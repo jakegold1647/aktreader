@@ -7,8 +7,10 @@ spelling varies; anchor on the slot sequence, not exact strings).
 ## BIRTH ACT (akt urodzenia / акт о рождении)
 1. **Venue+date slot**: «Состоялось в городе/посаде N, [date] года, в [hour] часов» /
    «Działo się w mieście N dnia [date] roku o godzinie [hour]» → registration_date, town.
-   ⚠️ Dual dating common after ~1868: Julian/Gregorian written as "четвертого (шестнадцатого)"
-   — capture BOTH; schema stores Gregorian as value, Julian in original_script note.
+   ⚠️ Dual dating appears in some registers after ~1868, written as
+   "четвертого (шестнадцатого)". Capture both ONLY if both day-words are physically present;
+   many acts carry a single date and that is not an error. Schema stores Gregorian as value,
+   Julian in original_script note.
 2. **Declarant slot**: «явился лично [name], [occupation], жительствующий в [place], [age] лет»
    → father (usually) with age, occupation, residence. If the declarant is NOT the father
    (midwife, relative — common for posthumous or illegitimate births), the formula says so —

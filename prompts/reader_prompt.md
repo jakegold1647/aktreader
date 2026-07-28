@@ -1,6 +1,6 @@
 # AKTREADER shared Reader prompt
 
-Prompt version: 1.0.0
+Prompt version: 1.1.0
 
 ## Reader task
 
@@ -8,7 +8,11 @@ Read exactly the supplied civil-register act image or act crop. Produce a struct
 
 This is one blind pass. A single reader may emit `PROBABLE`, `UNCLEAR`, or a typed non-present observation state, but never `CONFIDENT`. If a glyph or word has two plausible readings, render the normalized value exactly as `[unclear: X/Y]` and retain both candidates. If only one shaky candidate is visible, use `[unclear: X?]`. Never silently complete a surname, filiation, date, or maiden name from context.
 
-Distinguish `ABSENT_ON_FORM`, `BLANK`, `STATED_UNKNOWN`, and `ILLEGIBLE`. They are not synonyms. Include an image source span for each observation. Transcribe in original order before structuring. Capture both sides of every dual date. Keep derived calendar normalization explicitly separate from what the ink states.
+Distinguish `ABSENT_ON_FORM`, `BLANK`, `STATED_UNKNOWN`, and `ILLEGIBLE`. They are not synonyms. Include an image source span for each observation. Transcribe in original order before structuring. When a dual date is physically present in the ink (two day-words, one usually
+parenthesized), capture both sides. Record a dual date ONLY when both day-words are
+visibly on the page; single-dated acts are common in some register years — the absence
+of a dual date is normal and must not be "corrected." If unsure whether a second
+day-word exists, say so: `[unclear: single/dual]`. Keep derived calendar normalization explicitly separate from what the ink states.
 
 Return only one JSON object conforming to the schema supplied with the batch brief. The batch brief supplies artifact identity, target act, clerk-year proxy, Reader identity, blind-group identity, and prompt SHA-256. Do not add prose outside the JSON.
 
@@ -26,8 +30,10 @@ spelling varies; anchor on the slot sequence, not exact strings).
 ## BIRTH ACT (akt urodzenia / акт о рождении)
 1. **Venue+date slot**: «Состоялось в городе/посаде N, [date] года, в [hour] часов» /
    «Działo się w mieście N dnia [date] roku o godzinie [hour]» → registration_date, town.
-   ⚠️ Dual dating common after ~1868: Julian/Gregorian written as "четвертого (шестнадцатого)"
-   — capture BOTH; schema stores Gregorian as value, Julian in original_script note.
+   ⚠️ Dual dating appears in some registers after ~1868, written as
+   "четвертого (шестнадцатого)". Capture both ONLY if both day-words are physically present;
+   many acts carry a single date and that is not an error. Schema stores Gregorian as value,
+   Julian in original_script note.
 2. **Declarant slot**: «явился лично [name], [occupation], жительствующий в [place], [age] лет»
    → father (usually) with age, occupation, residence. If the declarant is NOT the father
    (midwife, relative — common for posthumous or illegitimate births), the formula says so —
