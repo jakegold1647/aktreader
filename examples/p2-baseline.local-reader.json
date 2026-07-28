@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "artifacts": {
+    "executable": {
+      "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-cli.exe",
+      "sha256": "5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5"
+    },
+    "model": {
+      "path": "E:\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\Qwen3.5-9B-Q5_K_M.gguf",
+      "sha256": "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c"
+    },
+    "mmproj": {
+      "path": "E:\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\mmproj-F16.gguf",
+      "sha256": "f70dc3509053962b0d0d3ee8a7eacebf5d60aa560cad78254ae8698516ae029f"
+    },
+    "prompt": {
+      "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt.md",
+      "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f"
+    },
+    "schema": {
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
+      "sha256": "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad"
+    }
+  },
+  "generation": {
+    "context_size": 16384,
+    "max_output_tokens": 8192,
+    "image_max_tokens": 4096,
+    "seed": 0,
+    "gpu_layers": "all",
+    "timeout_seconds": 1800
+  }
+}
