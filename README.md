@@ -4,11 +4,11 @@ AKTREADER is an evidence-first pipeline for scanned civil-register acts from par
 Poland. Its intended output is a structured genealogical extraction in which every field is
 traceable to the scan and uncertainty is recorded instead of guessed.
 
-> **Project status: P2 implementation gate.** The local-only Reader, external-label ingest,
-> consensus, validators, resumable batch engine, and SerockBench harness are implemented and
-> tested. The real local-model baseline is **NOT RUN**: Windows Security blocked the exact
-> downloaded inference runtime before it could execute. No accuracy number is inferred from
-> unit tests, vendor benchmarks, or an empty prediction set.
+> **Project status: P2 gate accepted; baseline addendum pending.** The local-only Reader,
+> external-label ingest, consensus, validators, resumable batch engine, and SerockBench harness
+> are implemented and tested. The pinned llama.cpp executable is now owner-cleared and verified;
+> the exact model and projector are not yet on disk, so the real baseline remains **NOT RUN**.
+> No accuracy number is inferred from unit tests, vendor benchmarks, or an empty prediction set.
 
 ## Why this project exists
 
@@ -42,8 +42,9 @@ The application invokes a content-pinned `llama-cli` executable directly as a su
 does not start an inference server, send HTTP to localhost, use a hosted SDK, or accept an API
 key.
 
-- **16 GB development default:** Qwen3.5-9B, quantized Q5 first and Q4 if measured headroom
-  requires it.
+- **16 GB development default:** Qwen3.5-9B Q5_K_M with an F16 vision projector; the exact
+  revision, byte sizes, hashes, and local paths are frozen in
+  [`examples/p2-baseline.artifacts.json`](examples/p2-baseline.artifacts.json).
 - **24 GB quality profile:** Qwen3.6-27B Q4.
 - **Smaller fallback:** Qwen3.5-4B.
 
@@ -76,10 +77,10 @@ python -m venv .venv
 
 The source tree uses the `src/` layout. The local CLI exposes `prompt-verify`,
 `label-validate`, `consensus-merge`, `reader-inspect`, `reader-infer`, `batch-run`, and `eval`
-in addition to `doctor`. `reader-infer` and `batch-run` are execution commands: do not issue
-them until the owner has authorized a trusted, checksum-pinned local runtime and model. The
-[example Reader configuration](examples/local-reader.config.example.json) contains deliberate
-path and checksum placeholders and cannot run until every pin is replaced.
+in addition to `doctor`. `reader-infer` and `batch-run` are execution commands. The generic
+[example Reader configuration](examples/local-reader.config.example.json) intentionally cannot
+run; the [P2 baseline configuration](examples/p2-baseline.local-reader.json) contains real pins
+but still fails closed until the owner fetches the two locked GGUF files.
 
 ## Gold corpus
 
@@ -131,6 +132,9 @@ bounded failed jobs can retry; unknown/multi-act targets route to review instead
 |---|---:|
 | Baseline run | **NOT RUN** |
 | Gold records evaluated | **0/36** |
+| Scan-backed gold records available for the first run | **17/36** |
+| Runtime verification | **PASS — 10167 (ee3d1b54c)** |
+| Model/projector present | **No** |
 | Clerk-year groups sequestered | **21** |
 | Prediction coverage | **N/A** |
 | Filiation exact match | **N/A** |
@@ -138,11 +142,14 @@ bounded failed jobs can retry; unknown/multi-act targets route to review instead
 | CONFIDENT / PROBABLE / UNCLEAR calibration | **N/A** |
 | Observation-state accuracy | **N/A** |
 
-Windows Security blocked the exact downloaded llama.cpp runtime before model invocation, and no
-bypass was authorized. The project did not disable, evade, or weaken that control. Running the
-baseline requires explicit owner action to review and provision a trusted runtime, then record
-its checksum with the model, projector, prompt, and schema checksums. Until that happens, there
-are no local-model predictions and every accuracy or calibration metric is `N/A`.
+The owner disabled Windows Smart App Control as an owner-level OS-policy decision; standard
+Defender remains active. The coordinator then verified `llama-cli.exe` version 10167
+(`ee3d1b54c`), exit 0, and SHA-256
+`5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5`. AKTREADER did not
+disable or bypass a control. Running the baseline now waits only for the owner-fetched,
+checksum-matching model/projector pair. Nineteen gold records are honestly marked
+`NOT_LOCALIZED`, so the first scan-backed run has a 17/36 coverage ceiling rather than an
+invented 36/36 input set.
 
 See the [label factory](docs/label-factory.md) and
 [P2 evaluation report](docs/p2-evaluation.md).
@@ -151,9 +158,10 @@ See the [label factory](docs/label-factory.md) and
 
 1. **P0 — scaffold and landscape:** completed.
 2. **P1 — Serock-seeded gold corpus:** completed and owner-approved.
-3. **P2 — local MVP pipeline:** implementation complete; real baseline blocked as documented
-   above. Acceptance remains filiation exact-match at least 90% and wrong-but-confident below
-   2%; no result is claimed yet.
+3. **P2 — local MVP pipeline:** implementation gate accepted; prompt v1.2 is frozen and the
+   real baseline attaches later as an addendum after owner-fetched model assets. The performance
+   targets remain filiation exact-match at least 90% and wrong-but-confident below 2%; no model
+   result is claimed yet.
 4. **P3 — Pułtusk batch:** begins only after the explicit corpus-acquisition gate.
 5. **P4 — name and place variant bridge.**
 6. **P5 — publication and single-act interface.**

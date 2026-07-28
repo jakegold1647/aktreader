@@ -87,11 +87,13 @@ generation settings, and a credential-free allow-listed subprocess environment. 
 locators, auto-download flags, remote schema references, missing files, and checksum mismatches
 fail closed.
 
-The default hardware profile is Qwen3.5-9B Q5/Q4 on the development RTX 5060 Ti 16 GB. A 24 GB
-quality profile uses Qwen3.6-27B Q4; Qwen3.5-4B is the smaller fallback. These choices remain
-provisional until the local historical-handwriting baseline runs. The exact downloaded runtime
-was blocked by Windows Security before invocation, so P2 records the baseline as `NOT RUN` and
-requires explicit owner review/provisioning rather than bypassing the control.
+The default hardware profile is revision-pinned Qwen3.5-9B Q5_K_M with an F16 projector on the
+development RTX 5060 Ti 16 GB. A 24 GB quality profile uses Qwen3.6-27B Q4; Qwen3.5-4B is the
+smaller fallback. These choices remain provisional until the historical-handwriting baseline
+runs. The owner-cleared llama.cpp executable is verified as 10167 (`ee3d1b54c`), exit 0, SHA-256
+`5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5`. The model/projector
+pair is locked by revision and checksum but absent from disk, so the baseline remains `NOT RUN`.
+AKTREADER made no operating-system security change.
 
 ## Resumable batch state machine
 
@@ -127,7 +129,10 @@ Identity-level forks stay untiered and quarantined until the sampled human check
 Evaluation splits are by clerk-year, not random act. `gold/clerk_year_holdout.json` sequesters all
 36 current gold records across 21 clerk-years and explicitly forbids training overlap. The eval
 harness rejects a mismatched holdout manifest or any training clerk-year leakage before scoring.
-This prevents a model that memorized one clerk's hand from masquerading as a general reader.
+Only 17 records currently bind to checksum-verified local scans; the other 19 remain explicit
+`NOT_LOCALIZED` coverage gaps. The first runnable manifest therefore contains 17 jobs and cannot
+claim 36/36 input coverage. This prevents missing artifacts—or a model that memorized one
+clerk's hand—from masquerading as a general reader.
 
 ## Stable identity and graph horizon
 
@@ -146,8 +151,8 @@ memorial-institution records.
 ## Phase boundaries
 
 - P1 is complete: 36 source-backed, evaluation-only records.
-- P2 implementation is complete; the real LocalReader baseline is `NOT RUN` pending explicit
-  owner action on the Windows Security-blocked runtime.
+- P2 implementation gate is accepted; the real LocalReader baseline is `NOT RUN` pending the
+  owner fetch of the exact checksum-locked model/projector pair. The runtime is verified.
 - P3 acquisition and Pułtusk batch work remain blocked until the explicit terms and polite-pace
   gate is approved.
 - P4 adds variant proposals without changing literal names.

@@ -17,9 +17,12 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 ## Claude (coordinator / Reader A) — owes
 - [x] Wave-002 RESOLVED appendix (done 28 Jul)
 - [x] Post wave-002 outcome + eval numbers → inbox_sol (msg-002)
+- [x] P2 gate review → **ACCEPTED** (msg-005); baseline attaches later as addendum
 - [ ] Assign wave 003 after v1.2 freezes (candidate: Serock 1890 births, or first Pułtusk acts once atlas lands)
 - [ ] Human gold-sample package for act 6 (crops + both readings + C report) for Jake
+- [ ] Fetch + pin model assets once Sol posts spec (msg-005 item 1); run baseline command verbatim
 - ACK: msg-001_ack-and-p2-boundaries.md (reply: inbox_sol/msg-003_silver-tier-and-v12.md)
+- ACK: msg-002_p2-gate.md (reply: inbox_sol/msg-005_p2-accepted.md)
 
 ## Tier definitions (binding, per msg-003)
 - gold = human-verified, eval-only, clerk-year-sequestered
@@ -34,10 +37,13 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - [x] PROVENANCE_ERRATA note at ingest for Reader A wave-001/002 stale prompt hash
 - [x] Assign resolved acts 1–5 to machine-readable SILVER (training-only, never eval,
   source-addressed fields); act 6 untiered and QUARANTINED pending human check
-- [ ] skills/prompt additions proposed for v1.2: line-break surname-split trap;
-  умеръ/умерла check first; scribe's -фельдъ written as в
+- [x] Prompt v1.2 frozen at b11bca0, sha256 ea0e8375…: line-break surname-split trap;
+  умеръ/умерла check first; generalized clerk-specific -фельдъ/-вельдъ check
+- [x] Exact 16 GB model/projector lock + 17-job scan-backed baseline manifest posted
+  (inbox_claude/msg-003); owner fetch pending
 - ACK: msg-001, msg-002 (reply: inbox_claude/msg-001_ack-and-p2-boundaries.md)
 - ACK: msg-003 (reply: inbox_claude/msg-002_p2-gate.md)
+- ACK: msg-005 (reply: inbox_claude/msg-003_p2-baseline-lock-and-v12.md)
 
 ## Standing facts
 - Prompt v1.0.0 canonical sha256: 88e56abd… (drift resolved — Reader A's recorded hash was stale)

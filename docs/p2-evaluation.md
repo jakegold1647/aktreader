@@ -1,6 +1,6 @@
 # P2 evaluation report
 
-**Status:** Wave 001 and Wave 002 diagnostics recorded; local-model baseline **NOT RUN**
+**Status:** P2 gate accepted; Wave 001/002 diagnostics recorded; baseline addendum **NOT RUN**
 
 **Report date:** 2026-07-28
 
@@ -23,6 +23,9 @@ The nine Reader B disagreements comprised:
 - 5 name/role reads;
 - 1 surname truncated at a hyphenated line break; and
 - 1 widower-name read.
+
+The fair paired summary is **2 prompt-induced date errors + 7 paleographic/parse errors**, followed
+by **0 dual-date recurrences across Wave 002's four acts** after the corrective prompt wording.
 
 This is a deliberately selection-biased, disputed-only sample. It is **not benchmark accuracy**,
 an overall Reader B error rate, a comparison of model families, or evidence that either other
@@ -62,9 +65,9 @@ the fork before gold. Act 6 is now explicitly quarantined in `gold/manifest.json
 mandatory human sample, regardless of Reader C's decisive vote.
 
 Acts 3–5 also remain outside `gold/`: their resolved fields are consensus-PROBABLE, while this
-repository's eval holdout is human-verified. No Wave 002 field has been added to gold. The
-coordinator has been asked to name a non-gold consensus/training tier or supply human
-verification before ingest.
+repository's eval holdout is human-verified. No Wave 002 field has been added to gold. They are
+now machine-readable `SILVER` records—training-only, never evaluation—pending any later sampled
+human promotion.
 
 Evidence:
 
@@ -98,20 +101,41 @@ The digest is recorded in [`prompts/manifest.json`](../prompts/manifest.json) an
 [`prompts/reader_prompt.sha256`](../prompts/reader_prompt.sha256). The patch is a documented
 protocol correction, not a retroactive benchmark result.
 
+## Prompt v1.2 release
+
+Wave 002 supplied three further parse safeguards: join a possible line-broken surname before
+inventing a new person; resolve `умеръ` versus `умерла` before downstream gendered parsing; and
+preserve the possibility that some clerks render normalized `-feld` literally as `-вельдъ`.
+The globally shared prompt generalizes those rules and deliberately omits the source act,
+surname, and clerk identity so it does not embed a held-out Serock-1890 answer.
+
+Prompt v1.2.0 is frozen at commit `b11bca0`; its raw-byte SHA-256 is:
+
+```text
+ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f
+```
+
+Frozen v1.1 remains auditable at commit `156393b`; it was not rewritten in place.
+
 ## LocalReader baseline — NOT RUN
 
-Windows Security blocked execution of the exact downloaded `llama.cpp` runtime before model
-invocation. No bypass was authorized, no scan was submitted to the model, and no prediction was
-produced. AKTREADER did not disable protection, add an exception, allow-list the binary, or
-otherwise weaken or evade the control.
+The owner resolved the former Smart App Control block as an owner-level OS-policy decision;
+standard Defender remains active. The coordinator verified the exact runtime, but the locked
+model and projector files are not on disk. No scan has been submitted and no prediction exists.
+AKTREADER did not change a security setting or attempt a bypass.
 
 | Run fact | Recorded state |
 |---|---:|
 | Baseline run state | **NOT RUN** |
 | Model invocations | **0** |
 | Gold records evaluated | **0/36** |
+| Scan-backed gold inputs available | **17/36** |
+| Gold records marked `NOT_LOCALIZED` | **19/36** |
 | Sequestered clerk-year groups | **21** |
-| Authorized security bypass | **No** |
+| Runtime verification | **PASS — 10167 (ee3d1b54c), exit 0** |
+| Runtime executable SHA-256 | `5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5` |
+| Model/projector present | **No** |
+| AKTREADER security-control mutation | **None** |
 
 ### Baseline metric table
 
@@ -128,20 +152,21 @@ otherwise weaken or evade the control.
 | Abstention rate | **N/A** | No predictions |
 
 These are report-level `N/A` values because the baseline did not happen. They are not calculated
-zeroes and do not satisfy an acceptance target. Once predictions exist, the harness also uses
+zeroes and do not satisfy a performance target. Once predictions exist, the harness also uses
 `N/A` for a calculated ratio with a zero denominator—for example `wrong-but-CONFIDENT` when an
 evaluated prediction set contains no CONFIDENT assertions.
 
-Resuming the baseline requires explicit owner action after independent review of the runtime
-artifact's provenance and signature: approve that exact artifact or replace it with a trusted
-build, then record the accepted executable's SHA-256. This project does not recommend or request
-a security bypass.
+The exact Qwen3.5-9B Q5_K_M model and F16 projector are now revision- and checksum-pinned in
+[`examples/p2-baseline.artifacts.json`](../examples/p2-baseline.artifacts.json). The owner fetches
+those bytes outside the application; `reader-inspect` verifies them before the coordinator runs
+the committed 17-job scan-backed manifest. The 19 unlocalized records remain explicit coverage
+gaps and are never assigned guessed paths.
 
 ## Intended local baseline
 
 | Hardware profile | Reader checkpoint | Quantization target | Runtime |
 |---|---|---|---|
-| Consumer GPU, 16 GB VRAM (default) | Qwen3.5-9B | Q5 when measured headroom permits; Q4 otherwise | Direct `llama.cpp` CLI subprocess |
+| Consumer GPU, 16 GB VRAM (default) | Qwen3.5-9B | Q5_K_M + F16 projector (frozen P2 baseline) | Direct `llama.cpp` CLI subprocess |
 | Consumer GPU, 24 GB VRAM | Qwen3.6-27B | Q4 | Direct `llama.cpp` CLI subprocess |
 | Smaller-VRAM fallback | Qwen3.5-4B | Select locally after a measured fit check | Direct `llama.cpp` CLI subprocess |
 
@@ -155,8 +180,10 @@ this project's gold-corpus evaluation.
 
 ## Benchmark integrity
 
-The current gold corpus contains 36 records spanning 21 clerk-year groups. All current gold
-records are evaluation-only:
+The current gold corpus contains 36 records spanning 21 clerk-year groups. Seventeen records
+have checksum-verified local scans and nineteen remain `NOT_LOCALIZED`; the first executable
+baseline therefore reports at most 17/36 prediction coverage. All current gold records are
+evaluation-only:
 
 - `gold/clerk_year_holdout.json` sets `training_overlap_allowed` to `false`.
 - Holdout membership is sequestered by clerk-year, not by individual act.
@@ -188,12 +215,12 @@ one reading.
 
 ## Exact local CLI commands — documented, not launched
 
-None of the commands below was executed while preparing this update. The prompt and label
-commands are local validation only. The batch command must remain unrun until the owner supplies
-or authorizes a trusted local runtime and model and replaces every placeholder digest in the
-Reader configuration.
+The validation commands below were exercised; the inference command was not. `batch-run` remains
+unrun until the two owner-fetched GGUF files match the committed hashes. The runtime, prompt,
+schema, configuration, and 17 scan jobs are already concrete—there are no placeholder digests in
+the P2 baseline configuration.
 
-### Verify prompt v1.1.0
+### Verify prompt v1.2.0
 
 From PowerShell:
 
@@ -203,7 +230,7 @@ Set-Location E:\DNA\Project_RegisterReader
 ```
 
 The reported digest must be exactly
-`9e679f3a799e75bbfeb7bf077f55b868d7fa06b9ab1164bed443a6f51b0b9d09`.
+`ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f`.
 
 ### Validate the four Wave 001 source labels
 
@@ -218,20 +245,19 @@ Set-Location E:\DNA\Project_RegisterReader
   .\labels\readerB\serock-1890-death-2.json
 ```
 
-### Inspect and run a batch only after owner authorization
+### Inspect and run the locked scan-backed baseline after the owner fetch
 
-First copy [`examples/local-reader.config.example.json`](../examples/local-reader.config.example.json)
-to an owner-selected local path and replace every sample digest with a verified SHA-256. The
-prompt pin in that configuration must be the v1.1.0 digest above. The batch manifest must contain
-explicit scan paths, act targets, act types, years, and matching record IDs; the runner never
-infers them from filenames.
-
-The two `Read-Host` prompts deliberately require the owner to supply those paths at run time:
+The configuration and manifest are committed at
+[`examples/p2-baseline.local-reader.json`](../examples/p2-baseline.local-reader.json) and
+[`examples/p2-baseline.jobs.json`](../examples/p2-baseline.jobs.json). The latter was built only
+from gold records already carrying a checksum-verified local artifact. Each job names exactly one
+act; a filename is never used to infer the target. Whole-page source regions are declared
+honestly where no verified crop exists.
 
 ```powershell
 Set-Location E:\DNA\Project_RegisterReader
-$readerConfig = Read-Host 'Absolute path to the owner-approved, SHA-pinned Reader config'
-$batchManifest = Read-Host 'Absolute path to the explicit local batch manifest'
+$readerConfig = '.\examples\p2-baseline.local-reader.json'
+$batchManifest = '.\examples\p2-baseline.jobs.json'
 $runRoot = 'E:\DNA\Project_RegisterReader\runs\p2-local-baseline'
 $checkpoint = Join-Path $runRoot 'checkpoint.sqlite3'
 $outputDir = Join-Path $runRoot 'predictions'
@@ -246,9 +272,9 @@ $outputDir = Join-Path $runRoot 'predictions'
   --max-retries 2
 ```
 
-`reader-inspect` verifies the content pins without inference. `batch-run` is the command that
-launches local inference; do not issue it before the explicit owner decision described above.
-Reissuing the identical `batch-run` command resumes from the SQLite checkpoint.
+`reader-inspect` verifies the content pins without inference. It currently fails closed because
+the two GGUF paths are absent. After the owner fetch, `batch-run` launches local inference;
+reissuing the identical command resumes from the SQLite checkpoint.
 
 ### Evaluate completed predictions
 
@@ -267,8 +293,9 @@ $evaluation = Join-Path $runRoot 'serockbench.json'
 ```
 
 The evaluation command accepts either one prediction JSON file or a directory of prediction
-JSON files. Preserve the predictions, batch checkpoint, runtime fingerprint, content pins, and
-generated report as immutable run evidence.
+JSON files. The first complete run should report 17/36 coverage, not 36/36. Preserve the
+predictions, batch checkpoint, runtime fingerprint, content pins, and generated report as
+immutable run evidence.
 
 See [Local model runtime](local-model.md), [Label factory](label-factory.md), and
 [Architecture](architecture.md) for the runtime, consensus, and data-flow contracts.

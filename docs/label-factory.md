@@ -33,11 +33,14 @@ The prompt contains the Napoleonic-act formula, pre-1918 Cyrillic guidance, and 
 contract verbatim. Its recorded checksum matters as much as its version string: a prompt file
 changed by line endings or one character is a different Reader condition.
 
-The current frozen prompt is v1.1.0. Its raw-byte SHA-256 is
-`9e679f3a799e75bbfeb7bf077f55b868d7fa06b9ab1164bed443a6f51b0b9d09`. The v1.1 patch removes a
-dual-date prior exposed by Wave 001: a Reader may record two dates only when two day-words are
-physically visible, and must use `[unclear: single/dual]` when that evidence is unresolved. This
-is a protocol correction for subsequent passes, not a retroactive accuracy claim.
+The current frozen prompt is v1.2.0. Its raw-byte SHA-256 is
+`ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f`. It retains v1.1's
+dual-date correction and adds three generalized Wave-002 safeguards: line-break surname joining,
+gender-verb-first death parsing, and a cautious `-фельдъ`/`-вельдъ` clerk-variant check. The
+source act, surname, and clerk identity are deliberately absent from the global prompt. Frozen
+v1.1 remains auditable at commit `156393b` with digest
+`9e679f3a799e75bbfeb7bf077f55b868d7fa06b9ab1164bed443a6f51b0b9d09`; neither correction is a
+retroactive accuracy claim.
 
 ## Consensus is strict, not fuzzy
 
@@ -103,7 +106,10 @@ The current machine-readable catalog is
 pins both source labels plus the consensus and Reader C documents by SHA-256, and leaves act 6
 quarantined. `training_materialized: false` is deliberate: the resolved field payloads are still
 stored in the content-addressed coordinator appendices, so no model-ready field export is claimed
-yet.
+yet. Tier-level `training_eligible` is not permission to violate an eval split: all five current
+silver acts carry the Serock-1890 clerk-year that is also in the present gold holdout, so a
+training export evaluated against that holdout must exclude them. The eval harness rejects such
+overlap if a training clerk-year manifest is supplied.
 
 No label or training export may contain material from Yad Vashem, USHMM, Arolsen, Geneteka, or
 JRI-Poland indexes. The factory labels only user-supplied permitted register scans.
