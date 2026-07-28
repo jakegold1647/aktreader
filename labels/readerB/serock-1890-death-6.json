@@ -1,0 +1,69 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-6.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-6",
+  "created_at": "2026-07-28T14:35:52.6579068-04:00",
+  "reader": {"reader_id": "reader-b-openai-sol-ultra", "reader_family": "gpt", "reader_version": "sol-ultra-2026-07-28", "mode": "subscription_session", "blind_group_id": "serock-1890-deaths-03-06-wave-002", "other_reader_output_seen": false},
+  "prompt": {"version": "1.0.0", "sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82", "path": "prompts/reader_prompt.md"},
+  "clerk_year": {"id": "73-826-0|serock|1890|clerk-unknown", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+    "sha256": "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {"x": 1410, "y": 980, "width": 1390, "height": 1360, "coordinate_space": "source_pixels"}
+  },
+  "target": {"town": "Serock", "fond": "73/826/0", "year": 1890, "act_type": "death", "act_no": 6, "language": "ru"},
+  "source_spans": {
+    "registration": {"bbox": {"x": 1480, "y": 1120, "width": 1260, "height": 230, "coordinate_space": "source_pixels"}, "description": "Act number, venue, registration date, year, and hour"},
+    "declarants": {"bbox": {"x": 1480, "y": 1300, "width": 1260, "height": 330, "coordinate_space": "source_pixels"}, "description": "Two declarants, occupations, ages, and common residence"},
+    "event": {"bbox": {"x": 1480, "y": 1560, "width": 1260, "height": 210, "coordinate_space": "source_pixels"}, "description": "Relative death date, hour, and place"},
+    "principal": {"bbox": {"x": 1480, "y": 1690, "width": 1260, "height": 240, "coordinate_space": "source_pixels"}, "description": "Deceased woman, uncertain name, and age"},
+    "filiation": {"bbox": {"x": 1480, "y": 1830, "width": 1260, "height": 300, "coordinate_space": "source_pixels"}, "description": "Faint parentage and surviving-family clause"},
+    "closing": {"bbox": {"x": 1480, "y": 2070, "width": 1260, "height": 240, "coordinate_space": "source_pixels"}, "description": "Certification and signature formula"}
+  },
+  "mentions": [
+    {"mention_id": "serock-1890-death-6#principal", "role": "principal"},
+    {"mention_id": "serock-1890-death-6#father", "role": "father"},
+    {"mention_id": "serock-1890-death-6#mother", "role": "mother"},
+    {"mention_id": "serock-1890-death-6#declarant-0", "role": "declarant"},
+    {"mention_id": "serock-1890-death-6#declarant-1", "role": "declarant"},
+    {"mention_id": "serock-1890-death-6#survivor-0", "role": "survivor"}
+  ],
+  "transcription": {
+    "original_script": "№ 6. Состоялось в посаде Сероцке двадцать перваго Февраля тысяча восемьсот девяностаго года [unclear: в десять часов утра/в девять часов утра]. Явились лично Гершек Лев, торговец, двадцати восьми лет, и Шляма Куракер младший, сапожник, двадцати пяти лет от роду, жительствующие оба в посаде Сероцке, и объявили, что вчерашняго числа в пять часов утра в посаде Сероцке умерла [unclear: Сура Мошка …/Рена Мошка …], пятидесяти пяти лет от роду. Последующая родительская формула бледна и не разрешена. Указан супруг Герш Векслер; оставшаяся семейная формула читается не полностью.",
+    "translation": "Act 6. Registered in Serock on 21 February 1890 at [unclear: 10 a.m./9 a.m.]. Gerszek Lew, a trader, age 28, and Szlama Kuraker the younger, a shoemaker, age 25, both resident in Serock, declared that the previous day at 5 a.m. a 55-year-old woman [unclear: Sura Moszka …/Rena Moszka …] died in Serock. The faint parentage clause is not resolved. A spouse, Gersz Weksler, is named; the remainder of the surviving-family clause is not fully legible."
+  },
+  "observations": {
+    "act_type": {"value": "death", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["principal"], "notes": []},
+    "act_no": {"value": 6, "original_script": "№ 6", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration"], "notes": []},
+    "year": {"value": 1890, "original_script": "тысяча восемьсот девяностаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration"], "notes": []},
+    "registration_date": {"value": {"julian": "1890-02-21", "gregorian": "1890-03-05", "gregorian_derived": true}, "original_script": "двадцать перваго Февраля", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration"], "notes": ["Only one date is written; Gregorian is a marked 12-day derivation."]},
+    "registration_time": {"value": "[unclear: 10:00/09:00]", "original_script": "[unclear: в десять часов утра/в девять часов утра]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "10:00", "original_script": "в десять часов утра"}, {"value": "09:00", "original_script": "в девять часов утра"}], "source_span_ids": ["registration"], "notes": ["The numeral phrase lies at the faint right edge."]},
+    "event_date": {"value": {"julian": "1890-02-20", "gregorian": "1890-03-04", "gregorian_derived": true}, "original_script": "вчерашняго числа", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["event"], "notes": ["Derived mechanically as the day before the written registration date."]},
+    "town": {"value": "Serock", "original_script": "в посаде Сероцке", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration", "event"], "notes": []},
+    "principal.name": {"value": "[unclear: Sura Moszka …/Rena Moszka …]", "original_script": "[unclear: Сура Мошка …/Рена Мошка …]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Sura Moszka …", "original_script": "Сура Мошка …"}, {"value": "Rena Moszka …", "original_script": "Рена Мошка …"}], "source_span_ids": ["principal"], "notes": ["The given-name opening and following surname cluster remain unresolved; ellipsis marks missing glyphs, not completion."]},
+    "principal.age": {"value": "55 years", "original_script": "пятидесяти пяти лет от роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["principal"], "notes": []},
+    "principal.sex": {"value": "female", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["principal"], "notes": []},
+    "principal.maiden_name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["The faint parentage clause cannot support a maiden-name assertion."]},
+    "father.name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["The father's name is not resolved from the faint line."]},
+    "mother.name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["The mother's name is not resolved from the faint line."]},
+    "mother.maiden_name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["No maiden surname is asserted from the faint line."]},
+    "spouse.name": {"value": "Gersz Weksler", "original_script": "супруга Герша Векслер", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["Relationship reading is based on the visible spouse formula; verify against the scan."]},
+    "declarants.0.name": {"value": "Gerszek Lew", "original_script": "Гершек Лев", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.0.age": {"value": "28 years", "original_script": "двадцати восьми лет", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.0.occupation": {"value": "trader", "original_script": "торговец", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.0.residence": {"value": "Serock", "original_script": "жительствующие оба в посаде Сероцке", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": ["The residence phrase applies to both declarants."]},
+    "declarants.1.name": {"value": "Szlama Kuraker", "original_script": "Шляма Куракер", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.1.age": {"value": "25 years", "original_script": "двадцати пяти лет", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.1.occupation": {"value": "shoemaker", "original_script": "младший сапожник", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": ["The word младший is retained as a descriptor, not folded into the occupation value."]},
+    "declarants.1.residence": {"value": "Serock", "original_script": "жительствующие оба в посаде Сероцке", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": ["The residence phrase applies to both declarants."]},
+    "deceased_left_behind": {"value": {"mention_id": "serock-1890-death-6#survivor-0", "relationship": "husband", "name": "Gersz Weksler"}, "original_script": "супруга Герша Векслер", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["The rest of the surviving-family clause remains unresolved."]},
+    "signatures_note": {"value": "signed by the registrar and declarants", "original_script": "акт сей нами и свидетелями подписан", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing"], "notes": []},
+    "marginalia": {"value": null, "original_script": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "alternatives": [], "source_span_ids": ["registration", "closing"], "notes": ["No act-specific marginal annotation is visible."]}
+  },
+  "compliance": {"restricted_sources_used": false, "privacy_decision": "ALLOW", "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.", "training_eligible": true, "training_basis": "Builder-produced blind subscription-session label from the approved civil-register scan."},
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

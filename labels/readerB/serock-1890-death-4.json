@@ -1,0 +1,65 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-4.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-4",
+  "created_at": "2026-07-28T14:35:52.6579068-04:00",
+  "reader": {"reader_id": "reader-b-openai-sol-ultra", "reader_family": "gpt", "reader_version": "sol-ultra-2026-07-28", "mode": "subscription_session", "blind_group_id": "serock-1890-deaths-03-06-wave-002", "other_reader_output_seen": false},
+  "prompt": {"version": "1.0.0", "sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82", "path": "prompts/reader_prompt.md"},
+  "clerk_year": {"id": "73-826-0|serock|1890|clerk-unknown", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+    "sha256": "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {"x": 70, "y": 980, "width": 1380, "height": 1360, "coordinate_space": "source_pixels"}
+  },
+  "target": {"town": "Serock", "fond": "73/826/0", "year": 1890, "act_type": "death", "act_no": 4, "language": "ru"},
+  "source_spans": {
+    "registration": {"bbox": {"x": 250, "y": 1080, "width": 1180, "height": 230, "coordinate_space": "source_pixels"}, "description": "Act number, venue, registration date, year, and hour"},
+    "declarants": {"bbox": {"x": 250, "y": 1260, "width": 1180, "height": 300, "coordinate_space": "source_pixels"}, "description": "Two declarants, occupations, ages, and common residence"},
+    "event": {"bbox": {"x": 250, "y": 1510, "width": 1180, "height": 210, "coordinate_space": "source_pixels"}, "description": "Relative death date, hour, and place"},
+    "principal": {"bbox": {"x": 250, "y": 1660, "width": 1180, "height": 210, "coordinate_space": "source_pixels"}, "description": "Deceased child, sex, name, and age"},
+    "filiation": {"bbox": {"x": 250, "y": 1790, "width": 1180, "height": 230, "coordinate_space": "source_pixels"}, "description": "Parents, mother's birth surname, and couple surname"},
+    "closing": {"bbox": {"x": 250, "y": 1990, "width": 1180, "height": 260, "coordinate_space": "source_pixels"}, "description": "Certification and signature formula"}
+  },
+  "mentions": [
+    {"mention_id": "serock-1890-death-4#principal", "role": "principal"},
+    {"mention_id": "serock-1890-death-4#father", "role": "father"},
+    {"mention_id": "serock-1890-death-4#mother", "role": "mother"},
+    {"mention_id": "serock-1890-death-4#declarant-0", "role": "declarant"},
+    {"mention_id": "serock-1890-death-4#declarant-1", "role": "declarant"}
+  ],
+  "transcription": {
+    "original_script": "№ 4. Состоялось в посаде Сероцке седьмого Февраля тысяча восемьсот девяностаго года в первом часу по полудни. Явились лично Иосеф Топер, лавочник, шестидесяти лет, и Серек [unclear: Коли…/Колиер?], шестидесяти пяти лет от роду, жительствующие оба в посаде Сероцке, и объявили, что вчерашняго числа в шесть часов вечера в посаде Сероцке умерло дитя мужескаго пола по имени [unclear: Анику Лейзор/Аникуш Лейзор] Тыкульский, сын [unclear: Мойка Гдали/Мошка Гдали] и матери Хаи Фрайды, урожденной [unclear: Пфлюгер/Плюгер], супругов Тыкульских, шести месяцев от роду.",
+    "translation": "Act 4. Registered in Serock on 7 February 1890 at about 1 p.m. Iosif Toper, a shopkeeper, age 60, and Serek [unclear], age 65, both resident in Serock, declared that the previous day at 6 p.m. a six-month-old male child [unclear: Aniku Lejzor/Anikush Lejzor] Tykulski, son of [unclear: Mojka Gdali/Moszka Gdali] and Chaja Frajda née [unclear: Pfluger/Pluger], spouses Tykulski, died in Serock."
+  },
+  "observations": {
+    "act_type": {"value": "death", "original_script": "умерло", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["principal"], "notes": []},
+    "act_no": {"value": 4, "original_script": "№ 4", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration"], "notes": []},
+    "year": {"value": 1890, "original_script": "тысяча восемьсот девяностаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration"], "notes": []},
+    "registration_date": {"value": {"julian": "1890-02-07", "gregorian": "1890-02-19", "gregorian_derived": true}, "original_script": "седьмого Февраля", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration"], "notes": ["Only one date is written; Gregorian is a marked 12-day derivation."]},
+    "event_date": {"value": {"julian": "1890-02-06", "gregorian": "1890-02-18", "gregorian_derived": true}, "original_script": "вчерашняго числа", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["event"], "notes": ["Derived mechanically as the day before the written registration date."]},
+    "town": {"value": "Serock", "original_script": "в посаде Сероцке", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["registration", "event"], "notes": []},
+    "principal.name": {"value": "[unclear: Aniku Lejzor Tykulski/Anikush Lejzor Tykulski]", "original_script": "[unclear: Анику Лейзор Тыкульский/Аникуш Лейзор Тыкульский]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Aniku Lejzor Tykulski", "original_script": "Анику Лейзор Тыкульский"}, {"value": "Anikush Lejzor Tykulski", "original_script": "Аникуш Лейзор Тыкульский"}], "source_span_ids": ["principal"], "notes": ["The first given-name ending is not resolved."]},
+    "principal.age": {"value": "6 months", "original_script": "шести месяцев от роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["principal"], "notes": []},
+    "principal.sex": {"value": "male", "original_script": "дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["principal"], "notes": []},
+    "principal.maiden_name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["Not applicable to the male infant."]},
+    "father.name": {"value": "[unclear: Mojka Gdali Tykulski/Moszka Gdali Tykulski]", "original_script": "[unclear: Мойка Гдали/Мошка Гдали] ... супругов Тыкульских", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Mojka Gdali Tykulski", "original_script": "Мойка Гдали ... супругов Тыкульских"}, {"value": "Moszka Gdali Tykulski", "original_script": "Мошка Гдали ... супругов Тыкульских"}], "source_span_ids": ["filiation"], "notes": ["The couple surname is written once; the first given name remains ambiguous."]},
+    "mother.name": {"value": "Chaja Frajda Tykulska", "original_script": "Хаи Фрайды ... супругов Тыкульских", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["filiation"], "notes": ["The couple surname is written once."]},
+    "mother.maiden_name": {"value": "[unclear: Pfluger/Pluger]", "original_script": "[unclear: Пфлюгер/Плюгер]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Pfluger", "original_script": "Пфлюгер"}, {"value": "Pluger", "original_script": "Плюгер"}], "source_span_ids": ["filiation"], "notes": ["The initial consonant cluster is unresolved."]},
+    "declarants.0.name": {"value": "Iosif Toper", "original_script": "Иосеф Топер", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.0.age": {"value": "60 years", "original_script": "шестидесяти лет", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.0.occupation": {"value": "shopkeeper", "original_script": "лавочник", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.0.residence": {"value": "Serock", "original_script": "жительствующие оба в посаде Сероцке", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": ["The residence phrase applies to both declarants."]},
+    "declarants.1.name": {"value": "[unclear: Serek Koli…/Serek Kolier]", "original_script": "[unclear: Серек Коли…/Серек Колиер]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Serek Koli…", "original_script": "Серек Коли…"}, {"value": "Serek Kolier", "original_script": "Серек Колиер"}], "source_span_ids": ["declarants"], "notes": ["The surname crosses a difficult cursive cluster near the gutter."]},
+    "declarants.1.age": {"value": "65 years", "original_script": "шестидесяти пяти лет", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": []},
+    "declarants.1.occupation": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["declarants"], "notes": ["No occupation is asserted from the unresolved gutter text."]},
+    "declarants.1.residence": {"value": "Serock", "original_script": "жительствующие оба в посаде Сероцке", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarants"], "notes": ["The residence phrase applies to both declarants."]},
+    "signatures_note": {"value": "signed by the registrar and declarants", "original_script": "акт сей свидетелям прочитан нами и оными подписан", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing"], "notes": []},
+    "marginalia": {"value": null, "original_script": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "alternatives": [], "source_span_ids": ["registration", "closing"], "notes": ["No act-specific marginal annotation is visible."]}
+  },
+  "compliance": {"restricted_sources_used": false, "privacy_decision": "ALLOW", "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.", "training_eligible": true, "training_basis": "Builder-produced blind subscription-session label from the approved civil-register scan."},
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
