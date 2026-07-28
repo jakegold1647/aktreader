@@ -190,11 +190,14 @@ def _mock_chromed_stdout(
 ) -> None:
     def fake_run(command: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
         request = command[command.index("--prompt") + 1]
-        echoed_request = request.replace("\n", line_ending)
+        mangled_echo = line_ending.join(
+            f'> {line.replace(chr(34), "")}' for line in request.splitlines()
+        )
         normalized_banner = banner.replace("\n", line_ending)
         stdout = (
             normalized_banner
-            + f"> {echoed_request}{line_ending}"
+            + mangled_echo
+            + line_ending
             + completion
             + line_ending
             + "Exiting..."
@@ -359,7 +362,7 @@ def test_reader_requires_exactly_one_strict_json_object(
         LocalReader(config).read(image, batch_brief=brief)
 
 
-def test_reader_extracts_json_after_exact_multiline_prompt_echo_and_runtime_chrome(
+def test_reader_uses_last_mangled_echo_line_and_ignores_pre_echo_objects_and_chrome(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     config = _reader_config(tmp_path)
@@ -478,19 +481,6 @@ def test_reader_stdout_rejects_malformed_non_object_or_unbalanced_output(
     _mock_chromed_stdout(monkeypatch, completion)
 
     with pytest.raises(LocalReaderOutputError, match=message):
-        LocalReader(config).read(image, batch_brief=brief)
-
-
-def test_reader_stdout_rejects_a_nonmatching_prompt_echo(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    config = _reader_config(tmp_path)
-    image = _write(tmp_path / "scan.jpg", b"scan pixels")
-    brief = _brief(config, image)
-    payload = json.dumps(_payload(brief), ensure_ascii=False)
-    _mock_stdout(monkeypatch, f"> a different request\n{payload}\nExiting...\n")
-
-    with pytest.raises(LocalReaderOutputError, match="does not exactly match"):
         LocalReader(config).read(image, batch_brief=brief)
 
 

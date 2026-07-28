@@ -192,35 +192,19 @@ def _normalize_newlines(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
-def _reader_completion_after_prompt_echo(stdout: str, *, request_text: str) -> str:
-    """Discard llama.cpp chrome through its exact, possibly multiline prompt echo."""
+def _reader_completion_after_prompt_echo(stdout: str) -> str:
+    """Discard llama.cpp chrome through its final physical ``> `` echo line."""
 
     normalized_stdout = _normalize_newlines(stdout)
-    normalized_request = _normalize_newlines(request_text)
-    echo = f"> {normalized_request}"
-    search_from = 0
+    offset = 0
     final_echo_end: int | None = None
-
-    while True:
-        start = normalized_stdout.find(echo, search_from)
-        if start < 0:
-            break
-        end = start + len(echo)
-        is_line_start = start == 0 or normalized_stdout[start - 1] == "\n"
-        boundary = end
-        while boundary < len(normalized_stdout) and normalized_stdout[boundary] in " \t":
-            boundary += 1
-        is_line_end = boundary == len(normalized_stdout) or normalized_stdout[boundary] == "\n"
-        if is_line_start and is_line_end:
-            final_echo_end = boundary + (boundary < len(normalized_stdout))
-        search_from = start + 1
+    for line in normalized_stdout.splitlines(keepends=True):
+        if line.startswith("> "):
+            final_echo_end = offset + len(line)
+        offset += len(line)
 
     if final_echo_end is not None:
         return normalized_stdout[final_echo_end:]
-    if any(line.startswith("> ") for line in normalized_stdout.splitlines()):
-        raise LocalReaderOutputError(
-            "Reader stdout contains a prompt echo that does not exactly match the request"
-        )
     return normalized_stdout
 
 
@@ -281,10 +265,10 @@ def _balanced_top_level_objects(text: str, *, source: str) -> list[tuple[int, in
     return objects
 
 
-def _load_reader_stdout(stdout: str, *, request_text: str) -> dict[str, Any]:
+def _load_reader_stdout(stdout: str) -> dict[str, Any]:
     """Extract exactly one completion object from llama.cpp stdout, failing closed."""
 
-    completion = _reader_completion_after_prompt_echo(stdout, request_text=request_text)
+    completion = _reader_completion_after_prompt_echo(stdout)
     completion = _strip_known_reader_trailer(completion)
     objects = _balanced_top_level_objects(completion, source="Reader stdout")
     if len(objects) != 1:
@@ -600,7 +584,7 @@ class LocalReader:
                 f"local runtime exited with code {completed.returncode}: {stderr_tail}"
             )
 
-        payload = _load_reader_stdout(completed.stdout, request_text=request_text)
+        payload = _load_reader_stdout(completed.stdout)
         for key, expected in brief.items():
             if payload.get(key) != expected:
                 raise LocalReaderOutputError(f"Reader changed batch-brief envelope field {key!r}")
