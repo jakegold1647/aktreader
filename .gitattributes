@@ -5,3 +5,4 @@
 *.toml text eol=lf
 *.lock text eol=lf
 *.txt text eol=lf
+*.sha256 text eol=lf

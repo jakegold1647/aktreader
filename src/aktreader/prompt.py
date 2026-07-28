@@ -11,7 +11,7 @@ VERBATIM_SKILLS = (
     "cyrillic-paleography.md",
     "uncertainty-grading.md",
 )
-PROMPT_VERSION = "1.1.0"
+PROMPT_VERSION = "1.2.0"
 
 
 class PromptIntegrityError(ValueError):

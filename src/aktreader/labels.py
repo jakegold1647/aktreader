@@ -23,7 +23,7 @@ from typing import Any
 
 AUTHORITY_WARNING = "extraction is not authority — verify against the scan"
 CANONICAL_SCHEMA_VERSION = "1.0.0"
-SUPPORTED_PROMPT_VERSIONS = frozenset({"1.0.0", "1.1.0"})
+SUPPORTED_PROMPT_VERSIONS = frozenset({"1.0.0", "1.1.0", "1.2.0"})
 KNOWN_STALE_READER_A_PROMPT_SHA256 = (
     "a2e6c50ca84a2e0141dfc785680a79429372e54e882120b6d908cefdad110fe5"
 )

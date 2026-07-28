@@ -24,7 +24,7 @@ def test_single_reader_confident_grade_is_rejected() -> None:
         validate_instance(document, LABEL_SCHEMA)
 
 
-def test_reader_label_schema_accepts_v1_1_prompt_without_changing_schema_version() -> None:
+def test_reader_label_schema_accepts_released_prompts_without_changing_schema_version() -> None:
     source = ROOT / "labels" / "readerB" / "serock-1890-death-1.json"
     document = json.loads(source.read_text(encoding="utf-8"))
     document["prompt"]["version"] = "1.1.0"
@@ -33,7 +33,11 @@ def test_reader_label_schema_accepts_v1_1_prompt_without_changing_schema_version
     assert document["schema_version"] == "1.0.0"
 
     document["prompt"]["version"] = "1.2.0"
-    with pytest.raises(ContractValidationError, match="1.2.0"):
+    validate_instance(document, LABEL_SCHEMA)
+    assert document["schema_version"] == "1.0.0"
+
+    document["prompt"]["version"] = "1.3.0"
+    with pytest.raises(ContractValidationError, match="1.3.0"):
         validate_instance(document, LABEL_SCHEMA)
 
 

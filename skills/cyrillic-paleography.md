@@ -21,6 +21,22 @@ into Reader prompts; use the confusable pairs when adjudicating [unclear].
 - **Surname-critical**: ГОЛЬДШТЕЙНЪ vs ГОЛЬДФАРБЪ differ mid-word where cursive is worst —
   never call a surname from its first letters (the project's "Goldfarb trap").
 
+## Verified register-reading traps
+- **Line-break surname split** — Before treating a line-start token as a new person, check whether
+  the preceding line ends with a hyphenated name fragment. Test the joined token in the same
+  formula slot first and check later inflected repeats. A line break does not create a person. If
+  joined versus separate remains ambiguous, emit both full parses as `[unclear: X/Y]`.
+- **Read «умеръ»/«умерла» first in death acts** — Before parsing name, age, filiation, or
+  survivors, inspect the entire ending: «умеръ» has a р-descender plus terminal ъ; «умерла» has
+  р + л + а. Do not let a plausible name or survivor phrase choose the verb. If unresolved,
+  transcribe `[unclear: умеръ/умерла]`, mark sex `[unclear: male/female]`, and retain downstream
+  identity forks as candidates.
+- **Clerk-specific «-фельдъ» written with в** — Some hands render normalized «-feld» literally as
+  «-вельдъ», with в rather than ф. Preserve the ink in `original_script`; normalize to «-feld» in
+  `value` only when the whole surname supports it. This is not a general в/ф equivalence or
+  permission to supply unread strokes; if unresolved, retain both full surname readings as
+  `[unclear: X/Y]`.
+
 ## Numbers, dates, ages — written as WORDS
 - Ages: «тридцати лѣтъ» (of thirty years — genitive). Dates: «двадцать перваго января».
 - **Dual dating**: «девятаго (двадцать перваго) марта» = 9 March Julian / 21 March Gregorian
