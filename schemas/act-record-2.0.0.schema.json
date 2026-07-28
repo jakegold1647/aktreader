@@ -1,0 +1,849 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/act-record-2.0.0.json",
+  "title": "AKTREADER canonical act consensus record",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "record_id",
+    "record_kind",
+    "revision",
+    "parent_record_sha256",
+    "target",
+    "clerk_year",
+    "artifact",
+    "mentions",
+    "fields",
+    "derivation",
+    "validation",
+    "arbitration",
+    "compliance",
+    "correction_events",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "act-record-2\\.0\\.0\\.schema\\.json$"
+    },
+    "schema_version": {"const": "2.0.0"},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+    "record_kind": {"const": "DUAL_READER_CONSENSUS"},
+    "revision": {"type": "integer", "minimum": 1},
+    "parent_record_sha256": {
+      "oneOf": [
+        {"$ref": "#/$defs/sha256"},
+        {"type": "null"}
+      ]
+    },
+    "target": {"$ref": "#/$defs/target"},
+    "clerk_year": {"$ref": "#/$defs/clerkYear"},
+    "artifact": {"$ref": "#/$defs/artifact"},
+    "mentions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/mention"}
+    },
+    "fields": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_-]+)*$"
+      },
+      "additionalProperties": {"$ref": "#/$defs/consensusField"}
+    },
+    "derivation": {"$ref": "#/$defs/derivation"},
+    "validation": {"$ref": "#/$defs/validation"},
+    "arbitration": {"$ref": "#/$defs/arbitration"},
+    "compliance": {"$ref": "#/$defs/compliance"},
+    "correction_events": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/correctionEvent"}
+    },
+    "authority_warning": {
+      "const": "extraction is not authority — verify against the scan"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "width", "height", "coordinate_space"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0},
+        "y": {"type": "integer", "minimum": 0},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1},
+        "coordinate_space": {"const": "source_pixels"}
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": ["town", "fond", "year", "act_type", "act_no", "language"],
+      "properties": {
+        "town": {"type": "string", "minLength": 1},
+        "fond": {"type": "string", "minLength": 1},
+        "year": {"type": "integer", "minimum": 1800, "maximum": 2100},
+        "act_type": {
+          "enum": ["birth", "marriage", "death", "annex", "index_page"]
+        },
+        "act_no": {
+          "oneOf": [
+            {"type": "integer", "minimum": 1},
+            {"type": "null"}
+          ]
+        },
+        "language": {"enum": ["ru", "pl", "mixed", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "clerkYear": {
+      "type": "object",
+      "required": ["id", "binding_status", "source_label_ids"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "binding_status": {
+          "enum": ["VERIFIED", "SINGLE_READER_METADATA", "UNVERIFIED"]
+        },
+        "source_label_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifactRegion": {
+      "type": "object",
+      "required": [
+        "source_label_id",
+        "width_px",
+        "height_px",
+        "page_index",
+        "act_region"
+      ],
+      "properties": {
+        "source_label_id": {"type": "string", "minLength": 1},
+        "width_px": {"type": "integer", "minimum": 1},
+        "height_px": {"type": "integer", "minimum": 1},
+        "page_index": {"type": "integer", "minimum": 0},
+        "act_region": {"$ref": "#/$defs/bbox"}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["path", "sha256", "binding_status", "regions"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        },
+        "binding_status": {
+          "enum": ["VERIFIED", "SINGLE_READER_HASH", "PATH_ONLY_UNVERIFIED"]
+        },
+        "regions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/artifactRegion"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "mention": {
+      "type": "object",
+      "required": [
+        "mention_id",
+        "role",
+        "metadata_status",
+        "source_label_ids"
+      ],
+      "properties": {
+        "mention_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+#[a-z0-9-]+$"
+        },
+        "role": {
+          "enum": [
+            "principal",
+            "father",
+            "mother",
+            "spouse",
+            "spouse_father",
+            "spouse_mother",
+            "declarant",
+            "witness",
+            "officiant",
+            "survivor"
+          ]
+        },
+        "metadata_status": {
+          "enum": ["AGREED", "SINGLE_READER_METADATA"]
+        },
+        "source_label_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "reportedAlternative": {
+      "type": "object",
+      "required": ["value", "original_script"],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "candidate_id",
+        "source_kind",
+        "reader_label_id",
+        "reader_id",
+        "reader_family",
+        "reported",
+        "observation_state",
+        "value",
+        "original_script",
+        "reported_alternatives",
+        "source_span_ids"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "pattern": "^cand-[a-f0-9]{16}$"},
+        "source_kind": {
+          "enum": ["BLIND_READER_LABEL", "ARBITER_VOTE"]
+        },
+        "reader_label_id": {"type": ["string", "null"]},
+        "reader_id": {"type": "string", "minLength": 1},
+        "reader_family": {"type": "string", "minLength": 1},
+        "reported": {"type": "boolean"},
+        "observation_state": {
+          "enum": [
+            "PRESENT",
+            "ABSENT_ON_FORM",
+            "BLANK",
+            "STATED_UNKNOWN",
+            "ILLEGIBLE",
+            "UNVERIFIED",
+            "UNREPORTED"
+          ]
+        },
+        "value": {},
+        "original_script": {"type": ["string", "null"]},
+        "reported_alternatives": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/reportedAlternative"}
+        },
+        "source_span_ids": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "required": [
+        "status",
+        "confidence_eligible",
+        "confidence_cap",
+        "reason",
+        "arbitration_id"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "EXACT_AGREEMENT",
+            "DUAL_DISAGREEMENT",
+            "ARBITRATED_2_OF_3",
+            "ARBITRATION_ALL_DIVERGE"
+          ]
+        },
+        "confidence_eligible": {"type": "boolean"},
+        "confidence_cap": {
+          "enum": ["CONFIDENT_ELIGIBLE", "PROBABLE", "UNCLEAR"]
+        },
+        "reason": {"type": "string", "minLength": 1},
+        "arbitration_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "consensusField": {
+      "type": "object",
+      "required": [
+        "value",
+        "original_script",
+        "confidence",
+        "observation_state",
+        "candidates",
+        "resolution",
+        "validator_finding_ids"
+      ],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]},
+        "confidence": {"enum": ["PROBABLE", "UNCLEAR", null]},
+        "observation_state": {
+          "enum": [
+            "PRESENT",
+            "ABSENT_ON_FORM",
+            "BLANK",
+            "STATED_UNKNOWN",
+            "ILLEGIBLE",
+            "UNVERIFIED",
+            "UNRESOLVED"
+          ]
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/candidate"}
+        },
+        "resolution": {"$ref": "#/$defs/resolution"},
+        "validator_finding_ids": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^finding-[a-f0-9]{16}$"},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "confidence": {"const": "UNCLEAR"}
+            },
+            "required": ["confidence"]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "pattern": "^\\[unclear: .+\\]$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "observation_state": {
+                "enum": [
+                  "ABSENT_ON_FORM",
+                  "BLANK",
+                  "STATED_UNKNOWN",
+                  "ILLEGIBLE",
+                  "UNVERIFIED"
+                ]
+              }
+            },
+            "required": ["observation_state"]
+          },
+          "then": {
+            "properties": {
+              "value": {"type": "null"},
+              "confidence": {"type": "null"}
+            }
+          }
+        }
+      ]
+    },
+    "readerIdentity": {
+      "type": "object",
+      "required": ["reader_id", "reader_family", "reader_version", "mode"],
+      "properties": {
+        "reader_id": {"type": "string", "minLength": 1},
+        "reader_family": {"type": "string", "minLength": 1},
+        "reader_version": {"type": "string", "minLength": 1},
+        "mode": {"enum": ["subscription_session", "local"]}
+      },
+      "additionalProperties": false
+    },
+    "provenanceErratum": {
+      "type": "object",
+      "required": [
+        "code",
+        "kind",
+        "claimed_hash_field_status",
+        "claimed_sha256",
+        "coordinator_reported_sha256",
+        "canonical_sha256",
+        "prompt_version",
+        "status",
+        "effect",
+        "source"
+      ],
+      "properties": {
+        "code": {"const": "PROVENANCE_ERRATA"},
+        "kind": {"const": "STALE_INTERMEDIATE_PROMPT_HASH"},
+        "claimed_hash_field_status": {
+          "enum": ["ABSENT_IN_FILE", "PRESENT_STALE"]
+        },
+        "claimed_sha256": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        },
+        "coordinator_reported_sha256": {
+          "const": "a2e6c50ca84a2e0141dfc785680a79429372e54e882120b6d908cefdad110fe5"
+        },
+        "canonical_sha256": {
+          "const": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+        },
+        "prompt_version": {"const": "1.0.0"},
+        "status": {"const": "KNOWN_ERRATUM"},
+        "effect": {"const": "CONTENT_STANDS_PROMPT_BINDING_UNVERIFIED"},
+        "source": {
+          "const": "labels/consensus/FOR_SOL_wave002_brief.md#1-prompt-hash-drift-resolved"
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "claimed_hash_field_status": {"const": "ABSENT_IN_FILE"},
+            "claimed_sha256": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "claimed_hash_field_status": {"const": "PRESENT_STALE"},
+            "claimed_sha256": {
+              "const": "a2e6c50ca84a2e0141dfc785680a79429372e54e882120b6d908cefdad110fe5"
+            }
+          }
+        }
+      ]
+    },
+    "sourceLabel": {
+      "type": "object",
+      "required": [
+        "label_id",
+        "source_path",
+        "source_sha256",
+        "schema_kind",
+        "reader",
+        "blind_attested",
+        "blind_group_id",
+        "prompt_sha256",
+        "prompt_binding_verified",
+        "artifact_binding_verified",
+        "clerk_year_id",
+        "binding_notes",
+        "provenance_errata"
+      ],
+      "properties": {
+        "label_id": {"type": "string", "minLength": 1},
+        "source_path": {"type": ["string", "null"]},
+        "source_sha256": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        },
+        "schema_kind": {"enum": ["canonical", "legacy_reader_a"]},
+        "reader": {"$ref": "#/$defs/readerIdentity"},
+        "blind_attested": {"const": true},
+        "blind_group_id": {"type": ["string", "null"]},
+        "prompt_sha256": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        },
+        "prompt_binding_verified": {"type": "boolean"},
+        "artifact_binding_verified": {"type": "boolean"},
+        "clerk_year_id": {"type": ["string", "null"]},
+        "binding_notes": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "provenance_errata": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/provenanceErratum"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "pairAssessment": {
+      "type": "object",
+      "required": [
+        "prompt_binding_verified",
+        "artifact_binding_verified",
+        "blind_group_verified",
+        "clerk_year_verified",
+        "fully_verified",
+        "notes"
+      ],
+      "properties": {
+        "prompt_binding_verified": {"type": "boolean"},
+        "artifact_binding_verified": {"type": "boolean"},
+        "blind_group_verified": {"type": "boolean"},
+        "clerk_year_verified": {"type": "boolean"},
+        "fully_verified": {"type": "boolean"},
+        "notes": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "confidenceSummary": {
+      "type": "object",
+      "required": [
+        "field_count",
+        "exact_agreement_count",
+        "dual_disagreement_count",
+        "confident_eligible_count",
+        "probable_count",
+        "unclear_count",
+        "unresolved_state_count",
+        "validator_finding_count"
+      ],
+      "properties": {
+        "field_count": {"type": "integer", "minimum": 1},
+        "exact_agreement_count": {"type": "integer", "minimum": 0},
+        "dual_disagreement_count": {"type": "integer", "minimum": 0},
+        "confident_eligible_count": {"type": "integer", "minimum": 0},
+        "probable_count": {"type": "integer", "minimum": 0},
+        "unclear_count": {"type": "integer", "minimum": 0},
+        "unresolved_state_count": {"type": "integer", "minimum": 0},
+        "validator_finding_count": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "derivation": {
+      "type": "object",
+      "required": [
+        "method",
+        "policy_version",
+        "source_labels",
+        "pair_assessment",
+        "confidence_summary"
+      ],
+      "properties": {
+        "method": {"const": "blind-field-consensus"},
+        "policy_version": {"const": "1.0.0"},
+        "source_labels": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/sourceLabel"}
+        },
+        "pair_assessment": {"$ref": "#/$defs/pairAssessment"},
+        "confidence_summary": {"$ref": "#/$defs/confidenceSummary"}
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "finding_id",
+        "code",
+        "message",
+        "record_ids",
+        "field_paths",
+        "severity",
+        "blocks_confident",
+        "evidence"
+      ],
+      "properties": {
+        "finding_id": {"type": "string", "pattern": "^finding-[a-f0-9]{16}$"},
+        "code": {"type": "string", "minLength": 1},
+        "message": {"type": "string", "minLength": 1},
+        "record_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "field_paths": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "severity": {"type": "string", "minLength": 1},
+        "blocks_confident": {"type": "boolean"},
+        "evidence": {}
+      },
+      "additionalProperties": false
+    },
+    "validation": {
+      "type": "object",
+      "required": ["policy_version", "findings"],
+      "properties": {
+        "policy_version": {"const": "1.0.0"},
+        "findings": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/finding"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "publicCandidate": {
+      "type": "object",
+      "required": [
+        "candidate_id",
+        "observation_state",
+        "value",
+        "original_script",
+        "reported_alternatives"
+      ],
+      "properties": {
+        "candidate_id": {"type": "string", "pattern": "^cand-[a-f0-9]{16}$"},
+        "observation_state": {
+          "enum": [
+            "PRESENT",
+            "ABSENT_ON_FORM",
+            "BLANK",
+            "STATED_UNKNOWN",
+            "ILLEGIBLE",
+            "UNVERIFIED"
+          ]
+        },
+        "value": {},
+        "original_script": {"type": ["string", "null"]},
+        "reported_alternatives": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/reportedAlternative"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "arbitrationSpan": {
+      "type": "object",
+      "required": ["artifact_sha256", "bbox", "description"],
+      "properties": {
+        "artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "bbox": {"$ref": "#/$defs/bbox"},
+        "description": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "contextPolicy": {
+      "type": "object",
+      "required": [
+        "span_and_candidates_only",
+        "reader_identities_hidden",
+        "full_labels_hidden"
+      ],
+      "properties": {
+        "span_and_candidates_only": {"const": true},
+        "reader_identities_hidden": {"const": true},
+        "full_labels_hidden": {"const": true}
+      },
+      "additionalProperties": false
+    },
+    "arbitrationRequest": {
+      "type": "object",
+      "required": [
+        "arbitration_id",
+        "field_path",
+        "status",
+        "span_binding_status",
+        "source_spans",
+        "candidates",
+        "context_policy"
+      ],
+      "properties": {
+        "arbitration_id": {"type": "string", "pattern": "^arb-[a-f0-9]{16}$"},
+        "field_path": {"type": "string", "minLength": 1},
+        "status": {
+          "enum": ["PENDING", "RESOLVED_2_OF_3", "ALL_DIVERGE"]
+        },
+        "span_binding_status": {
+          "enum": ["VERIFIED", "PARTIAL", "UNVERIFIED"]
+        },
+        "source_spans": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/arbitrationSpan"}
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/publicCandidate"}
+        },
+        "context_policy": {"$ref": "#/$defs/contextPolicy"}
+      },
+      "additionalProperties": false
+    },
+    "arbiter": {
+      "type": "object",
+      "required": [
+        "reader_id",
+        "reader_family",
+        "reader_version",
+        "session_id",
+        "independence_basis",
+        "independence_attested",
+        "candidate_only_context",
+        "reader_identities_seen",
+        "full_labels_seen"
+      ],
+      "properties": {
+        "reader_id": {"type": "string", "minLength": 1},
+        "reader_family": {"type": "string", "minLength": 1},
+        "reader_version": {"type": "string", "minLength": 1},
+        "session_id": {"type": "string", "minLength": 1},
+        "independence_basis": {
+          "enum": ["DIFFERENT_MODEL", "FRESH_SESSION"]
+        },
+        "independence_attested": {"const": true},
+        "candidate_only_context": {"const": true},
+        "reader_identities_seen": {"const": false},
+        "full_labels_seen": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "vote": {
+      "type": "object",
+      "required": ["selected_candidate_id", "novel_candidate"],
+      "properties": {
+        "selected_candidate_id": {"type": ["string", "null"]},
+        "novel_candidate": {
+          "oneOf": [
+            {"$ref": "#/$defs/publicCandidate"},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "selected_candidate_id": {"type": "string"},
+            "novel_candidate": {"type": "null"}
+          }
+        },
+        {
+          "properties": {
+            "selected_candidate_id": {"type": "null"},
+            "novel_candidate": {"$ref": "#/$defs/publicCandidate"}
+          }
+        }
+      ]
+    },
+    "arbitrationEvent": {
+      "type": "object",
+      "required": [
+        "arbitration_id",
+        "field_path",
+        "occurred_at",
+        "arbiter",
+        "vote",
+        "outcome",
+        "result_confidence"
+      ],
+      "properties": {
+        "arbitration_id": {"type": "string", "pattern": "^arb-[a-f0-9]{16}$"},
+        "field_path": {"type": "string", "minLength": 1},
+        "occurred_at": {"type": "string", "format": "date-time"},
+        "arbiter": {"$ref": "#/$defs/arbiter"},
+        "vote": {"$ref": "#/$defs/vote"},
+        "outcome": {"enum": ["RESOLVED_2_OF_3", "ALL_DIVERGE"]},
+        "result_confidence": {"enum": ["PROBABLE", "UNCLEAR"]}
+      },
+      "additionalProperties": false
+    },
+    "arbitration": {
+      "type": "object",
+      "required": [
+        "policy_version",
+        "default_tie_break",
+        "requests",
+        "events"
+      ],
+      "properties": {
+        "policy_version": {"const": "1.0.0"},
+        "default_tie_break": {"const": "INDEPENDENT_THIRD_READER"},
+        "requests": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/arbitrationRequest"}
+        },
+        "events": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/arbitrationEvent"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "compliance": {
+      "type": "object",
+      "required": [
+        "restricted_sources_used",
+        "restricted_sources_status",
+        "privacy_decision",
+        "privacy_binding_status",
+        "training_eligible",
+        "training_basis"
+      ],
+      "properties": {
+        "restricted_sources_used": {"const": false},
+        "restricted_sources_status": {
+          "enum": ["ALL_READERS_ATTESTED", "SINGLE_READER_ATTESTED"]
+        },
+        "privacy_decision": {"enum": ["ALLOW", "REFUSE"]},
+        "privacy_binding_status": {
+          "enum": ["ALL_READERS_ATTESTED", "SINGLE_READER_ATTESTED"]
+        },
+        "training_eligible": {"type": "boolean"},
+        "training_basis": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "correctionEvent": {
+      "type": "object",
+      "required": [
+        "correction_id",
+        "field_path",
+        "occurred_at",
+        "prior_record_sha256",
+        "replacement",
+        "corrector",
+        "consent",
+        "source_crop_sha256"
+      ],
+      "properties": {
+        "correction_id": {"type": "string", "minLength": 1},
+        "field_path": {"type": "string", "minLength": 1},
+        "occurred_at": {"type": "string", "format": "date-time"},
+        "prior_record_sha256": {"$ref": "#/$defs/sha256"},
+        "replacement": {"$ref": "#/$defs/consensusField"},
+        "corrector": {
+          "type": "object",
+          "required": ["corrector_id", "verification_tier"],
+          "properties": {
+            "corrector_id": {"type": "string", "minLength": 1},
+            "verification_tier": {
+              "enum": ["HUMAN", "VERIFIED_EXPERT"]
+            }
+          },
+          "additionalProperties": false
+        },
+        "consent": {
+          "type": "object",
+          "required": ["status", "training_eligible"],
+          "properties": {
+            "status": {"enum": ["GRANTED", "DECLINED", "NOT_RECORDED"]},
+            "training_eligible": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "source_crop_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "artifacts": {
+    "executable": {
+      "path": "E:\\AKTREADER_LOCAL\\runtime\\llama-cli.exe",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "model": {
+      "path": "E:\\AKTREADER_LOCAL\\models\\qwen3.5-9b-q5.gguf",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "mmproj": {
+      "path": "E:\\AKTREADER_LOCAL\\models\\qwen3.5-mmproj.gguf",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "prompt": {
+      "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt.md",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "schema": {
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  },
+  "generation": {
+    "context_size": 16384,
+    "max_output_tokens": 8192,
+    "image_max_tokens": 4096,
+    "seed": 0,
+    "gpu_layers": "all",
+    "timeout_seconds": 1800
+  }
+}

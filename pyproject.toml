@@ -5,7 +5,9 @@ description = "A register-reading machine: scan in, graded genealogical evidence
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Jake Goldstein" }]
-dependencies = []
+dependencies = [
+    "jsonschema>=4.23,<5",
+]
 
 [project.scripts]
 aktreader = "aktreader.cli:main"

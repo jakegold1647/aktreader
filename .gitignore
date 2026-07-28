@@ -23,6 +23,8 @@ dist/
 !.env.example
 output/
 runs/
+runtime/
+models/
 
 # Editors and operating systems
 .idea/
