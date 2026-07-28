@@ -9,7 +9,7 @@
     "sha256": "5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5",
     "verification": "Coordinator observed exit 0 after the owner's OS-policy decision."
   },
-  "upstream_model": {
+  "official_reference_snapshot": {
     "repository": "Qwen/Qwen3.5-9B",
     "revision": "ef3d031a90d340a92d71f83ec17d054e100ce713",
     "source_url": "https://huggingface.co/Qwen/Qwen3.5-9B/tree/ef3d031a90d340a92d71f83ec17d054e100ce713",
