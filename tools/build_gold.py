@@ -220,6 +220,21 @@ def main() -> int:
             }
         ],
         "training_eligibility": "NONE_WITHOUT_RECORDED_CORRECTOR_CONSENT",
+        "quarantine": [
+            {
+                "record_id": "serock-1890-death-6",
+                "status": "HUMAN_VERIFICATION_REQUIRED",
+                "gold_ingest_allowed": False,
+                "reason": (
+                    "Identity-level Reader A/Reader B fork resolved only by third-reader "
+                    "2-of-3 consensus; sampled human verification is still mandatory."
+                ),
+                "source": (
+                    "labels/consensus/"
+                    "serock-1890-deaths-3-6_wave002_CONSENSUS.md#wave-002-resolved"
+                ),
+            }
+        ],
     }
     write_json(ROOT / "gold" / "manifest.json", manifest)
 

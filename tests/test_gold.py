@@ -46,6 +46,29 @@ def test_all_gold_clerk_years_are_permanently_sequestered() -> None:
     assert holdout["training_overlap_allowed"] is False
 
 
+def test_identity_fork_is_quarantined_outside_gold_pending_human_review() -> None:
+    manifest = json.loads((ROOT / "gold" / "manifest.json").read_text(encoding="utf-8"))
+    records = load_gold_records(ROOT)
+    quarantine = manifest["quarantine"]
+
+    assert quarantine == [
+        {
+            "record_id": "serock-1890-death-6",
+            "status": "HUMAN_VERIFICATION_REQUIRED",
+            "gold_ingest_allowed": False,
+            "reason": (
+                "Identity-level Reader A/Reader B fork resolved only by third-reader "
+                "2-of-3 consensus; sampled human verification is still mandatory."
+            ),
+            "source": (
+                "labels/consensus/"
+                "serock-1890-deaths-3-6_wave002_CONSENSUS.md#wave-002-resolved"
+            ),
+        }
+    ]
+    assert quarantine[0]["record_id"] not in {record["record_id"] for record in records}
+
+
 def test_gold_act_files_contain_no_restricted_source_provenance() -> None:
     forbidden = ("yad vashem", "ushmm", "arolsen")
 
