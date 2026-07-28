@@ -1,0 +1,306 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-2.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-2",
+  "created_at": "2026-07-28T13:58:41.1753348-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-01-02-wave-001",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.0.0",
+    "sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg",
+    "sha256": "3a4ed2604cf2f02b9a32009749869548b639803b3ed5204eafeeb84a6f55e886",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1400,
+      "y": 1110,
+      "width": 1460,
+      "height": 1240,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 2,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {"x": 1470, "y": 1140, "width": 1360, "height": 220, "coordinate_space": "source_pixels"},
+      "description": "Act number, venue, dual registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {"x": 1470, "y": 1280, "width": 1360, "height": 330, "coordinate_space": "source_pixels"},
+      "description": "Two declarants, ages, status or occupation, and residence"
+    },
+    "event": {
+      "bbox": {"x": 1470, "y": 1470, "width": 1360, "height": 250, "coordinate_space": "source_pixels"},
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {"x": 1470, "y": 1570, "width": 1360, "height": 250, "coordinate_space": "source_pixels"},
+      "description": "Deceased name, age, and sex-marking verb"
+    },
+    "filiation": {
+      "bbox": {"x": 1470, "y": 1700, "width": 1360, "height": 250, "coordinate_space": "source_pixels"},
+      "description": "Father, mother, and mother's maiden-name phrase"
+    },
+    "closing": {
+      "bbox": {"x": 1470, "y": 1880, "width": 1360, "height": 440, "coordinate_space": "source_pixels"},
+      "description": "Certification, signature formula, and signatures"
+    }
+  },
+  "mentions": [
+    {"mention_id": "serock-1890-death-2#principal", "role": "principal"},
+    {"mention_id": "serock-1890-death-2#father", "role": "father"},
+    {"mention_id": "serock-1890-death-2#mother", "role": "mother"},
+    {"mention_id": "serock-1890-death-2#declarant-0", "role": "declarant"},
+    {"mention_id": "serock-1890-death-2#declarant-1", "role": "declarant"}
+  ],
+  "transcription": {
+    "original_script": "№ 2. Состоялось въ посадѣ Сероцкѣ Января восьмаго/двадцатаго дня тысяча восемьсотъ девяностаго года въ [unclear: девять/десять часовъ] утра. Явился лично Израель Ицковичъ Гольдфарбъ, пятидесяти пяти лѣтъ, и Янкель Беренштейнъ, [unclear: школьникъ?], сорока лѣтъ отъ роду, жительствующія оба въ посадѣ Сероцкѣ, [unclear: евреи-мѣщане?]; объявили, что вчерашняго числа текущаго года въ восемь часовъ утра въ посадѣ Сероцкѣ умерла Хана Аукштукъ, девять мѣсяцевъ отъ роду, которая дочь Лайбы и Лаи, урожденной [unclear: Коркы/Корки]. По надлежащемъ удостовереніи о кончинѣ Ханы Аукштукъ актъ сей нами и свидѣтелями подписанъ.",
+    "translation": "Act 2. Registered in Serock on 8/20 January 1890 at [unclear: nine/ten o'clock] in the morning. Izrael Ickowicz Goldfarb, 55, and Jankiel Berenstein, [unclear: shkolnik?], 40, both residing in Serock, declared that on the previous day at 8 a.m. in Serock, Chana Auksztuk, age nine months, daughter of Lajba and Laja née [unclear: Korky/Korki], died. The act was signed after certification of the death."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal"],
+      "notes": []
+    },
+    "act_no": {
+      "value": 2,
+      "original_script": "№ 2",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration"],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration"],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {"gregorian": "1890-01-20", "julian": "1890-01-08"},
+      "original_script": "Января восьмаго/двадцатаго",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration"],
+      "notes": ["Both sides of the written dual date are retained."]
+    },
+    "event_date": {
+      "value": {"gregorian": "1890-01-19", "julian": "1890-01-07", "resolved_from_relative_phrase": true},
+      "original_script": "вчерашняго числа текущаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["event"],
+      "notes": ["Resolved as one day before both sides of the registration date; original relative phrase retained."]
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration", "event"],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "Chana Auksztuk",
+      "original_script": "Хана Аукштукъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal", "closing"],
+      "notes": ["Surname is repeated in the certification formula."]
+    },
+    "principal.age": {
+      "value": "9 months",
+      "original_script": "девять мѣсяцевъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal"],
+      "notes": []
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal"],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["The principal is an infant; no principal maiden-name slot is present."]
+    },
+    "father.name": {
+      "value": "Lajba",
+      "original_script": "Лайбы",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["The father's surname is not repeated; none is supplied by inference."]
+    },
+    "mother.name": {
+      "value": "Laja",
+      "original_script": "Лаи",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "[unclear: Korky/Korki]",
+      "original_script": "[unclear: Коркы/Корки]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {"value": "Korky", "original_script": "Коркы"},
+        {"value": "Korki", "original_script": "Корки"}
+      ],
+      "source_span_ids": ["filiation"],
+      "notes": ["The phrase урожденной is legible; the final maiden-name glyph remains ambiguous."]
+    },
+    "declarants.0.name": {
+      "value": "Izrael Ickowicz Goldfarb",
+      "original_script": "Израель Ицковичъ Гольдфарбъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "55 years",
+      "original_script": "пятидесяти пяти лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующія оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": ["The residence phrase applies to both declarants."]
+    },
+    "declarants.1.name": {
+      "value": "Jankiel Berenstein",
+      "original_script": "Янкель Беренштейнъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "40 years",
+      "original_script": "сорока лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "[unclear: shkolnik?]",
+      "original_script": "[unclear: школьникъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {"value": "shkolnik", "original_script": "школьникъ"}
+      ],
+      "source_span_ids": ["declarants"],
+      "notes": ["One shaky candidate; no occupational expansion is asserted."]
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующія оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": ["The residence phrase applies to both declarants."]
+    },
+    "deceased_left_behind": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["No survivor clause is present for the nine-month-old principal."]
+    },
+    "signatures_note": {
+      "value": "signed by the registrar and the declarants or witnesses",
+      "original_script": "актъ сей нами и свидѣтелями подписанъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["closing"],
+      "notes": ["Two non-registrar signatures are visible."]
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": ["registration", "closing"],
+      "notes": ["No marginal annotation is visible for this act."]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

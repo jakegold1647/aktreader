@@ -1,0 +1,307 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-1.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-1",
+  "created_at": "2026-07-28T13:58:41.1753348-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-01-02-wave-001",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.0.0",
+    "sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg",
+    "sha256": "3a4ed2604cf2f02b9a32009749869548b639803b3ed5204eafeeb84a6f55e886",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1400,
+      "y": 40,
+      "width": 1460,
+      "height": 1170,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 1,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {"x": 1470, "y": 100, "width": 1360, "height": 210, "coordinate_space": "source_pixels"},
+      "description": "Act number, venue, dual registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {"x": 1470, "y": 260, "width": 1360, "height": 330, "coordinate_space": "source_pixels"},
+      "description": "Two declarants, ages, status or occupation, and residence"
+    },
+    "event": {
+      "bbox": {"x": 1470, "y": 510, "width": 1360, "height": 280, "coordinate_space": "source_pixels"},
+      "description": "Death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {"x": 1470, "y": 700, "width": 1360, "height": 260, "coordinate_space": "source_pixels"},
+      "description": "Deceased name, age, and sex-marking verb"
+    },
+    "filiation": {
+      "bbox": {"x": 1470, "y": 830, "width": 1360, "height": 210, "coordinate_space": "source_pixels"},
+      "description": "Parents and surviving husband"
+    },
+    "closing": {
+      "bbox": {"x": 1470, "y": 980, "width": 1360, "height": 220, "coordinate_space": "source_pixels"},
+      "description": "Certification, signature formula, and signatures"
+    }
+  },
+  "mentions": [
+    {"mention_id": "serock-1890-death-1#principal", "role": "principal"},
+    {"mention_id": "serock-1890-death-1#father", "role": "father"},
+    {"mention_id": "serock-1890-death-1#mother", "role": "mother"},
+    {"mention_id": "serock-1890-death-1#declarant-0", "role": "declarant"},
+    {"mention_id": "serock-1890-death-1#declarant-1", "role": "declarant"},
+    {"mention_id": "serock-1890-death-1#survivor-0", "role": "survivor"}
+  ],
+  "transcription": {
+    "original_script": "№ 1. Состоялось въ посадѣ Сероцкѣ Января перваго/тринадцатаго тысяча восемьсотъ девяностаго года въ одиннадцать часовъ утра. Явился лично Израель Ицковичъ Гольдфарбъ, пятидесяти пяти лѣтъ, и Янкель Беренштейнъ, [unclear: школьникъ?], сорока лѣтъ отъ роду, жительствующія оба въ посадѣ Сероцкѣ, [unclear: евреи-мѣщане?]; объявили, что тридцатаго Декабря тысяча восемьсотъ восемьдесятъ девятаго года въ девять часовъ утра въ посадѣ Сероцкѣ умерла Фрума [unclear: Маловянчикъ/Маловальчикъ], шестьдесятъ одинъ лѣтъ отъ роду, которая дочь покойныхъ родителей Абрама и Цифры, супруговъ Антоновичъ. Оставивъ послѣ себя мужа Юдка. По надлежащемъ удостовереніи о кончинѣ Фрумы [unclear: Маловянчикъ/Маловальчикъ] актъ сей нами и свидѣтелями подписанъ.",
+    "translation": "Act 1. Registered in Serock on 1/13 January 1890 at 11 a.m. Izrael Ickowicz Goldfarb, 55, and Jankiel Berenstein, [unclear: shkolnik?], 40, both residing in Serock, declared that on 30 December 1889 at 9 a.m. in Serock, Fruma [unclear: Małowiańczyk/Małowalczyk], age 61, daughter of the late Abram and Cyfra, spouses Antonowicz, died, leaving her husband Judka. The act was signed after certification of the death."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal"],
+      "notes": []
+    },
+    "act_no": {
+      "value": 1,
+      "original_script": "№ 1",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration"],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration"],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {"gregorian": "1890-01-13", "julian": "1890-01-01"},
+      "original_script": "Января перваго/тринадцатаго",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration"],
+      "notes": ["Both sides of the written dual date are retained."]
+    },
+    "event_date": {
+      "value": {"gregorian": "1890-01-11", "julian": "1889-12-30", "gregorian_derived": true},
+      "original_script": "тридцатаго Декабря тысяча восемьсотъ восемьдесятъ девятаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["event"],
+      "notes": ["Only the Julian date is written; Gregorian date is a marked 12-day derivation."]
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["registration", "event"],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "[unclear: Fruma Małowiańczyk/Fruma Małowalczyk]",
+      "original_script": "[unclear: Фрума Маловянчикъ/Фрума Маловальчикъ]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {"value": "Fruma Małowiańczyk", "original_script": "Фрума Маловянчикъ"},
+        {"value": "Fruma Małowalczyk", "original_script": "Фрума Маловальчикъ"}
+      ],
+      "source_span_ids": ["principal", "closing"],
+      "notes": ["The surname is repeated, but the middle cursive cluster remains ambiguous."]
+    },
+    "principal.age": {
+      "value": "61 years",
+      "original_script": "шестьдесятъ одинъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal"],
+      "notes": []
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["principal"],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["The act gives the parents' shared surname but does not state the deceased's née name."]
+    },
+    "father.name": {
+      "value": "Abram Antonowicz",
+      "original_script": "Абрама ... супруговъ Антоновичъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["Surname is written once for the parental couple."]
+    },
+    "mother.name": {
+      "value": "Cyfra Antonowicz",
+      "original_script": "Цифры, супруговъ Антоновичъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["Surname is written once for the parental couple."]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": ["No урожденной or equivalent maiden-name phrase is present."]
+    },
+    "declarants.0.name": {
+      "value": "Izrael Ickowicz Goldfarb",
+      "original_script": "Израель Ицковичъ Гольдфарбъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "55 years",
+      "original_script": "пятидесяти пяти лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующія оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": ["The residence phrase applies to both declarants."]
+    },
+    "declarants.1.name": {
+      "value": "Jankiel Berenstein",
+      "original_script": "Янкель Беренштейнъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "40 years",
+      "original_script": "сорока лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "[unclear: shkolnik?]",
+      "original_script": "[unclear: школьникъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {"value": "shkolnik", "original_script": "школьникъ"}
+      ],
+      "source_span_ids": ["declarants"],
+      "notes": ["One shaky candidate; no occupational expansion is asserted."]
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующія оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["declarants"],
+      "notes": ["The residence phrase applies to both declarants."]
+    },
+    "deceased_left_behind": {
+      "value": {"mention_id": "serock-1890-death-1#survivor-0", "relationship": "husband", "name": "Judka"},
+      "original_script": "Оставивъ послѣ себя мужа Юдка",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["filiation"],
+      "notes": []
+    },
+    "signatures_note": {
+      "value": "signed by the registrar and the declarants or witnesses",
+      "original_script": "актъ сей нами и свидѣтелями подписанъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": ["closing"],
+      "notes": ["Two non-registrar signatures are visible."]
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": ["registration", "closing"],
+      "notes": ["No marginal annotation is visible for this act."]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
