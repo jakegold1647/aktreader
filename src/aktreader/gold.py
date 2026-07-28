@@ -120,8 +120,13 @@ def validate_gold_record(record: dict[str, Any]) -> None:
         )
 
     record_id = record["record_id"]
-    if record["schema_version"] != "1.0.0":
+    if record["schema_version"] != "1.1.0":
         raise GoldValidationError(f"{record_id}: unsupported schema version")
+    clerk_year = record["register"].get("clerk_year")
+    if not isinstance(clerk_year, dict) or not clerk_year.get("id"):
+        raise GoldValidationError(f"{record_id}: clerk-year metadata is required")
+    if clerk_year.get("basis") not in {"IDENTIFIED_CLERK", "REGISTER_YEAR_PROXY"}:
+        raise GoldValidationError(f"{record_id}: invalid clerk-year basis")
     if record["authority_warning"] != "extraction is not authority — verify against the scan":
         raise GoldValidationError(f"{record_id}: authority warning changed or missing")
     if record["provenance"].get("restricted_sources_used") is not False:
@@ -155,6 +160,7 @@ def validate_corpus(records: list[dict[str, Any]]) -> dict[str, Any]:
 
     return {
         "total": len(records),
+        "clerk_years": len({record["register"]["clerk_year"]["id"] for record in records}),
         "towns": dict(sorted(Counter(record["register"]["town"] for record in records).items())),
         "languages": dict(
             sorted(Counter(record["register"]["language"] for record in records).items())

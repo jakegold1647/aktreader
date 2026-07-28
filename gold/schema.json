@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aktreader.org/schema/gold-act-1.0.0.json",
+  "$id": "https://aktreader.org/schema/gold-act-1.1.0.json",
   "title": "AKTREADER gold act",
   "description": "A source-backed civil-register act label. NOT_ANNOTATED means the verification note did not label the field; it says nothing about the act form.",
   "type": "object",
@@ -18,18 +18,28 @@
   ],
   "properties": {
     "$schema": {"type": "string"},
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "record_id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
     "register": {
       "type": "object",
-      "required": ["town", "fond", "year", "act_type", "act_no", "language"],
+      "required": ["town", "fond", "year", "act_type", "act_no", "language", "clerk_year"],
       "properties": {
         "town": {"type": "string"},
         "fond": {"type": "string"},
         "year": {"type": "integer"},
         "act_type": {"enum": ["birth", "marriage", "death", "annex"]},
         "act_no": {"type": "integer", "minimum": 1},
-        "language": {"enum": ["ru", "pl", "mixed", "unknown"]}
+        "language": {"enum": ["ru", "pl", "mixed", "unknown"]},
+        "clerk_year": {
+          "type": "object",
+          "required": ["id", "basis", "clerk_id"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "basis": {"enum": ["IDENTIFIED_CLERK", "REGISTER_YEAR_PROXY"]},
+            "clerk_id": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     },

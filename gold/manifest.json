@@ -1,8 +1,9 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "built_on": "2026-07-28",
   "coverage": {
     "total": 36,
+    "clerk_years": 21,
     "towns": {
       "Pułtusk": 7,
       "Serock": 29

@@ -14,6 +14,8 @@ def test_gold_corpus_contract_and_coverage() -> None:
     assert coverage["towns"] == {"Pułtusk": 7, "Serock": 29}
     assert coverage["act_types"] == {"birth": 13, "death": 18, "marriage": 5}
     assert coverage["languages"] == {"ru": 36}
+    assert coverage["clerk_years"] > 0
+    assert all(record["register"]["clerk_year"]["id"] for record in records)
 
 
 def test_manifest_matches_validated_corpus() -> None:
@@ -32,6 +34,16 @@ def test_spot_check_manifest_names_five_existing_records() -> None:
 
     assert len(spot_checks["records"]) == 5
     assert {item["record_id"] for item in spot_checks["records"]}.issubset(record_ids)
+
+
+def test_all_gold_clerk_years_are_permanently_sequestered() -> None:
+    records = load_gold_records(ROOT)
+    holdout = json.loads((ROOT / "gold" / "clerk_year_holdout.json").read_text(encoding="utf-8"))
+    record_clerk_years = {record["register"]["clerk_year"]["id"] for record in records}
+
+    assert set(holdout["holdout_clerk_year_ids"]) == record_clerk_years
+    assert set(holdout["record_ids"]) == {record["record_id"] for record in records}
+    assert holdout["training_overlap_allowed"] is False
 
 
 def test_gold_act_files_contain_no_restricted_source_provenance() -> None:

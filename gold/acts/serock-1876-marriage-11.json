@@ -1,6 +1,6 @@
 {
   "$schema": "../schema.json",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "record_id": "serock-1876-marriage-11",
   "register": {
     "town": "Serock",
@@ -8,7 +8,12 @@
     "year": 1876,
     "act_type": "marriage",
     "act_no": 11,
-    "language": "ru"
+    "language": "ru",
+    "clerk_year": {
+      "id": "73-826-0|serock|1876|clerk-unknown",
+      "basis": "REGISTER_YEAR_PROXY",
+      "clerk_id": null
+    }
   },
   "artifact": {
     "status": "LOCAL",

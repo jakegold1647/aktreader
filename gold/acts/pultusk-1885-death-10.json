@@ -1,6 +1,6 @@
 {
   "$schema": "../schema.json",
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "record_id": "pultusk-1885-death-10",
   "register": {
     "town": "Pułtusk",
@@ -8,7 +8,12 @@
     "year": 1885,
     "act_type": "death",
     "act_no": 10,
-    "language": "ru"
+    "language": "ru",
+    "clerk_year": {
+      "id": "84|putusk|1885|clerk-unknown",
+      "basis": "REGISTER_YEAR_PROXY",
+      "clerk_id": null
+    }
   },
   "artifact": {
     "status": "NOT_LOCALIZED",

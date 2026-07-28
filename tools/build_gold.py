@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -131,7 +132,7 @@ def make_record(spec: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "$schema": SCHEMA_REF,
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "record_id": spec["record_id"],
         "register": {
             "town": spec["town"],
@@ -140,6 +141,7 @@ def make_record(spec: dict[str, Any]) -> dict[str, Any]:
             "act_type": spec["act_type"],
             "act_no": spec["act_no"],
             "language": spec.get("language", "ru"),
+            "clerk_year": clerk_year(spec),
         },
         "artifact": {
             "status": "LOCAL" if artifact_path is not None else "NOT_LOCALIZED",
@@ -171,6 +173,19 @@ def make_record(spec: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def clerk_year(spec: dict[str, Any]) -> dict[str, Any]:
+    """Return a conservative handwriting-group proxy without claiming a known clerk."""
+    normalized_town = unicodedata.normalize("NFKD", spec["town"])
+    town_slug = "".join(character for character in normalized_town if character.isascii())
+    town_slug = "-".join(town_slug.lower().split())
+    fond_slug = spec["fond"].replace("/", "-")
+    return {
+        "id": f"{fond_slug}|{town_slug}|{spec['year']}|clerk-unknown",
+        "basis": "REGISTER_YEAR_PROXY",
+        "clerk_id": None,
+    }
+
+
 def write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -189,7 +204,7 @@ def main() -> int:
         write_json(ACTS_DIR / f"{record['record_id']}.json", record)
 
     manifest = {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "built_on": "2026-07-28",
         "coverage": coverage,
         "restricted_sources_used": False,
@@ -207,6 +222,22 @@ def main() -> int:
         "training_eligibility": "NONE_WITHOUT_RECORDED_CORRECTOR_CONSENT",
     }
     write_json(ROOT / "gold" / "manifest.json", manifest)
+
+    holdout = {
+        "schema_version": "1.0.0",
+        "policy": "CLERK_YEAR_SEQUESTERED_EVALUATION_ONLY",
+        "created_on": "2026-07-28",
+        "holdout_clerk_year_ids": sorted(
+            {record["register"]["clerk_year"]["id"] for record in records}
+        ),
+        "record_ids": sorted(record["record_id"] for record in records),
+        "training_overlap_allowed": False,
+        "note": (
+            "All P1 gold records are evaluation-only and correction consent is not recorded; "
+            "future training exports must reject every listed clerk-year."
+        ),
+    }
+    write_json(ROOT / "gold" / "clerk_year_holdout.json", holdout)
 
     spot_ids = [
         "serock-1876-marriage-11",
