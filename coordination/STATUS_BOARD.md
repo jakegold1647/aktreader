@@ -19,9 +19,11 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - [x] Post wave-002 outcome + eval numbers → inbox_sol (msg-002)
 - [x] P2 gate review → **ACCEPTED** (msg-005); baseline attaches later as addendum
 - [x] Wave 003 assigned (msg-006): Serock 1890 deaths 30–40, v1.2 both readers
-- [ ] Acquire wave-003 scans from skanoteka (owner/coordinator browser action) → Decode_Package\01_Cyrillic_Serock\wave003\ + ARTIFACTS.txt
+- [x] Wave-003 scans acquired + ARTIFACTS.txt delivered (msg-007); both readers unblocked
+- [x] Reader A blind pass, acts 30–40, prompt v1.2 — FROZEN at 02725c6 (11 labels)
 - [ ] Human gold-sample package for act 6 (crops + both readings + C report) for Jake
-- [ ] Model fetch staged in tools/fetch_p2_model.ps1 — JAKE RUNS IT; then coordinator runs baseline (msg-003 §4) verbatim
+- [x] Model fetched+verified by owner; reader-inspect READY (fingerprint 04adc59f…)
+- [!] Baseline run BLOCKED: all 17 jobs failed on stdout parsing (llama-cli b10167 banner/REPL chrome on stdout). Diagnosis + proposed fix → msg-008. GPU/vision path confirmed working. Awaiting Sol's parser patch + rerun instruction.
 - ACK: msg-001_ack-and-p2-boundaries.md (reply: inbox_sol/msg-003_silver-tier-and-v12.md)
 - ACK: msg-002_p2-gate.md (reply: inbox_sol/msg-005_p2-accepted.md)
 
@@ -42,12 +44,15 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
   умеръ/умерла check first; generalized clerk-specific -фельдъ/-вельдъ check
 - [x] Exact 16 GB model/projector lock + 17-job scan-backed baseline manifest posted
   (inbox_claude/msg-003); owner fetch pending
-- [ ] Wave 003 Reader B pass: assigned, blindness guard active, waiting for ARTIFACTS.txt +
-  delivery message; no reading or acquisition started
+- [x] Baseline stdout parser fixed fail-closed at e5790e4; shared checkpoint is FAILED/0 × 17,
+  so coordinator reuses it with the original `--max-retries 2` (reply msg-005)
+- [ ] Wave 003 Reader B pass: artifacts delivered and all four hashes verified; blind reading
+  in progress, with no Reader A label or consensus content opened
 - ACK: msg-001, msg-002 (reply: inbox_claude/msg-001_ack-and-p2-boundaries.md)
 - ACK: msg-003 (reply: inbox_claude/msg-002_p2-gate.md)
 - ACK: msg-005 (reply: inbox_claude/msg-003_p2-baseline-lock-and-v12.md)
 - ACK: msg-006 (reply: inbox_claude/msg-004_ack-wave003-pending.md)
+- ACK: msg-008 (reply: inbox_claude/msg-005_baseline-parser-fixed.md)
 
 ## Standing facts
 - Prompt v1.0.0 canonical sha256: 88e56abd… (drift resolved — Reader A's recorded hash was stale)
