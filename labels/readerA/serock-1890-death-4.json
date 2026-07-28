@@ -1,0 +1,26 @@
+{
+  "reader": {"identity": "claude-fable-5 (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.0.0", "prompt_sha256": "A2E6C50CA84A2E0141DFC785680A79429372E54E882120B6D908CEFDAD110FE5"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg", "position": "left page, lower act (No.4)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 4, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-02-07 13:00", "original_script": "седьмого Февраля тысяча восемьсотъ девяностаго года въ первомъ часу по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "event_date": {"value": "1890-02-06 18:00", "original_script": "вчерашняго числа въ шесть часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Pinkus Lejzor Tykulski", "original_script": "Пинкусъ Лейзоръ Тыкульскій", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "compound given name — one person"},
+      "age": {"value": "6 months", "original_script": "шести мѣсяцевъ отъ роду имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+    },
+    "father": {"name": {"value": "Moszek Gdala Tykulski", "original_script": "сынъ Мошка Гдали ... супруговъ Тыкульскихъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Chaja Frajda", "original_script": "матери Хаи Фрайды", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+               "maiden_name": {"value": "[unclear: Pjenik/Psznik]", "original_script": "урожденной П[unclear]никъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "SAME surname-shape as declarant 1 — if identical, declarant 1 is plausibly the maternal grandfather; kinship NOT asserted, surname match flagged only"}},
+    "declarants": [
+      {"name": "Josek [unclear: Pjenik/Psznik]", "original_script": "Іосекъ П[unclear]никъ", "occupation": "shopkeeper (лавочникъ)", "age": 60, "confidence": "UNCLEAR"},
+      {"name": "Berk [unclear: Kaltun/Kaltuk]", "original_script": "Беркъ Кал[unclear: тунъ/тукъ]", "occupation": "attendant (служитель)", "age": 65, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew/Przylubski]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by registrar and ONE witness per closing formula (одними свидѣтелемъ); one declarant signature visible", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 7 February 1890, at 1 PM. Appeared personally Josek P[unclear]nik, shopkeeper, 60, and Berk Kaltun[?], attendant, 65, both residing in posad Serock, and declared that yesterday at 6 PM in posad Serock died a male child named Pinkus Lejzor Tykulski, son of Moszek Gdala and of the mother Chaja Frajda née P[unclear]nik, the Tykulski spouses, six months of age. Upon eyewitness certification of the child's death this act was read to the witnesses and signed by us and one witness.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -320,3 +320,12 @@ Supersedes the API-backend portions of §12/§13's bootstrap plan. **No API keys
 - Eval integrity unchanged: human-verified, clerk-year-sequestered holdouts (§13, corpus
   plan). Frontier-model leaderboard comparisons become OPTIONAL nice-to-haves, not
   dependencies.
+
+### §13 amendment (28 Jul 2026, Jake): third-reader arbitration is the DEFAULT tie-break
+Human arbitration of dual-reader disagreements is OPTIONAL, not required. Default resolution:
+a THIRD independent reader (different model or fresh session, shown only the disputed span and
+the pooled candidates, never the readers' identities or full labels) votes; 2-of-3 agreement
+promotes the field to consensus-PROBABLE. Fields where all three diverge stay [unclear].
+Humans remain mandatory only where they always were: the sampled verification of gold/eval
+records and the clerk-year-sequestered holdouts. This keeps the human budget tiny and spent
+where it counts.

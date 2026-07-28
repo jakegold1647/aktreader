@@ -1,0 +1,26 @@
+{
+  "reader": {"identity": "claude-fable-5 (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.0.0", "prompt_sha256": "A2E6C50CA84A2E0141DFC785680A79429372E54E882120B6D908CEFDAD110FE5"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg", "position": "right page, lower act (No.6)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 6, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-02-27 10:00", "original_script": "двадцать седьмого Февраля тысяча восемьсотъ девяностаго года въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "event_date": {"value": "1890-02-26 05:00", "original_script": "вчерашняго числа въ пять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Boruch Moszko Herszfeld", "original_script": "Борухъ Мошко Гершфельдъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "compound given name; closing formula repeats 'Гершфельда Боруха Мошко' confirming"},
+      "age": {"value": 50, "original_script": "пятидесяти лѣтъ отъ роду имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+    },
+    "father": {"name": {"value": "Berek", "original_script": "сынъ покойныхъ родителей Берка", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents stated deceased (покойныхъ); filiation of a 50-year-old — formula-grade caution applies"}},
+    "mother": {"name": {"value": "[unclear: Chana/Hana/Gala]", "original_script": "и [unclear: Ханы/Гали] супруговъ Гершфельдъ", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": "widowed wife Chana and [unclear: seven] children", "original_script": "Оставивъ послѣ себя жену Хану и се[unclear: меро/мь] дѣтей", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "number of children read as 'семеро/семь' (seven) — smudged, needs arbitration; wife's name Chana clearer than mother's similar name above"},
+    "declarants": [
+      {"name": "[unclear: Hersz/Gersz] Lew", "original_script": "[unclear: Чершекъ/Гершекъ] Левъ; signature below reads Гершъ Левъ", "occupation": "trader (торговщикъ)", "age": 28, "confidence": "PROBABLE", "note": "signature resolves toward Hersz Lew"},
+      {"name": "Szlama [unclear: Kuraker/Kurakier]", "original_script": "Шляма Курак[unclear: е]ръ", "occupation": "house owner (владѣлецъ дома)", "age": 45, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew/Przylubski]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "both declarant signatures visible (Гершъ Левъ; Шляма Кураке[ръ]) — literate", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 27 February 1890, 10 AM. Appeared personally Hersz Lew, trader, 28, and Szlama Kuraker[?], house owner, 45, both residing in posad Serock, and declared that yesterday at 5 AM in posad Serock died Boruch Moszko Herszfeld, 50 years of age, son of the late parents Berek and [unclear: Chana], the Herszfeld spouses. He left behind his wife Chana and [unclear: seven] children. Upon eyewitness certification of the death of Boruch Moszko Herszfeld this act was signed by us and the witnesses.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

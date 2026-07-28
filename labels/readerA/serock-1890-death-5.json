@@ -1,0 +1,26 @@
+{
+  "reader": {"identity": "claude-fable-5 (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.0.0", "prompt_sha256": "A2E6C50CA84A2E0141DFC785680A79429372E54E882120B6D908CEFDAD110FE5"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg", "position": "right page, upper act (No.5); page carries folio number 56 top-right"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 5, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-02-18 09:00", "original_script": "восемьнадцатаго Февраля тысяча восемьсотъ девяностаго года въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "event_date": {"value": "1890-02-17 10:00", "original_script": "вчерашняго числа въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Chil [unclear: Wewel/Welwel] [unclear: Cykor/Cykoria]", "original_script": "Хилъ [unclear: Ве(л)овель] Цикор[unclear: ъ/ія]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "compound given name Chil Welwel plausible (Welwel = Yiddish for Wolf); surname rare"},
+      "age": {"value": "2 weeks", "original_script": "двѣ недѣли отъ роду имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+    },
+    "father": {"name": {"value": "Chaim Jankel", "original_script": "сынъ Хаима Янкеля", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Dwojra", "original_script": "матери Двойры", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+               "maiden_name": {"value": "Antoszewicz", "original_script": "урожденной Антошевичъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "clearly legible here — relevant to act 1/1890's [unclear: Litoszewicz/Antoszewicz]: same-register recurrence supports the Antoszewicz reading there (cross-act observation, consensus-stage evidence only)"}},
+    "declarants": [
+      {"name": "Jankel Borensztejn", "original_script": "Янкель Боренштейнъ", "occupation": "szkolnik (школьникъ)", "age": 40, "confidence": "PROBABLE", "note": "same person as acts 1–2 declarant; age 40 consistent within register year"},
+      {"name": "Lewek [unclear: Kendzior/Kendior]", "original_script": "Левекъ Кендз[unclear: іо/о]ръ", "occupation": "shoemaker (сапожникъ)", "age": 50, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew/Przylubski]", "confidence": "UNCLEAR", "note": "same signature-shape as acts 1–4"},
+    "signatures_note": {"value": "signed by registrar and one witness (Я Боренштейнъ signature visible)", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 18 February 1890, 9 AM. Appeared personally Jankel Borensztejn, szkolnik, 40, and Lewek Kendzior[?], shoemaker, 50, both residing in posad Serock, and declared that yesterday at 10 AM in posad Serock died a male child named Chil Welwel[?] Cykor[?], son of Chaim Jankel and of the mother Dwojra née Antoszewicz; two weeks of age. Upon eyewitness certification of the child's death this act was read to the witnesses and signed by us and one witness.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

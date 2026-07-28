@@ -1,0 +1,25 @@
+{
+  "reader": {"identity": "claude-fable-5 (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.0.0", "prompt_sha256": "A2E6C50CA84A2E0141DFC785680A79429372E54E882120B6D908CEFDAD110FE5"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg", "position": "left page, upper act (No.3)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 3, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-01-30 15:00", "original_script": "тридцатаго Января тысяча восемьсотъ девяностаго года въ три часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date as written; no dual date present in this act"},
+    "event_date": {"value": "1890-01-29 15:00", "original_script": "вчерашняго числа въ три часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "'yesterday' resolved against registration date; derived normalization kept separate from ink"},
+    "principal": {
+      "name": {"value": "Josek Zajczyk", "original_script": "Іосекъ Зайчикъ", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "age": {"value": "4 weeks", "original_script": "четыре недѣли отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+    },
+    "father": {"name": {"value": "[unclear: Szepa/Szejna]", "original_script": "сынъ Ше[unclear: п/йн]ы", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "short form; if Шейны, could be the MOTHER's name with father unstated — slot ambiguity flagged for Reader B arbitration"}},
+    "mother": {"name": {"value": "stated unknown", "original_script": "и матери неизвѣстной", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "the clerk wrote the mother as unknown — STATED_UNKNOWN, not blank/absent"}},
+    "declarants": [
+      {"name": "Lejb [unclear: Uksztukalski/Auksztukalski]", "original_script": "Лейбъ Укштукальскій", "occupation": "tailor (портной)", "age": 49, "confidence": "PROBABLE"},
+      {"name": "Mortka [unclear: Wolman/Wolmark]", "original_script": "Мортка Воль[unclear: манъ/маркъ]", "occupation": "watchmaker (часовщикъ)", "age": 50, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew/Przylubski]", "original_script": "Чиновникъ Гражданскаго состоянія — signature", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "declarant signatures present below act, partly smudged", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 30 January 1890, 3 PM. Appeared personally Lejb Uksztukalski, tailor, 49, and Mortka Wolman[?], watchmaker, 50, both residing in posad Serock, and declared that yesterday at 3 PM in posad Serock died a male child named Josek Zajczyk, son of [unclear: Szepa], the mother unknown, four weeks of age. Upon eyewitness certification of the child's death this act was read to the witnesses and signed by us and them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
