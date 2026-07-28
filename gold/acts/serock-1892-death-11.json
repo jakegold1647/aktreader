@@ -1,0 +1,730 @@
+{
+  "$schema": "../schema.json",
+  "schema_version": "1.0.0",
+  "record_id": "serock-1892-death-11",
+  "register": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1892,
+    "act_type": "death",
+    "act_no": 11,
+    "language": "ru"
+  },
+  "artifact": {
+    "status": "LOCAL",
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1892_deaths_11-14.jpg",
+    "sha256": "77cb265abd27820309c97c0ceb3f58779c3ec64ef2d139de0acc83549f3e2a78",
+    "source_spans_captured": false
+  },
+  "provenance": {
+    "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+    "source_note_sha256": "c6dbdf1d2e903bc7da4e1ad1a520ec3a879878eb6ecedfcec5daca9472d77baf",
+    "source_locator": "§2 children table: Szyja",
+    "source_author": "Agent C-2",
+    "restricted_sources_used": false
+  },
+  "annotation": {
+    "tier": "PROJECT_VERIFIED_RESEARCH_NOTE",
+    "expert_verified": false,
+    "evaluation_eligible": true,
+    "correction_consent": {
+      "status": "NOT_RECORDED",
+      "training_eligible": false
+    },
+    "correction_history": []
+  },
+  "privacy": {
+    "decision": "ALLOW",
+    "basis": "pre-1915 civil act; older than the configured 100-year default",
+    "evaluated_on": "2026-07-28"
+  },
+  "fields": {
+    "act_type": {
+      "value": "death",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+          "locator": "§2 children table: Szyja"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "act_no": {
+      "value": 11,
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+          "locator": "§2 children table: Szyja"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "year": {
+      "value": 1892,
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+          "locator": "§2 children table: Szyja"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "registration_date": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "event_date": {
+      "value": "1892-04-27",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+          "locator": "§2 children table: Szyja"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+          "locator": "§2 children table: Szyja"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "principal": {
+      "name": {
+        "value": "Szyja Goldsztejn",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+            "locator": "§2 children table: Szyja"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": "3 months",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+            "locator": "§2 children table: Szyja"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": "male",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+            "locator": "§2 children table: Szyja"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "father": {
+      "name": {
+        "value": "Majer Goldsztejn",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+            "locator": "§2 children table: Szyja"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "mother": {
+      "name": {
+        "value": "Ruchla Goldsztejn",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+            "locator": "§2 children table: Szyja"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": "Miara",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+            "locator": "§2 children table: Szyja"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "spouse": {
+      "name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "spouse_parents": {
+      "father": {
+        "name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "maiden_name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "age": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "occupation": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "residence": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "birthplace": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "sex": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "marital_status": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "relationship": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        }
+      },
+      "mother": {
+        "name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "maiden_name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "age": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "occupation": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "residence": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "birthplace": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "sex": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "marital_status": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "relationship": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        }
+      }
+    },
+    "declarants": [],
+    "witnesses": [],
+    "officiant": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "signatures_note": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "deceased_left_behind": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "banns_dates": [],
+    "permission_notes": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "prenup_note": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "rabbi": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    }
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

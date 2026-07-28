@@ -1,0 +1,822 @@
+{
+  "$schema": "../schema.json",
+  "schema_version": "1.0.0",
+  "record_id": "pultusk-1890-death-43",
+  "register": {
+    "town": "Pułtusk",
+    "fond": "84",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 43,
+    "language": "ru"
+  },
+  "artifact": {
+    "status": "NOT_LOCALIZED",
+    "path": null,
+    "sha256": null,
+    "source_spans_captured": false
+  },
+  "provenance": {
+    "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+    "source_note_sha256": "c039e783ff863d6c68de4eabf4e5b43166253939a58df4b5183d562c4b978ce4",
+    "source_locator": "Session 3 §2",
+    "source_author": "Fork-Pultusk research sessions",
+    "restricted_sources_used": false
+  },
+  "annotation": {
+    "tier": "PROJECT_VERIFIED_RESEARCH_NOTE",
+    "expert_verified": false,
+    "evaluation_eligible": true,
+    "correction_consent": {
+      "status": "NOT_RECORDED",
+      "training_eligible": false
+    },
+    "correction_history": []
+  },
+  "privacy": {
+    "decision": "ALLOW",
+    "basis": "pre-1915 civil act; older than the configured 100-year default",
+    "evaluated_on": "2026-07-28"
+  },
+  "fields": {
+    "act_type": {
+      "value": "death",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+          "locator": "Session 3 §2"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "act_no": {
+      "value": 43,
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+          "locator": "Session 3 §2"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "year": {
+      "value": 1890,
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+          "locator": "Session 3 §2"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "registration_date": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "event_date": {
+      "value": {
+        "time": "15:00",
+        "date": null
+      },
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+          "locator": "Session 3 §2"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "town": {
+      "value": "Pułtusk",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+          "locator": "Session 3 §2"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "principal": {
+      "name": {
+        "value": "Ruchla Goldsztejn",
+        "original_script": "Рухля Гольдштейнъ",
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "PRESERVED"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": 55,
+        "original_script": "пятидесяти пяти лѣтъ",
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "PRESERVED"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": "Pułtusk",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": "female",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "father": {
+      "name": {
+        "value": "Szaul Wagman",
+        "original_script": "Шауля",
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "PRESERVED"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "mother": {
+      "name": {
+        "value": "Etka Wagman",
+        "original_script": "Этки",
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "PRESERVED"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "spouse": {
+      "name": {
+        "value": "Srul Nisim Goldsztejn",
+        "original_script": "Срула Нисима Гольдштейна",
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "PRESERVED"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": "merchant",
+        "original_script": "торговца",
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "PRESERVED"
+      },
+      "residence": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": "male",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+            "locator": "Session 3 §2"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "spouse_parents": {
+      "father": {
+        "name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "maiden_name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "age": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "occupation": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "residence": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "birthplace": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "sex": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "marital_status": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "relationship": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        }
+      },
+      "mother": {
+        "name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "maiden_name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "age": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "occupation": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "residence": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "birthplace": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "sex": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "marital_status": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "relationship": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        }
+      }
+    },
+    "declarants": [
+      {
+        "name": {
+          "value": "Boruch Rozenblum",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+              "locator": "Session 3 §2"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "age": {
+          "value": 59,
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+              "locator": "Session 3 §2"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        }
+      },
+      {
+        "name": {
+          "value": "Abram Cukman",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+              "locator": "Session 3 §2"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "age": {
+          "value": 69,
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+              "locator": "Session 3 §2"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        }
+      }
+    ],
+    "witnesses": [],
+    "officiant": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "signatures_note": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "deceased_left_behind": {
+      "value": "widower Srul Nisim Goldsztejn, merchant",
+      "original_script": "овдовѣвшаго мужа Срула Нисима Гольдштейна, торговца",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\Pultusk_Fond84_Goldsztejn.md",
+          "locator": "Session 3 §2"
+        }
+      ],
+      "transcription_status": "PRESERVED"
+    },
+    "banns_dates": [],
+    "permission_notes": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "prenup_note": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "rabbi": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    }
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

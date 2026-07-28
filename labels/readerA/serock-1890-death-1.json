@@ -1,0 +1,27 @@
+{
+  "reader": {"identity": "claude-fable-5 (subscription session, Reader A)", "blind": true, "date": "2026-07-28"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg", "position": "upper act, right-hand page"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 1, "language": "ru"},
+  "fields": {
+    "registration_date": {"value": "1890-01-01", "original_script": "Января перваго дня тысяча восемьсотъ девяностаго года въ одиннадцать часовъ утра", "confidence": "CONFIDENT", "note": "single date as written; calendar (Julian vs Gregorian) not stated on the page — no dual date present in this act"},
+    "event_date": {"value": "1889-12-30", "original_script": "тридцатаго Декабря тысяча восемьсотъ восемьдесятъ девятаго года въ девять часовъ утра", "confidence": "CONFIDENT", "note": "death at 9 AM, in posad Serock"},
+    "principal": {
+      "name": {"value": "Ruchla Malowanczyk", "original_script": "Ру[unclear: х/д]ля Малованьчикъ", "confidence": "PROBABLE", "unclear": "second letter of given name; read as Рухля (Ruchla); Рудля implausible"},
+      "age": {"value": 61, "original_script": "шестьдесятъ одинъ лѣтъ отъ роду", "confidence": "CONFIDENT"},
+      "sex": {"value": "female", "confidence": "CONFIDENT"}
+    },
+    "father": {"name": {"value": "Abram", "original_script": "покойныхъ родителей Абрама", "confidence": "CONFIDENT", "note": "parents stated as deceased (покойныхъ)"}},
+    "mother": {"name": {"value": "Rifka", "original_script": "и Рифки", "confidence": "CONFIDENT"},
+               "parents_surname": {"value": "[unclear: Litoszewicz/Antoszewicz]", "original_script": "супруговъ [unclear: Л/А]итошевичъ", "confidence": "UNCLEAR", "note": "spouses' shared surname — first letter ambiguous between Л and А"}},
+    "deceased_left_behind": {"value": "husband, name [unclear: Cuka/Szuka]", "original_script": "Оставивъ послѣ себя мужа [unclear: Цука/Шука]", "confidence": "UNCLEAR", "note": "widower's name short and smudged; possibly a diminutive"},
+    "declarants": [
+      {"name": "Izrael Ioskowicz", "original_script": "Израель Іосковичъ", "occupation": "feldsher (фельдшеръ)", "age": 55, "confidence": "CONFIDENT"},
+      {"name": "Jankel Borensztejn", "original_script": "Янкель Боренштейнъ", "occupation": "szkolnik (школьникъ — synagogue attendant)", "age": 40, "confidence": "CONFIDENT"}
+    ],
+    "witness_residence": {"value": "both residing in posad Serock", "confidence": "CONFIDENT"},
+    "officiant": {"value": "[unclear: Przylubski?]", "original_script": "Чиновникъ Гражданскаго состоянія — signature П[р]жилуб[skij?]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "BOTH declarants signed (Іосковичъ; Я. Боренштейнъ) — literate", "confidence": "CONFIDENT"}
+  },
+  "translation": "It took place in the posad of Serock on 1 January 1890 at 11 AM. Personally appeared Izrael Ioskowicz, feldsher, 55, and Jankel Borensztejn, szkolnik, 40, both residing in posad Serock, and declared that on 30 December 1889 at 9 AM in posad Serock died Ruchla Malowanczyk, 61 years of age, daughter of the late parents Abram and Rifka, the [unclear: Litoszewicz/Antoszewicz] spouses. She left behind her husband [unclear name]. Upon eyewitness certification of the death of Ruchla Malowanczyk this act was signed by us and the witnesses. Civil registrar [signature].",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

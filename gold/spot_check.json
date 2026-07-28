@@ -1,0 +1,40 @@
+{
+  "instructions": "Compare each JSON field only to the cited research-note section and local scan. Do not fill omitted fields.",
+  "records": [
+    {
+      "record_id": "serock-1876-marriage-11",
+      "json": "gold/acts/serock-1876-marriage-11.json",
+      "artifact": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1876_marriage_acts11-12_Majer_names_Aron_Jochwet_FULLPAGE.jpg",
+      "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+      "source_locator": "§1 F1"
+    },
+    {
+      "record_id": "serock-1883-birth-28",
+      "json": "gold/acts/serock-1883-birth-28.json",
+      "artifact": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1883_births_27-30.jpg",
+      "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+      "source_locator": "§3.1 Szaja Berek household"
+    },
+    {
+      "record_id": "serock-1884-death-8",
+      "json": "gold/acts/serock-1884-death-8.json",
+      "artifact": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1884_death_act8_Aron_Goldsztejn_07-10.jpg",
+      "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+      "source_locator": "§1 F5"
+    },
+    {
+      "record_id": "serock-1888-death-37",
+      "json": "gold/acts/serock-1888-death-37.json",
+      "artifact": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1888_deaths_35-38.jpg",
+      "source_note": "E:\\DNA\\Helene_Research\\Majer_Thirteen_Children.md",
+      "source_locator": "§2 children table: Jankel"
+    },
+    {
+      "record_id": "serock-1903-death-6",
+      "json": "gold/acts/serock-1903-death-6.json",
+      "artifact": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1903_deaths_03-06.jpg",
+      "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+      "source_locator": "§1 F2"
+    }
+  ]
+}

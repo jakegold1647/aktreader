@@ -1,0 +1,43 @@
+[project]
+name = "aktreader"
+version = "0.0.1"
+description = "A register-reading machine: scan in, graded genealogical evidence out. Structured, uncertainty-honest extraction of 19th-century civil register acts from partitioned Poland (Russian Cyrillic 1868-1915, Polish before/after)."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Jake Goldstein" }]
+dependencies = []
+
+[project.scripts]
+aktreader = "aktreader.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<10",
+    "ruff>=0.12,<1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3,<10",
+    "ruff>=0.12,<1",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

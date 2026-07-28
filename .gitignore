@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environments and coverage
+.venv/
+.tmp/
+.uv-cache/
+.coverage
+htmlcov/
+
+# Build output
+build/
+dist/
+
+# Local configuration, credentials, and generated pipeline output
+.env
+.env.*
+!.env.example
+output/
+runs/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

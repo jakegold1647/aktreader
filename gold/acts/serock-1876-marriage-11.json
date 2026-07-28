@@ -1,0 +1,1003 @@
+{
+  "$schema": "../schema.json",
+  "schema_version": "1.0.0",
+  "record_id": "serock-1876-marriage-11",
+  "register": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1876,
+    "act_type": "marriage",
+    "act_no": 11,
+    "language": "ru"
+  },
+  "artifact": {
+    "status": "LOCAL",
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1876_marriage_acts11-12_Majer_names_Aron_Jochwet_FULLPAGE.jpg",
+    "sha256": "f8e2a5c067e958fb8cfd56fe759ed6d6a0b65ba80ad91312d9ce59c11fb0c976",
+    "source_spans_captured": false
+  },
+  "provenance": {
+    "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+    "source_note_sha256": "4c936b7fa0a9fb2a36b4a12169ac3d1cade64bef6b907e8403ff62ba6f838541",
+    "source_locator": "§1 F1",
+    "source_author": "Agent C",
+    "restricted_sources_used": false
+  },
+  "annotation": {
+    "tier": "PROJECT_VERIFIED_RESEARCH_NOTE",
+    "expert_verified": false,
+    "evaluation_eligible": true,
+    "correction_consent": {
+      "status": "NOT_RECORDED",
+      "training_eligible": false
+    },
+    "correction_history": []
+  },
+  "privacy": {
+    "decision": "ALLOW",
+    "basis": "pre-1915 civil act; older than the configured 100-year default",
+    "evaluated_on": "2026-07-28"
+  },
+  "fields": {
+    "act_type": {
+      "value": "marriage",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "act_no": {
+      "value": 11,
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "year": {
+      "value": 1876,
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "registration_date": {
+      "value": {
+        "gregorian": "1876-07-14",
+        "julian": "1876-07-02"
+      },
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "event_date": {
+      "value": {
+        "gregorian": "1876-07-13",
+        "julian": "1876-07-01"
+      },
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "principal": {
+      "name": {
+        "value": "Majer Goldsztejn",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": 19,
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "occupation": {
+        "value": "laborer",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "residence": {
+        "value": "[unclear: Piskornia/Liskornia]",
+        "original_script": null,
+        "confidence": "UNCLEAR",
+        "observation_state": "PRESENT",
+        "alternatives": [
+          "Piskornia",
+          "Liskornia"
+        ],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "birthplace": {
+        "value": "Serock",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "father": {
+      "name": {
+        "value": "Aron Goldsztejn",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": "[unclear: Piskornia/Liskornia]",
+        "original_script": null,
+        "confidence": "UNCLEAR",
+        "observation_state": "PRESENT",
+        "alternatives": [
+          "Piskornia",
+          "Liskornia"
+        ],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "mother": {
+      "name": {
+        "value": "Jochwet Goldsztejn",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "occupation": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "residence": {
+        "value": "[unclear: Piskornia/Liskornia]",
+        "original_script": null,
+        "confidence": "UNCLEAR",
+        "observation_state": "PRESENT",
+        "alternatives": [
+          "Piskornia",
+          "Liskornia"
+        ],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "birthplace": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "spouse": {
+      "name": {
+        "value": "Ruchla Miara",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "maiden_name": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "age": {
+        "value": 20,
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "occupation": {
+        "value": "worker",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "residence": {
+        "value": "Serock",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "birthplace": {
+        "value": "Serock",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "sex": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      },
+      "marital_status": {
+        "value": "maiden",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      },
+      "relationship": {
+        "value": null,
+        "original_script": null,
+        "confidence": null,
+        "observation_state": "NOT_ANNOTATED",
+        "alternatives": [],
+        "source_spans": [],
+        "transcription_status": "NOT_APPLICABLE"
+      }
+    },
+    "spouse_parents": {
+      "father": {
+        "name": {
+          "value": "Aron Miara",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "maiden_name": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "age": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "occupation": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "residence": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "birthplace": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "sex": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "marital_status": {
+          "value": "deceased",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "relationship": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        }
+      },
+      "mother": {
+        "name": {
+          "value": "Gitla Miara",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "maiden_name": {
+          "value": "[unclear: Kania/Kanarek]",
+          "original_script": null,
+          "confidence": "UNCLEAR",
+          "observation_state": "PRESENT",
+          "alternatives": [
+            "Kania",
+            "Kanarek"
+          ],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "age": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "occupation": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "residence": {
+          "value": "Serock",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "birthplace": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "sex": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        },
+        "marital_status": {
+          "value": "widow",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "relationship": {
+          "value": null,
+          "original_script": null,
+          "confidence": null,
+          "observation_state": "NOT_ANNOTATED",
+          "alternatives": [],
+          "source_spans": [],
+          "transcription_status": "NOT_APPLICABLE"
+        }
+      }
+    },
+    "declarants": [],
+    "witnesses": [
+      {
+        "name": {
+          "value": "Fajwel Rozenberg",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "age": {
+          "value": 37,
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "occupation": {
+          "value": "merchant",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "residence": {
+          "value": "Serock",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        }
+      },
+      {
+        "name": {
+          "value": "Zajwel Rozenberg",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "age": {
+          "value": 36,
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "occupation": {
+          "value": "merchant",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        },
+        "residence": {
+          "value": "Serock",
+          "original_script": null,
+          "confidence": "PROBABLE",
+          "observation_state": "PRESENT",
+          "alternatives": [],
+          "source_spans": [
+            {
+              "kind": "research_note",
+              "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+              "locator": "§1 F1"
+            }
+          ],
+          "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+        }
+      }
+    ],
+    "officiant": {
+      "value": "Rabbi Josef Lewinsztejn",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "signatures_note": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "deceased_left_behind": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "banns_dates": [
+      {
+        "value": "Three announcements in the Serock synagogue; dates not recorded in the verification note",
+        "original_script": null,
+        "confidence": "PROBABLE",
+        "observation_state": "PRESENT",
+        "alternatives": [],
+        "source_spans": [
+          {
+            "kind": "research_note",
+            "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+            "locator": "§1 F1"
+          }
+        ],
+        "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+      }
+    ],
+    "permission_notes": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "NOT_ANNOTATED",
+      "alternatives": [],
+      "source_spans": [],
+      "transcription_status": "NOT_APPLICABLE"
+    },
+    "prenup_note": {
+      "value": "No prenuptial contract",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    },
+    "rabbi": {
+      "value": "Josef Lewinsztejn",
+      "original_script": null,
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_spans": [
+        {
+          "kind": "research_note",
+          "source_note": "E:\\DNA\\Helene_Research\\C_Serock_Registers_Goldsztajn_Miara.md",
+          "locator": "§1 F1"
+        }
+      ],
+      "transcription_status": "NOT_RECORDED_IN_SOURCE_NOTE"
+    }
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -1,0 +1,25 @@
+{
+  "reader": {"identity": "claude-fable-5 (subscription session, Reader A)", "blind": true, "date": "2026-07-28"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg", "position": "lower act, right-hand page"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 2, "language": "ru"},
+  "fields": {
+    "registration_date": {"value": "1890-01-18", "original_script": "Января восемьнадцатаго дня тысяча восемьсотъ девяностаго года въ десять часовъ утра", "confidence": "CONFIDENT"},
+    "event_date": {"value": "1890-01-17", "original_script": "вчерашняго числа текущаго года въ восемь часовъ утра", "confidence": "CONFIDENT", "note": "'yesterday of the current year' at 8 AM, resolved against the registration date"},
+    "principal": {
+      "name": {"value": "Chana [unclear: Auksztukalska/Łuksztukalska]", "original_script": "Хана [unclear: А/Л]укштукаль[ская]", "confidence": "UNCLEAR", "note": "rare surname; first letter and ending uncertain; Lithuanian-form surname plausible (Aukštakalnis-type); later in the act rendered Аукштукальской (genitive), which supports initial А"},
+      "age": {"value": "9 months", "original_script": "девяти мѣсяцевъ отъ роду", "confidence": "CONFIDENT"},
+      "sex": {"value": "female", "confidence": "CONFIDENT"}
+    },
+    "father": {"name": {"value": "Lejba", "original_script": "дочь Лейбы", "confidence": "CONFIDENT"}},
+    "mother": {"name": {"value": "Łaja (Laja)", "original_script": "и Ляи", "confidence": "PROBABLE"},
+               "maiden_name": {"value": "[unclear: Konkol/Konkal]", "original_script": "урожденной Конк[unclear: о/а]л[ь]", "confidence": "UNCLEAR"}},
+    "declarants": [
+      {"name": "Izrael Ioskowicz", "occupation": "feldsher", "age": 55, "confidence": "CONFIDENT", "note": "same declarant pair as act 1/1890 — ages consistent (55, 40), a within-register consistency confirmation"},
+      {"name": "Jankel Borensztejn", "occupation": "szkolnik", "age": 40, "confidence": "CONFIDENT"}
+    ],
+    "officiant": {"value": "[unclear: Przylubski?]", "confidence": "UNCLEAR", "note": "same signature as act 1"},
+    "signatures_note": {"value": "both declarants signed — literate", "confidence": "CONFIDENT"}
+  },
+  "translation": "It took place in the posad of Serock on 18 January 1890 at 10 AM. Personally appeared Izrael Ioskowicz, feldsher, 55, and Jankel Borensztejn, szkolnik, 40, both residing in posad Serock, and declared that yesterday of the current year at 8 AM in posad Serock died Chana [unclear surname], nine months of age, daughter of Lejba and Łaja née [unclear: Konkol]. Upon eyewitness certification of the death of Chana [surname, genitive] this act was signed by us and the witnesses. Civil registrar [signature].",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

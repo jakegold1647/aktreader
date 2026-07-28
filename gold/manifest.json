@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "built_on": "2026-07-28",
+  "coverage": {
+    "total": 36,
+    "towns": {
+      "Pułtusk": 7,
+      "Serock": 29
+    },
+    "languages": {
+      "ru": 36
+    },
+    "act_types": {
+      "birth": 13,
+      "death": 18,
+      "marriage": 5
+    }
+  },
+  "restricted_sources_used": false,
+  "serock_seeded": true,
+  "known_gaps": [
+    {
+      "target": "Polish-language acts",
+      "status": "UNMET",
+      "reason": "No independently verified permitted Polish act was available; tentative memorial-derived material was excluded."
+    }
+  ],
+  "training_eligibility": "NONE_WITHOUT_RECORDED_CORRECTOR_CONSENT"
+}

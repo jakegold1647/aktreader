@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/gold-act-1.0.0.json",
+  "title": "AKTREADER gold act",
+  "description": "A source-backed civil-register act label. NOT_ANNOTATED means the verification note did not label the field; it says nothing about the act form.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "record_id",
+    "register",
+    "artifact",
+    "provenance",
+    "annotation",
+    "privacy",
+    "fields",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schema_version": {"const": "1.0.0"},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "register": {
+      "type": "object",
+      "required": ["town", "fond", "year", "act_type", "act_no", "language"],
+      "properties": {
+        "town": {"type": "string"},
+        "fond": {"type": "string"},
+        "year": {"type": "integer"},
+        "act_type": {"enum": ["birth", "marriage", "death", "annex"]},
+        "act_no": {"type": "integer", "minimum": 1},
+        "language": {"enum": ["ru", "pl", "mixed", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["status", "path", "sha256", "source_spans_captured"],
+      "properties": {
+        "status": {"enum": ["LOCAL", "NOT_LOCALIZED"]},
+        "path": {"type": ["string", "null"]},
+        "sha256": {"type": ["string", "null"]},
+        "source_spans_captured": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["source_note", "source_note_sha256", "source_locator", "source_author", "restricted_sources_used"],
+      "properties": {
+        "source_note": {"type": "string"},
+        "source_note_sha256": {"type": "string"},
+        "source_locator": {"type": "string"},
+        "source_author": {"type": "string"},
+        "restricted_sources_used": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "annotation": {
+      "type": "object",
+      "required": ["tier", "expert_verified", "evaluation_eligible", "correction_consent", "correction_history"],
+      "properties": {
+        "tier": {"const": "PROJECT_VERIFIED_RESEARCH_NOTE"},
+        "expert_verified": {"const": false},
+        "evaluation_eligible": {"const": true},
+        "correction_consent": {
+          "type": "object",
+          "required": ["status", "training_eligible"],
+          "properties": {
+            "status": {"enum": ["NOT_RECORDED", "GRANTED", "DECLINED"]},
+            "training_eligible": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        },
+        "correction_history": {"type": "array"}
+      },
+      "additionalProperties": false
+    },
+    "privacy": {
+      "type": "object",
+      "required": ["decision", "basis", "evaluated_on"],
+      "properties": {
+        "decision": {"const": "ALLOW"},
+        "basis": {"type": "string"},
+        "evaluated_on": {"type": "string", "format": "date"}
+      },
+      "additionalProperties": false
+    },
+    "fields": {"$ref": "#/$defs/fieldTree"},
+    "authority_warning": {"const": "extraction is not authority — verify against the scan"}
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "required": ["value", "original_script", "confidence", "observation_state", "alternatives", "source_spans", "transcription_status"],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]},
+        "confidence": {"enum": ["CONFIDENT", "PROBABLE", "UNCLEAR", null]},
+        "observation_state": {"enum": ["PRESENT", "ABSENT_ON_FORM", "BLANK", "STATED_UNKNOWN", "ILLEGIBLE", "NOT_ANNOTATED"]},
+        "alternatives": {"type": "array"},
+        "source_spans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "source_note", "locator"],
+            "properties": {
+              "kind": {"const": "research_note"},
+              "source_note": {"type": "string"},
+              "locator": {"type": "string"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "transcription_status": {"enum": ["PRESERVED", "NOT_RECORDED_IN_SOURCE_NOTE", "NOT_APPLICABLE"]}
+      },
+      "additionalProperties": false
+    },
+    "fieldTree": {
+      "oneOf": [
+        {"$ref": "#/$defs/evidence"},
+        {"type": "array", "items": {"$ref": "#/$defs/fieldTree"}},
+        {"type": "object", "additionalProperties": {"$ref": "#/$defs/fieldTree"}}
+      ]
+    }
+  },
+  "additionalProperties": false
+}
