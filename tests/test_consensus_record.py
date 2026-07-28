@@ -253,10 +253,14 @@ def test_atomic_writer_emits_schema_valid_json(tmp_path: Path) -> None:
     assert not (tmp_path / ".record.consensus.json.tmp").exists()
 
 
-def test_all_six_complete_reader_filename_pairs_are_selected() -> None:
+def test_all_complete_reader_filename_pairs_are_selected() -> None:
     names = [reader_a.name for reader_a, _ in _complete_pair_paths()]
 
-    assert names == [f"serock-1890-death-{act_no}.json" for act_no in range(1, 7)]
+    expected_acts = [*range(1, 7), *range(30, 41)]
+    expected_names = sorted(
+        f"serock-1890-death-{act_no}.json" for act_no in expected_acts
+    )
+    assert names == expected_names
 
 
 def test_build_tool_requires_explicit_safe_record_ids() -> None:
