@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_35-38.jpg",
+               "sha256": "7589125ADE3B2D904875190F1949671FD98280B1885D47DD734F0B9798F6D62B",
+               "position": "right page, lower act (margin No.38)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 38, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-09-19 09:00", "original_script": "девятнадцатаго Сентября тысяча восемьсотъ девяностаго года въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "single date, no dual"},
+    "event_date": {"value": "1890-09-18 18:00", "original_script": "вчерашняго числа во шесть часовъ вечера во деревнѣ Зегже", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9", "note": "place of death is the village Zegrze (деревня Зегже), not posad Serock"},
+    "principal": {
+      "name": {"value": "unnamed male infant, surname [unclear: Kutnowski/Kuchnowski]", "original_script": "умеръ младенецъ мужескаго пола безъ име-ни Ку[unclear: тн/хн]овскій", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 9-10", "note": "given name: the ink states 'безъ имени' (without a name) — a stated fact, not a blank and not illegible; surname mid-word strokes ambiguous, both candidates retained"},
+      "age": {"value": "6 days", "original_script": "шесть дней отъ роду имѣющійся", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 10"},
+      "sex": {"value": "male", "original_script": "умеръ младенецъ мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 9", "note": "verb ending checked first; explicit male-sex phrase agrees"}
+    },
+    "father": {"name": {"value": "Jankiel", "original_script": "сынъ Янкеля", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 11"}},
+    "mother": {"name": {"value": "[unclear: Perla/Serla]", "original_script": "и [unclear: Перли/Серли]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act line 11", "note": "initial capital ambiguous"},
+               "maiden_name": {"value": null, "original_script": "урожденной неизвѣстно[й]", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "source_span": "act lines 11-12", "note": "clerk explicitly wrote the maiden name as unknown — STATED_UNKNOWN, not blank"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "ABSENT_ON_FORM", "note": "infant death — no survivors clause in formula; closing says only 'о кончинѣ дитяти' (of the death of the child), without repeating a name — the usual name-repeat internal check is unavailable here"},
+    "declarants": [
+      {"name": "Berek Kołtun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "source_span": "act lines 3-4", "note": "listed first in this act; occupation written работникъ here vs кладбищный служитель in acts 35-37 — recorded as ink shows"},
+      {"name": "Szlama [unclear: Kuraker/Kutas]", "original_script": "Шляма Кура-керъ (split across line break); Latin-script signature below reads [unclear: Szlama Kutas?]", "occupation": "trader (торговщикъ)", "age": 47, "confidence": "UNCLEAR", "source_span": "act lines 4-6 and signature", "note": "body text joins across line break as Куракеръ; the Latin signature does not obviously match — both readings retained for arbitration"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ Гражданскаго Состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "first witness illiterate ('Первый свидѣтель неграмотный'); second witness signed in Latin script [unclear: Szlama Kutas?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "final lines and signature"}
+  },
+  "translation": "Took place in posad Serock, 19 September 1890, 9 AM. Appeared personally Berek Kołtun, laborer, 65, and Szlama [unclear: Kuraker/Kutas], trader, 47, both residing in Serock, and declared that yesterday at 6 PM in the village of Zegrze died a male infant without a name, [surname unclear: Kutnowski/Kuchnowski], six days of age, son of Jankiel and [unclear: Perla/Serla], nee unknown. Upon eyewitness certification of the death of the child this act was read to the witnesses, signed by us and one witness; the first witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

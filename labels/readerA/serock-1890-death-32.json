@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+               "sha256": "4317591739940CD91D23ED29A19BC01FF3E39FC43E4982EDC6B73FA8A8A5FCA4",
+               "position": "left page, lower act (margin No.32)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 32, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-08-16 [unclear: 07:00/08:00]", "original_script": "шестнадцатаго Августа тысяча восемьсотъ девяностаго года въ [unclear: семь/восемь] часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "day-word clear; hour-word cramped — both candidates retained; single date, no dual"},
+    "event_date": {"value": "1890-08-15 19:00", "original_script": "вчерашняго числа въ семь часовъ вечера въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9"},
+    "principal": {
+      "name": {"value": "Jankiel [unclear: Groniewicz/Broniewicz]", "original_script": "умеръ Янкель [unclear: Гро/Бро]-невичъ (surname split across line break); closing 'о кончинѣ Янкеля [unclear: Г/У]роневича'", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 9-10 and closing lines 13-14", "note": "line-break split joined and confirmed against the inflected closing repeat — one surname, one person; initial capital ambiguous Г/Б"},
+      "age": {"value": "9 months", "original_script": "девять мѣсяцевъ имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 10"},
+      "sex": {"value": "male", "original_script": "умеръ (terminal ъ, no -ла)", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 9", "note": "verb ending checked first"}
+    },
+    "father": {"name": {"value": "Aron", "original_script": "сынъ Арона", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 10-11"}},
+    "mother": {"name": {"value": "Chaja Maria", "original_script": "и Хаи Маріи", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 11"},
+               "maiden_name": {"value": "Pokorna", "original_script": "урожденной Покорной", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 11"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "ABSENT_ON_FORM", "note": "infant death — no survivors clause in formula"},
+    "declarants": [
+      {"name": "[unclear: Gerszek/Gerszon] Jagoda", "original_script": "Гершекъ Ягода; signature below reads Гершонъ(?) Ягода", "occupation": "trader (торговщикъ)", "age": 27, "confidence": "UNCLEAR", "source_span": "act lines 3-4 and signature", "note": "body text reads Гершекъ, signature closer to Гершонъ — both retained"},
+      {"name": "Lipa Sztatzinger", "original_script": "Липа Штатцингеръ", "occupation": "trader (торговщикъ)", "age": 60, "confidence": "PROBABLE", "source_span": "act lines 4-6", "note": "same surname as deceased of act 31 — spelling here shows ц where act 31 shows з; kept as ink shows"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ гражданскаго состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "second witness illiterate ('Вторый свидѣтель неграмотенъ'); first witness signed: Гершонъ(?) Ягода", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "final act lines and signature"}
+  },
+  "translation": "Took place in posad Serock, 16 August 1890, [unclear: 7/8] AM. Appeared personally [unclear: Gerszek] Jagoda, trader, 27, and Lipa Sztatzinger, trader, 60, both residing in Serock, and declared that yesterday at 7 PM in posad Serock died Jankiel [unclear: Groniewicz/Broniewicz], nine months of age, son of Aron and Chaja Maria née Pokorna. Upon eyewitness certification of the death of Jankiel [unclear: Groniewicz] this act was read to the witnesses, signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+               "sha256": "2A35C3B1B9B20B8A1A741736CCA81C8552B0343D3C93204B3422DD4B9BD69740",
+               "position": "right page, lower act (margin No.30 verified)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 30, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-08-03 08:00", "original_script": "третьяго Августа тысяча восемьсотъ девяностаго года въ восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "single date in the ink; no second day-word present — dual date not recorded; calendar style unstated on page"},
+    "event_date": {"value": "1890-08-02 22:00", "original_script": "вчерашняго числа въ десять часовъ вечера въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-10", "note": "'вчерашняго числа' resolved relative to registration day 3 Aug"},
+    "principal": {
+      "name": {"value": "Moszek [unclear: Kaner/Kajer]", "original_script": "умеръ Мошекъ Ка[unclear: неръ/йеръ] (large letters); closing formula 'о кончинѣ Ка[unclear: н/й]ера'", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act line 10 and closing lines 13-14", "note": "closing genitive repeat used as internal check — same ambiguous mid-word strokes in both places; н/й confusable, Kaner slightly favored by letter count"},
+      "age": {"value": "[unclear: 60?]", "original_script": "шест[unclear: ьдесятъ?] лѣтъ отъ роду имѣющій", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act line 11", "note": "day-word smudged; only one shaky candidate (sixty)"},
+      "sex": {"value": "male", "original_script": "умеръ (р-descender + terminal ъ, no -ла)", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 10", "note": "verb ending checked before any gendered parsing per prompt rule"}
+    },
+    "father": {"name": {"value": null, "original_script": "по книгамъ народонаселенія незначущійся", "confidence": "PROBABLE", "observation_state": "BLANK", "source_span": "act lines 11-12", "note": "no filiation given anywhere in the act; clerk instead wrote that the deceased does not appear in the population books — that statement concerns the registers, not the parents, so the filiation slot is BLANK, not STATED_UNKNOWN"}},
+    "mother": {"name": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "BLANK", "source_span": "act lines 11-12", "note": "same as father — no mother named"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "BLANK", "source_span": "whole act scanned", "note": "no survivors clause in the ink despite adult deceased"},
+    "declarants": [
+      {"name": "Lejbka [unclear: Kejdzior/Kendzior]", "original_script": "Лейбка Ке[unclear: й/н]дзюръ", "occupation": "shoemaker (сапожникъ)", "age": 54, "confidence": "UNCLEAR", "source_span": "act lines 3-5", "note": "same declarant appears in act 31 on next spread with identical spelling — within-register consistency check applied"},
+      {"name": "[unclear: Fiszer/Fiszel] [unclear: Sterdyner?]", "original_script": "Фише[unclear: ръ/ль] Стерд[unclear: ы]неръ, occupation [unclear: смол... — possibly смолярь (tar-maker)], шестидесяти семи лѣтъ", "occupation": "[unclear: смолярь?]", "age": 67, "confidence": "UNCLEAR", "source_span": "act lines 5-6", "note": "occupation word between surname and age defeated a clean read; both name candidates retained"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ гражданскаго состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing lines"},
+    "signatures_note": {"value": "act signed by officiant and one witness; first witness illiterate ('Первый свидѣтель неграмотенъ'); a small second-hand signature line below the officiant is present but not cleanly readable [unclear]", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "final act lines and below"}
+  },
+  "translation": "Took place in posad Serock, 3 August 1890, 8 AM. Appeared personally Lejbka [unclear: Kejdzior], shoemaker, 54, and [unclear: Fiszer Sterdyner], [unclear occupation], 67, both residing in Serock, and declared that yesterday at 10 PM in posad Serock died Moszek [unclear: Kaner/Kajer], [unclear: sixty?] years of age, not appearing in the population books. Upon eyewitness certification of the death of [unclear: Kaner] this act was read to the witnesses and signed by us and one witness; the first witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+               "sha256": "FE50EC137204DE014BC34AF985974DB498875097FA6F73EDC9D0AE6D26E81EA5",
+               "position": "left page, upper act (margin No.39)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 39, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-09-20 08:00", "original_script": "двадцатаго Сентября тысяча восемьсотъ девяностаго года восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 1-2", "note": "single date, no dual; preposition before the hour apparently omitted by clerk"},
+    "event_date": {"value": "1890-09-19 05:00", "original_script": "вчерашняго числа въ пять часовъ утра ... въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 7-9"},
+    "principal": {
+      "name": {"value": "Ruchla Makowska", "original_script": "умерла въ посадѣ Сероцкѣ Ру-хля Маковская (underlined; given name split across line break); closing 'о кончинѣ Рухли Маковской'", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-10 and closing lines 12-13", "note": "line-break split joined; closing genitive repeat matches — internal check applied"},
+      "age": {"value": "1.5 years", "original_script": "одинъ съ половиною лѣтъ отъ роду имѣющаяся", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 10-11"},
+      "sex": {"value": "female", "original_script": "умерла (р + л + а ending)", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 8", "note": "verb ending checked first; 'дочь' and feminine surname form agree"}
+    },
+    "father": {"name": {"value": "Michel Makowski", "original_script": "дочь Михля ... супруговъ Маковскихъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 11-12", "note": "genitive Михля — nominative normalized as Michel"}},
+    "mother": {"name": {"value": "Pessa", "original_script": "и Пессы супруговъ Маковскихъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 11-12"},
+               "maiden_name": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "BLANK", "note": "née slot not filled"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "ABSENT_ON_FORM", "note": "child death — no survivors clause in formula"},
+    "declarants": [
+      {"name": "Josek Rubinsztejn", "original_script": "Іосекъ Рубинштейнъ; Latin-script signature below reads 'Josek Rubinsztajn'", "occupation": "blacksmith (кузнецъ)", "age": 38, "confidence": "PROBABLE", "source_span": "act lines 3-4 and signature", "note": "clean Latin signature confirms the surname"},
+      {"name": "Berek Kołtun", "original_script": "Берекъ Колтунъ", "occupation": "cemetery attendant (кладбищный служитель)", "age": 65, "confidence": "PROBABLE", "source_span": "act lines 4-6"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ Гражданскаго Состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "second witness illiterate ('Вторый свидѣтель неграмотенъ'); first witness signed in Latin script: Josek Rubinsztajn", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "final lines and signature"}
+  },
+  "translation": "Took place in posad Serock, 20 September 1890, 8 AM. Appeared personally Josek Rubinsztejn, blacksmith, 38, and Berek Kołtun, cemetery attendant, 65, both residing in posad Serock, and declared that yesterday at 5 AM died in posad Serock Ruchla Makowska, one and a half years of age, daughter of Michel and Pessa, the Makowski spouses. Upon eyewitness certification of the death of Ruchla Makowska this act was read to the witnesses, signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

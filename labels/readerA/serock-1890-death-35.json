@@ -1,0 +1,32 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_35-38.jpg",
+               "sha256": "7589125ADE3B2D904875190F1949671FD98280B1885D47DD734F0B9798F6D62B",
+               "position": "left page, upper act (margin No.35)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 35, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-09-14 [unclear: 09:00/10:00]", "original_script": "четырнадцатаго Сентября тысяча восемьсотъ девяностаго года въ де[unclear: вять/сять] часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "hour-word hyphenated across the line break — nine/ten both plausible; single date, no dual"},
+    "event_date": {"value": "1890-09-13 11:00", "original_script": "вчерашняго числа въ одиннадцать часовъ утра ... въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 7-9"},
+    "principal": {
+      "name": {"value": "Ruchla Laja Frydman", "original_script": "умерла Рухля Лая Фридманъ (underlined in ink); closing 'удостовѣренію Рухли Лаи Фридманъ'", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9 and closing lines 15-16", "note": "closing repeat used as internal check — agrees"},
+      "age": {"value": 38, "original_script": "тридцати восьми лѣтъ отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 10-11"},
+      "sex": {"value": "female", "original_script": "умерла (р + л + а ending)", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 7-8", "note": "verb ending checked first; 'жительница', 'дочь' agree"},
+      "residence": {"value": "city of Radzymin, Radzymin district", "original_script": "жительница города Радимина Радиминскаго Уѣзда", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 9-10"},
+      "birthplace": {"value": "posad Rozan (Rozan), Makow district", "original_script": "родившаяся въ посадѣ Рожанъ Маковскаго Уѣзда", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 12-13"}
+    },
+    "father": {"name": {"value": "Lejba", "original_script": "дочь Лейбы", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 12"}},
+    "mother": {"name": {"value": "Sura [unclear: Majta/Malka]", "original_script": "и Суры Ма[unclear: йты/лки]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act line 12", "note": "second given-name of mother ambiguous mid-word"},
+               "maiden_name": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "BLANK", "note": "no née given for the deceased's mother"}},
+    "deceased_left_behind": {"value": "widowed husband [unclear: Bojm/Chaim] Frydman, shopkeeper in posad Serock, and five children", "original_script": "оставивъ послѣ себя мужа [unclear: Боима/Хаима] Фридмана лавочника въ посадѣ Сероцкѣ и пять дѣтей", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 13-15", "note": "husband's given name initial letter ambiguous Б/Х; number of children 'пять' read cleanly"},
+    "declarants": [
+      {"name": "Abram Frydman", "original_script": "Абрамъ Фридманъ", "occupation": "innkeeper (шинкарь)", "age": 54, "confidence": "PROBABLE", "source_span": "act lines 3-4", "note": "same surname as deceased and her husband; kinship not stated in ink — not assumed"},
+      {"name": "Berek Kołtun", "original_script": "Берекъ Колтунъ", "occupation": "cemetery attendant (кладбищный служитель)", "age": 65, "confidence": "PROBABLE", "source_span": "act lines 4-6", "note": "occupation here 'кладбищный служитель' where earlier acts of the same year say 'работникъ' — recorded as the ink shows"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ Гражданскаго Состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "second witness illiterate; a first-witness signature line is present below the officiant but not cleanly readable [unclear: Абрамъ Фридманъ?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "final lines"}
+  },
+  "translation": "Took place in posad Serock, 14 September 1890, [unclear: 9/10] AM. Appeared personally Abram Frydman, innkeeper, 54, and Berek Kołtun, cemetery attendant, 65, both residing in posad Serock, and declared that yesterday at 11 AM died in posad Serock Ruchla Laja Frydman, resident of the city of Radzymin, Radzymin district, thirty-eight years of age, daughter of Lejba and Sura [unclear: Majta], born in posad Rozan, Makow district, leaving behind her husband [unclear: Bojm/Chaim] Frydman, shopkeeper in posad Serock, and five children. Upon eyewitness certification of the death of Ruchla Laja Frydman this act was read to the witnesses, signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

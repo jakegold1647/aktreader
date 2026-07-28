@@ -1,0 +1,33 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+               "sha256": "FE50EC137204DE014BC34AF985974DB498875097FA6F73EDC9D0AE6D26E81EA5",
+               "position": "left page, lower act (margin No.40); act carries red-ink corrections and a red marginal certification"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 40, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-09-23 07:00", "original_script": "двадцать третьяго Сентября тысяча восемьсотъ девяностаго года въ семь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "single date, no dual"},
+    "event_date": {"value": "1890-09-22 04:00", "original_script": "вчерашняго числа въ четыре часа утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 7-8"},
+    "principal": {
+      "name": {"value": "Elka Bobek", "original_script": "умерла [black 'Гутманъ' struck through; red interlinear correction 'Элька'] Бобекъ; closing formula still reads uncorrected 'о кончинѣ Гутмана Бобекъ'", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9, closing lines 12-13, red marginal note", "note": "clerk originally entered the father's given name as the deceased; corrected in red ink (умерла + Элька + дочь-clause) with a red marginal certification; the closing repeat was NOT corrected and still reads 'Гутмана Бобекъ' — internal name-repeat check conflicts by design of the correction, graded on the corrected reading"},
+      "age": {"value": "2 years", "original_script": "два года отъ роду имѣющ[ій → corrected ending, red]", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 9-10"},
+      "sex": {"value": "female", "original_script": "умерла (red correction over black); red 'дочь'", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-10", "note": "verb ending checked first: final reading after red correction is умерла; original black layer had masculine framing (сынъ) — the red layer controls"},
+      "birthplace": {"value": "[unclear: posad Serock?]", "original_script": "родившійся въ посадѣ [token struck/overwritten, not cleanly readable]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act line 10", "note": "the place token after 'въ посадѣ' is caught in the correction mess; single shaky candidate Сероцкѣ"}
+    },
+    "father": {"name": {"value": "Gutman Bobek", "original_script": "red correction: 'дочь Гутмана и ...' [replacing struck black 'сынъ ...']; father occupation possibly сапожникъ [unclear]", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 10-11 (red layer)", "note": "father's name also appears in the uncorrected closing 'о кончинѣ Гутмана Бобекъ' and in 'супруговъ Бобекъ'"},
+              "occupation": {"value": "[unclear: shoemaker (сапожникъ)?]", "original_script": "супруговъ Бобекъ, са-пожник[unclear ending]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 11-12", "note": "word split across line break; ending obscured"}},
+    "mother": {"name": {"value": "[unclear: Estera?]", "original_script": "red: 'и Е[unclear: сте]ры' — red interlinear hand, shaky", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act line 11 (red layer)", "note": "only one shaky candidate; red hand small and cramped"},
+               "maiden_name": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "BLANK", "note": "no née in either ink layer"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "ABSENT_ON_FORM", "note": "child death — no survivors clause in formula"},
+    "declarants": [
+      {"name": "Berek Kołtun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "source_span": "act lines 3-4", "note": "age word partly cramped; 65 matches this witness's age in every other act of the year — witness-age continuity check"},
+      {"name": "Majer Mendzilewski", "original_script": "Маеръ Мендзилевскій; signature below reads Меэръ Мендзилевскій", "occupation": "shopkeeper (лавочникъ)", "age": 25, "confidence": "PROBABLE", "source_span": "act lines 4-6 and signature", "note": "same surname as the deceased infant of act 37; kinship not stated — not assumed"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ Гражданскаго Состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "second witness illiterate; first-listed literate witness signed Меэръ Мендзилевскій", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "final lines and signature"},
+    "marginalia": {"value": "red-ink marginal certification of the corrections, running vertically in the left margin; partially legible — appears to validate the corrected words ('исправленному ... вѣрить') and carries an official's initial/signature [unclear: М. М...?]", "original_script": "[red marginal note, partially legible]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "left margin, red ink"}
+  },
+  "translation": "Took place in posad Serock, 23 September 1890, 7 AM. Appeared personally Berek Kołtun, laborer, 65, and Majer Mendzilewski, shopkeeper, 25, both residing in posad Serock, and declared that yesterday at 4 AM died [corrected in red:] Elka Bobek, two years of age, born in posad [unclear: Serock], [red:] daughter of Gutman and [unclear: Estera], the Bobek spouses, [father's occupation unclear: shoemaker?]. Upon eyewitness certification of the death of [closing left uncorrected:] Gutman Bobek, this act was read to the witnesses, signed by us and one witness; the second witness is illiterate. Red marginal note certifies the corrections.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

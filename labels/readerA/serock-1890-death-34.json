@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+               "sha256": "4317591739940CD91D23ED29A19BC01FF3E39FC43E4982EDC6B73FA8A8A5FCA4",
+               "position": "right page, lower act (margin No.34)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 34, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-09-01 20:00", "original_script": "Состоялось въ посадѣ перваго Сентября тысяча восемьсотъ девяностаго года въ восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "clerk omitted the town name after 'въ посадѣ' in the venue slot (Serock supplied by register context only, not by this act's ink); single date, no dual"},
+    "event_date": {"value": "1890-08-31 18:00", "original_script": "вчерашняго числа въ шесть часовъ вечера въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9"},
+    "principal": {
+      "name": {"value": "Bejla [unclear: Miara/Mera]", "original_script": "умерла Бейля Мяра (large letters); closing 'о кончинѣ Бейли Мяра'", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 9-10 and closing lines 12-13", "note": "ink clearly 'Мяра' in both occurrences and in declarant's surname; normalization ambiguous Miara/Mera — candidates retained"},
+      "age": {"value": "2.5 years", "original_script": "два съ половиною лѣтъ отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 10"},
+      "sex": {"value": "female", "original_script": "умерла (р + л + а ending visible)", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 9", "note": "verb ending checked first; feminine participle 'имѣющая' and 'дочь' agree"}
+    },
+    "father": {"name": {"value": "Moszek", "original_script": "дочь Мошка", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 11", "note": "declarant 1 bears the same surname Мяра but no kinship is stated in the ink — not assumed"}},
+    "mother": {"name": {"value": "Frajda", "original_script": "и Фрайды", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 11"},
+               "maiden_name": {"value": "[unclear: Kohn/Kac]", "original_script": "урожденной Ко[unclear: нъ/цъ]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "source_span": "act lines 11-12", "note": "final letter(s) cramped at line edge; both candidates retained"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "ABSENT_ON_FORM", "note": "child death — no survivors clause in formula"},
+    "declarants": [
+      {"name": "Szmul [unclear: Miara/Mera]", "original_script": "Шмуль Мяра; signature below reads Шмуль Мяра", "occupation": "trader (торговщикъ)", "age": 40, "confidence": "PROBABLE", "source_span": "act lines 3-4 and signature", "note": "same surname as deceased; relationship not stated in ink"},
+      {"name": "Berek Kołtun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "source_span": "act lines 4-6"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ гражданскаго состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "second witness illiterate ('Вторый свидѣтель неграмотенъ'); first witness signed: Шмуль Мяра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "final act lines and signature"}
+  },
+  "translation": "Took place in the posad [town name omitted by clerk], 1 September 1890, 8 PM. Appeared personally Szmul [unclear: Miara], trader, 40, and Berek Kołtun, laborer, 65, both residing in posad Serock, and declared that yesterday at 6 PM in posad Serock died Bejla [unclear: Miara], two and a half years of age, daughter of Moszek and Frajda née [unclear: Kohn/Kac]. Upon eyewitness certification of the death of Bejla [unclear: Miara] this act was read to the witnesses, signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

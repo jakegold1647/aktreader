@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.2.0", "prompt_sha256": "EA0E83756698496414BA654DE70805179829848F31ACC644112B1E51F48E955F",
+             "blind_group_id": "serock-1890-deaths-30-40-wave-003"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+               "sha256": "4317591739940CD91D23ED29A19BC01FF3E39FC43E4982EDC6B73FA8A8A5FCA4",
+               "position": "left page, upper act (margin No.31)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 31, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-08-15 08:00", "original_script": "пятнадцатаго Августа тысяча восемьсотъ девяностаго года въ восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 1-3", "note": "single date in the ink; no second day-word"},
+    "event_date": {"value": "1890-08-14 16:00", "original_script": "вчерашняго числа въ четыре часа пополудни въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 7-8"},
+    "principal": {
+      "name": {"value": "Abram Hersz Sztatzinger", "original_script": "умеръ Абрамъ Гершъ Штат зингеръ (surname written as two spaced tokens); closing 'о кончинѣ Абрама Герша Штат зингера'", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9 and closing lines 11-12", "note": "split-token surname test applied: both occurrences show 'Штат'+'зингеръ' in the surname slot, and the closing genitive inflects as one surname — one person, one surname, not two persons; same surname borne by declarant in act 32 and deceased in act 29 on adjacent pages"},
+      "age": {"value": "9 months", "original_script": "девять мѣсяцевъ имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 8-9"},
+      "sex": {"value": "male", "original_script": "умеръ (terminal ъ, no -ла)", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 8", "note": "verb ending checked first"}
+    },
+    "father": {"name": {"value": "Chaim", "original_script": "сынъ Хаима", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 9"}},
+    "mother": {"name": {"value": "Tauba", "original_script": "и Тауби", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act line 9"},
+               "maiden_name": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "BLANK", "note": "née slot not filled for this infant's mother"}},
+    "deceased_left_behind": {"value": null, "original_script": null, "confidence": "PROBABLE", "observation_state": "ABSENT_ON_FORM", "note": "infant death — survivors clause not part of the formula for children"},
+    "declarants": [
+      {"name": "Lejbka [unclear: Kejdzior/Kendzior]", "original_script": "Лейбка Ке[unclear: й/н]дзюръ", "occupation": "shoemaker (сапожникъ)", "age": 54, "confidence": "UNCLEAR", "source_span": "act lines 3-5", "note": "same declarant, same spelling and age as act 30 — consistency check"},
+      {"name": "Berek Kołtun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "source_span": "act lines 5-6", "note": "recurring witness through acts 33, 34, 38, 39, 40 of this register year"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski/Przybyszew]", "original_script": "Чиновникъ гражданскаго состоянія [flourish signature]", "confidence": "UNCLEAR", "source_span": "closing line"},
+    "signatures_note": {"value": "witnesses declared themselves illiterate ('Свидѣтели объявили себя неграмотными' [wording partly unclear]); no witness signatures", "confidence": "PROBABLE", "observation_state": "PRESENT", "source_span": "act lines 12-13"}
+  },
+  "translation": "Took place in posad Serock, 15 August 1890, 8 AM. Appeared personally Lejbka [unclear: Kejdzior], shoemaker, 54, and Berek Kołtun, laborer, 65, both residing in Serock, and declared that yesterday at 4 PM in posad Serock died Abram Hersz Sztatzinger, nine months of age, son of Chaim and Tauba. Upon eyewitness certification of the death of Abram Hersz Sztatzinger this act was read to the witnesses and signed by us; the witnesses are illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
