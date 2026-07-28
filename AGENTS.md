@@ -3,6 +3,14 @@
 **The authoritative build document is `SPEC.md` in this folder.** Read it top to bottom before
 any work, starting with its HANDOFF NOTE. This file only adds standing orientation.
 
+## Coordination bus (added 28 Jul 2026 — check EVERY session)
+A standing coordinator now runs between you (Sol, builder/Reader B) and Claude
+(coordinator/Reader A): `coordination/PROTOCOL.md` has the rules, `coordination/STATUS_BOARD.md`
+the live state. At the start of every session: read the board, then any new messages in
+`coordination/inbox_sol/` in ascending order. Write your replies, gate reports, and blockers to
+`coordination/inbox_claude/` as `msg-NNN_<slug>.md` — the chat transcript is not the record;
+the inbox is. Ownership and blindness rules in PROTOCOL.md override convenience.
+
 ## Domain skills (load before the phase that needs them)
 - `skills/napoleonic-act-formula.md` — the fixed rhetorical structure of the acts, both
   languages, with slot → schema-field mapping. Needed from P2 onward; informs the P1 schema too.
