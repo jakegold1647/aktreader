@@ -1,0 +1,437 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-30.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-30",
+  "created_at": "2026-07-28T17:41:20.2348087-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-30-40-wave-003",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.2.0",
+    "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+    "sha256": "2a35c3b1b9b20b8a1a741736cca81c8552b0343d3c93204b3422dd4b9bd69740",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1450,
+      "y": 1030,
+      "width": 1320,
+      "height": 1160,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 30,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 1490,
+        "y": 1040,
+        "width": 1230,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 1490,
+        "y": 1170,
+        "width": 1230,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, ages, occupations, and shared residence clause"
+    },
+    "event": {
+      "bbox": {
+        "x": 1490,
+        "y": 1400,
+        "width": 1230,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 1490,
+        "y": 1530,
+        "width": 1230,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 1490,
+        "y": 1690,
+        "width": 1230,
+        "height": 240,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 1490,
+        "y": 1840,
+        "width": 1230,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-30#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-30#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-30#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 30. Состоялось въ посадѣ Сероцкѣ третьяго Августа тысяча восемьсотъ девяностаго года въ восемь часовъ утра. Явились лично Лейбка [unclear: Кендлеръ/Кендлоръ], сапожникъ, пятидесяти четырехъ лѣтъ, и Фишеръ [unclear: Стерд…?], маляръ, шестидесяти семи лѣтъ отъ роду, жительствующіе оба въ Сероцкѣ, и объявили, что вчерашняго числа въ девять часовъ вечера въ посадѣ Сероцкѣ умеръ Мошекъ Кацъ, шестидесяти лѣтъ отъ роду. По личному удостоверенію о кончинѣ Каца актъ сей [unclear: нами и однимъ свидѣтелемъ подписанъ; первый свидѣтель неграмотенъ?].",
+    "translation": "Act 30. Registered in Serock on the single written date 3 August 1890 at 8 a.m. Leybka [unclear: Kendler/Kendlor], a shoemaker, 54, and Fisher [unclear surname], a painter, 67, declared that yesterday at 9 p.m. in Serock Moshek Kats, age 60, died. The exact signature closing is partly unclear."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умеръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The death-declaration formula is visible on the act."
+      ]
+    },
+    "act_no": {
+      "value": 30,
+      "original_script": "№ 30",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "event"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-08-03",
+        "gregorian": "1890-08-15",
+        "gregorian_derived": true
+      },
+      "original_script": "третьяго Августа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation, not a second transcribed date."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-08-02",
+        "gregorian": "1890-08-14",
+        "gregorian_derived": true
+      },
+      "original_script": "вчерашняго числа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Derived mechanically as the day before the written single registration date; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "principal.name": {
+      "value": "Moshek Kats",
+      "original_script": "Мошекъ Кацъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "60 years",
+      "original_script": "шестидесяти лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.sex": {
+      "value": "male",
+      "original_script": "умеръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "A maiden-name field does not apply to the male principal."
+      ]
+    },
+    "father.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No parentage clause is present in this act."
+      ]
+    },
+    "mother.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No parentage clause is present in this act."
+      ]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No maiden-name clause is present."
+      ]
+    },
+    "declarants.0.name": {
+      "value": "[unclear: Leybka Kendler/Leybka Kendlor]",
+      "original_script": "[unclear: Лейбка Кендлеръ/Лейбка Кендлоръ]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Leybka Kendler",
+          "original_script": "Лейбка Кендлеръ"
+        },
+        {
+          "value": "Leybka Kendlor",
+          "original_script": "Лейбка Кендлоръ"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "54 years",
+      "original_script": "пятидесяти четырехъ лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": "shoemaker",
+      "original_script": "сапожникъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе оба въ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "[unclear: Fisher Sterd…?]",
+      "original_script": "[unclear: Фишеръ Стерд…?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Fisher Sterd…",
+          "original_script": "Фишеръ Стерд…"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The surname remains unresolved after the visible Стерд- cluster."
+      ]
+    },
+    "declarants.1.age": {
+      "value": "67 years",
+      "original_script": "шестидесяти семи лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "painter",
+      "original_script": "маляръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе оба въ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "signatures_note": {
+      "value": "[unclear: one declarant signed and the first was noted illiterate?]",
+      "original_script": "[unclear: однимъ свидѣтелемъ подписанъ; первый свидѣтель неграмотенъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "one declarant signed; the first was noted illiterate",
+          "original_script": "однимъ свидѣтелемъ подписанъ; первый свидѣтель неграмотенъ"
+        }
+      ],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "closing"
+      ],
+      "notes": [
+        "No marginal annotation is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

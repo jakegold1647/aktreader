@@ -1,0 +1,432 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-34.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-34",
+  "created_at": "2026-07-28T17:41:20.2348087-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-30-40-wave-003",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.2.0",
+    "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+    "sha256": "4317591739940cd91d23ed29a19bc01ff3e39fc43e4982edc6b73fa8a8a5fca4",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1450,
+      "y": 1050,
+      "width": 1300,
+      "height": 1130,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 34,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 1490,
+        "y": 1060,
+        "width": 1230,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 1490,
+        "y": 1200,
+        "width": 1230,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, ages, occupations, and shared residence clause"
+    },
+    "event": {
+      "bbox": {
+        "x": 1490,
+        "y": 1430,
+        "width": 1230,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 1490,
+        "y": 1550,
+        "width": 1230,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 1490,
+        "y": 1690,
+        "width": 1230,
+        "height": 240,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 1490,
+        "y": 1890,
+        "width": 1230,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-34#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-34#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-34#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-34#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-34#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 34. Состоялось въ посадѣ Сероцкѣ перваго Сентября тысяча восемьсотъ девяностаго года въ восемь часовъ вечера. Явились лично Шмуилъ Меда, торговщикъ, сорока лѣтъ, и Берекъ Килтуръ, работникъ, шестидесяти пяти лѣтъ отъ роду, жительствующіе оба въ посадѣ Сероцкѣ, и объявили, что вчерашняго числа въ шесть часовъ вечера въ посадѣ Сероцкѣ умерла Етля Меда, два съ половиною лѣтъ отъ роду, дочь Мошка и Фрайды, урожденной [unclear: Коцъ/Кацъ]. По наочному удостоверенію о кончинѣ Етли Меда актъ сей прочитанъ и подписанъ; [unclear: одинъ свидѣтель неграмотенъ?].",
+    "translation": "Act 34. Registered in Serock on the single written date 1 September 1890 at 8 p.m. Shmuil Meda, trader, 40, and Berek Kiltur, laborer, 65, declared that yesterday at 6 p.m. Etlya Meda, age two years and six months, daughter of Moshek and Frayda née [unclear: Kots/Kats], died in Serock."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The death-declaration formula is visible on the act."
+      ]
+    },
+    "act_no": {
+      "value": 34,
+      "original_script": "№ 34",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "event"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-09-01",
+        "gregorian": "1890-09-13",
+        "gregorian_derived": true
+      },
+      "original_script": "перваго Сентября",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation, not a second transcribed date."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-08-31",
+        "gregorian": "1890-09-12",
+        "gregorian_derived": true
+      },
+      "original_script": "вчерашняго числа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Derived mechanically as the day before the written single registration date; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "principal.name": {
+      "value": "Etlya Meda",
+      "original_script": "Етля Меда",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "2 years 6 months",
+      "original_script": "два съ половиною лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "A maiden-name field does not apply to the female child."
+      ]
+    },
+    "father.name": {
+      "value": "Moshek",
+      "original_script": "Мошка",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.name": {
+      "value": "Frayda",
+      "original_script": "Фрайды",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "[unclear: Kots/Kats]",
+      "original_script": "[unclear: Коцъ/Кацъ]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Kots",
+          "original_script": "Коцъ"
+        },
+        {
+          "value": "Kats",
+          "original_script": "Кацъ"
+        }
+      ],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "declarants.0.name": {
+      "value": "Shmuil Meda",
+      "original_script": "Шмуилъ Меда",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "40 years",
+      "original_script": "сорока лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": "trader",
+      "original_script": "торговщикъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Berek Kiltur",
+      "original_script": "Берекъ Килтуръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "65 years",
+      "original_script": "шестидесяти пяти лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "laborer",
+      "original_script": "работникъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "signatures_note": {
+      "value": "[unclear: one declarant signed and the other was illiterate?]",
+      "original_script": "[unclear: одинъ свидѣтель неграмотенъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "one declarant signed; the other was illiterate",
+          "original_script": "одинъ свидѣтель неграмотенъ"
+        }
+      ],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "closing"
+      ],
+      "notes": [
+        "No marginal annotation is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

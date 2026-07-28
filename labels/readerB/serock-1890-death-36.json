@@ -1,0 +1,426 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-36.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-36",
+  "created_at": "2026-07-28T17:41:20.2348087-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-30-40-wave-003",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.2.0",
+    "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_35-38.jpg",
+    "sha256": "7589125ade3b2d904875190f1949671fd98280b1885d47dd734f0b9798f6d62b",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 210,
+      "y": 990,
+      "width": 1240,
+      "height": 1190,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 36,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 250,
+        "y": 1000,
+        "width": 1170,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 250,
+        "y": 1130,
+        "width": 1170,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, ages, occupations, and shared residence clause"
+    },
+    "event": {
+      "bbox": {
+        "x": 250,
+        "y": 1380,
+        "width": 1170,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 250,
+        "y": 1510,
+        "width": 1170,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 250,
+        "y": 1690,
+        "width": 1170,
+        "height": 240,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 250,
+        "y": 1940,
+        "width": 1170,
+        "height": 240,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-36#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-36#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-36#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-36#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-36#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 36. Состоялось въ посадѣ Сероцкѣ [unclear: семнадцатаго Сентября?] тысяча восемьсотъ девяностаго года [unclear: въ шесть часовъ вечера?]. [illegible: declarant identities, ages, and occupations]. Объявили, что [unclear: вчерашняго числа?] въ посадѣ Сероцкѣ [unclear: умерла/умеръ]. [illegible: principal name, age, filiation, and survivor clause]. Актъ сей [illegible: closing].",
+    "translation": "Act 36. Serock, 1890. The written September day may be the 17th and the time may be 6 p.m., but heavy bleed-through defeats the declarants, principal identity, sex, age, filiation, survivors, and exact closing. No identity has been supplied from context."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "[unclear: умеръ/умерла]",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The death-declaration formula is visible on the act."
+      ]
+    },
+    "act_no": {
+      "value": 36,
+      "original_script": "№ 36",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "event"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": "[unclear: 17 September 1890 Julian?]",
+      "original_script": "[unclear: семнадцатаго Сентября?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": {
+            "julian": "1890-09-17",
+            "gregorian": "1890-09-29",
+            "gregorian_derived": true
+          },
+          "original_script": "семнадцатаго Сентября"
+        }
+      ],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date may be written; the day-word is not secure."
+      ]
+    },
+    "event_date": {
+      "value": "[unclear: day before the uncertain registration date?]",
+      "original_script": "[unclear: вчерашняго числа?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "day before registration",
+          "original_script": "вчерашняго числа"
+        }
+      ],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The principal's name is ink-present but unreadable."
+      ]
+    },
+    "principal.age": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The principal's age is unreadable."
+      ]
+    },
+    "principal.sex": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The death-verb ending cannot be distinguished securely."
+      ]
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "The identity clause is unreadable."
+      ]
+    },
+    "father.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "The filiation text is unreadable."
+      ]
+    },
+    "mother.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "The filiation text is unreadable."
+      ]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "The filiation text is unreadable."
+      ]
+    },
+    "declarants.0.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The first declarant identity is unreadable."
+      ]
+    },
+    "declarants.0.age": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The first declarant age is unreadable."
+      ]
+    },
+    "declarants.0.occupation": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The first occupation is unreadable."
+      ]
+    },
+    "declarants.1.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The second declarant identity is unreadable."
+      ]
+    },
+    "declarants.1.age": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The second declarant age is unreadable."
+      ]
+    },
+    "declarants.1.occupation": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The second occupation is unreadable."
+      ]
+    },
+    "signatures_note": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "The exact signature closing is unreadable."
+      ]
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "closing"
+      ],
+      "notes": [
+        "No marginal annotation is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

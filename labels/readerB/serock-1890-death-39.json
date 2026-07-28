@@ -1,0 +1,426 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-39.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-39",
+  "created_at": "2026-07-28T17:41:20.2348087-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-30-40-wave-003",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.2.0",
+    "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+    "sha256": "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 210,
+      "y": 140,
+      "width": 1240,
+      "height": 930,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 39,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 250,
+        "y": 150,
+        "width": 1170,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 250,
+        "y": 280,
+        "width": 1170,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, ages, occupations, and shared residence clause"
+    },
+    "event": {
+      "bbox": {
+        "x": 250,
+        "y": 500,
+        "width": 1170,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 250,
+        "y": 610,
+        "width": 1170,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 250,
+        "y": 730,
+        "width": 1170,
+        "height": 240,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 250,
+        "y": 850,
+        "width": 1170,
+        "height": 220,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-39#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-39#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-39#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-39#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-39#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 39. Состоялось въ посадѣ Сероцкѣ двадцать девятаго Сентября тысяча восемьсотъ девяностаго года въ семь часовъ утра. Явились лично Іосифъ Рубинштейнъ, купецъ, тридцати восьми лѣтъ, и Берекъ Килтуръ, кладбищенскій служитель, [unclear: шестидесяти ...?] лѣтъ отъ роду, жительствующіе оба въ посадѣ Сероцкѣ, и объявили, что вчерашняго числа [unclear: въ шесть часовъ вечера?] въ посадѣ Сероцкѣ умеръ Лейбъ Майковскій, одинъ съ половиною лѣтъ отъ роду, сынъ Мошка и Пессы, супруговъ Майковскихъ. По наочному удостоверенію о кончинѣ Лейба Майковскаго актъ сей прочитанъ и подписанъ. Іосифъ Рубинштейнъ.",
+    "translation": "Act 39. Registered in Serock on the single written date 29 September 1890 at 7 a.m. Josef Rubinstein, merchant, 38, and Berek Kiltur, cemetery attendant, declared that yesterday [unclear: at 6 p.m.?] Leib Maykovsky, age one year and six months, son of Moshek and Pessa, spouses Maykovsky, died."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умеръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The death-declaration formula is visible on the act."
+      ]
+    },
+    "act_no": {
+      "value": 39,
+      "original_script": "№ 39",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "event"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-09-29",
+        "gregorian": "1890-10-11",
+        "gregorian_derived": true
+      },
+      "original_script": "двадцать девятаго Сентября",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation, not a second transcribed date."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-09-28",
+        "gregorian": "1890-10-10",
+        "gregorian_derived": true
+      },
+      "original_script": "вчерашняго числа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Derived mechanically as the day before the written single registration date; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "principal.name": {
+      "value": "Leib Maykovsky",
+      "original_script": "Лейбъ Майковскій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "1 year 6 months",
+      "original_script": "одинъ съ половиною лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.sex": {
+      "value": "male",
+      "original_script": "умеръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "A maiden-name field does not apply to the male child."
+      ]
+    },
+    "father.name": {
+      "value": "Moshek Maykovsky",
+      "original_script": "Мошка ... Майковскихъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.name": {
+      "value": "Pessa Maykovsky",
+      "original_script": "Пессы, супруговъ Майковскихъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No урожденной or equivalent maiden-name phrase is present."
+      ]
+    },
+    "declarants.0.name": {
+      "value": "Josef Rubinstein",
+      "original_script": "Іосифъ Рубинштейнъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants",
+        "closing"
+      ],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "38 years",
+      "original_script": "тридцати восьми лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": "merchant",
+      "original_script": "купецъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Berek Kiltur",
+      "original_script": "Берекъ Килтуръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "[unclear: 60-something years?]",
+      "original_script": "[unclear: шестидесяти ... лѣтъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "60-something years",
+          "original_script": "шестидесяти ... лѣтъ"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "cemetery attendant",
+      "original_script": "кладбищенскій служитель",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе оба въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "signatures_note": {
+      "value": "Josef Rubinstein and the registrar signed",
+      "original_script": "актъ сей ... подписанъ; Іосифъ Рубинштейнъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "closing"
+      ],
+      "notes": [
+        "No marginal annotation is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

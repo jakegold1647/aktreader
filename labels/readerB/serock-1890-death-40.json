@@ -1,0 +1,450 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-40.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-40",
+  "created_at": "2026-07-28T17:41:20.2348087-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-30-40-wave-003",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.2.0",
+    "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+    "sha256": "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 210,
+      "y": 1000,
+      "width": 1240,
+      "height": 1190,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 40,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 250,
+        "y": 1010,
+        "width": 1170,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 250,
+        "y": 1150,
+        "width": 1170,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, ages, occupations, and shared residence clause"
+    },
+    "event": {
+      "bbox": {
+        "x": 250,
+        "y": 1410,
+        "width": 1170,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 250,
+        "y": 1510,
+        "width": 1170,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 250,
+        "y": 1660,
+        "width": 1170,
+        "height": 240,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 250,
+        "y": 1930,
+        "width": 1170,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-40#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-40#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-40#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-40#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-40#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 40. Состоялось въ посадѣ Сероцкѣ тридцатаго Сентября тысяча восемьсотъ девяностаго года въ семь часовъ утра. Явились лично Берекъ Килтуръ, работникъ, [unclear: шестидесяти ...?] лѣтъ, и Маркъ Медниковскій, лавочникъ, двадцати пяти лѣтъ отъ роду, жительствующіе въ посадѣ Сероцкѣ, и объявили, что вчерашняго числа въ четыре часа утра умерла [red correction: Лейка] [unclear: Бодекъ/Бодеръ], [unclear: двухъ лѣтъ?] отъ роду. [illegible: corrected parentage clause]. По наочному удостоверенію о кончинѣ [unclear: corrected name] актъ сей прочитанъ, нами и однимъ свидѣтелемъ подписанъ.",
+    "translation": "Act 40. Registered in Serock on the single written date 30 September 1890 at 7 a.m. Berek Kiltur and Marek Mednikovsky declared that yesterday at 4 a.m. a female child whose corrected name appears to be [unclear: Leyka Bodek/Leyka Boder], possibly age two, died. Red-ink corrections overwrite the parentage and part of the identity clause; those identities are not guessed."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The death-declaration formula is visible on the act."
+      ]
+    },
+    "act_no": {
+      "value": 40,
+      "original_script": "№ 40",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "event"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-09-30",
+        "gregorian": "1890-10-12",
+        "gregorian_derived": true
+      },
+      "original_script": "тридцатаго Сентября",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation, not a second transcribed date."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-09-29",
+        "gregorian": "1890-10-11",
+        "gregorian_derived": true
+      },
+      "original_script": "вчерашняго числа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Derived mechanically as the day before the written single registration date; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "principal.name": {
+      "value": "[unclear: Leyka Bodek/Leyka Boder]",
+      "original_script": "[unclear: Лейка Бодекъ/Лейка Бодеръ]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Leyka Bodek",
+          "original_script": "Лейка Бодекъ"
+        },
+        {
+          "value": "Leyka Boder",
+          "original_script": "Лейка Бодеръ"
+        }
+      ],
+      "source_span_ids": [
+        "principal",
+        "closing"
+      ],
+      "notes": [
+        "The given name is inserted in red over a struck reading."
+      ]
+    },
+    "principal.age": {
+      "value": "[unclear: 2 years?]",
+      "original_script": "[unclear: двухъ лѣтъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "2 years",
+          "original_script": "двухъ лѣтъ"
+        }
+      ],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "A maiden-name field does not apply to the female child."
+      ]
+    },
+    "father.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation",
+        "closing"
+      ],
+      "notes": [
+        "The corrected parentage text is overwritten and unreadable."
+      ]
+    },
+    "mother.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation",
+        "closing"
+      ],
+      "notes": [
+        "The corrected parentage text is overwritten and unreadable."
+      ]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation",
+        "closing"
+      ],
+      "notes": [
+        "No secure maiden-name reading survives the correction."
+      ]
+    },
+    "declarants.0.name": {
+      "value": "Berek Kiltur",
+      "original_script": "Берекъ Килтуръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "[unclear: 60-something years?]",
+      "original_script": "[unclear: шестидесяти ... лѣтъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "60-something years",
+          "original_script": "шестидесяти ... лѣтъ"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": "laborer",
+      "original_script": "работникъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Marek Mednikovsky",
+      "original_script": "Маркъ Медниковскій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "25 years",
+      "original_script": "двадцати пяти лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "shopkeeper",
+      "original_script": "лавочникъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующіе въ посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "signatures_note": {
+      "value": "registrar and one declarant signed",
+      "original_script": "актъ сей ... нами и однимъ свидѣтелемъ подписанъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": "red-ink correction alters the principal and parentage clause",
+      "original_script": "Лейка",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal",
+        "filiation",
+        "closing"
+      ],
+      "notes": [
+        "The given name is visibly inserted in red; exact corrected parentage wording remains illegible."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Builder-produced blind subscription-session label from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
