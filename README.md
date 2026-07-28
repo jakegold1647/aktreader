@@ -100,6 +100,13 @@ All 36 records are evaluation-only and sequestered by 21 clerk-year IDs in
 [`gold/clerk_year_holdout.json`](gold/clerk_year_holdout.json). Their correction consent is not
 recorded, so none is training-eligible.
 
+Machine consensus is kept separate. [`labels/silver/manifest.json`](labels/silver/manifest.json)
+assigns resolved acts 1–5 to the training-only `SILVER` tier, pins every source label and
+arbitration document by SHA-256, and explicitly excludes them from evaluation. Its resolved
+field payloads remain content-addressed in the coordinator appendices rather than duplicated;
+`training_materialized: false` prevents claiming that a model-ready export already exists. Act 6
+has no tier and is quarantined pending the required human identity check.
+
 ## P2 implementation and baseline
 
 P2 now contains:

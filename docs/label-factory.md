@@ -92,6 +92,19 @@ of their clerk-years are sequestered in
 every overlapping clerk-year, not merely the same act IDs. This prevents handwriting-style
 memorization from contaminating the benchmark.
 
+## Gold, silver, and quarantine
+
+- `GOLD` is human-verified, clerk-year-sequestered, and evaluation-only.
+- `SILVER` is resolved 2-of-3 machine consensus, training-eligible, and never evaluation data.
+- An identity-level fork has no tier until the required human sample resolves it.
+
+The current machine-readable catalog is
+[`labels/silver/manifest.json`](../labels/silver/manifest.json). It assigns acts 1–5 to silver,
+pins both source labels plus the consensus and Reader C documents by SHA-256, and leaves act 6
+quarantined. `training_materialized: false` is deliberate: the resolved field payloads are still
+stored in the content-addressed coordinator appendices, so no model-ready field export is claimed
+yet.
+
 No label or training export may contain material from Yad Vashem, USHMM, Arolsen, Geneteka, or
 JRI-Poland indexes. The factory labels only user-supplied permitted register scans.
 

@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/silver-tier-manifest-1.0.0.json",
+  "title": "AKTREADER silver-tier provenance manifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "created_on",
+    "tier_definition",
+    "records",
+    "quarantine",
+    "restricted_sources_used",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {"const": "../../schemas/silver-tier-manifest-1.0.0.schema.json"},
+    "schema_version": {"const": "1.0.0"},
+    "created_on": {"type": "string", "format": "date"},
+    "tier_definition": {
+      "type": "object",
+      "required": ["name", "basis", "training_eligible", "eval_eligible", "human_verified"],
+      "properties": {
+        "name": {"const": "SILVER"},
+        "basis": {"const": "BLIND_2_OF_3_MACHINE_CONSENSUS"},
+        "training_eligible": {"const": true},
+        "eval_eligible": {"const": false},
+        "human_verified": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/silverRecord"}
+    },
+    "quarantine": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/quarantineRecord"}
+    },
+    "restricted_sources_used": {"const": false},
+    "authority_warning": {"const": "extraction is not authority — verify against the scan"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sourceFile": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "sourceLabel": {
+      "type": "object",
+      "required": ["reader_role", "path", "sha256"],
+      "properties": {
+        "reader_role": {"enum": ["A", "B"]},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source_labels",
+        "consensus_document",
+        "arbitration_document",
+        "reader_a_prompt_binding",
+        "reader_b_prompt_sha256"
+      ],
+      "properties": {
+        "source_labels": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/sourceLabel"}
+        },
+        "consensus_document": {"$ref": "#/$defs/sourceFile"},
+        "arbitration_document": {"$ref": "#/$defs/sourceFile"},
+        "reader_a_prompt_binding": {"const": "PROVENANCE_ERRATA_UNVERIFIED"},
+        "reader_b_prompt_sha256": {
+          "const": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+        }
+      },
+      "additionalProperties": false
+    },
+    "silverRecord": {
+      "type": "object",
+      "required": [
+        "record_id",
+        "tier",
+        "clerk_year_id",
+        "resolution_method",
+        "confidence_cap",
+        "training_eligible",
+        "training_materialized",
+        "eval_eligible",
+        "human_verified",
+        "resolved_fields",
+        "provenance"
+      ],
+      "properties": {
+        "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+        "tier": {"const": "SILVER"},
+        "clerk_year_id": {"type": "string", "minLength": 1},
+        "resolution_method": {"const": "BLIND_2_OF_3_MACHINE_CONSENSUS"},
+        "confidence_cap": {"const": "PROBABLE"},
+        "training_eligible": {"const": true},
+        "training_materialized": {"const": false},
+        "eval_eligible": {"const": false},
+        "human_verified": {"const": false},
+        "resolved_fields": {
+          "type": "object",
+          "required": ["storage", "path", "sha256"],
+          "properties": {
+            "storage": {"const": "COORDINATOR_RESOLVED_APPENDIX"},
+            "path": {"type": "string", "minLength": 1},
+            "sha256": {"$ref": "#/$defs/sha256"}
+          },
+          "additionalProperties": false
+        },
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": false
+    },
+    "quarantineRecord": {
+      "type": "object",
+      "required": [
+        "record_id",
+        "tier",
+        "status",
+        "training_eligible",
+        "eval_eligible",
+        "human_verified",
+        "reason",
+        "provenance"
+      ],
+      "properties": {
+        "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+        "tier": {"type": "null"},
+        "status": {"const": "HUMAN_VERIFICATION_REQUIRED"},
+        "training_eligible": {"const": false},
+        "eval_eligible": {"const": false},
+        "human_verified": {"const": false},
+        "reason": {"type": "string", "minLength": 1},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

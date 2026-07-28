@@ -1,0 +1,251 @@
+{
+  "$schema": "../../schemas/silver-tier-manifest-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "created_on": "2026-07-28",
+  "tier_definition": {
+    "name": "SILVER",
+    "basis": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+    "training_eligible": true,
+    "eval_eligible": false,
+    "human_verified": false
+  },
+  "records": [
+    {
+      "record_id": "serock-1890-death-1",
+      "tier": "SILVER",
+      "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
+      "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+      "confidence_cap": "PROBABLE",
+      "training_eligible": true,
+      "training_materialized": false,
+      "eval_eligible": false,
+      "human_verified": false,
+      "resolved_fields": {
+        "storage": "COORDINATOR_RESOLVED_APPENDIX",
+        "path": "labels/consensus/serock-1890-deaths-1-2_wave001_CONSENSUS.md",
+        "sha256": "c2e134b91c136d47168c2942c1a00b3d1ee0060962dffe11f7b83890813ae488"
+      },
+      "provenance": {
+        "source_labels": [
+          {
+            "reader_role": "A",
+            "path": "labels/readerA/serock-1890-death-1.json",
+            "sha256": "e31445a2d0f1cd870599848ef411329b6b5c3c9d31ad204950140fb24806fc4c"
+          },
+          {
+            "reader_role": "B",
+            "path": "labels/readerB/serock-1890-death-1.json",
+            "sha256": "570a600717ab13c4bba432d9e46582f16c1a41814b5f1987edf27ebd60cd9d32"
+          }
+        ],
+        "consensus_document": {
+          "path": "labels/consensus/serock-1890-deaths-1-2_wave001_CONSENSUS.md",
+          "sha256": "c2e134b91c136d47168c2942c1a00b3d1ee0060962dffe11f7b83890813ae488"
+        },
+        "arbitration_document": {
+          "path": "labels/consensus/readerC_arbitration_wave001.md",
+          "sha256": "cc06ca7642b10602537d475af84be86a8ff6a93afd63fce568b5b922003e7918"
+        },
+        "reader_a_prompt_binding": "PROVENANCE_ERRATA_UNVERIFIED",
+        "reader_b_prompt_sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+      }
+    },
+    {
+      "record_id": "serock-1890-death-2",
+      "tier": "SILVER",
+      "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
+      "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+      "confidence_cap": "PROBABLE",
+      "training_eligible": true,
+      "training_materialized": false,
+      "eval_eligible": false,
+      "human_verified": false,
+      "resolved_fields": {
+        "storage": "COORDINATOR_RESOLVED_APPENDIX",
+        "path": "labels/consensus/serock-1890-deaths-1-2_wave001_CONSENSUS.md",
+        "sha256": "c2e134b91c136d47168c2942c1a00b3d1ee0060962dffe11f7b83890813ae488"
+      },
+      "provenance": {
+        "source_labels": [
+          {
+            "reader_role": "A",
+            "path": "labels/readerA/serock-1890-death-2.json",
+            "sha256": "352f3aa3ea5f9cacfb4a1ebf4ec2e9bddcacc455558565314c0168ebef76c7cb"
+          },
+          {
+            "reader_role": "B",
+            "path": "labels/readerB/serock-1890-death-2.json",
+            "sha256": "657985cf472c4b685496c46f7ce6e3db64380ab3607f6cfc18c45661be23a7d4"
+          }
+        ],
+        "consensus_document": {
+          "path": "labels/consensus/serock-1890-deaths-1-2_wave001_CONSENSUS.md",
+          "sha256": "c2e134b91c136d47168c2942c1a00b3d1ee0060962dffe11f7b83890813ae488"
+        },
+        "arbitration_document": {
+          "path": "labels/consensus/readerC_arbitration_wave001.md",
+          "sha256": "cc06ca7642b10602537d475af84be86a8ff6a93afd63fce568b5b922003e7918"
+        },
+        "reader_a_prompt_binding": "PROVENANCE_ERRATA_UNVERIFIED",
+        "reader_b_prompt_sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+      }
+    },
+    {
+      "record_id": "serock-1890-death-3",
+      "tier": "SILVER",
+      "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
+      "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+      "confidence_cap": "PROBABLE",
+      "training_eligible": true,
+      "training_materialized": false,
+      "eval_eligible": false,
+      "human_verified": false,
+      "resolved_fields": {
+        "storage": "COORDINATOR_RESOLVED_APPENDIX",
+        "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+        "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+      },
+      "provenance": {
+        "source_labels": [
+          {
+            "reader_role": "A",
+            "path": "labels/readerA/serock-1890-death-3.json",
+            "sha256": "b40e72bcc989dee64d4d5e541ff18effc9c054a483c3908081829225cdd69d84"
+          },
+          {
+            "reader_role": "B",
+            "path": "labels/readerB/serock-1890-death-3.json",
+            "sha256": "e131a69eb2363832d3927dd94e425e8c3d3f8027796f140b8fdee09055e2bd86"
+          }
+        ],
+        "consensus_document": {
+          "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+          "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        },
+        "arbitration_document": {
+          "path": "labels/consensus/readerC_arbitration_wave002.md",
+          "sha256": "9e57fbec382b7661c7ee4060f5f3d995035b5d1ce1d27ae1ce6eadee35b3f671"
+        },
+        "reader_a_prompt_binding": "PROVENANCE_ERRATA_UNVERIFIED",
+        "reader_b_prompt_sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+      }
+    },
+    {
+      "record_id": "serock-1890-death-4",
+      "tier": "SILVER",
+      "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
+      "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+      "confidence_cap": "PROBABLE",
+      "training_eligible": true,
+      "training_materialized": false,
+      "eval_eligible": false,
+      "human_verified": false,
+      "resolved_fields": {
+        "storage": "COORDINATOR_RESOLVED_APPENDIX",
+        "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+        "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+      },
+      "provenance": {
+        "source_labels": [
+          {
+            "reader_role": "A",
+            "path": "labels/readerA/serock-1890-death-4.json",
+            "sha256": "93951f1ee90d356e05ecd071c5e9569d178f7f7646e69e8832256cb57b0fc834"
+          },
+          {
+            "reader_role": "B",
+            "path": "labels/readerB/serock-1890-death-4.json",
+            "sha256": "a5bfd6e2dcc63f44805530a0c8763df53d67c586dd0681d6a00c7cae4a005f65"
+          }
+        ],
+        "consensus_document": {
+          "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+          "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        },
+        "arbitration_document": {
+          "path": "labels/consensus/readerC_arbitration_wave002.md",
+          "sha256": "9e57fbec382b7661c7ee4060f5f3d995035b5d1ce1d27ae1ce6eadee35b3f671"
+        },
+        "reader_a_prompt_binding": "PROVENANCE_ERRATA_UNVERIFIED",
+        "reader_b_prompt_sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+      }
+    },
+    {
+      "record_id": "serock-1890-death-5",
+      "tier": "SILVER",
+      "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
+      "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+      "confidence_cap": "PROBABLE",
+      "training_eligible": true,
+      "training_materialized": false,
+      "eval_eligible": false,
+      "human_verified": false,
+      "resolved_fields": {
+        "storage": "COORDINATOR_RESOLVED_APPENDIX",
+        "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+        "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+      },
+      "provenance": {
+        "source_labels": [
+          {
+            "reader_role": "A",
+            "path": "labels/readerA/serock-1890-death-5.json",
+            "sha256": "fa508ec317990284eb1fd2be3a48786160661816be0a78e77385a70beeebca7d"
+          },
+          {
+            "reader_role": "B",
+            "path": "labels/readerB/serock-1890-death-5.json",
+            "sha256": "d1bff7412d4ff66919473cd40d2d602df10eb1714f83eee3eb3790d771e014ba"
+          }
+        ],
+        "consensus_document": {
+          "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+          "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        },
+        "arbitration_document": {
+          "path": "labels/consensus/readerC_arbitration_wave002.md",
+          "sha256": "9e57fbec382b7661c7ee4060f5f3d995035b5d1ce1d27ae1ce6eadee35b3f671"
+        },
+        "reader_a_prompt_binding": "PROVENANCE_ERRATA_UNVERIFIED",
+        "reader_b_prompt_sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+      }
+    }
+  ],
+  "quarantine": [
+    {
+      "record_id": "serock-1890-death-6",
+      "tier": null,
+      "status": "HUMAN_VERIFICATION_REQUIRED",
+      "training_eligible": false,
+      "eval_eligible": false,
+      "human_verified": false,
+      "reason": "Identity-level fork resolved only by machine 2-of-3; the standing protocol requires a sampled human check before tier assignment.",
+      "provenance": {
+        "source_labels": [
+          {
+            "reader_role": "A",
+            "path": "labels/readerA/serock-1890-death-6.json",
+            "sha256": "5684a7cad54c05c5735f427a54318939b337ad449874073fe87912491ff6aef5"
+          },
+          {
+            "reader_role": "B",
+            "path": "labels/readerB/serock-1890-death-6.json",
+            "sha256": "2f7665fc6a3781f74928693dd7ba5bf077d79f172e4c3fc288b3780c5a35e224"
+          }
+        ],
+        "consensus_document": {
+          "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+          "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        },
+        "arbitration_document": {
+          "path": "labels/consensus/readerC_arbitration_wave002.md",
+          "sha256": "9e57fbec382b7661c7ee4060f5f3d995035b5d1ce1d27ae1ce6eadee35b3f671"
+        },
+        "reader_a_prompt_binding": "PROVENANCE_ERRATA_UNVERIFIED",
+        "reader_b_prompt_sha256": "88e56abd110b1f206a2d4cf0d699fbd449e667ea810ae1854a0c6a8d63269d82"
+      }
+    }
+  ],
+  "restricted_sources_used": false,
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

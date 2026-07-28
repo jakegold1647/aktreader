@@ -71,6 +71,15 @@ Evidence:
 - [Wave 002 resolved consensus](../labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md)
 - [Wave 002 Reader C report](../labels/consensus/readerC_arbitration_wave002.md)
 
+### Tier disposition
+
+The machine-readable [silver manifest](../labels/silver/manifest.json) assigns resolved acts 1–5
+to `SILVER`: training-eligible 2-of-3 consensus, never evaluation, never human-verified. It pins
+all source labels and resolution documents by SHA-256. The actual resolved fields remain
+source-addressed in the coordinator appendices (`training_materialized: false`), so this gate does
+not pretend that a canonical LoRA export has already been built. Act 6 remains untiered and
+quarantined pending the mandatory human check.
+
 ## Prompt v1.1 correction
 
 Wave 001 exposed prompt-induced date bias: the earlier wording made dual dating sound expected,

@@ -118,6 +118,12 @@ Consent and correctness are separate gates. A human-verified correction is not t
 unless its correction consent explicitly says so. The 36 P1 records have no recorded correction
 consent and are evaluation-only.
 
+The label factory has a separate `SILVER` tier for 2-of-3 machine consensus. Silver is
+training-eligible but never evaluation data and never described as human-verified. The current
+silver manifest content-addresses the resolved coordinator appendices and all contributing label
+files; canonical training rows are not claimed until those field payloads are materialized.
+Identity-level forks stay untiered and quarantined until the sampled human check.
+
 Evaluation splits are by clerk-year, not random act. `gold/clerk_year_holdout.json` sequesters all
 36 current gold records across 21 clerk-years and explicitly forbids training overlap. The eval
 harness rejects a mismatched holdout manifest or any training clerk-year leakage before scoring.
