@@ -181,6 +181,37 @@ def _mock_success(
     monkeypatch.setattr(local_reader_module.subprocess, "run", fake_run)
 
 
+def _mock_chromed_stdout(
+    monkeypatch: pytest.MonkeyPatch,
+    completion: str,
+    *,
+    banner: str = "",
+    line_ending: str = "\n",
+) -> None:
+    def fake_run(command: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+        request = command[command.index("--prompt") + 1]
+        echoed_request = request.replace("\n", line_ending)
+        normalized_banner = banner.replace("\n", line_ending)
+        stdout = (
+            normalized_banner
+            + f"> {echoed_request}{line_ending}"
+            + completion
+            + line_ending
+            + "Exiting..."
+            + line_ending
+        )
+        return subprocess.CompletedProcess(command, 0, stdout, "")
+
+    monkeypatch.setattr(local_reader_module.subprocess, "run", fake_run)
+
+
+def _mock_stdout(monkeypatch: pytest.MonkeyPatch, stdout: str) -> None:
+    def fake_run(command: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(command, 0, stdout, "")
+
+    monkeypatch.setattr(local_reader_module.subprocess, "run", fake_run)
+
+
 def test_constructor_fails_closed_on_missing_or_changed_artifact(tmp_path: Path) -> None:
     config = _reader_config(tmp_path)
     config.model.path.write_bytes(b"changed after checksum pin")
@@ -326,6 +357,153 @@ def test_reader_requires_exactly_one_strict_json_object(
 
     with pytest.raises(LocalReaderOutputError):
         LocalReader(config).read(image, batch_brief=brief)
+
+
+def test_reader_extracts_json_after_exact_multiline_prompt_echo_and_runtime_chrome(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = _payload(brief)
+    _mock_chromed_stdout(
+        monkeypatch,
+        json.dumps(payload, ensure_ascii=False),
+        banner=(
+            "llama.cpp build 10167\n"
+            '{"banner_diagnostic":{"cuda":true}}\n'
+            "available commands: /exit\n"
+        ),
+        line_ending="\r\n",
+    )
+
+    result = LocalReader(config).read(image, batch_brief=brief)
+
+    assert result.payload == payload
+
+
+def test_reader_stdout_scan_is_string_and_escape_aware(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = _payload(brief)
+    payload["transcription"]["translation"] = (
+        'literal braces { and }, an escaped quote " and a backslash \\'
+    )
+    _mock_chromed_stdout(monkeypatch, json.dumps(payload, ensure_ascii=False))
+
+    result = LocalReader(config).read(image, batch_brief=brief)
+
+    assert result.payload == payload
+
+
+@pytest.mark.parametrize("position", ["before", "after"])
+def test_reader_stdout_rejects_model_prose_outside_the_json_object(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    position: str,
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = json.dumps(_payload(brief), ensure_ascii=False)
+    completion = f"model preface\n{payload}" if position == "before" else f"{payload}\ncommentary"
+    _mock_chromed_stdout(monkeypatch, completion)
+
+    with pytest.raises(LocalReaderOutputError, match="non-whitespace text outside"):
+        LocalReader(config).read(image, batch_brief=brief)
+
+
+def test_reader_stdout_accepts_only_whitespace_around_json_and_known_trailer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = _payload(brief)
+    completion = f"\n \t{json.dumps(payload, ensure_ascii=False)}\n  "
+    _mock_chromed_stdout(monkeypatch, completion)
+
+    assert LocalReader(config).read(image, batch_brief=brief).payload == payload
+
+
+@pytest.mark.parametrize(
+    ("completion", "observed"),
+    [
+        ("ordinary prose only", 0),
+        ('{}\n{"second":true}', 2),
+    ],
+)
+def test_reader_stdout_rejects_zero_or_multiple_post_echo_objects(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    completion: str,
+    observed: int,
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    _mock_chromed_stdout(monkeypatch, completion)
+
+    with pytest.raises(
+        LocalReaderOutputError,
+        match=rf"exactly one balanced top-level JSON object.*observed {observed}",
+    ):
+        LocalReader(config).read(image, batch_brief=brief)
+
+
+@pytest.mark.parametrize(
+    ("completion", "message"),
+    [
+        ('{"broken": tru}', "exactly one JSON object"),
+        ('{"broken":{"nested":true}', "unbalanced JSON object"),
+        ('{"broken":{"nested":true}]}', "exactly one JSON object"),
+        ("unexpected }", "unmatched closing brace"),
+        ('[{"looks":"object-like"}]', "top-level array"),
+        ('{"duplicate":1,"duplicate":2}', "duplicate JSON key"),
+        ('{"value":NaN}', "non-standard JSON number"),
+    ],
+)
+def test_reader_stdout_rejects_malformed_non_object_or_unbalanced_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    completion: str,
+    message: str,
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    _mock_chromed_stdout(monkeypatch, completion)
+
+    with pytest.raises(LocalReaderOutputError, match=message):
+        LocalReader(config).read(image, batch_brief=brief)
+
+
+def test_reader_stdout_rejects_a_nonmatching_prompt_echo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = json.dumps(_payload(brief), ensure_ascii=False)
+    _mock_stdout(monkeypatch, f"> a different request\n{payload}\nExiting...\n")
+
+    with pytest.raises(LocalReaderOutputError, match="does not exactly match"):
+        LocalReader(config).read(image, batch_brief=brief)
+
+
+def test_reader_preserves_direct_json_stdout_compatibility(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = _payload(brief)
+    _mock_stdout(monkeypatch, f" \n{json.dumps(payload, ensure_ascii=False)}\n\t")
+
+    assert LocalReader(config).read(image, batch_brief=brief).payload == payload
 
 
 def test_blind_brief_rejects_reader_output_and_wrong_hashes(tmp_path: Path) -> None:

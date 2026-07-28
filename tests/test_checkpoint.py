@@ -105,3 +105,26 @@ def test_interruption_remains_resumable_when_failure_retries_are_disabled(
 
     assert store.claim_job("one", "fingerprint", max_retries=0)
     assert store.get_job("one").retry_count == 1
+
+
+def test_failed_job_is_retried_from_same_checkpoint_until_retry_budget_is_exhausted(
+    tmp_path: Path,
+) -> None:
+    store = CheckpointStore(tmp_path / "run.sqlite3")
+    job = BatchJob("one", tmp_path / "scan.jpg", tmp_path / "one.json")
+    job.scan_path.write_bytes(b"x")
+    _register(store, job, "fingerprint")
+
+    assert store.claim_job("one", "fingerprint", max_retries=2)
+    store.finish_running("one", JobStatus.FAILED, error="first failure")
+    assert store.get_job("one").retry_count == 0
+
+    assert store.claim_job("one", "fingerprint", max_retries=2)
+    assert store.get_job("one").retry_count == 1
+    store.finish_running("one", JobStatus.FAILED, error="second failure")
+
+    assert store.claim_job("one", "fingerprint", max_retries=2)
+    assert store.get_job("one").retry_count == 2
+    store.finish_running("one", JobStatus.FAILED, error="third failure")
+
+    assert not store.claim_job("one", "fingerprint", max_retries=2)

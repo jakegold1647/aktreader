@@ -188,6 +188,118 @@ def _load_one_json_object(text: str, *, source: str) -> dict[str, Any]:
     return value
 
 
+def _normalize_newlines(text: str) -> str:
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _reader_completion_after_prompt_echo(stdout: str, *, request_text: str) -> str:
+    """Discard llama.cpp chrome through its exact, possibly multiline prompt echo."""
+
+    normalized_stdout = _normalize_newlines(stdout)
+    normalized_request = _normalize_newlines(request_text)
+    echo = f"> {normalized_request}"
+    search_from = 0
+    final_echo_end: int | None = None
+
+    while True:
+        start = normalized_stdout.find(echo, search_from)
+        if start < 0:
+            break
+        end = start + len(echo)
+        is_line_start = start == 0 or normalized_stdout[start - 1] == "\n"
+        boundary = end
+        while boundary < len(normalized_stdout) and normalized_stdout[boundary] in " \t":
+            boundary += 1
+        is_line_end = boundary == len(normalized_stdout) or normalized_stdout[boundary] == "\n"
+        if is_line_start and is_line_end:
+            final_echo_end = boundary + (boundary < len(normalized_stdout))
+        search_from = start + 1
+
+    if final_echo_end is not None:
+        return normalized_stdout[final_echo_end:]
+    if any(line.startswith("> ") for line in normalized_stdout.splitlines()):
+        raise LocalReaderOutputError(
+            "Reader stdout contains a prompt echo that does not exactly match the request"
+        )
+    return normalized_stdout
+
+
+def _strip_known_reader_trailer(text: str) -> str:
+    """Remove only llama.cpp's terminal ``Exiting...`` chrome and surrounding whitespace."""
+
+    without_trailing_whitespace = text.rstrip()
+    if without_trailing_whitespace.endswith("Exiting..."):
+        return without_trailing_whitespace[: -len("Exiting...")]
+    return text
+
+
+def _balanced_top_level_objects(text: str, *, source: str) -> list[tuple[int, int]]:
+    """Return balanced top-level object spans using a JSON-string-aware scan."""
+
+    objects: list[tuple[int, int]] = []
+    start: int | None = None
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for index, character in enumerate(text):
+        if start is None:
+            if character == "{":
+                start = index
+                depth = 1
+            elif character == "}":
+                raise LocalReaderOutputError(
+                    f"{source} contains an unmatched closing brace outside a JSON object"
+                )
+            elif character in "[]":
+                raise LocalReaderOutputError(
+                    f"{source} contains a top-level array; one JSON object is required"
+                )
+            continue
+
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+
+        if character == '"':
+            in_string = True
+        elif character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                objects.append((start, index + 1))
+                start = None
+
+    if start is not None:
+        raise LocalReaderOutputError(f"{source} contains an unbalanced JSON object")
+    return objects
+
+
+def _load_reader_stdout(stdout: str, *, request_text: str) -> dict[str, Any]:
+    """Extract exactly one completion object from llama.cpp stdout, failing closed."""
+
+    completion = _reader_completion_after_prompt_echo(stdout, request_text=request_text)
+    completion = _strip_known_reader_trailer(completion)
+    objects = _balanced_top_level_objects(completion, source="Reader stdout")
+    if len(objects) != 1:
+        raise LocalReaderOutputError(
+            "Reader stdout must contain exactly one balanced top-level JSON object "
+            f"after the prompt echo; observed {len(objects)}"
+        )
+    start, end = objects[0]
+    if completion[:start].strip() or completion[end:].strip():
+        raise LocalReaderOutputError(
+            "Reader stdout contains non-whitespace text outside its JSON object"
+        )
+    return _load_one_json_object(completion[start:end], source="Reader stdout JSON object")
+
+
 def _contains_external_ref(value: Any) -> bool:
     if isinstance(value, dict):
         for key, child in value.items():
@@ -488,7 +600,7 @@ class LocalReader:
                 f"local runtime exited with code {completed.returncode}: {stderr_tail}"
             )
 
-        payload = _load_one_json_object(completed.stdout.strip(), source="Reader stdout")
+        payload = _load_reader_stdout(completed.stdout, request_text=request_text)
         for key, expected in brief.items():
             if payload.get(key) != expected:
                 raise LocalReaderOutputError(f"Reader changed batch-brief envelope field {key!r}")
