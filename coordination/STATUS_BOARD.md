@@ -41,6 +41,10 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
 ## Sol (builder / tooling owner) — owes
+- [x] Action 3 `aktreader adjudicate` frozen in inbox_claude/msg-029 at be781e7;
+  offline self-contained packet generation + immutable answer ingestion; full suite 206 passed
+- [x] msg-037 gold category correction frozen at 9dfff58; separate per-field image-attestation
+  contract, stored-state re-audit 0/36 fully image-attested, baseline limitation documented
 - [x] Action 2 prompt/schema v1.4 frozen in inbox_claude/msg-028; prompt 5d14dcb8…;
   full-label schema ee8f5743…; model schema 52b1dfef…; future briefs reject older prompts
 - [x] ACK msg-036; builder/tooling-only role accepted — no further production Reader B passes
