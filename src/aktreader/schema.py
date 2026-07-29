@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -29,16 +30,35 @@ def validate_instance(instance: dict[str, Any], schema_path: Path) -> None:
     schema = load_json(schema_path)
     validator = Draft202012Validator(schema, format_checker=FormatChecker())
     errors = sorted(validator.iter_errors(instance), key=lambda item: list(item.absolute_path))
-    if not errors:
-        return
-    rendered: list[str] = []
-    for error in errors[:20]:
-        location = ".".join(str(part) for part in error.absolute_path) or "<root>"
-        rendered.append(f"{location}: {error.message}")
-    suffix = f" (+{len(errors) - 20} more)" if len(errors) > 20 else ""
-    raise ContractValidationError(
-        f"schema validation failed against {schema_path}: " + "; ".join(rendered) + suffix
-    )
+    if errors:
+        rendered: list[str] = []
+        for error in errors[:20]:
+            location = ".".join(str(part) for part in error.absolute_path) or "<root>"
+            rendered.append(f"{location}: {error.message}")
+        suffix = f" (+{len(errors) - 20} more)" if len(errors) > 20 else ""
+        raise ContractValidationError(
+            f"schema validation failed against {schema_path}: "
+            + "; ".join(rendered)
+            + suffix
+        )
+
+    grounding_contract = schema.get("x-aktreader-grounding-contract")
+    if isinstance(grounding_contract, Mapping):
+        if grounding_contract.get("version") != "1.0.0":
+            raise ContractValidationError(
+                f"{schema_path}: unsupported grounding contract version"
+            )
+        from aktreader.grounding import (
+            GroundingValidationError,
+            require_grounded_payload,
+        )
+
+        try:
+            require_grounded_payload(instance)
+        except GroundingValidationError as error:
+            raise ContractValidationError(
+                f"grounding validation failed against {schema_path}: {error}"
+            ) from error
 
 
 def validate_declared_document(path: Path, *, workspace_root: Path) -> dict[str, Any]:

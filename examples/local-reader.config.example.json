@@ -18,11 +18,11 @@
       "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
     },
     "schema": {
-      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0-v1.4.schema.json",
       "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
     },
     "model_schema": {
-      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.1.0.schema.json",
       "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
     }
   },

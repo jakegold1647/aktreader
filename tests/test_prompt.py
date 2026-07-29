@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_reader_prompt_contains_all_three_skills_verbatim() -> None:
     assert verify_reader_prompt(ROOT) == (
-        "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77"
+        "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a"
     )
     prompt = (ROOT / "prompts" / "reader_prompt.md").read_text(encoding="utf-8")
     assert "Line-break surname split" in prompt
@@ -40,7 +40,7 @@ def test_prompt_check_detects_manifest_drift(tmp_path: Path) -> None:
         (tmp_path / "skills" / source.name).write_bytes(source.read_bytes())
     manifest_path = tmp_path / "prompts" / "manifest.json"
     manifest = manifest_path.read_text(encoding="utf-8").replace(
-        "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+        "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
         "0" * 64,
     )
     manifest_path.write_text(manifest, encoding="utf-8")

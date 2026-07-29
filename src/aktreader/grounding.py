@@ -123,6 +123,8 @@ def require_grounded(label: ReaderLabel) -> ReaderLabel:
 def require_grounded_payload(payload: Mapping[str, Any]) -> None:
     """Reject a schema-validated, pipeline-stamped payload that is not grounded."""
     target = payload.get("target")
+    if not isinstance(target, Mapping):
+        target = payload.get("target_check")
     transcription = payload.get("transcription")
     observations = payload.get("observations")
     if not isinstance(target, Mapping) or not isinstance(transcription, Mapping):
@@ -130,6 +132,10 @@ def require_grounded_payload(payload: Mapping[str, Any]) -> None:
     if not isinstance(observations, Mapping):
         raise GroundingValidationError("payload has no observations")
     continuous = transcription.get("original_script")
+    if isinstance(continuous, list) and all(
+        isinstance(line, str) for line in continuous
+    ):
+        continuous = "\n".join(continuous)
     normalized_transcription = (
         _normalized_text(continuous) if isinstance(continuous, str) else ""
     )

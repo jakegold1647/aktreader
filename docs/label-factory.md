@@ -1,50 +1,54 @@
-# Out-of-band dual-Reader label factory
+# Grounded single-reader label factory
 
-Status: P2 protocol and ingest implementation, 2026-07-28.
+Status: restructured protocol and guarded ingest, 2026-07-29.
 
-The label factory bootstraps training and review data without creating an API dependency.
-Two subscription AI sessions read the same scan independently and save JSON labels. AKTREADER
-does not log in to those services, automate their sessions, call their models, or carry a key for
-them. Its first contact with either pass is a file on disk.
+AKTREADER still accepts subscription-session labels only as files on disk: it does not log in
+to those services, automate their sessions, call their models, or carry a key for them. The
+measured wave-005 failure ended Sol's production-reader role and disproved the assumption that
+two reliable frontier readers were available.
 
-## Blind-pass workflow
+## Current workflow
 
-1. A coordinator prepares one metadata-only batch brief: artifact identity and SHA-256, exact
-   act/crop, target register metadata, clerk-year, Reader identity, blind-group ID, privacy
-   decision, prompt version, and prompt SHA-256.
-2. Reader A and Reader B receive the same scan, brief, and
-   [`prompts/reader_prompt.md`](../prompts/reader_prompt.md). They must be from distinct model
-   families and neither may see the other's output.
-3. Each session emits exactly one JSON object conforming to
-   [`schemas/reader-label-1.0.0.schema.json`](../schemas/reader-label-1.0.0.schema.json).
-4. The files are retained unchanged. Their own SHA-256 digests become immutable source
-   provenance; a corrected observation is a new label, not an edit hidden in place.
-5. `LabelIngest` validates exact keys, identifiers, Reader/blind attestations, prompt binding,
-   artifact binding, clerk-year, source spans, confidence/state rules, compliance metadata, and
-   the authority warning. It then freezes the loaded mapping.
-6. Only a legitimate blind pair reaches consensus. Different record/target metadata, same Reader
-   identity or family, a false blindness attestation, conflicting artifact hashes, prompt hashes,
-   blind groups, or clerk-years are rejected or explicitly capped according to the missing
-   binding.
-7. Field-level consensus and cross-act validators produce either reviewable evidence or a review
-   item. They never write back into the source labels.
+1. A coordinator prepares one metadata-only batch brief with artifact, target, clerk-year,
+   privacy, prompt, and reader bindings.
+2. One blind production reader receives the scan, brief, and frozen v1.4 prompt.
+3. That reader emits a continuous original-order transcription plus structured observations
+   under the v1.4 grounded schema.
+4. An independent verifier checks every field that matters. It does not inherit unsupported
+   assertions merely because they are well formed.
+5. Residual ambiguity becomes an `aktreader adjudicate` question with candidates, image evidence,
+   structural checks, and explicit neither/can't-tell exits.
+6. A human decision closes what the evidence supports; unresolved fields remain unclear.
+7. Every source file is retained unchanged and content-addressed. Corrections are new events,
+   never hidden rewrites.
 
-The prompt contains the Napoleonic-act formula, pre-1918 Cyrillic guidance, and uncertainty
-contract verbatim. Its recorded checksum matters as much as its version string: a prompt file
-changed by line endings or one character is a different Reader condition.
+This workflow is slower and has less cross-vendor diversity than the original dual-reader plan.
+That loss is documented rather than masked. Legacy dual-reader consensus remains auditable, but
+no historical label is grandfathered into grounded ingest.
 
-The current frozen prompt is v1.3.0. Its raw-byte SHA-256 is
-`97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77`. It retains v1.1's
-dual-date correction and adds three generalized Wave-002 safeguards: line-break surname joining,
-gender-verb-first death parsing, and a cautious `-фельдъ`/`-вельдъ` clerk-variant check. The
-source act, surname, and clerk identity are deliberately absent from the global prompt. Frozen
-v1.1 remains auditable at commit `156393b` with digest
-`9e679f3a799e75bbfeb7bf077f55b868d7fa06b9ab1164bed443a6f51b0b9d09`; neither correction is a
-retroactive accuracy claim.
+## Prompt and schema v1.4 freeze
 
-v1.3 adds exactly one rule: inspect a zoom/crop before emitting `ILLEGIBLE` and record the
-attempted scale/region. The measured P2 baseline remains pinned to exact v1.2 prompt/schema
-copies.
+The current frozen prompt is v1.4.0:
+
+- prompt SHA-256:
+  `5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a`;
+- full-label schema: `schemas/reader-label-1.0.0-v1.4.schema.json`, SHA-256
+  `ee8f57431dfa70f85103953c27314c2bb9d61dbc08b8e20b5e092bc0376a5a08`;
+- bounded model schema: `schemas/model-output-1.1.0.schema.json`, SHA-256
+  `52b1dfef4bda7506987c22a7f7438fbf807f9aa42b7fdf1eb9c25ae4be512e1d`.
+
+v1.4 retains the domain skills and prior paleographic safeguards, then adds a mechanical
+grounding contract: every act has a nonblank continuous original-order transcription; every
+PRESENT observation has a nonblank `original_script`; Russian PRESENT excerpts contain Cyrillic;
+and each complete excerpt occurs in the transcription after Unicode NFC and whitespace
+normalization only. Numeric/symbol observations must include enough adjacent inked wording to
+satisfy the Russian-script rule.
+
+Standard JSON Schema enforces the structural requirements. Both v1.4 schemas also declare
+`x-aktreader-grounding-contract: 1.0.0`; AKTREADER's local schema validator executes that
+declared cross-field contract and rejects substring/Cyrillic failures. This is not a documentary
+annotation: `validate_instance` fails closed on it. Generated future briefs reject prompt
+versions below 1.4. The measured P2 baseline remains pinned to its historical v1.2 artifacts.
 
 ## Consensus is strict, not fuzzy
 
@@ -77,11 +81,11 @@ warning. A mismatched hash must be reconciled before treating a pair as fully bo
 
 ## Local model in later waves
 
-After the first LoRA, the local model can emit a third blind label under the same schema and
-prompt. It does not automatically decide a two-Reader disagreement. Its agreements and conflicts
-are additional attributed observations that route review. As held-out performance improves, it
-can take more first-pass work while the subscription sessions become spot-checkers and hard-case
-readers. The continuous corpus batch remains local throughout.
+After the first LoRA, the local model can emit a blind first-pass or verification label under
+the same v1.4 grounding contract. It never automatically decides a disagreement; conflicts route
+to adjudication. As held-out performance improves, it can take more first-pass work while the
+subscription reader becomes a verifier and hard-case reader. The continuous corpus batch remains
+local throughout.
 
 ## Privacy, consent, and split integrity
 

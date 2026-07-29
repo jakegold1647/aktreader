@@ -1,9 +1,9 @@
 {
-  "schema_version": "1.0.0",
-  "prompt_header": {
-    "prompt_version": "1.3.0",
-    "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77"
-  },
-  "checksum_scope": "raw reader_prompt.md bytes",
-  "released_on": "2026-07-28"
+    "schema_version":  "1.0.0",
+    "prompt_header":  {
+                          "prompt_version":  "1.4.0",
+                          "prompt_sha256":  "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a"
+                      },
+    "checksum_scope":  "raw reader_prompt.md bytes",
+    "released_on":  "2026-07-28"
 }

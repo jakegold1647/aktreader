@@ -133,8 +133,13 @@ def test_canonical_loader_accepts_only_supported_prompt_versions() -> None:
     v1_3["prompt"]["version"] = "1.3.0"
     assert parse_canonical_reader_label(v1_3).prompt_binding_verified is True
 
+    v1_4 = _canonical_payload()
+    v1_4["prompt"]["version"] = "1.4.0"
+    v1_4["$schema"] = "schemas/reader-label-1.0.0-v1.4.schema.json"
+    assert parse_canonical_reader_label(v1_4).prompt_binding_verified is True
+
     unsupported = _canonical_payload()
-    unsupported["prompt"]["version"] = "1.4.0"
+    unsupported["prompt"]["version"] = "1.5.0"
     with pytest.raises(LabelValidationError, match="unsupported prompt"):
         parse_canonical_reader_label(unsupported)
 

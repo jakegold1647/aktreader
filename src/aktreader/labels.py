@@ -23,7 +23,7 @@ from typing import Any
 
 AUTHORITY_WARNING = "extraction is not authority — verify against the scan"
 CANONICAL_SCHEMA_VERSION = "1.0.0"
-SUPPORTED_PROMPT_VERSIONS = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"})
+SUPPORTED_PROMPT_VERSIONS = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0", "1.4.0"})
 KNOWN_STALE_READER_A_PROMPT_SHA256 = (
     "a2e6c50ca84a2e0141dfc785680a79429372e54e882120b6d908cefdad110fe5"
 )
@@ -261,8 +261,14 @@ def parse_canonical_reader_label(
     _require_exact_keys(data, CANONICAL_TOP_LEVEL_KEYS, "label")
     if data["schema_version"] != CANONICAL_SCHEMA_VERSION:
         raise LabelValidationError("label.schema_version: unsupported version")
-    if not isinstance(data["$schema"], str) or not data["$schema"].endswith(
-        "schemas/reader-label-1.0.0.schema.json"
+    schema_ref = data["$schema"]
+    accepted_schema_refs = (
+        "schemas/reader-label-1.0.0.schema.json",
+        "schemas/reader-label-1.0.0-v1.4.schema.json",
+        "https://aktreader.org/schema/reader-label-1.0.0.json",
+    )
+    if not isinstance(schema_ref, str) or not any(
+        schema_ref.endswith(reference) for reference in accepted_schema_refs
     ):
         raise LabelValidationError("label.$schema: unexpected canonical schema reference")
     label_id = _require_string(data["label_id"], "label.label_id")
