@@ -4,9 +4,9 @@
   "created_at": "2026-07-28T15:39:23-04:00",
   "scope": {
     "gold_records": 36,
-    "scan_backed_jobs": 17,
-    "not_localized_exclusions": 19,
-    "coverage_ceiling": "17/36"
+    "scan_backed_jobs": 24,
+    "not_localized_exclusions": 12,
+    "coverage_ceiling": "24/36"
   },
   "excluded": [
     {
@@ -38,31 +38,7 @@
       "reason": "gold artifact is NOT_LOCALIZED"
     },
     {
-      "record_id": "serock-1877-birth-25",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
       "record_id": "serock-1882-birth-2",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
-      "record_id": "serock-1884-birth-37",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
-      "record_id": "serock-1888-birth-6",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
-      "record_id": "serock-1890-birth-1",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
-      "record_id": "serock-1891-birth-5",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
-      "record_id": "serock-1892-birth-12",
       "reason": "gold artifact is NOT_LOCALIZED"
     },
     {
@@ -71,10 +47,6 @@
     },
     {
       "record_id": "serock-1899-birth-6",
-      "reason": "gold artifact is NOT_LOCALIZED"
-    },
-    {
-      "record_id": "serock-1902-death-25",
       "reason": "gold artifact is NOT_LOCALIZED"
     },
     {
@@ -114,7 +86,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1876|clerk-unknown",
@@ -155,6 +127,73 @@
       }
     },
     {
+      "id": "serock-1877-birth-25",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1877_births_23-26.jpg",
+      "act_type": "birth",
+      "year": 1877,
+      "target": {
+        "kind": "act",
+        "act_no": 25
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1877-birth-25.local-qwen35-p2-baseline",
+          "record_id": "serock-1877-birth-25",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1877|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1877_births_23-26.jpg",
+            "sha256": "3711a974a862a77c9334aaec526d39dbab23c71ea37a1fa7ebf80f18c6bf3aa5",
+            "width_px": 3044,
+            "height_px": 2412,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 3044,
+              "height": 2412,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1877,
+            "act_type": "birth",
+            "act_no": 25,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
       "id": "serock-1883-birth-28",
       "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1883_births_27-30.jpg",
       "act_type": "birth",
@@ -181,7 +220,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1883|clerk-unknown",
@@ -248,7 +287,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1883|clerk-unknown",
@@ -315,7 +354,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1883|clerk-unknown",
@@ -356,6 +395,73 @@
       }
     },
     {
+      "id": "serock-1884-birth-37",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1884_births_35-38.jpg",
+      "act_type": "birth",
+      "year": 1884,
+      "target": {
+        "kind": "act",
+        "act_no": 37
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1884-birth-37.local-qwen35-p2-baseline",
+          "record_id": "serock-1884-birth-37",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1884|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1884_births_35-38.jpg",
+            "sha256": "e2cad7cc8d1aefe3c58d03c6e185536cb856e06da023e3dedfb99d34678b7632",
+            "width_px": 3044,
+            "height_px": 2412,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 3044,
+              "height": 2412,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1884,
+            "act_type": "birth",
+            "act_no": 37,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
       "id": "serock-1884-death-17",
       "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1884_deaths_15-18.jpg",
       "act_type": "death",
@@ -382,7 +488,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1884|clerk-unknown",
@@ -449,7 +555,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1884|clerk-unknown",
@@ -516,7 +622,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1885|clerk-unknown",
@@ -583,7 +689,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1885|clerk-unknown",
@@ -609,6 +715,73 @@
             "fond": "73/826/0",
             "year": 1885,
             "act_type": "death",
+            "act_no": 6,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
+      "id": "serock-1888-birth-6",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1888_births_03-06.jpg",
+      "act_type": "birth",
+      "year": 1888,
+      "target": {
+        "kind": "act",
+        "act_no": 6
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1888-birth-6.local-qwen35-p2-baseline",
+          "record_id": "serock-1888-birth-6",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1888|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1888_births_03-06.jpg",
+            "sha256": "b453b4d7cf259ada8ba9869cd6537f7f85d682c5c0018798d1998ae652668316",
+            "width_px": 3044,
+            "height_px": 2412,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 3044,
+              "height": 2412,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1888,
+            "act_type": "birth",
             "act_no": 6,
             "language": "ru"
           },
@@ -650,7 +823,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1888|clerk-unknown",
@@ -717,7 +890,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1888|clerk-unknown",
@@ -758,6 +931,73 @@
       }
     },
     {
+      "id": "serock-1890-birth-1",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1890_births_01-02.jpg",
+      "act_type": "birth",
+      "year": 1890,
+      "target": {
+        "kind": "act",
+        "act_no": 1
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1890-birth-1.local-qwen35-p2-baseline",
+          "record_id": "serock-1890-birth-1",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1890|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1890_births_01-02.jpg",
+            "sha256": "7b9c765598cd75588dc1c78c07360d420ec731669206a49c3e118a9e39840d79",
+            "width_px": 2872,
+            "height_px": 2384,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 2872,
+              "height": 2384,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1890,
+            "act_type": "birth",
+            "act_no": 1,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
       "id": "serock-1890-death-43",
       "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_43-46.jpg",
       "act_type": "death",
@@ -784,7 +1024,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1890|clerk-unknown",
@@ -825,6 +1065,140 @@
       }
     },
     {
+      "id": "serock-1891-birth-5",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1891_births_03-06.jpg",
+      "act_type": "birth",
+      "year": 1891,
+      "target": {
+        "kind": "act",
+        "act_no": 5
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1891-birth-5.local-qwen35-p2-baseline",
+          "record_id": "serock-1891-birth-5",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1891|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1891_births_03-06.jpg",
+            "sha256": "d70b7019cfb0ec04fe65801960b46103a7df2c5305bc975a7bebd17eb3330625",
+            "width_px": 2872,
+            "height_px": 2384,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 2872,
+              "height": 2384,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1891,
+            "act_type": "birth",
+            "act_no": 5,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
+      "id": "serock-1892-birth-12",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1892_births_11-14.jpg",
+      "act_type": "birth",
+      "year": 1892,
+      "target": {
+        "kind": "act",
+        "act_no": 12
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1892-birth-12.local-qwen35-p2-baseline",
+          "record_id": "serock-1892-birth-12",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1892|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1892_births_11-14.jpg",
+            "sha256": "3458012aae9ce65a34d56f1e79032afb2c62dc1c7c3ff67598c21143ef9d36d7",
+            "width_px": 2872,
+            "height_px": 2384,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 2872,
+              "height": 2384,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1892,
+            "act_type": "birth",
+            "act_no": 12,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
       "id": "serock-1892-death-11",
       "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1892_deaths_11-14.jpg",
       "act_type": "death",
@@ -851,7 +1225,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1892|clerk-unknown",
@@ -918,7 +1292,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1893|clerk-unknown",
@@ -985,7 +1359,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1894|clerk-unknown",
@@ -1052,7 +1426,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1896|clerk-unknown",
@@ -1093,6 +1467,73 @@
       }
     },
     {
+      "id": "serock-1902-death-25",
+      "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1902_deaths_23-26.jpg",
+      "act_type": "death",
+      "year": 1902,
+      "target": {
+        "kind": "act",
+        "act_no": 25
+      },
+      "metadata": {
+        "batch_brief": {
+          "$schema": "schemas/reader-label-1.0.0.schema.json",
+          "schema_version": "1.0.0",
+          "label_id": "serock-1902-death-25.local-qwen35-p2-baseline",
+          "record_id": "serock-1902-death-25",
+          "created_at": "2026-07-28T15:39:23-04:00",
+          "reader": {
+            "reader_id": "local-qwen3.5-9b-q5-k-m",
+            "reader_family": "qwen",
+            "reader_version": "qwen3.5-9b-q5_k_m@unsloth-9f870da",
+            "mode": "local",
+            "blind_group_id": "p2-scan-backed-baseline-v1.2",
+            "other_reader_output_seen": false
+          },
+          "prompt": {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md"
+          },
+          "clerk_year": {
+            "id": "73-826-0|serock|1902|clerk-unknown",
+            "basis": "REGISTER_YEAR_PROXY",
+            "clerk_id": null
+          },
+          "artifact": {
+            "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1902_deaths_23-26.jpg",
+            "sha256": "211943af4720af3e550a36c5ef64bb74c863a162dc0915b93b34ee0c9fd967ca",
+            "width_px": 2872,
+            "height_px": 2384,
+            "page_index": 0,
+            "act_region": {
+              "x": 0,
+              "y": 0,
+              "width": 2872,
+              "height": 2384,
+              "coordinate_space": "source_pixels"
+            }
+          },
+          "target": {
+            "town": "Serock",
+            "fond": "73/826/0",
+            "year": 1902,
+            "act_type": "death",
+            "act_no": 25,
+            "language": "ru"
+          },
+          "compliance": {
+            "restricted_sources_used": false,
+            "privacy_decision": "ALLOW",
+            "privacy_basis": "pre-1915 civil act; older than the configured 100-year default",
+            "training_eligible": false,
+            "training_basis": "SerockBench gold holdout is evaluation-only; consent absent."
+          },
+          "authority_warning": "extraction is not authority — verify against the scan"
+        }
+      }
+    },
+    {
       "id": "serock-1903-death-5",
       "scan": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1903_deaths_03-06.jpg",
       "act_type": "death",
@@ -1119,7 +1560,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1903|clerk-unknown",
@@ -1186,7 +1627,7 @@
           "prompt": {
             "version": "1.2.0",
             "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-            "path": "prompts/reader_prompt.md"
+            "path": "prompts/reader_prompt-v1.2.0.md"
           },
           "clerk_year": {
             "id": "73-826-0|serock|1903|clerk-unknown",

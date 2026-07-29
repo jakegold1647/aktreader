@@ -1,22 +1,37 @@
 # AKTREADER
 
-AKTREADER is an evidence-first pipeline for scanned civil-register acts from partitioned
-Poland. Its intended output is a structured genealogical extraction in which every field is
-traceable to the scan and uncertainty is recorded instead of guessed.
+AKTREADER produces institutionally usable evidence objects from difficult handwritten
+records — structured records, uncertainty you can act on, local deployment, machine-readable
+provenance, and feedback loops that accumulate expertise instead of discarding it.
 
-> **Project status: P2 gate accepted; baseline addendum pending.** The local-only Reader,
-> external-label ingest, consensus, validators, resumable batch engine, and SerockBench harness
-> are implemented and tested. The pinned llama.cpp executable is now owner-cleared and verified;
-> the exact model and projector are not yet on disk, so the real baseline remains **NOT RUN**.
-> No accuracy number is inferred from unit tests, vendor benchmarks, or an empty prediction set.
+The first pilot reads civil-register acts from partitioned Poland and keeps every extracted field
+traceable to the scan.
+
+> **Project status: P2 gate accepted; constrained baseline blocked on one mtmd probe.** The
+> local-only Reader, external-label ingest, consensus, validators, resumable batch engine,
+> SerockBench harness, and leakage-safe silver export are implemented. The measured “before”
+> baseline found two failures: b10167 `llama-cli` crashes when Qwen3.5’s chat template is combined
+> with grammar sampling, while unconstrained output either repetition-loops or returns a hollow
+> schema-shaped shell. The same build’s `llama-mtmd-cli` initializes grammar successfully; a
+> reduced-schema one-job probe must pass before the final capped retry. No benchmark accuracy is
+> inferred from unit tests or diagnostics.
 
 ## Why this project exists
 
-Most handwriting tools optimize for plausible text. AKTREADER uses one local open-weights
-vision-language model for inference and concentrates on the layers above recognition:
-act-format structure, filiation-first extraction, evidence provenance, explicit uncertainty,
-and evaluation of wrong-but-confident claims. Labels produced manually in two independent
-subscription AI sessions can be imported as files; the application never calls those assistants.
+Historical-record tooling still leaves four practical gaps:
+
+- confidence scores often accompany a forced reading, while researchers need actionable
+  abstention and preserved alternatives;
+- page transcripts are not register-native records with filiation, roles, and typed absence;
+- hosted workflows depend on accounts or page credits, while preservation needs a local path;
+- plausible text can fabricate a person or swap a role. Two AKTREADER blind-review waves caught
+  that phantom-person failure class before promotion.
+
+AKTREADER concentrates on the evidence layers above raw recognition: act-format structure,
+filiation-first extraction, explicit uncertainty, and wrong-but-confident evaluation. Every label
+carries machine-readable model identity, software and prompt versions/hashes, blind status,
+artifact binding, and uncertainty. Labels produced manually in two independent subscription AI
+sessions can be imported as files; the application never calls those assistants.
 
 The pilot goal is to reconstruct the Jewish community of Pułtusk from civil registers as a
 reviewable evidence graph. No record becomes a person-level conclusion merely because a model
@@ -38,7 +53,7 @@ suggests it.
 
 ## Local-only Reader
 
-The application invokes a content-pinned `llama-cli` executable directly as a subprocess. It
+The application invokes a content-pinned `llama-mtmd-cli` executable directly as a subprocess. It
 does not start an inference server, send HTTP to localhost, use a hosted SDK, or accept an API
 key.
 
@@ -80,7 +95,7 @@ The source tree uses the `src/` layout. The local CLI exposes `prompt-verify`,
 in addition to `doctor`. `reader-infer` and `batch-run` are execution commands. The generic
 [example Reader configuration](examples/local-reader.config.example.json) intentionally cannot
 run; the [P2 baseline configuration](examples/p2-baseline.local-reader.json) contains real pins
-but still fails closed until the owner fetches the two locked GGUF files.
+for the executable, model, projector, frozen v1.2 prompt/schema, and reduced model-output schema.
 
 ## Gold corpus
 
@@ -103,16 +118,19 @@ recorded, so none is training-eligible.
 
 Machine consensus is kept separate. [`labels/silver/manifest.json`](labels/silver/manifest.json)
 assigns resolved acts 1–5 to the training-only `SILVER` tier, pins every source label and
-arbitration document by SHA-256, and explicitly excludes them from evaluation. Its resolved
-field payloads remain content-addressed in the coordinator appendices rather than duplicated;
-`training_materialized: false` prevents claiming that a model-ready export already exists. Act 6
-has no tier and is quarantined pending the required human identity check.
+arbitration document by SHA-256, content-addresses five materialized field payloads, and excludes
+them from evaluation. The training exporter fails before writing an example if a chosen
+evaluation holdout contains Serock-1890; consequently the current SerockBench holdout correctly
+rejects all five silver records. Act 6 has no tier and remains quarantined pending the required
+human identity check.
 
 ## P2 implementation and baseline
 
 P2 now contains:
 
 - one fully local, checksum-pinned llama.cpp Reader;
+- first-class machine-readable provenance for runtime, model, prompt, schema, artifact, blind
+  status, and uncertainty;
 - immutable canonical and explicitly downgraded legacy label ingest;
 - strict field-level blind consensus and `[unclear: X/Y]` disagreements;
 - date, formula-position, witness-age, and within-clerk-year validators;
@@ -132,9 +150,10 @@ bounded failed jobs can retry; unknown/multi-act targets route to review instead
 |---|---:|
 | Baseline run | **NOT RUN** |
 | Gold records evaluated | **0/36** |
-| Scan-backed gold records available for the first run | **17/36** |
-| Runtime verification | **PASS — 10167 (ee3d1b54c)** |
-| Model/projector present | **No** |
+| Scan-backed gold records available for the first run | **24/36** |
+| Runtime verification | **PASS — b10167 mtmd grammar initialization** |
+| Model/projector pins | **Verified local artifacts** |
+| Raw failure probes | **5 grammar crashes; repetition loop; hollow shell** |
 | Clerk-year groups sequestered | **21** |
 | Prediction coverage | **N/A** |
 | Filiation exact match | **N/A** |
@@ -142,26 +161,26 @@ bounded failed jobs can retry; unknown/multi-act targets route to review instead
 | CONFIDENT / PROBABLE / UNCLEAR calibration | **N/A** |
 | Observation-state accuracy | **N/A** |
 
-The owner disabled Windows Smart App Control as an owner-level OS-policy decision; standard
-Defender remains active. The coordinator then verified `llama-cli.exe` version 10167
-(`ee3d1b54c`), exit 0, and SHA-256
-`5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5`. AKTREADER did not
-disable or bypass a control. Running the baseline now waits only for the owner-fetched,
-checksum-matching model/projector pair. Nineteen gold records are honestly marked
-`NOT_LOCALIZED`, so the first scan-backed run has a 17/36 coverage ceiling rather than an
-invented 36/36 input set.
+The baseline remains unspent until one `reader-infer` probe proves constrained output through
+the pinned mtmd frontend. Only then may `batch-run --max-retries 3
+--rebind-failed-fingerprints` preserve the existing retry audit and spend the final approved
+attempt. Failed jobs retain raw stdout/stderr paths in the checkpoint. Twelve gold records remain
+honestly marked `NOT_LOCALIZED`: five exact Serock source objects returned HTTP 415 and seven
+Pułtusk routes remain explicitly unresolved.
 
-See the [label factory](docs/label-factory.md) and
+See [SerockBench](docs/serockbench.md), the [label factory](docs/label-factory.md), the
+[baseline addendum](docs/p2-baseline-addendum.md), and the
 [P2 evaluation report](docs/p2-evaluation.md).
 
 ## Roadmap and phase gates
 
 1. **P0 — scaffold and landscape:** completed.
 2. **P1 — Serock-seeded gold corpus:** completed and owner-approved.
-3. **P2 — local MVP pipeline:** implementation gate accepted; prompt v1.2 is frozen and the
-   real baseline attaches later as an addendum after owner-fetched model assets. The performance
-   targets remain filiation exact-match at least 90% and wrong-but-confident below 2%; no model
-   result is claimed yet.
+3. **P2 — local MVP pipeline:** implementation gate accepted; prompt v1.3 is frozen for new
+   factory waves while the measured baseline remains pinned to exact v1.2 snapshots. The real
+   baseline attaches after the mtmd reduced-schema probe. The performance targets remain
+   filiation exact-match at least 90% and wrong-but-confident below 2%; no model result is
+   claimed yet.
 4. **P3 — Pułtusk batch:** begins only after the explicit corpus-acquisition gate.
 5. **P4 — name and place variant bridge.**
 6. **P5 — publication and single-act interface.**
@@ -173,3 +192,8 @@ See [the architecture notes](docs/architecture.md) and
 
 No open-source license has been selected yet. The P5 decision is explicitly reserved for Jake
 (AGPL or MIT). Until a license is added, the repository is not yet offered for reuse.
+
+Every declared runtime, development, build, and known transitive dependency is inventoried in
+[`dependency-licenses.json`](dependency-licenses.json); run
+`python -m tools.check_dependency_licenses` after dependency changes. See
+[CONTRIBUTING.md](CONTRIBUTING.md).

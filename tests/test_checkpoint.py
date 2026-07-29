@@ -128,3 +128,68 @@ def test_failed_job_is_retried_from_same_checkpoint_until_retry_budget_is_exhaus
     store.finish_running("one", JobStatus.FAILED, error="third failure")
 
     assert not store.claim_job("one", "fingerprint", max_retries=2)
+
+
+def test_explicit_failed_fingerprint_rebind_preserves_retry_history_and_audits(
+    tmp_path: Path,
+) -> None:
+    store = CheckpointStore(tmp_path / "run.sqlite3")
+    job = BatchJob("one", tmp_path / "scan.jpg", tmp_path / "one.json")
+    job.scan_path.write_bytes(b"x")
+    _register(store, job, "old")
+    assert store.claim_job("one", "old", max_retries=3)
+    store.finish_running("one", JobStatus.FAILED, error="attempt one")
+    assert store.claim_job("one", "old", max_retries=3)
+    store.finish_running("one", JobStatus.FAILED, error="attempt two")
+    assert store.claim_job("one", "old", max_retries=3)
+    store.finish_running("one", JobStatus.FAILED, error="attempt three")
+    assert store.get_job("one").retry_count == 2
+
+    rebound = store.upsert_job(
+        job_id="one",
+        fingerprint="new",
+        scan_path=str(job.scan_path),
+        output_path=str(job.output_path),
+        job_json='{"runtime":"mtmd"}',
+        preserve_failed_retry_history=True,
+    )
+
+    assert rebound.status is JobStatus.FAILED
+    assert rebound.retry_count == 2
+    assert rebound.error == "attempt three"
+    events = store.list_fingerprint_rebind_events()
+    assert len(events) == 1
+    assert events[0].job_id == "one"
+    assert events[0].old_fingerprint == "old"
+    assert events[0].new_fingerprint == "new"
+    assert events[0].retry_count == 2
+    assert store.claim_job("one", "new", max_retries=3)
+    assert store.get_job("one").retry_count == 3
+
+
+def test_explicit_fingerprint_rebind_rejects_changed_non_failed_row(
+    tmp_path: Path,
+) -> None:
+    store = CheckpointStore(tmp_path / "run.sqlite3")
+    job = BatchJob("one", tmp_path / "scan.jpg", tmp_path / "one.json")
+    job.scan_path.write_bytes(b"x")
+    _register(store, job, "old")
+
+    try:
+        store.upsert_job(
+            job_id="one",
+            fingerprint="new",
+            scan_path=str(job.scan_path),
+            output_path=str(job.output_path),
+            job_json="{}",
+            preserve_failed_retry_history=True,
+        )
+    except ValueError as error:
+        assert "requires FAILED state" in str(error)
+    else:  # pragma: no cover - assertion branch
+        raise AssertionError("changed PENDING row must fail closed")
+
+    snapshot = store.get_job("one")
+    assert snapshot.fingerprint == "old"
+    assert snapshot.status is JobStatus.PENDING
+    assert store.list_fingerprint_rebind_events() == []

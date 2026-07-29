@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "profile_id": "p2-qwen3.5-9b-q5_k_m-f16",
-  "state": "MTMD_REDUCED_SCHEMA_PROBE_REQUIRED",
+  "state": "MTMD_REDUCED_SCHEMA_FROZEN_PROBE_PENDING",
   "target_hardware": "NVIDIA RTX 5060 Ti 16 GB",
   "runtime": {
     "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-mtmd-cli.exe",
@@ -40,19 +40,19 @@
   },
   "prompt": {
     "version": "1.2.0",
-    "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt.md",
+    "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt-v1.2.0.md",
     "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f"
   },
   "schema": {
     "version": "1.0.0",
-    "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
+    "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0-v1.2.schema.json",
     "sha256": "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad"
   },
   "application_downloads_artifacts": false,
   "model_schema": {
     "version": "1.0.0",
     "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
-    "sha256": "a6eb69d2732b691936b859ec91f1bd017d4b4e1cfa8381443317b767ced40c64",
+    "sha256": "374f7c29ecf8ac73cc5d312a57802b013e49da0df5fb5a88eead86e62a5916e1",
     "purpose": "Bounded grammar surface; application stamps identity and provenance."
   },
   "inference_network_allowed": false

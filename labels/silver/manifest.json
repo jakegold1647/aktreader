@@ -17,13 +17,14 @@
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
       "training_eligible": true,
-      "training_materialized": false,
+      "training_materialized": true,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
-        "storage": "COORDINATOR_RESOLVED_APPENDIX",
-        "path": "labels/consensus/serock-1890-deaths-1-2_wave001_CONSENSUS.md",
-        "sha256": "c2e134b91c136d47168c2942c1a00b3d1ee0060962dffe11f7b83890813ae488"
+        "storage": "MATERIALIZED_JSON",
+        "schema": "schemas/silver-record-1.0.0.schema.json",
+        "path": "labels/silver/records/serock-1890-death-1.json",
+        "sha256": "c486958c181b477bde47d666c620f43fb6288b0129c64ef7126665a9d81a162e"
       },
       "provenance": {
         "source_labels": [
@@ -57,13 +58,14 @@
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
       "training_eligible": true,
-      "training_materialized": false,
+      "training_materialized": true,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
-        "storage": "COORDINATOR_RESOLVED_APPENDIX",
-        "path": "labels/consensus/serock-1890-deaths-1-2_wave001_CONSENSUS.md",
-        "sha256": "c2e134b91c136d47168c2942c1a00b3d1ee0060962dffe11f7b83890813ae488"
+        "storage": "MATERIALIZED_JSON",
+        "schema": "schemas/silver-record-1.0.0.schema.json",
+        "path": "labels/silver/records/serock-1890-death-2.json",
+        "sha256": "759c50068f180c0141406f63a7ffeae1a838d57413ab218bbc07f4b5c16731bb"
       },
       "provenance": {
         "source_labels": [
@@ -97,13 +99,14 @@
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
       "training_eligible": true,
-      "training_materialized": false,
+      "training_materialized": true,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
-        "storage": "COORDINATOR_RESOLVED_APPENDIX",
-        "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
-        "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        "storage": "MATERIALIZED_JSON",
+        "schema": "schemas/silver-record-1.0.0.schema.json",
+        "path": "labels/silver/records/serock-1890-death-3.json",
+        "sha256": "0b3544ddd33a7fd07d26e71d427b5e27ad16e1074b05d0ced55fc2de120a14f5"
       },
       "provenance": {
         "source_labels": [
@@ -137,13 +140,14 @@
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
       "training_eligible": true,
-      "training_materialized": false,
+      "training_materialized": true,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
-        "storage": "COORDINATOR_RESOLVED_APPENDIX",
-        "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
-        "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        "storage": "MATERIALIZED_JSON",
+        "schema": "schemas/silver-record-1.0.0.schema.json",
+        "path": "labels/silver/records/serock-1890-death-4.json",
+        "sha256": "f7d5dd9c289bae5e7ed0038f3aed953222ac759599dbf820ca8f6093c8775c41"
       },
       "provenance": {
         "source_labels": [
@@ -177,13 +181,14 @@
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
       "training_eligible": true,
-      "training_materialized": false,
+      "training_materialized": true,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
-        "storage": "COORDINATOR_RESOLVED_APPENDIX",
-        "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
-        "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+        "storage": "MATERIALIZED_JSON",
+        "schema": "schemas/silver-record-1.0.0.schema.json",
+        "path": "labels/silver/records/serock-1890-death-5.json",
+        "sha256": "f840c4682e7181f28fd95084ead1931bc6e6aad1c87fb56dbf6bcdd97d7136aa"
       },
       "provenance": {
         "source_labels": [

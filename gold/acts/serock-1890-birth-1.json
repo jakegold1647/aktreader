@@ -16,9 +16,9 @@
     }
   },
   "artifact": {
-    "status": "NOT_LOCALIZED",
-    "path": null,
-    "sha256": null,
+    "status": "LOCAL",
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1890_births_01-02.jpg",
+    "sha256": "7b9c765598cd75588dc1c78c07360d420ec731669206a49c3e118a9e39840d79",
     "source_spans_captured": false
   },
   "provenance": {

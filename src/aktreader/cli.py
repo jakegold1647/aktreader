@@ -17,6 +17,7 @@ from aktreader.batch import (
     InferenceIdentity,
     atomic_write_json,
     load_manifest_jobs,
+    atomic_write_text,
 )
 from aktreader.cli_support import (
     CliConfigurationError,
@@ -113,6 +114,14 @@ def build_parser() -> argparse.ArgumentParser:
     batch.add_argument("--output-dir", required=True, type=Path)
     batch.add_argument("--as-of-year", type=int)
     batch.add_argument("--max-retries", type=int, default=2)
+    batch.add_argument(
+        "--rebind-failed-fingerprints",
+        action="store_true",
+        help=(
+            "explicitly preserve FAILED retry counts while auditing a changed "
+            "runtime fingerprint; changed non-FAILED rows are rejected"
+        ),
+    )
 
     evaluate = subparsers.add_parser(
         "eval", help="generate the clerk-year-sequestered SerockBench report"
@@ -302,7 +311,20 @@ def _command_batch_run(args: argparse.Namespace) -> int:
             )
 
     def read_job(job: BatchJob) -> Mapping[str, Any]:
-        return reader.read(job.scan_path, batch_brief=brief_for_job(job)).payload
+        try:
+            return reader.read(job.scan_path, batch_brief=brief_for_job(job)).payload
+        except LocalReaderError as error:
+            if not error.has_process_diagnostics:
+                raise
+            stdout_path = job.output_path.with_suffix(".failed.stdout.txt")
+            stderr_path = job.output_path.with_suffix(".failed.stderr.txt")
+            atomic_write_text(stdout_path, error.stdout or "")
+            atomic_write_text(stderr_path, error.stderr or "")
+            raise LocalReaderError(
+                f"{error}; raw_stdout={stdout_path}; raw_stderr={stderr_path}",
+                stdout=error.stdout,
+                stderr=error.stderr,
+            ) from error
 
     def report_progress(progress: Any, snapshot: Any) -> None:
         payload: dict[str, Any] = {"progress": progress.as_dict()}
@@ -316,7 +338,7 @@ def _command_batch_run(args: argparse.Namespace) -> int:
         prompt_hash=reader.artifact_hashes["prompt"],
         schema=(
             f"label:{reader.artifact_hashes['schema']};"
-            f"model:{reader.artifact_hashes['model_schema']}"
+            f"model:{reader.artifact_hashes.get('model_schema', reader.artifact_hashes['schema'])}"
         ),
         decoding_config=generation_report(reader.config),
     )
@@ -328,6 +350,7 @@ def _command_batch_run(args: argparse.Namespace) -> int:
         as_of_year=args.as_of_year,
         max_retries=args.max_retries,
         progress_callback=report_progress,
+        preserve_failed_retry_history=args.rebind_failed_fingerprints,
     )
     progress = runner.run()
     report = {
@@ -340,6 +363,9 @@ def _command_batch_run(args: argparse.Namespace) -> int:
         "output_dir": str(output_dir),
         "runtime_fingerprint": reader.runtime_fingerprint,
         "progress": progress.as_dict(),
+        "failed_fingerprint_rebind": (
+            "enabled" if args.rebind_failed_fingerprints else "disabled"
+        ),
     }
     _emit_json(report)
     return 0 if report["status"] == "COMPLETE" else 1

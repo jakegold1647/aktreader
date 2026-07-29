@@ -61,7 +61,7 @@ def _provenance(act_no: int, wave: int) -> dict[str, Any]:
 
 
 def build_manifest() -> dict[str, Any]:
-    """Return the deterministic tier index; resolved field payloads remain source-addressed."""
+    """Return the deterministic tier index over materialized resolved field payloads."""
     records = []
     for act_no in range(1, 6):
         wave = 1 if act_no <= 2 else 2
@@ -75,12 +75,15 @@ def build_manifest() -> dict[str, Any]:
                 "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
                 "confidence_cap": "PROBABLE",
                 "training_eligible": True,
-                "training_materialized": False,
+                "training_materialized": True,
                 "eval_eligible": False,
                 "human_verified": False,
                 "resolved_fields": {
-                    "storage": "COORDINATOR_RESOLVED_APPENDIX",
-                    **consensus,
+                    "storage": "MATERIALIZED_JSON",
+                    "schema": "schemas/silver-record-1.0.0.schema.json",
+                    **_source(
+                        f"labels/silver/records/serock-1890-death-{act_no}.json"
+                    ),
                 },
                 "provenance": provenance,
             }

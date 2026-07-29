@@ -50,6 +50,17 @@ class JobSnapshot:
 
 
 @dataclass(frozen=True)
+class FingerprintRebindEvent:
+    """Audited identity transition for an explicitly approved failed-job remediation."""
+
+    job_id: str
+    old_fingerprint: str
+    new_fingerprint: str
+    retry_count: int
+    created_at: str
+
+
+@dataclass(frozen=True)
 class Progress:
     """Exact state totals from one checkpoint database."""
 
@@ -151,6 +162,17 @@ class CheckpointStore:
                 );
 
                 CREATE INDEX IF NOT EXISTS jobs_status_idx ON jobs(status);
+                CREATE TABLE IF NOT EXISTS fingerprint_rebind_events (
+                    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    job_id TEXT NOT NULL,
+                    old_fingerprint TEXT NOT NULL,
+                    new_fingerprint TEXT NOT NULL,
+                    retry_count INTEGER NOT NULL CHECK (retry_count >= 0),
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY(job_id) REFERENCES jobs(job_id)
+                );
+                CREATE INDEX IF NOT EXISTS fingerprint_rebind_job_idx
+                ON fingerprint_rebind_events(job_id, event_id);
                 """
             )
             row = connection.execute(
@@ -192,8 +214,13 @@ class CheckpointStore:
         scan_path: str,
         output_path: str,
         job_json: str,
+        preserve_failed_retry_history: bool = False,
     ) -> JobSnapshot:
-        """Register a job, resetting it only when its fingerprint changed."""
+        """Register a job, resetting it only when its fingerprint changed.
+
+        A remediation rebind preserves an existing FAILED row's retry count and writes
+        an audit event. A changed row in any other state fails closed.
+        """
         if not job_id:
             raise ValueError("job_id must not be empty")
         if not fingerprint:
@@ -222,24 +249,56 @@ class CheckpointStore:
                     ),
                 )
             elif row["fingerprint"] != fingerprint:
-                connection.execute(
-                    """
-                    UPDATE jobs
-                    SET fingerprint = ?, scan_path = ?, output_path = ?, job_json = ?,
-                        status = ?, retry_count = 0, error = NULL, updated_at = ?,
-                        started_at = NULL, finished_at = NULL
-                    WHERE job_id = ?
-                    """,
-                    (
-                        fingerprint,
-                        scan_path,
-                        output_path,
-                        job_json,
-                        JobStatus.PENDING.value,
-                        now,
-                        job_id,
-                    ),
-                )
+                if preserve_failed_retry_history:
+                    if JobStatus(row["status"]) is not JobStatus.FAILED:
+                        raise ValueError(
+                            f"{job_id}: remediation fingerprint rebind requires FAILED state"
+                        )
+                    old_fingerprint = row["fingerprint"]
+                    connection.execute(
+                        """
+                        UPDATE jobs
+                        SET fingerprint = ?, scan_path = ?, output_path = ?, job_json = ?,
+                            updated_at = ?
+                        WHERE job_id = ? AND status = ?
+                        """,
+                        (
+                            fingerprint,
+                            scan_path,
+                            output_path,
+                            job_json,
+                            now,
+                            job_id,
+                            JobStatus.FAILED.value,
+                        ),
+                    )
+                    connection.execute(
+                        """
+                        INSERT INTO fingerprint_rebind_events(
+                            job_id, old_fingerprint, new_fingerprint, retry_count, created_at
+                        ) VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (job_id, old_fingerprint, fingerprint, row["retry_count"], now),
+                    )
+                else:
+                    connection.execute(
+                        """
+                        UPDATE jobs
+                        SET fingerprint = ?, scan_path = ?, output_path = ?, job_json = ?,
+                            status = ?, retry_count = 0, error = NULL, updated_at = ?,
+                            started_at = NULL, finished_at = NULL
+                        WHERE job_id = ?
+                        """,
+                        (
+                            fingerprint,
+                            scan_path,
+                            output_path,
+                            job_json,
+                            JobStatus.PENDING.value,
+                            now,
+                            job_id,
+                        ),
+                    )
             else:
                 connection.execute(
                     """
@@ -263,6 +322,27 @@ class CheckpointStore:
         if row is None:
             raise KeyError(job_id)
         return self._snapshot(row)
+
+    def list_fingerprint_rebind_events(self) -> list[FingerprintRebindEvent]:
+        """Return remediation identity transitions in insertion order."""
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT job_id, old_fingerprint, new_fingerprint, retry_count, created_at
+                FROM fingerprint_rebind_events
+                ORDER BY event_id
+                """
+            ).fetchall()
+        return [
+            FingerprintRebindEvent(
+                job_id=row["job_id"],
+                old_fingerprint=row["old_fingerprint"],
+                new_fingerprint=row["new_fingerprint"],
+                retry_count=row["retry_count"],
+                created_at=row["created_at"],
+            )
+            for row in rows
+        ]
 
     def list_jobs(self) -> list[JobSnapshot]:
         """Return all jobs in stable ID order."""

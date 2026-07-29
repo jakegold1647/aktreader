@@ -129,8 +129,12 @@ def test_canonical_loader_accepts_only_supported_prompt_versions() -> None:
     v1_2["prompt"]["version"] = "1.2.0"
     assert parse_canonical_reader_label(v1_2).prompt_binding_verified is True
 
+    v1_3 = _canonical_payload()
+    v1_3["prompt"]["version"] = "1.3.0"
+    assert parse_canonical_reader_label(v1_3).prompt_binding_verified is True
+
     unsupported = _canonical_payload()
-    unsupported["prompt"]["version"] = "1.3.0"
+    unsupported["prompt"]["version"] = "1.4.0"
     with pytest.raises(LabelValidationError, match="unsupported prompt"):
         parse_canonical_reader_label(unsupported)
 

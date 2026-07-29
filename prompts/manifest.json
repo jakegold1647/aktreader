@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "prompt_header": {
-    "prompt_version": "1.2.0",
-    "prompt_sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f"
+    "prompt_version": "1.3.0",
+    "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77"
   },
   "checksum_scope": "raw reader_prompt.md bytes",
   "released_on": "2026-07-28"

@@ -78,10 +78,10 @@ Evidence:
 
 The machine-readable [silver manifest](../labels/silver/manifest.json) assigns resolved acts 1–5
 to `SILVER`: training-eligible 2-of-3 consensus, never evaluation, never human-verified. It pins
-all source labels and resolution documents by SHA-256. The actual resolved fields remain
-source-addressed in the coordinator appendices (`training_materialized: false`), so this gate does
-not pretend that a canonical LoRA export has already been built. Act 6 remains untiered and
-quarantined pending the mandatory human check.
+all source labels and resolution documents by SHA-256 and content-addresses five materialized
+field payloads. The training exporter rejects the current holdout because Serock-1890 appears in
+both sets; a model-ready export is possible only with an explicitly selected, non-overlapping
+evaluation holdout. Act 6 remains untiered and quarantined pending the mandatory human check.
 
 ## Prompt v1.1 correction
 
@@ -129,8 +129,8 @@ AKTREADER did not change a security setting or attempt a bypass.
 | Baseline run state | **NOT RUN** |
 | Model invocations | **0** |
 | Gold records evaluated | **0/36** |
-| Scan-backed gold inputs available | **17/36** |
-| Gold records marked `NOT_LOCALIZED` | **19/36** |
+| Scan-backed gold inputs available | **24/36** |
+| Gold records marked `NOT_LOCALIZED` | **12/36** |
 | Sequestered clerk-year groups | **21** |
 | Runtime verification | **PASS — 10167 (ee3d1b54c), exit 0** |
 | Runtime executable SHA-256 | `5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5` |
@@ -159,7 +159,7 @@ evaluated prediction set contains no CONFIDENT assertions.
 The exact Qwen3.5-9B Q5_K_M model and F16 projector are now revision- and checksum-pinned in
 [`examples/p2-baseline.artifacts.json`](../examples/p2-baseline.artifacts.json). The owner fetches
 those bytes outside the application; `reader-inspect` verifies them before the coordinator runs
-the committed 17-job scan-backed manifest. The 19 unlocalized records remain explicit coverage
+the committed 24-job scan-backed manifest. The 12 unlocalized records remain explicit coverage
 gaps and are never assigned guessed paths.
 
 ## Intended local baseline
@@ -180,9 +180,9 @@ this project's gold-corpus evaluation.
 
 ## Benchmark integrity
 
-The current gold corpus contains 36 records spanning 21 clerk-year groups. Seventeen records
-have checksum-verified local scans and nineteen remain `NOT_LOCALIZED`; the first executable
-baseline therefore reports at most 17/36 prediction coverage. All current gold records are
+The current gold corpus contains 36 records spanning 21 clerk-year groups. Twenty-four records
+have checksum-verified local scans and twelve remain `NOT_LOCALIZED`; the first executable
+baseline therefore reports at most 24/36 prediction coverage. All current gold records are
 evaluation-only:
 
 - `gold/clerk_year_holdout.json` sets `training_overlap_allowed` to `false`.
@@ -293,7 +293,7 @@ $evaluation = Join-Path $runRoot 'serockbench.json'
 ```
 
 The evaluation command accepts either one prediction JSON file or a directory of prediction
-JSON files. The first complete run should report 17/36 coverage, not 36/36. Preserve the
+JSON files. The first complete run should report 24/36 coverage, not 36/36. Preserve the
 predictions, batch checkpoint, runtime fingerprint, content pins, and generated report as
 immutable run evidence.
 

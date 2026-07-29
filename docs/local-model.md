@@ -1,23 +1,27 @@
 # Local model and runtime
 
 AKTREADER has one Reader backend: a local open-weights vision-language model invoked through
-`llama-cli`. There is no hosted Reader interface, model URL, SDK, API server, account, or key in
+`llama-mtmd-cli`. There is no hosted Reader interface, model URL, SDK, API server, account, or key in
 the application.
 
 ## Current execution status
 
-The P2 LocalReader baseline is **NOT RUN**, but the runtime is no longer the blocker. After the
-owner disabled Smart App Control as an owner-level OS-policy decision (standard Defender remains
-active), the coordinator verified:
+The P2 LocalReader baseline is **NOT RUN**. All locked runtime/model artifacts are present and
+`reader-inspect` verifies their hashes without invoking inference.
 
-- `runtime\llama.cpp-b10167\llama-cli.exe --version` → `10167 (ee3d1b54c)`, exit 0;
-- executable SHA-256 →
-  `5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5`.
+Measured probes separated the frontend failure from the grammar engine:
 
-AKTREADER did not disable, evade, or weaken an operating-system control. The remaining gate is
-artifact availability: neither locked GGUF file is present yet, so there have been zero model
-invocations and no prediction denominator. The owner fetches those exact bytes outside the
-application; `reader-inspect` then verifies every content pin before inference.
+- b10167 `llama-cli` crashes when its REPL prompt tokens pass through the active Qwen3.5 grammar;
+- the same build's `llama-mtmd-cli` initializes the inline JSON schema correctly;
+- the full label schema then caused repetition in long mechanical fields;
+- the frozen remediation gives the model only a bounded target check, transcription/translation,
+  and observations, while AKTREADER stamps identity and provenance after generation.
+
+The pinned frontend is `runtime\llama.cpp-b10167\llama-mtmd-cli.exe`, version
+`10167 (ee3d1b54c)`, SHA-256
+`6866b9425ec02798087380e14d5a9c69ded092a914cd48f06cf9b803552f7bfc`.
+The one-job reduced-schema probe remains pending. No baseline retry has been spent by this
+rebuild.
 
 ## Hardware profiles
 
@@ -78,46 +82,41 @@ and record the newly produced hashes; those hashes cannot be truthfully predicte
 projectors, GPU/CPU offload, JSON-schema-constrained generation, and LoRA adapters. Qwen's
 official repository explicitly lists llama.cpp support for Qwen3.6 text and vision.
 
-AKTREADER invokes `llama-cli.exe` directly with `shell=False`. It does not start
+AKTREADER invokes `llama-mtmd-cli.exe` directly with `shell=False`. It does not start
 `llama-server`, speak HTTP to localhost, or use an OpenAI-compatible client. The fixed command
 shape is equivalent to:
 
 ```powershell
-llama-cli.exe `
+llama-mtmd-cli.exe `
   -m E:\path\model.gguf `
   -mm E:\path\mmproj.gguf `
   --image E:\path\act-crop.jpg `
-  --system-prompt-file E:\path\reader_prompt.md `
-  --json-schema-file E:\path\reader-label.schema.json `
-  --ctx-size 16384 `
-  --predict 8192 `
+  -sys "<pinned prompt contents>" `
+  --json-schema "<pinned reduced-schema contents>" `
+  -p "<bounded target-check request>" `
+  -c 16384 `
+  -n 8192 `
   --image-max-tokens 4096 `
-  --seed 0 `
+  -s 0 `
   --temp 0 `
   --top-k 1 `
-  --reasoning off `
-  --gpu-layers all `
-  --jinja `
-  --single-turn `
-  --simple-io `
-  --no-context-shift `
-  --no-display-prompt `
-  --no-show-timings
+  -ngl 99
 ```
 
 An optional local LoRA adds `--lora E:\path\adapter.gguf`.
 
-The CLI grammar makes the output syntactically JSON-shaped. It cannot make a semantically wrong
-name true. AKTREADER consequently parses exactly one strict JSON object, rejects duplicate keys
-and non-standard numbers, independently validates the result against the checksum-pinned local
-schema, and rejects any single-reader `CONFIDENT` grade. A local blind pass may return only
+The CLI grammar makes the reduced output syntactically JSON-shaped. It cannot make a
+semantically wrong name true. AKTREADER consequently parses exactly one strict JSON object,
+rejects duplicate keys and non-standard numbers, validates it against the checksum-pinned reduced
+schema, verifies the target check, stamps all identity/provenance and source-span IDs
+mechanically, validates the assembled label against the full schema, and rejects any
+single-reader `CONFIDENT` grade. A local blind pass may return only
 `PROBABLE`, `UNCLEAR`, or null confidence for a typed non-present state. Consensus and
 validators—not the model—may later promote evidence.
 
 Runtime documentation:
 
 - [llama.cpp](https://github.com/ggml-org/llama.cpp)
-- [llama-cli options](https://github.com/ggml-org/llama.cpp/blob/master/tools/cli/README.md)
 - [JSON-schema grammars](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md)
 
 ## Artifact provisioning and checksum pins
@@ -127,15 +126,16 @@ The application never downloads them and never turns an operating-system block i
 continue. After trusted provisioning, record the SHA-256 of every required file:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 E:\path\llama-cli.exe
+Get-FileHash -Algorithm SHA256 E:\path\llama-mtmd-cli.exe
 Get-FileHash -Algorithm SHA256 E:\path\model.gguf
 Get-FileHash -Algorithm SHA256 E:\path\mmproj.gguf
 Get-FileHash -Algorithm SHA256 E:\path\reader_prompt.md
 Get-FileHash -Algorithm SHA256 E:\path\reader-label.schema.json
+Get-FileHash -Algorithm SHA256 E:\path\model-output.schema.json
 ```
 
 Record a LoRA checksum too when one is used. Do not commit an invented or placeholder digest.
-Pin the exact llama.cpp binary, model quant, projector, prompt, schema, and adapter used for an
+Pin the exact llama.cpp binary, model quant, projector, prompt, both schemas, and adapter used for an
 evaluation run. `LocalReader` hashes each file before inference and fails closed on a missing
 file, relative path, UNC path, URL-like locator, external schema reference, or mismatch.
 
@@ -150,52 +150,14 @@ blocked.
 
 ## Construction
 
-```python
-from pathlib import Path
+The runnable, content-pinned configuration is
+[`examples/p2-baseline.local-reader.json`](../examples/p2-baseline.local-reader.json). It requires
+separate full-label and reduced model-facing schema pins:
 
-from aktreader.local_reader import LocalReader, LocalReaderConfig, PinnedArtifact
-
-reader = LocalReader(
-    LocalReaderConfig(
-        executable=PinnedArtifact(
-            Path(
-                r"E:\DNA\Project_RegisterReader\runtime"
-                r"\llama.cpp-b10167\llama-cli.exe"
-            ),
-            "5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5",
-        ),
-        model=PinnedArtifact(
-            Path(
-                r"E:\DNA\Project_RegisterReader\models\qwen3.5-9b-q5_k_m"
-                r"\Qwen3.5-9B-Q5_K_M.gguf"
-            ),
-            "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c",
-        ),
-        mmproj=PinnedArtifact(
-            Path(
-                r"E:\DNA\Project_RegisterReader\models\qwen3.5-9b-q5_k_m"
-                r"\mmproj-F16.gguf"
-            ),
-            "f70dc3509053962b0d0d3ee8a7eacebf5d60aa560cad78254ae8698516ae029f",
-        ),
-        prompt=PinnedArtifact(
-            Path(r"E:\DNA\Project_RegisterReader\prompts\reader_prompt.md"),
-            "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
-        ),
-        schema=PinnedArtifact(
-            Path(
-                r"E:\DNA\Project_RegisterReader\schemas"
-                r"\reader-label-1.0.0.schema.json"
-            ),
-            "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad",
-        ),
-    )
-)
+```powershell
+.\.venv\Scripts\aktreader.exe reader-inspect `
+  --config examples\p2-baseline.local-reader.json
 ```
-
-The two GGUF paths intentionally remain absent until the owner fetches and verifies the locked
-files. The equivalent JSON configuration is tracked directly, so this code block is explanatory
-rather than a second source of truth.
 
 ## Future LoRA training hardware
 
@@ -219,7 +181,8 @@ blind pass cannot accidentally receive another Reader's work.
 
 Each successful result exposes:
 
-- the SHA-256 of the llama.cpp executable, model, projector, prompt, schema, and optional LoRA;
+- the SHA-256 of the llama.cpp executable, model, projector, prompt, full label schema,
+  reduced model schema, and optional LoRA;
 - deterministic generation settings;
 - the input image SHA-256;
 - the canonical batch-brief SHA-256;

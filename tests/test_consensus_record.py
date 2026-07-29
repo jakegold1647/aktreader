@@ -256,9 +256,12 @@ def test_atomic_writer_emits_schema_valid_json(tmp_path: Path) -> None:
 def test_all_complete_reader_filename_pairs_are_selected() -> None:
     names = [reader_a.name for reader_a, _ in _complete_pair_paths()]
 
-    expected_acts = [*range(1, 7), *range(30, 41)]
+    expected_acts = [*range(1, 7), *range(30, 50)]
     expected_names = sorted(
-        f"serock-1890-death-{act_no}.json" for act_no in expected_acts
+        [
+            *(f"serock-1890-death-{act_no}.json" for act_no in expected_acts),
+            "serock-1890-skz-index.json",
+        ]
     )
     assert names == expected_names
 

@@ -10,7 +10,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 GOLD_ACTS = ROOT / "gold" / "acts"
-PROMPT_MANIFEST = ROOT / "prompts" / "manifest.json"
+BASELINE_LOCK = ROOT / "examples" / "p2-baseline.artifacts.json"
 DEFAULT_OUTPUT = ROOT / "examples" / "p2-baseline.jobs.json"
 CREATED_AT = "2026-07-28T15:39:23-04:00"
 AUTHORITY_WARNING = "extraction is not authority — verify against the scan"
@@ -89,7 +89,7 @@ def _image_dimensions(path: Path) -> tuple[int, int]:
 
 
 def _batch_brief(record: dict[str, Any], *, width: int, height: int) -> dict[str, Any]:
-    prompt_header = _load_json(PROMPT_MANIFEST)["prompt_header"]
+    prompt_lock = _load_json(BASELINE_LOCK)["prompt"]
     register = record["register"]
     artifact = record["artifact"]
     return {
@@ -107,9 +107,9 @@ def _batch_brief(record: dict[str, Any], *, width: int, height: int) -> dict[str
             "other_reader_output_seen": False,
         },
         "prompt": {
-            "version": prompt_header["prompt_version"],
-            "sha256": prompt_header["prompt_sha256"],
-            "path": "prompts/reader_prompt.md",
+            "version": prompt_lock["version"],
+            "sha256": prompt_lock["sha256"],
+            "path": "prompts/reader_prompt-v1.2.0.md",
         },
         "clerk_year": register["clerk_year"],
         "artifact": {

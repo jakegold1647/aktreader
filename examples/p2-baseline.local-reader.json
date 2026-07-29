@@ -14,16 +14,16 @@
       "sha256": "f70dc3509053962b0d0d3ee8a7eacebf5d60aa560cad78254ae8698516ae029f"
     },
     "prompt": {
-      "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt.md",
+      "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt-v1.2.0.md",
       "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f"
     },
     "schema": {
-      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0-v1.2.schema.json",
       "sha256": "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad"
     },
     "model_schema": {
       "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
-      "sha256": "a6eb69d2732b691936b859ec91f1bd017d4b4e1cfa8381443317b767ced40c64"
+      "sha256": "374f7c29ecf8ac73cc5d312a57802b013e49da0df5fb5a88eead86e62a5916e1"
     }
   },
   "generation": {

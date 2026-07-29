@@ -20,3 +20,15 @@ Date: 28 Jul 2026, ~22:15. Answers recorded verbatim, coordinator interpretation
 - Act 40 surname: unresolved 2–2 + human abstention → [unclear] stands; expert-review list.
 - Verifier method note for the paper: all confirmations achieved by a non-reader of Cyrillic
   via lineups, bilingual anchors, and split-visibility — the "hieroglyph method" validated.
+
+## Q7 follow-up (act 40 surname, Бобекъ vs Бодекъ) — answered ~22:30
+Jake, verbatim: "they each appear as ek for letters 4 and 5" then, on the deciding letter 3
+across its occurrences: "they all appear as upside down vs".
+Interpretation: letter 3 presents as a Λ-shape matching NEITHER reference form (loop-д nor
+flagged-б) in this clerk's hand. Human verdict: CAN'T TELL — a genuine third reading of the
+stroke, consistent with the machine 2–2 deadlock.
+OUTCOME: surname stays [unclear: Бобекъ/Бодекъ]; expert-review list; the Λ-observation is
+recorded as evidence for the eventual expert (it may suggest a variant letterform or a third
+candidate entirely). All three verifiers — two machines and one human — have now honestly
+declined to force this field. The system said "I don't know" in unison, which is the product
+working.

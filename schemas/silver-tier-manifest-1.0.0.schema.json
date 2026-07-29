@@ -109,14 +109,15 @@
         "resolution_method": {"const": "BLIND_2_OF_3_MACHINE_CONSENSUS"},
         "confidence_cap": {"const": "PROBABLE"},
         "training_eligible": {"const": true},
-        "training_materialized": {"const": false},
+        "training_materialized": {"const": true},
         "eval_eligible": {"const": false},
         "human_verified": {"const": false},
         "resolved_fields": {
           "type": "object",
-          "required": ["storage", "path", "sha256"],
+          "required": ["storage", "schema", "path", "sha256"],
           "properties": {
-            "storage": {"const": "COORDINATOR_RESOLVED_APPENDIX"},
+            "storage": {"const": "MATERIALIZED_JSON"},
+            "schema": {"const": "schemas/silver-record-1.0.0.schema.json"},
             "path": {"type": "string", "minLength": 1},
             "sha256": {"$ref": "#/$defs/sha256"}
           },

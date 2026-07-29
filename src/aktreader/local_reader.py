@@ -1,7 +1,7 @@
 """Fully local, content-pinned llama.cpp Reader backend.
 
 The application deliberately has no hosted Reader abstraction.  ``LocalReader`` invokes one
-explicitly configured ``llama-cli`` executable with local files and returns one JSON object.
+explicitly configured ``llama-mtmd-cli`` executable with local files and returns one JSON object.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ _SAFE_ENVIRONMENT_KEYS = {
     "VK_ICD_FILENAMES",
     "WINDIR",
 }
-_CONTRACT_VERSION = "aktreader-local-reader-1.0.0"
+_CONTRACT_VERSION = "aktreader-local-reader-1.1.0"
 
 
 class LocalReaderError(RuntimeError):
@@ -478,6 +478,7 @@ class LocalReader:
             "seed": self.config.seed,
             "temperature": 0,
             "top_k": 1,
+            "repeat_penalty": None,
         }
 
     def _prepare_brief(
@@ -589,6 +590,20 @@ class LocalReader:
         if not isinstance(act_region, Mapping):
             raise BatchBriefError("batch brief artifact.act_region must be an object")
 
+        model_observations = model_payload.get("observations")
+        if not isinstance(model_observations, Mapping):
+            raise LocalReaderOutputError("model output requires an observations object")
+        stamped_observations: dict[str, dict[str, Any]] = {}
+        for field_path, evidence in model_observations.items():
+            if not isinstance(field_path, str) or not isinstance(evidence, Mapping):
+                raise LocalReaderOutputError(
+                    "model observations require string keys and object values"
+                )
+            stamped_observations[field_path] = {
+                **dict(evidence),
+                "source_span_ids": ["act-region"],
+            }
+
         return {
             "$schema": "https://aktreader.org/schema/reader-label-1.0.0.json",
             "schema_version": "1.0.0",
@@ -604,7 +619,7 @@ class LocalReader:
             },
             "mentions": [],
             "transcription": model_payload["transcription"],
-            "observations": model_payload["observations"],
+            "observations": stamped_observations,
             "compliance": {
                 "restricted_sources_used": False,
                 "privacy_decision": "ALLOW",
@@ -637,7 +652,7 @@ class LocalReader:
 
         image = _resolve_local_file(Path(image_path), role="input image")
         image_sha256 = sha256_file(image)
-        brief, brief_text = self._prepare_brief(batch_brief, image_sha256=image_sha256)
+        brief, _ = self._prepare_brief(batch_brief, image_sha256=image_sha256)
         target_request = self._target_check_request(brief)
         request_text = (
             "Read the supplied image as one blind AKTREADER pass. Return only the bounded "

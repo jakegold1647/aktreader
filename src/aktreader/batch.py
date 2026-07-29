@@ -201,6 +201,33 @@ def atomic_write_json(path: Path, payload: Mapping[str, Any]) -> None:
             temporary_path.unlink(missing_ok=True)
 
 
+def atomic_write_text(path: Path, text: str) -> None:
+    """Write diagnostic text atomically without altering its decoded stream content."""
+
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="",
+            prefix=f".{destination.name}.",
+            suffix=".tmp",
+            dir=destination.parent,
+            delete=False,
+        ) as stream:
+            temporary_path = Path(stream.name)
+            stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary_path, destination)
+        temporary_path = None
+    finally:
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)
+
+
 def _valid_completed_output(path: Path) -> bool:
     """Accept a checkpointed success only while its output is one readable JSON object."""
     try:
@@ -367,6 +394,7 @@ class BatchRunner:
         privacy_policy: PrivacyPolicy = DEFAULT_PRIVACY_POLICY,
         as_of_year: int | None = None,
         max_retries: int = 2,
+        preserve_failed_retry_history: bool = False,
         progress_callback: ProgressCallback | None = None,
     ) -> None:
         self.jobs = list(jobs)
@@ -385,6 +413,7 @@ class BatchRunner:
         self.as_of_year = as_of_year
         self.max_retries = max_retries
         self.progress_callback = progress_callback
+        self.preserve_failed_retry_history = preserve_failed_retry_history
 
     def _report(self, job_id: str | None = None) -> Progress:
         progress = self.store.progress()
@@ -426,6 +455,7 @@ class BatchRunner:
                 scan_path=str(job.scan_path.resolve()),
                 output_path=str(job.output_path.resolve()),
                 job_json=self._job_json(job, fingerprint),
+                preserve_failed_retry_history=self.preserve_failed_retry_history,
             )
             prepared.append((job, fingerprint))
         self._report()

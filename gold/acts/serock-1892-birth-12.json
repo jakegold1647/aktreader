@@ -16,9 +16,9 @@
     }
   },
   "artifact": {
-    "status": "NOT_LOCALIZED",
-    "path": null,
-    "sha256": null,
+    "status": "LOCAL",
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wantlist\\Serock_1892_births_11-14.jpg",
+    "sha256": "3458012aae9ce65a34d56f1e79032afb2c62dc1c7c3ff67598c21143ef9d36d7",
     "source_spans_captured": false
   },
   "provenance": {

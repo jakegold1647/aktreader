@@ -254,9 +254,10 @@ def load_local_reader_config(path: Path | str) -> LocalReaderConfig:
         optional=_OPTIONAL_ARTIFACTS,
         location="reader config.artifacts",
     )
+    pin_roles = _REQUIRED_ARTIFACTS
     pins = {
         role: _artifact_from_config(artifacts[role], role=role, config_dir=config_path.parent)
-        for role in sorted(_REQUIRED_ARTIFACTS)
+        for role in sorted(pin_roles)
     }
     lora = (
         _artifact_from_config(artifacts["lora"], role="lora", config_dir=config_path.parent)
@@ -297,6 +298,7 @@ def generation_report(config: LocalReaderConfig) -> dict[str, Any]:
         "timeout_seconds": config.timeout_seconds,
         "temperature": 0,
         "top_k": 1,
+        "repeat_penalty": None,
         "frontend": "mtmd-cli",
     }
 

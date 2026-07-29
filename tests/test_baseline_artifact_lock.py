@@ -18,7 +18,7 @@ def test_baseline_lock_uses_revision_pinned_owner_fetches() -> None:
     lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
     revision = lock["prebuilt_gguf"]["revision"]
 
-    assert lock["state"] == "MODEL_ASSETS_OWNER_FETCH_REQUIRED"
+    assert lock["state"] == "MTMD_REDUCED_SCHEMA_FROZEN_PROBE_PENDING"
     assert lock["application_downloads_artifacts"] is False
     assert lock["inference_network_allowed"] is False
     assert len(revision) == 40
@@ -40,6 +40,7 @@ def test_runnable_config_contains_only_local_paths_and_matches_lock() -> None:
         "executable": lock["runtime"],
         "model": lock["model"],
         "mmproj": lock["mmproj"],
+        "model_schema": lock["model_schema"],
         "prompt": lock["prompt"],
         "schema": lock["schema"],
     }
@@ -48,8 +49,12 @@ def test_runnable_config_contains_only_local_paths_and_matches_lock() -> None:
         assert "://" not in pin["path"]
         assert pin["sha256"] == expected[role]["sha256"]
 
-    assert _sha256(ROOT / "prompts" / "reader_prompt.md") == artifacts["prompt"]["sha256"]
+    assert _sha256(ROOT / "prompts" / "reader_prompt-v1.2.0.md") == artifacts["prompt"]["sha256"]
     assert (
-        _sha256(ROOT / "schemas" / "reader-label-1.0.0.schema.json")
+        _sha256(ROOT / "schemas" / "reader-label-1.0.0-v1.2.schema.json")
         == artifacts["schema"]["sha256"]
+    )
+    assert (
+        _sha256(ROOT / "schemas" / "model-output-1.0.0.schema.json")
+        == artifacts["model_schema"]["sha256"]
     )

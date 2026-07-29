@@ -7,6 +7,9 @@ from typing import Any
 import pytest
 
 import aktreader.local_reader as local_reader_module
+ROOT = Path(__file__).resolve().parents[1]
+
+
 from aktreader.local_reader import (
     ArtifactValidationError,
     BatchBriefError,
@@ -28,12 +31,22 @@ def _pin(path: Path) -> PinnedArtifact:
     return PinnedArtifact(path=path, sha256=sha256_file(path))
 
 
-def _reader_config(tmp_path: Path, *, with_lora: bool = False) -> LocalReaderConfig:
-    executable = _write(tmp_path / "llama-cli.exe", b"pinned llama.cpp executable")
+def _reader_config(
+    tmp_path: Path,
+    *,
+    with_lora: bool = False,
+    strict_schemas: bool = False,
+) -> LocalReaderConfig:
+    executable = _write(tmp_path / "llama-mtmd-cli.exe", b"pinned llama.cpp executable")
     model = _write(tmp_path / "model.gguf", b"pinned quantized model")
     mmproj = _write(tmp_path / "mmproj.gguf", b"pinned vision projector")
     prompt = _write(tmp_path / "reader_prompt.md", b"pinned reader prompt")
-    schema = _write(tmp_path / "reader-label.schema.json", b'{"type":"object"}')
+    if strict_schemas:
+        schema = ROOT / "schemas" / "reader-label-1.0.0.schema.json"
+        model_schema = ROOT / "schemas" / "model-output-1.0.0.schema.json"
+    else:
+        schema = _write(tmp_path / "reader-label.schema.json", b'{"type":"object"}')
+        model_schema = _write(tmp_path / "model-output.schema.json", b'{"type":"object"}')
     lora = _write(tmp_path / "aktreader-lora.gguf", b"pinned LoRA") if with_lora else None
     return LocalReaderConfig(
         executable=_pin(executable),
@@ -41,6 +54,7 @@ def _reader_config(tmp_path: Path, *, with_lora: bool = False) -> LocalReaderCon
         mmproj=_pin(mmproj),
         prompt=_pin(prompt),
         schema=_pin(schema),
+        model_schema=_pin(model_schema),
         lora=_pin(lora) if lora else None,
         timeout_seconds=60,
     )
@@ -102,61 +116,72 @@ def _payload(brief: dict[str, Any], *, confidence: str | None = "PROBABLE") -> d
             "confidence": None,
             "observation_state": "BLANK",
             "alternatives": [],
-            "source_span_ids": ["span-1"],
             "notes": [],
         }
     elif confidence == "UNCLEAR":
         observation = {
             "value": "[unclear: Goldsztejn/Goldfarb]",
-            "original_script": "[unclear: Гольдштейнъ/Гольдфарбъ]",
+            "original_script": "[unclear: Goldsztejn/Goldfarb]",
             "confidence": "UNCLEAR",
             "observation_state": "PRESENT",
             "alternatives": [
-                {"value": "Goldsztejn", "original_script": "Гольдштейнъ"},
-                {"value": "Goldfarb", "original_script": "Гольдфарбъ"},
+                {"value": "Goldsztejn", "original_script": "Goldsztejn"},
+                {"value": "Goldfarb", "original_script": "Goldfarb"},
             ],
-            "source_span_ids": ["span-1"],
             "notes": [],
         }
     else:
         observation = {
             "value": "Goldsztejn",
-            "original_script": "Гольдштейнъ",
+            "original_script": "Goldsztejn",
             "confidence": confidence,
             "observation_state": "PRESENT",
             "alternatives": [],
-            "source_span_ids": ["span-1"],
             "notes": [],
         }
 
+    target = brief["target"]
+    return {
+        "target_check": {
+            key: target[key] for key in ("year", "act_type", "act_no", "language")
+        },
+        "transcription": {
+            "original_script": "Goldsztejn",
+            "translation": "Goldsztejn",
+        },
+        "observations": {"principal.name": observation},
+    }
+
+
+def _expected_label(brief: dict[str, Any], model_payload: dict[str, Any]) -> dict[str, Any]:
+    observations = {
+        field_path: {**evidence, "source_span_ids": ["act-region"]}
+        for field_path, evidence in model_payload["observations"].items()
+    }
     return {
         "$schema": "https://aktreader.org/schema/reader-label-1.0.0.json",
         "schema_version": "1.0.0",
         **brief,
         "source_spans": {
-            "span-1": {
-                "bbox": {
-                    "x": 10,
-                    "y": 20,
-                    "width": 30,
-                    "height": 40,
-                    "coordinate_space": "source_pixels",
-                },
-                "description": "surname",
+            "act-region": {
+                "bbox": dict(brief["artifact"]["act_region"]),
+                "description": (
+                    "Entire supplied act region; the local model did not emit "
+                    "field-level bounding boxes."
+                ),
             }
         },
         "mentions": [],
-        "transcription": {
-            "original_script": "Гольдштейнъ",
-            "translation": "Goldsztejn",
-        },
-        "observations": {"principal.name": observation},
+        "transcription": model_payload["transcription"],
+        "observations": observations,
         "compliance": {
             "restricted_sources_used": False,
             "privacy_decision": "ALLOW",
-            "privacy_basis": "death act older than 80 years",
+            "privacy_basis": "local batch privacy gate allowed this act before inference",
             "training_eligible": False,
-            "training_basis": "consent not recorded",
+            "training_basis": (
+                "single local-reader output requires consensus or human verification"
+            ),
         },
         "authority_warning": "extraction is not authority — verify against the scan",
     }
@@ -189,7 +214,7 @@ def _mock_chromed_stdout(
     line_ending: str = "\n",
 ) -> None:
     def fake_run(command: list[str], **_: Any) -> subprocess.CompletedProcess[str]:
-        request = command[command.index("--prompt") + 1]
+        request = command[command.index("-p") + 1]
         mangled_echo = line_ending.join(
             f'> {line.replace(chr(34), "")}' for line in request.splitlines()
         )
@@ -223,11 +248,12 @@ def test_constructor_fails_closed_on_missing_or_changed_artifact(tmp_path: Path)
         LocalReader(config)
 
     relative_config = LocalReaderConfig(
-        executable=PinnedArtifact(Path("llama-cli.exe"), "0" * 64),
+        executable=PinnedArtifact(Path("llama-mtmd-cli.exe"), "0" * 64),
         model=config.model,
         mmproj=config.mmproj,
         prompt=config.prompt,
         schema=config.schema,
+        model_schema=config.model_schema,
     )
     with pytest.raises(ArtifactValidationError, match="path must be absolute"):
         LocalReader(relative_config)
@@ -246,6 +272,7 @@ def test_constructor_rejects_external_schema_refs(tmp_path: Path) -> None:
         mmproj=config.mmproj,
         prompt=config.prompt,
         schema=_pin(schema_path),
+        model_schema=config.model_schema,
     )
 
     with pytest.raises(ArtifactValidationError, match=r"external \$ref"):
@@ -274,7 +301,13 @@ def test_local_command_is_deterministic_keyless_and_path_only(
     assert command[command.index("--image") + 1] == str(image)
     assert command[command.index("--temp") + 1] == "0"
     assert command[command.index("--top-k") + 1] == "1"
-    assert command[command.index("--reasoning") + 1] == "off"
+    assert command[command.index("-sys") + 1] == config.prompt.path.read_text(encoding="utf-8")
+    assert command[command.index("--json-schema") + 1] == config.model_schema.path.read_text(
+        encoding="utf-8"
+    )
+    assert command[command.index("-ngl") + 1] == "99"
+    assert "--reasoning" not in command
+    assert "--jinja" not in command
     assert "-hf" not in command
     assert "--model-url" not in command
     assert all("http://" not in item and "https://" not in item for item in command)
@@ -283,8 +316,74 @@ def test_local_command_is_deterministic_keyless_and_path_only(
     assert "OPENAI_API_KEY" not in kwargs["env"]
     assert "ANTHROPIC_API_KEY" not in kwargs["env"]
     assert kwargs["env"]["HF_HUB_OFFLINE"] == "1"
-    assert result.payload == payload
+    assert result.payload == _expected_label(brief, payload)
     assert result.stderr == "local diagnostics"
+
+
+def test_reduced_output_is_strictly_validated_then_mechanically_stamped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path, strict_schemas=True)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    model_payload = _payload(brief)
+    _mock_success(monkeypatch, model_payload)
+
+    result = LocalReader(config).read(image, batch_brief=brief)
+
+    assert result.payload == _expected_label(brief, model_payload)
+    assert "target_check" not in result.payload
+    assert result.payload["record_id"] == brief["record_id"]
+    assert result.payload["label_id"] == brief["label_id"]
+    assert result.payload["artifact"] == brief["artifact"]
+    assert result.payload["reader"] == brief["reader"]
+    assert result.payload["prompt"] == brief["prompt"]
+    assert result.payload["observations"]["principal.name"]["source_span_ids"] == [
+        "act-region"
+    ]
+
+
+def test_reduced_schema_accepts_integer_observation_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path, strict_schemas=True)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    model_payload = _payload(brief)
+    model_payload["observations"]["principal.name"]["value"] = 31
+    _mock_success(monkeypatch, model_payload)
+
+    result = LocalReader(config).read(image, batch_brief=brief)
+
+    assert result.payload["observations"]["principal.name"]["value"] == 31
+
+
+def test_reduced_schema_rejects_model_owned_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path, strict_schemas=True)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    model_payload = _payload(brief)
+    model_payload["record_id"] = "mutated-by-model"
+    _mock_success(monkeypatch, model_payload)
+
+    with pytest.raises(LocalReaderOutputError, match="pinned model JSON schema"):
+        LocalReader(config).read(image, batch_brief=brief)
+
+
+def test_target_check_mutation_fails_before_pipeline_stamping(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path, strict_schemas=True)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    model_payload = _payload(brief)
+    model_payload["target_check"]["act_no"] = 32
+    _mock_success(monkeypatch, model_payload)
+
+    with pytest.raises(LocalReaderOutputError, match="changed target-check field 'act_no'"):
+        LocalReader(config).read(image, batch_brief=brief)
 
 
 @pytest.mark.parametrize("confidence", ["PROBABLE", "UNCLEAR", None])
@@ -328,12 +427,15 @@ def test_reader_output_must_validate_against_the_pinned_schema(
         mmproj=config.mmproj,
         prompt=config.prompt,
         schema=_pin(schema_path),
+        model_schema=_pin(
+            _write(tmp_path / "model-output.schema.json", b'{"type":"object"}')
+        ),
     )
     image = _write(tmp_path / "scan.jpg", b"scan pixels")
     brief = _brief(config, image)
     _mock_success(monkeypatch, _payload(brief))
 
-    with pytest.raises(LocalReaderOutputError, match="pinned JSON schema"):
+    with pytest.raises(LocalReaderOutputError, match="pinned label JSON schema"):
         LocalReader(config).read(image, batch_brief=brief)
 
 
@@ -382,7 +484,7 @@ def test_reader_uses_last_mangled_echo_line_and_ignores_pre_echo_objects_and_chr
 
     result = LocalReader(config).read(image, batch_brief=brief)
 
-    assert result.payload == payload
+    assert result.payload == _expected_label(brief, payload)
 
 
 def test_reader_stdout_scan_is_string_and_escape_aware(
@@ -399,7 +501,7 @@ def test_reader_stdout_scan_is_string_and_escape_aware(
 
     result = LocalReader(config).read(image, batch_brief=brief)
 
-    assert result.payload == payload
+    assert result.payload == _expected_label(brief, payload)
 
 
 @pytest.mark.parametrize("position", ["before", "after"])
@@ -429,8 +531,20 @@ def test_reader_stdout_accepts_only_whitespace_around_json_and_known_trailer(
     completion = f"\n \t{json.dumps(payload, ensure_ascii=False)}\n  "
     _mock_chromed_stdout(monkeypatch, completion)
 
-    assert LocalReader(config).read(image, batch_brief=brief).payload == payload
+    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(brief, payload)
 
+
+def test_reader_stdout_accepts_one_complete_json_fence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    payload = _payload(brief)
+    completion = f"```json\n{json.dumps(payload, ensure_ascii=False)}\n```"
+    _mock_chromed_stdout(monkeypatch, completion)
+
+    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(brief, payload)
 
 @pytest.mark.parametrize(
     ("completion", "observed"),
@@ -493,7 +607,7 @@ def test_reader_preserves_direct_json_stdout_compatibility(
     payload = _payload(brief)
     _mock_stdout(monkeypatch, f" \n{json.dumps(payload, ensure_ascii=False)}\n\t")
 
-    assert LocalReader(config).read(image, batch_brief=brief).payload == payload
+    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(brief, payload)
 
 
 def test_blind_brief_rejects_reader_output_and_wrong_hashes(tmp_path: Path) -> None:

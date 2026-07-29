@@ -37,7 +37,11 @@ def test_reader_label_schema_accepts_released_prompts_without_changing_schema_ve
     assert document["schema_version"] == "1.0.0"
 
     document["prompt"]["version"] = "1.3.0"
-    with pytest.raises(ContractValidationError, match="1.3.0"):
+    validate_instance(document, LABEL_SCHEMA)
+    assert document["schema_version"] == "1.0.0"
+
+    document["prompt"]["version"] = "1.4.0"
+    with pytest.raises(ContractValidationError, match="1.4.0"):
         validate_instance(document, LABEL_SCHEMA)
 
 

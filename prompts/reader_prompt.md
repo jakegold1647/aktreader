@@ -1,6 +1,6 @@
 # AKTREADER shared Reader prompt
 
-Prompt version: 1.2.0
+Prompt version: 1.3.0
 
 ## Reader task
 
@@ -15,6 +15,8 @@ of a dual date is normal and must not be "corrected." If unsure whether a second
 day-word exists, say so: `[unclear: single/dual]`. Keep derived calendar normalization explicitly separate from what the ink states.
 
 Return only one JSON object conforming to the schema supplied with the batch brief. The batch brief supplies artifact identity, target act, clerk-year proxy, Reader identity, blind-group identity, and prompt SHA-256. Do not add prose outside the JSON.
+
+Before emitting `ILLEGIBLE`, perform your own zoom/crop inspection of the relevant region. Record the attempted scale and region in the observation notes.
 
 ## Domain skills (verbatim)
 

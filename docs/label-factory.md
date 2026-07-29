@@ -33,14 +33,18 @@ The prompt contains the Napoleonic-act formula, pre-1918 Cyrillic guidance, and 
 contract verbatim. Its recorded checksum matters as much as its version string: a prompt file
 changed by line endings or one character is a different Reader condition.
 
-The current frozen prompt is v1.2.0. Its raw-byte SHA-256 is
-`ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f`. It retains v1.1's
+The current frozen prompt is v1.3.0. Its raw-byte SHA-256 is
+`97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77`. It retains v1.1's
 dual-date correction and adds three generalized Wave-002 safeguards: line-break surname joining,
 gender-verb-first death parsing, and a cautious `-фельдъ`/`-вельдъ` clerk-variant check. The
 source act, surname, and clerk identity are deliberately absent from the global prompt. Frozen
 v1.1 remains auditable at commit `156393b` with digest
 `9e679f3a799e75bbfeb7bf077f55b868d7fa06b9ab1164bed443a6f51b0b9d09`; neither correction is a
 retroactive accuracy claim.
+
+v1.3 adds exactly one rule: inspect a zoom/crop before emitting `ILLEGIBLE` and record the
+attempted scale/region. The measured P2 baseline remains pinned to exact v1.2 prompt/schema
+copies.
 
 ## Consensus is strict, not fuzzy
 
@@ -104,12 +108,12 @@ memorization from contaminating the benchmark.
 The current machine-readable catalog is
 [`labels/silver/manifest.json`](../labels/silver/manifest.json). It assigns acts 1–5 to silver,
 pins both source labels plus the consensus and Reader C documents by SHA-256, and leaves act 6
-quarantined. `training_materialized: false` is deliberate: the resolved field payloads are still
-stored in the content-addressed coordinator appendices, so no model-ready field export is claimed
-yet. Tier-level `training_eligible` is not permission to violate an eval split: all five current
-silver acts carry the Serock-1890 clerk-year that is also in the present gold holdout, so a
-training export evaluated against that holdout must exclude them. The eval harness rejects such
-overlap if a training clerk-year manifest is supplied.
+quarantined. Acts 1–5 now have deterministic, schema-validated materialized payloads under
+`labels/silver/records/`; every payload is content-addressed by the manifest. Tier-level
+`training_eligible` is not permission to violate an eval split: all five current silver acts carry
+the Serock-1890 clerk-year that is also in the present gold holdout. The training exporter checks
+the complete clerk-year set before reading or emitting examples and hard-fails against the
+current holdout.
 
 No label or training export may contain material from Yad Vashem, USHMM, Arolsen, Geneteka, or
 JRI-Poland indexes. The factory labels only user-supplied permitted register scans.

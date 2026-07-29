@@ -22,9 +22,9 @@ def test_baseline_manifest_truthfully_separates_localized_gold() -> None:
 
     assert manifest["scope"] == {
         "gold_records": 36,
-        "scan_backed_jobs": 17,
-        "not_localized_exclusions": 19,
-        "coverage_ceiling": "17/36",
+        "scan_backed_jobs": 24,
+        "not_localized_exclusions": 12,
+        "coverage_ceiling": "24/36",
     }
     assert {job["id"] for job in manifest["jobs"]} == localized
     assert {item["record_id"] for item in manifest["excluded"]} == excluded
@@ -42,6 +42,11 @@ def test_baseline_jobs_bind_gold_artifact_target_and_clerk_year() -> None:
         assert brief["artifact"]["sha256"] == record["artifact"]["sha256"]
         assert brief["clerk_year"] == record["register"]["clerk_year"]
         assert brief["target"]["act_no"] == record["register"]["act_no"]
+        assert brief["prompt"] == {
+            "version": "1.2.0",
+            "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f",
+            "path": "prompts/reader_prompt-v1.2.0.md",
+        }
         assert job["target"] == {"kind": "act", "act_no": record["register"]["act_no"]}
         assert region == {
             "x": 0,

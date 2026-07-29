@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "artifacts": {
     "executable": {
-      "path": "E:\\AKTREADER_LOCAL\\runtime\\llama-cli.exe",
+      "path": "E:\\AKTREADER_LOCAL\\runtime\\llama-mtmd-cli.exe",
       "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
     },
     "model": {
@@ -20,6 +20,10 @@
     "schema": {
       "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
       "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+    },
+    "model_schema": {
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
+      "sha256": "5555555555555555555555555555555555555555555555555555555555555555"
     }
   },
   "generation": {
