@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+               "sha256": "2a35c3b1b9b20b8a1a741736cca81c8552b0343d3c93204b3422dd4b9bd69740",
+               "position": "right page, upper act (No.29)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 29, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-07-31 19:00", "original_script": "тридцать перваго Іюля тысяча восемьсотъ девяностаго года въ семь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-07-30 21:00", "original_script": "вчерашняго числа въ девять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Dobra Ita Sztatzinger", "original_script": "Добра Ита Штат-зингеръ [hyphenated across line break, joined]", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula repeats 'о кончинѣ Добры Ита Штатзингеръ' (genitive) — internal check passes"},
+      "age": {"value": 4, "original_script": "четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерла ending (р+л+а) inspected before name parsing per protocol"}
+    },
+    "father": {"name": {"value": "Chaim Boruch", "original_script": "дочь Хаима Боруха", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Tauba", "original_script": "и Таубы", "confidence": "PROBABLE", "observation_state": "PRESENT", "maiden_name_state": "BLANK", "note": "no 'урожденной X' clause inked for the mother"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — child death act"},
+    "declarants": [
+      {"name": "Lejwka [unclear: Kedziur/Kendzior]", "original_script": "Лейвка Кендзюръ(?)", "occupation": "shoemaker (сапожникъ)", "age": 54, "confidence": "UNCLEAR", "note": "surname nasal cluster cramped; Polish Kedzior the likelier form"},
+      {"name": "Aron Cukier", "original_script": "Аронъ Цу-керъ [hyphenated across line break, joined]", "occupation": "[unclear: furrier (кушнеръ)?]", "age": 55, "confidence": "UNCLEAR", "note": "occupation word reads кушниръ/кушнеръ — furrier favored, graded UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses and signed by us only; witnesses declared themselves illiterate", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 31 July 1890, 7 PM. Appeared personally Lejwka Kedziur[?], shoemaker, 54, and Aron Cukier, furrier[?], 55, both residing in Serock, and declared that yesterday at 9 PM in posad Serock died Dobra Ita Sztatzinger, aged four years, daughter of Chaim Boruch and Tauba. Upon eyewitness certification of the death of Dobra Ita Sztatzinger, this act was read to the witnesses and signed by us. The witnesses declared themselves illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

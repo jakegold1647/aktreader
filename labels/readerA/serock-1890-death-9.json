@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_07-10.jpg",
+               "sha256": "ce4bf8d38b2d1c033494363468056daeced0b1643624dd82661ad419c1b486fe",
+               "position": "right page, upper act (No.9)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 9, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-03-23 17:00", "original_script": "двадцать третьяго Марта тысяча восемьсотъ девяностаго года въ пять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-03-22 05:00", "original_script": "вчерашняго числа въ пять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Frajda Ruchla Partowicz nee [unclear: Roszkowicz/Roszowicz]", "original_script": "Фрайда Рухля Партовичъ урожденная Рош[unclear: к/ю]вичъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "married surname Партовичъ in large letters; closing formula repeats 'о кончинѣ Партовичъ' (genitive) — internal check passes on the married surname; maiden surname mid-word strokes ambiguous"},
+      "age": {"value": 24, "original_script": "двадцати четырехъ лѣтъ отъ роду имѣющей", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерла ending (р + л + а) inspected before parsing names per protocol"}
+    },
+    "father": {"name": {"value": "Judka", "original_script": "дочь Юдки", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Chana nee [unclear: Lejdkowicz/Lejbkowicz]", "original_script": "и Ханы урожденной Лей[unclear: д/б]ковичъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "glyph after Лей has the 8-shaped loop this clerk uses for д, but Лейбковичъ is the more expected onomastic form — both retained"}},
+    "deceased_left_behind": {"value": "husband [unclear: Motel/Motek] and son Abram", "original_script": "Оставивъ послѣ себя мужа Мот[unclear: еля/ека] и сына Абрама", "confidence": "UNCLEAR", "observation_state": "PRESENT"},
+    "declarants": [
+      {"name": "[unclear: Szymel?] Markus", "original_script": "Шимел[я?] Маркусъ", "occupation": "shoemaker (сапожникъ)", "age": 34, "confidence": "UNCLEAR", "note": "given name ends in a flourish; Шимель favored"},
+      {"name": "Alter Blumberg", "original_script": "Альтеръ Блюмбергъ; Latin-script signature 'Alter Blumberg' below", "occupation": "trader (торговщикъ)", "age": 22, "confidence": "PROBABLE", "note": "Latin signature resolves the surname"}
+    ],
+    "officiant": {"value": "[unclear: Przybysz...?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржиб...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by one witness (нами и однимъ свидѣтелемъ) — only Alter Blumberg's Latin signature appears; the other declarant apparently did not sign", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 23 March 1890, 5 PM. Appeared personally Szymel[?] Markus, shoemaker, 34, and Alter Blumberg, trader, 22, both residing in posad Serock, and declared that yesterday at 5 AM in posad Serock died Frajda Ruchla Partowicz nee Roszkowicz[?], daughter of Judka and Chana nee Lejdkowicz[?], aged 24 years. She left behind her husband Motel[?] and son Abram. Upon eyewitness certification of the death of Partowicz, this act was read to the witnesses and signed by us and one witness.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

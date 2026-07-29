@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_15-18.jpg",
+               "sha256": "e50978e991626106ba4f6cf56108eb23c1d6c78ff5fe795283b21c253969c064",
+               "position": "left page, lower act (No.16)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 16, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "looser hand (same as 13-15)"},
+  "fields": {
+    "registration_date": {"value": "1890-05-[unclear: 22/26] 19:00", "original_script": "двадцать [unclear: втораго/шестаго] Мая тысяча восемьсотъ девяностаго года въ семь часовъ вечера", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "day-word inspected at 6x zoom (region x840-1436,y1120-1210 of artifact) — cramped run after 'двадцать' unresolved; single date only, no dual day-word"},
+    "event_date": {"value": "same day, 05:00", "original_script": "сего числа въ пять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "'сего числа' = the registration day itself, so death date shares the registration day's unclear reading"},
+    "principal": {
+      "name": {"value": "Laja Rozental", "original_script": "Лая Розенталь", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents called 'супруговъ Розенталь' — surname repeated in the spouses clause, internal check passes"},
+      "age": {"value": "0.5 year", "original_script": "полъ году отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "Berek", "original_script": "дочь Берка", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents jointly styled сапожниковъ (shoemakers), residing in posad Serock"}},
+    "mother": {"name": {"value": "[unclear: Masza/Mala]", "original_script": "и Ма[unclear: ши/ли]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "maiden_name_state": "BLANK", "note": "no 'урожденной X' clause inked for the mother — maiden-name slot left empty by the clerk"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Jankiel Borensztejn", "original_script": "Янкель Борен-штейнъ [hyphenated across line break, joined]; signature Я Б[р]енштейнъ below", "occupation": "carpenter (столяръ)", "age": 36, "confidence": "PROBABLE", "note": "столяръ here corroborates the столяръ reading of act 14"},
+      {"name": "Berek Koltun", "original_script": "Берекъ Колтунъ", "occupation": "attendant of the Jewish cemetery (служитель еврейскаго кладбища)", "age": 65, "confidence": "PROBABLE", "note": "fuller occupation wording corroborates act 13's 'кладбищный служитель'; age 65 matches act 15"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew(ski)?]", "original_script": "Чиновникъ Гражданскаго Состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and one witness; the second witness illiterate ('вторый свидѣтель неграмотенъ')", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 2[2/6?] May 1890, 7 PM. Appeared personally Jankiel Borensztejn, carpenter, 36, and Berek Koltun, attendant of the Jewish cemetery, 65, both residing in Serock, and declared that this day at 5 AM died in posad Serock a child of female sex named Laja Rozental, aged half a year, daughter of Berek and Masza[?], the Rozental spouses, shoemakers residing in posad Serock. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

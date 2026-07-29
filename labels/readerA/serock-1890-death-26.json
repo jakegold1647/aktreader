@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_23-26.jpg",
+               "sha256": "bef4519680b7bb84bf61dc22e492f4e80db3a4d6bd70d6931e675495857337fc",
+               "position": "right page, lower act (No.26)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 26, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "same neater hand as acts 24-25"},
+  "fields": {
+    "registration_date": {"value": "1890-07-21 ~13:00", "original_script": "двадцать перваго Іюля тысяча восемьсотъ девяностаго года въ первомъ часу по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "same calendar day as act 25 but an EARLIER hour than act 25's evening sitting — book order anomaly recorded, not resolved; single date only, no dual day-word"},
+    "event_date": {"value": "1890-07-20 03:00", "original_script": "вчерашняго числа въ три часа утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "hour phrase slightly garbled on the page"},
+    "principal": {
+      "name": {"value": "Moszek Zylbersztejn", "original_script": "Мошекъ Зильбер-штейнъ [hyphenated across line break, joined; underlined in the ink]", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula repeats 'о кончинѣ Мошка Зильберштейна' (genitive) — internal check passes"},
+      "age": {"value": "9 months", "original_script": "девяти мѣсяцевъ отъ роду имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя ... имѣющій, сынъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерло inspected first; сынъ and masculine participle agree on male"}
+    },
+    "father": {"name": {"value": "Judka", "original_script": "сынъ Юдки", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Rojza", "original_script": "и Ройзы", "confidence": "PROBABLE", "observation_state": "PRESENT", "maiden_name_state": "BLANK", "note": "no 'урожденной X' clause inked for the mother"}},
+    "foster_note": {"value": "child had been given out for upbringing to Cyrtla [unclear: Wielkobrod?]", "original_script": "отданный на воспитаніе Цыртли Велико-брода", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "rare fostering clause — captured verbatim; foster carer's surname shaky"},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Berek Koltun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "note": "same man and age 65 as acts 15/16/23 — within-register consistency holds"},
+      {"name": "Icek Rubinsztejn", "original_script": "Ицекъ Рубин-штейнъ", "occupation": "blacksmith (кузнецъ)", "age": 49, "confidence": "PROBABLE", "note": "a Rubinsztejn blacksmith aged 49 also declares in act 24 with a cramped given name — this clearer Ицекъ reading supports Icek there too; flagged for arbitration"}
+    ],
+    "officiant": {"value": "Pszybyszewski (as signed)", "original_script": "Чиновникъ Гражданскаго Состоянія Пржибышевск[ій]", "confidence": "PROBABLE"},
+    "signatures_note": {"value": "act read to witnesses and signed by us only; witnesses declared themselves illiterate", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 21 July 1890, in the first hour after noon. Appeared personally Berek Koltun, laborer, 65, and Icek Rubinsztejn, blacksmith, 49, both residing in posad Serock, and declared that yesterday at three[?] in the morning in posad Serock died a child named Moszek Zylbersztejn, aged nine months, son of Judka and Rojza, [who had been] given out for upbringing to Cyrtla Wielkobrod[?]. Upon eyewitness certification of the death of Moszek Zylbersztejn, this act was read to the witnesses and signed by us. The witnesses declared themselves illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

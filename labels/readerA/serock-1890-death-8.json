@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_07-10.jpg",
+               "sha256": "ce4bf8d38b2d1c033494363468056daeced0b1643624dd82661ad419c1b486fe",
+               "position": "left page, lower act (No.8)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 8, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-03-03 21:00", "original_script": "третьяго [Февраля struck through, Марта written above] тысяча восемьсотъ девяностаго года въ девять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "same sitting as act 7; month correction attested in margin ('Исправлено Марта...'); single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-03-02 17:00", "original_script": "вчерашняго числа въ пять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Szlama [unclear: Cukier/Cukor]", "original_script": "Шляма Цук[unclear: е/о]р[ъ with trailing flourish]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "large-letter name; vowel after к reads о as much as е; no genitive repeat of the child's name in the closing formula ('о кончинѣ ... дитяти' only)"},
+      "age": {"value": "1.5 years", "original_script": "одинъ и полъ года отъ роду имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "Chaim", "original_script": "сынъ Хаима", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Dwojra nee [unclear: Antosiewicz?]", "original_script": "и матери Двойры урожденной А[unclear: нтосевичъ?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "maiden name read as Антосевичъ with shaky нт cluster (и/н/п confusable); single shaky candidate"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Abram Wajngrod", "original_script": "Абрамъ Вайнгродъ", "occupation": "szkolnik (школьникъ)", "age": 60, "confidence": "PROBABLE", "note": "signature line below officiant reads 'Абрамъ Вайнгродъ Мошекъ Зильберштейнъ' — supports Вайнгродъ over Файнгродъ"},
+      {"name": "Moszek Zylbersztejn", "original_script": "Мошекъ Зильберштейнъ", "occupation": "trader (торговц-)", "age": 33, "confidence": "PROBABLE"}
+    ],
+    "officiant": {"value": "[unclear: Przybysz.../Przibce...]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish, reads Пржиб...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by them and by us; both declarant names written below the officiant signature", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 3 March [corrected from February] 1890, 9 PM. Appeared personally Abram Wajngrod, szkolnik, 60, and Moszek Zylbersztejn, trader, 33, both residing in posad Serock, and declared that yesterday at 5 PM in posad Serock died a child of male sex named Szlama Cukier[?], son of Chaim and of the mother Dwojra nee Antosiewicz[?], aged one and a half years. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by them and by us.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

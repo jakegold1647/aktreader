@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_11-14.jpg",
+               "sha256": "6fc220f7a07c27601d789baa99f0c33a1ee77e4d6e3aa7ed2b07457a65fc4557",
+               "position": "right page, upper act (No.13)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 13, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "looser hand than acts 7-12; red-ink correction by second hand"},
+  "fields": {
+    "registration_date": {"value": "1890-05-08 13:00", "original_script": "восьмаго Мая тысяча восемьсотъ девяностаго года, въ первомъ часу по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-05-07 05:00", "original_script": "вчерашняго числа въ пят[unclear: ь часовъ/омъ часу] утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "hour word cramped; five o'clock favored, morning qualifier shaky"},
+    "principal": {
+      "name": {"value": "Chaim Lejb Rozenberg", "original_script": "Хаимъ Лейбъ Розенбергъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents called 'супруговъ Розенбергъ' — surname repeated in the spouses clause, internal check passes"},
+      "age": {"value": 1, "original_script": "одинъ годъ отъ роду имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "[unclear: Ruwel/Rywel]", "original_script": "сынъ Р[unclear: у/ы]веля", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "[unclear: Cwetla/Cweszla] nee [unclear: Endler] (corrected)", "original_script": "и Цве[unclear: т/ш]ли урожденной [struck out in red: unclear Цухалевицкой?] [red above the line: unclear Ендлер-]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "maiden name corrected in red ink by a second hand; original entry struck through; red margin note 'Исправлено ... Ендлер... [officiant initials]' attests the correction; both layers recorded"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Berek Koltun", "original_script": "Берекъ Кол-тунъ [hyphenated across line break; joined token tested in the declarant slot — one person, not two]", "occupation": "cemetery attendant (кладбищный служитель)", "age": "[unclear: 60/68]", "confidence": "UNCLEAR", "note": "age words split across lines, шестидесяти [восьми?]"},
+      {"name": "Beniamin [unclear: Rolinski/Rolnicki]", "original_script": "Бенямина Роль[ин]-скій [surname hyphenated across line break, joined]", "occupation": "butcher (мясникъ)", "age": 44, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: M. Przybyszew(ski)?]", "original_script": "Чиновникъ Гражданскаго состоянія. М. Пржиб[ышевъ?]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses and signed by us only; witnesses declared themselves illiterate (свидѣтели заявили себя неграмотными)", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 8 May 1890, in the first hour after noon. Appeared personally Berek Koltun, cemetery attendant, 60[?], and Beniamin Rolinski[?], butcher, 44, residing in posad Serock, and declared that yesterday at five[?] in the morning in posad Serock died a child of male sex named Chaim Lejb Rozenberg, son of Ruwel[?] and Cwetla[?] nee Endler [corrected in red from a struck-out form], the Rozenberg spouses, aged one year. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us; the witnesses declared themselves illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

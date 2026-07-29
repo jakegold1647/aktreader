@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+               "sha256": "2a35c3b1b9b20b8a1a741736cca81c8552b0343d3c93204b3422dd4b9bd69740",
+               "position": "left page, upper act (No.27)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 27, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "same neater hand as acts 24-26"},
+  "fields": {
+    "registration_date": {"value": "1890-07-25 10:00", "original_script": "двадцать пята-го Іюля тысяча восемьсотъ девяностаго года въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-07-24 18:00", "original_script": "вчерашняго числа въ шесть часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Frajda [unclear: Jarzombek/Arzombek]", "original_script": "Фрайда [unclear: Яржомбекъ/Аржомбекъ] [underlined in the ink]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "closing formula repeats 'Фрайды [Я/А]ржомбекъ' (genitive) — surname repeat check passes but the initial glyph stays ambiguous in both places; Jarzombek (Jarzabek) the likelier Polish form"},
+      "age": {"value": 2, "original_script": "двухъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерла ending inspected before name parsing per protocol"}
+    },
+    "father": {"name": {"value": "Moszek", "original_script": "дочь Мошка", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Dwojra nee [unclear: Kran/Krap]", "original_script": "и Двойры урожденной Кра[unclear: нъ/пъ]", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — child death act"},
+    "declarants": [
+      {"name": "Berek Koltun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "note": "same man and age 65 as acts 15/16/23/26 — consistency holds"},
+      {"name": "Szymla Markus", "original_script": "Шимля Маркусъ", "occupation": "shoemaker (сапожникъ)", "age": 34, "confidence": "PROBABLE", "note": "same shoemaker aged 34 as act 9 — a March-to-July age of 34 both times, consistent"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses and signed by us only; witnesses [declared themselves] illiterate", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 25 July 1890, 10 AM. Appeared personally Berek Koltun, laborer, 65, and Szymla Markus, shoemaker, 34, both residing in posad Serock, and declared that yesterday at 6 PM in posad Serock died Frajda Jarzombek[?], aged two years, daughter of Moszek and Dwojra nee Kran[?]. Upon eyewitness certification of the death of Frajda Jarzombek, this act was read to the witnesses and signed by us. The witnesses are illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

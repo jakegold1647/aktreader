@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+               "sha256": "2a35c3b1b9b20b8a1a741736cca81c8552b0343d3c93204b3422dd4b9bd69740",
+               "position": "left page, lower act (No.28)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 28, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "same neater hand as acts 24-27"},
+  "fields": {
+    "registration_date": {"value": "1890-07-30 20:00", "original_script": "(30 Іюля) трид-цатаго [Іюля] тысяча восемьсотъ девяностаго года во восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "day in digits with the day-word repeated — one date written twice, NOT a dual date; no second calendar day inked"},
+    "event_date": {"value": "1890-07-29 11:00", "original_script": "вчерашняго числа въ одиннад-цать часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": null, "original_script": "безъ имени по фамиліи Виногура", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "given name explicitly stated absent ('безъ имени'); family surname Виногура (Winogora/Winogura) IS inked — record as surname-only identification"},
+      "age": {"value": "3 days", "original_script": "три дня отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя ... женскаго пола ... имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерло inspected first; пола wording and feminine participle agree; the following 'Отецъ коего' uses a masculine relative pronoun — clerk's slip, noted"}
+    },
+    "father": {"name": {"value": "Lejb Winogura", "original_script": "Отецъ коего Лейбъ Виногура", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Chaja Rakla", "original_script": "и мать Хая-Ракля", "confidence": "PROBABLE", "observation_state": "PRESENT", "maiden_name_state": "BLANK", "note": "no 'урожденной X' clause inked for the mother"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — newborn death act"},
+    "declarants": [
+      {"name": "Abram Moszek Rozenowicz", "original_script": "Абрамъ Мо-шекъ Розеновичъ; own signature 'А М Розен[овичъ]' below", "occupation": "keeper of a lodging house (содержащій заѣзжаго дома)", "age": 56, "confidence": "PROBABLE"},
+      {"name": "Lejzor Wielkobroda", "original_script": "Лейзоръ Велькоброда, ма-ляръ; own signature 'Лейзоръ Велькоброда' below", "occupation": "painter (маляръ)", "age": 34, "confidence": "PROBABLE", "note": "same surname as the foster carer named in act 26 (Великоброда) — possible family, NOT stated, not assumed"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго Состоянія Пржибы[шевъ...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed in Cyrillic", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, (30 July) the thirtieth of July 1890, 8 PM. Appeared personally Abram Moszek Rozenowicz, keeper of a lodging house, 56, and Lejzor Wielkobroda, painter, 34, both residing in posad Serock, and declared that yesterday at 11 AM in posad Serock died a child without a name, of the surname Winogura, of female sex, aged three days. Its father is Lejb Winogura and mother Chaja Rakla. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

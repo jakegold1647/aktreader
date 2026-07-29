@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_15-18.jpg",
+               "sha256": "e50978e991626106ba4f6cf56108eb23c1d6c78ff5fe795283b21c253969c064",
+               "position": "left page, upper act (No.15)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 15, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "looser hand (same as acts 13-14)"},
+  "fields": {
+    "registration_date": {"value": "1890-05-13 (hour not written)", "original_script": "трина-дцатаго Мая тысяча восемьсотъ девяносто-го года. [no hour clause — text goes straight to Явились лично]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "day-word split across lines, тринадцатаго favored over двѣнадцатаго; the hour slot of the formula is BLANK — clerk omitted it; single date only, no dual day-word"},
+    "registration_hour": {"value": null, "confidence": null, "observation_state": "BLANK", "note": "formula normally carries an hour here; none inked"},
+    "event_date": {"value": "1890-05-12 20:00", "original_script": "вчерашняго числа въ восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Chana Ruchla Finkielsztejn", "original_script": "Хана Рухля Финкельштейнъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula says only 'о кончинѣ дитяти' — no genitive surname repeat to check"},
+      "age": {"value": "9 months", "original_script": "девяти мѣсяцевъ отъ роду имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "Josek", "original_script": "дочь Іоска", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "[unclear: Bita/Gita] Czyta nee Piekarz", "original_script": "и [unclear: Биты/Гиты] Читы урожденной Пе-каръ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "double given name; first element's initial has a б-like bowl+ascender — Бита read, Гита retained as candidate; maiden name hyphenated across line break, joined to Пекаръ (Piekarz)"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Berek Koltun", "original_script": "Берекъ Колтунъ", "occupation": "[unclear: разсыльный (messenger)?]", "age": 65, "confidence": "UNCLEAR", "note": "occupation word badly cramped; note act 13 of this register styles the same man 'кладбищный служитель' — flagged, not merged"},
+      {"name": "Szapsia Rozental", "original_script": "Шапсей(?) Розенталь; Latin-script signature 'S. Rozental' below", "occupation": "[unclear: feldsher (фершалъ)?]", "age": 40, "confidence": "UNCLEAR", "note": "given name and occupation cramped; surname resolved by Latin signature"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew(ski)?]", "original_script": "Чиновникъ Гражданск[аго] состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by one witness ('нами и однимъ свидѣтелемъ подписанъ'); only S. Rozental signed", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 13[?] May 1890 [no hour written]. Appeared personally Berek Koltun, messenger[?], 65, and Szapsia[?] Rozental, feldsher[?], 40, both residing in posad Serock, and declared that yesterday at 8 PM in posad Serock died a child of female sex named Chana Ruchla Finkielsztejn, daughter of Josek and [unclear: Bita/Gita] Czyta nee Piekarz, aged nine months. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by one witness.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

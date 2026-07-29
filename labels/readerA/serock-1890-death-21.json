@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_19-22.jpg",
+               "sha256": "fa3c74f40f88bb6df6668b791fa19b166e0a09423709264880b701ff11cc5385",
+               "position": "right page, upper act (No.21)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 21, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-06-28 15:00", "original_script": "двадцать восьмаго Іюня тысяча восемьсотъ девяностаго года въ три часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "same calendar day as act 20 but a later sitting; single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-06-28 08:00", "original_script": "сего числа текущаго [года] въ восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": null, "original_script": null, "confidence": null, "observation_state": "BLANK", "note": "no 'по имени X' clause and no 'безъ имени' statement — the name slot of the formula was simply left out by the clerk for this 5-day-old infant; BLANK, not STATED_UNKNOWN"},
+      "age": {"value": "5 days", "original_script": "пять дней отъ роду имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя мужескаго пола ... сынъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first; пола wording and сынъ agree here"}
+    },
+    "father": {"name": {"value": "Fajwel [unclear: Zylbersztam/Zylbersztajn]", "original_script": "сынъ Файвеля Зыльберштам[unclear: а/на]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "surname tail cramped at line end — both full-surname candidates retained"}},
+    "mother": {"name": {"value": "[unclear: Czyta/Cyta] nee Skurnik", "original_script": "и жены его Читы урожденной Скурникъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "Ч/Ц initial confusable"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — newborn death act"},
+    "declarants": [
+      {"name": "Jankiel Borensztejn", "original_script": "Янкель Боренштейнъ; signature Я Б[р]енштейнъ below", "occupation": "carpenter (столяръ)", "age": "[unclear: 34/36]", "confidence": "UNCLEAR", "note": "age words read тридцати четырехъ here, but the same declarant carries 36 in acts 11-12 and 16 of this register — inconsistency flagged, not resolved"},
+      {"name": "Nuta [unclear: Roznowicz/Rozenowicz]", "original_script": "Нута Рожно-вичъ [hyphenated across line break, joined]; Latin-script signature 'N. Rozenowicz' below", "occupation": "shopkeeper (лавочникъ)", "age": 30, "confidence": "UNCLEAR", "note": "body text has ж (Рожновичъ), Latin signature has 'Rozenowicz' — both retained"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew(ski)?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed (one Cyrillic, one Latin)", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 28 June 1890, 3 PM. Appeared personally Jankiel Borensztejn, carpenter, 34[?], and Nuta Roznowicz[?], shopkeeper, 30, both residing in posad Serock, and declared that this day at 8 AM died in posad Serock a child of male sex, aged five days [no name inked], son of Fajwel Zylbersztam[?] and his wife Czyta[?] nee Skurnik, residing in posad Serock. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

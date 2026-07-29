@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_11-14.jpg",
+               "sha256": "6fc220f7a07c27601d789baa99f0c33a1ee77e4d6e3aa7ed2b07457a65fc4557",
+               "position": "right page, lower act (No.14)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 14, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "same looser hand as act 13; margin note 'деревня Зегрже'"},
+  "fields": {
+    "registration_date": {"value": "1890-05-09 09:00", "original_script": "девятаго Мая тысяча восемьсотъ девяностаго года въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-05-08 08:00", "original_script": "вчерашняго числа въ восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "event_place": {"value": "village Zegrze", "original_script": "въ деревни Зегрже [margin: деревня Зегрже]", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Ruchla Jagoda", "original_script": "Рухля Ягода", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents called 'супруговъ Ягода' — surname repeated in the spouses clause, internal check passes"},
+      "age": {"value": "2 months", "original_script": "два мѣсяца отъ роду имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "Dawid", "original_script": "дочь Давида", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Itta nee Kuligowska", "original_script": "и Итты урожденной Кулиговской", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "same surname as declarant 2 (Кулиговскій) — possible kinship, NOT stated on the page, not assumed"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Jankiel Borensztejn", "original_script": "Янкель Боренштейнъ", "occupation": "[unclear: carpenter (столяръ)/szkolnik]", "age": "[unclear: 36?]", "confidence": "UNCLEAR", "note": "occupation word reads столяръ here, though the same-named declarant appears as школьникъ in acts 11-12 of this register — flagged, not decided; age word cramped, тридцати шести favored"},
+      {"name": "Josek Kuligowski", "original_script": "Іосекъ Кулиговскій; Latin-script signature 'Josek Kuligowski' below", "occupation": "trader (торговщикъ)", "age": 33, "confidence": "PROBABLE", "note": "Latin signature resolves the surname"}
+    ],
+    "officiant": {"value": "[unclear: M. Przybyszew(ski)?]", "original_script": "Чиновникъ Гражданскаго состоянія М. Пржиб[ышевъ?]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; signatures: Я. Б[р]енштейнъ (Cyrillic), Josek Kuligowski (Latin)", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 9 May 1890, 9 AM. Appeared personally Jankiel Borensztejn, carpenter[?], 36[?], and Josek Kuligowski, trader, 33, residing in posad Serock, and declared that yesterday at 8 AM in the village of Zegrze died a child of female sex named Ruchla Jagoda, daughter of Dawid and Itta nee Kuligowska, the Jagoda spouses, aged two months. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_11-14.jpg",
+               "sha256": "6fc220f7a07c27601d789baa99f0c33a1ee77e4d6e3aa7ed2b07457a65fc4557",
+               "position": "left page, upper act (No.11)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 11, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-04-20 08:00", "original_script": "двадцатаго Апрѣля тысяча восемьсотъ девяностаго года въ восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-04-19 09:00", "original_script": "вчерашняго числа въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Frajda Finkielsztejn", "original_script": "Фрайда Финкельштейнъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "large letters, both words clear; closing formula has only 'о кончинѣ дитяти' — no genitive surname repeat available as internal check"},
+      "age": {"value": "6 months", "original_script": "шесть мѣсяцевъ отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло (neuter, child) inspected first per protocol"}
+    },
+    "father": {"name": {"value": "[unclear: Fajf/Fajwel]", "original_script": "дочь Фа[unclear: и/й]фа", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "genitive Фаифа on the page; nominative candidates Файфъ/Файвель — mid-word ф/в strokes shaky"}},
+    "mother": {"name": {"value": "[unclear: Cytla/Czytla] nee Piekarz", "original_script": "и [unclear: Цитли/Читли] урожденной Пекар[ь]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "initial Ц/Ч confusable; Cytla the more expected onomastic form; maiden name Пекарь read PROBABLE"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "Jankiel Borensztejn", "original_script": "Янкель Боренштейнъ; signature below reads Я. Б[р]енштейнъ", "occupation": "szkolnik (школьникъ)", "age": 36, "confidence": "PROBABLE"},
+      {"name": "Hersz Morgensztern", "original_script": "Гершъ Моргенштернъ; own signature Гершъ Моргенштернъ below", "occupation": "teacher (учитель)", "age": 30, "confidence": "PROBABLE"}
+    ],
+    "officiant": {"value": "[unclear: Przybysz...?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 20 April 1890, 8 AM. Appeared personally Jankiel Borensztejn, szkolnik, 36, and Hersz Morgensztern, teacher, 30, both residing in posad Serock, and declared that yesterday at 9 AM in posad Serock died a child of female sex named Frajda Finkielsztejn, daughter of Fajf[?] and Cytla[?] nee Piekarz, aged six months. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

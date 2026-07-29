@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_11-14.jpg",
+               "sha256": "6fc220f7a07c27601d789baa99f0c33a1ee77e4d6e3aa7ed2b07457a65fc4557",
+               "position": "left page, lower act (No.12)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 12, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-04-21 21:00", "original_script": "двадцать перваго Апрѣля тысяча восемьсотъ девяностаго года въ девять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-04-20 20:00", "original_script": "вчерашняго числа въ восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Judka Hersz [unclear: Hozenberg/Chozenberg]", "original_script": "Юдка Гершъ [unclear: Гозенбергъ/Хозенбергъ]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "surname initial is the same Ч-shaped glyph this clerk uses for Г (as in Гершъ); read Гозенбергъ (=Hozenberg) or Хозенбергъ — both full-surname candidates retained, first letters not trusted alone; closing formula says only 'о кончинѣ дитяти' — no genitive surname repeat to check"},
+      "age": {"value": 3, "original_script": "трехъ лѣтъ отъ роду имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "[unclear: Szaja/Szyja]", "original_script": "сынъ Ш[unclear: аи/іи]", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Ryfka nee [unclear: Kuczelowska/Kuszelowska]", "original_script": "и Рыфки урожденной Ку[unclear: че/ше]ловской", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "family_residence": {"value": "permanent residents of posad Kaluszyn, temporarily residing in posad Serock", "original_script": "постоянныхъ жителей посада Калушина, временно въ посадѣ Сероцкѣ жительствующихъ", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — child death act"},
+    "declarants": [
+      {"name": "Jankiel Borensztejn", "original_script": "Янкель Борен[ш]тейнъ; signature Я Б[р]енштейнъ below", "occupation": "szkolnik (школьникъ)", "age": 36, "confidence": "PROBABLE", "note": "same szkolnik, same age 36 as act 11 — within-register consistency holds"},
+      {"name": "Jankiel Finkielsztejn", "original_script": "Янкель Финкельштейнъ; own signature below", "occupation": "[unclear: shingle maker (гонтовый мастеръ)?]", "age": 30, "confidence": "UNCLEAR", "note": "occupation word reads гонтовый мастеръ — shaky ‑нт‑ cluster, occupation graded UNCLEAR; name PROBABLE"}
+    ],
+    "officiant": {"value": "[unclear: Przybysz...?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 21 April 1890, 9 PM. Appeared personally Jankiel Borensztejn, szkolnik, 36, and Jankiel Finkielsztejn, [shingle?] master, 30, both residing in posad Serock, and declared that yesterday at 8 PM in posad Serock died a child of male sex named Judka Hersz Hozenberg[?], son of Szaja[?] and Ryfka nee Kuczelowska[?], permanent residents of posad Kaluszyn temporarily residing in posad Serock, aged three years. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

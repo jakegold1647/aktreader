@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_19-22.jpg",
+               "sha256": "fa3c74f40f88bb6df6668b791fa19b166e0a09423709264880b701ff11cc5385",
+               "position": "left page, lower act (No.20)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 20, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-06-28 07:00", "original_script": "двадцать восьмаго Іюня тысяча восемьсотъ девяностаго года въ семь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-06-26 20:00", "original_script": "двадцать шестаго Іюня текущаго года въ восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": null, "original_script": "безъ имени", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "the clerk explicitly wrote 'безъ имени' — the newborn died unnamed at 24 hours; this is a stated absence, not a blank"},
+      "age": {"value": "24 hours", "original_script": "двадцать четыре часа имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "[unclear: female/male]", "original_script": "умерло дитя женскаго пола ... сынъ Хаима Янкеля", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "internal contradiction on the page: 'женскаго пола' (female) but the filiation clause opens 'сынъ' (son); умерло is neuter and does not resolve it — both readings retained for arbitration"}
+    },
+    "father": {"name": {"value": "Chaim Jankiel Zacharek", "original_script": "сынъ Хаима Янкеля Захарекъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "[unclear: Grina/Gitla] nee Graf", "original_script": "и жены его Гри[unclear: нки/тли] урожденной Графъ", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — newborn death act"},
+    "declarants": [
+      {"name": "Moszek Cukier", "original_script": "Мошекъ Цу-керъ [hyphenated across line break, joined]", "occupation": "carter (извощикъ)", "age": 34, "confidence": "PROBABLE", "note": "same carter, same age 34 as act 17 — within-register consistency holds"},
+      {"name": "Herszek [unclear: Konikol/Konkol]", "original_script": "Гершекъ Ко[unclear: ни]коль", "occupation": "carter (извощикъ)", "age": 25, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew(ski)?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses and signed by us only; witnesses illiterate ('Свидѣтели неграмотные')", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 28 June 1890, 7 AM. Appeared personally Moszek Cukier, carter, 34, and Herszek Konikol[?], carter, 25, both residing in posad Serock, and declared that on 26 June of the current year at 8 PM died in posad Serock a child of female[?] sex, without a name, aged twenty-four hours, son[sic] of Chaim Jankiel Zacharek and his wife Grina[?] nee Graf, residing in posad Serock. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us; the witnesses are illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

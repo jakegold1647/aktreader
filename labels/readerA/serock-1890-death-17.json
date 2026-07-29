@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_15-18.jpg",
+               "sha256": "e50978e991626106ba4f6cf56108eb23c1d6c78ff5fe795283b21c253969c064",
+               "position": "right page, upper act (No.17)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 17, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-06-03 09:00", "original_script": "третьяго Іюня тысяча восемьсотъ девяностаго года въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-06-01 16:00", "original_script": "перваго Іюня сего года въ четыре часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "explicit date, not 'вчерашняго числа' — death registered two days later"},
+    "principal": {
+      "name": {"value": "Gitla Jagoda", "original_script": "Гитля Ягода", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents called 'супруговъ Ягода' — surname repeated in the spouses clause, internal check passes"},
+      "age": {"value": 6, "original_script": "шести лѣтъ отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "Moszek", "original_script": "дочь Мошка", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Sura nee Grinberg", "original_script": "и Суры урожденной Гринбергъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — child death act"},
+    "declarants": [
+      {"name": "Moszek Mitelbach", "original_script": "Мошекъ Мительбахъ; own signature 'Мошек Мителбах' below", "occupation": "carter (извощикъ)", "age": 25, "confidence": "PROBABLE"},
+      {"name": "Moszek Cukier", "original_script": "Мошекъ Цукеръ тоже извощикъ; own signature 'Мошекъ Цукеръ' below", "occupation": "carter (извощикъ)", "age": 34, "confidence": "PROBABLE"}
+    ],
+    "officiant": {"value": "[unclear: M. Przybyszewski?]", "original_script": "Чиновникъ гражданскаго состоянія М. П[unclear: ржибышевскій]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed in Cyrillic", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 3 June 1890, 9 AM. Appeared personally Moszek Mitelbach, carter, 25, and Moszek Cukier, also a carter, 34, both residing in posad Serock, and declared that on 1 June of this year at 4 PM died in posad Serock a child of female sex named Gitla Jagoda, aged six years, daughter of Moszek and Sura nee Grinberg, the Jagoda spouses residing in posad Serock. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

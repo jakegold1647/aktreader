@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_07-10.jpg",
+               "sha256": "ce4bf8d38b2d1c033494363468056daeced0b1643624dd82661ad419c1b486fe",
+               "position": "left page, upper act (No.7)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 7, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-03-03 21:00", "original_script": "третьяго [Февраля struck through, Марта written above] тысяча восемьсотъ девяностаго года въ девять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "month corrected in ink from Февраля to Марта; margin note 'Исправлено Марта...' with officiant countersignature attests the correction; single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-03-02 07:00", "original_script": "вчерашняго числа въ семь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "resolved relative to corrected registration date 3 March"},
+    "principal": {
+      "name": {"value": "[unclear: Joel/Uel] Cukier", "original_script": "[unclear: Іоель/Уоель] Цукеръ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "given name in large letters; initial glyph has a descender — reads Уоель on the page, Іоель (Joel) plausible; no genitive repeat of the child's name in the closing formula to cross-check (closing says only 'о кончинѣ онаго дитяти')"},
+      "age": {"value": "9 months", "original_script": "девять мѣсяцевъ имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло (neuter, child) inspected before name parsing per protocol"}
+    },
+    "father": {"name": {"value": "Szlama", "original_script": "сынъ Шлямы", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Sura nee Motkiewicz", "original_script": "и матери Суры урожденной М[unclear: о/я]ткевичъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "maiden name initial М clear; second glyph reads о (Моткевичъ) more than я — candidates Motkiewicz/Miatkiewicz"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — normal for an infant death act"},
+    "declarants": [
+      {"name": "Abram Wajngrod", "original_script": "Абрамъ [unclear: Вайнгродъ/Файнгродъ]", "occupation": "szkolnik (школьникъ, synagogue caretaker)", "age": 60, "confidence": "UNCLEAR", "note": "ornate initial letter of surname reads В more than Ф; Wajngrod favored"},
+      {"name": "Moszek Zylbersztejn", "original_script": "Мошекъ Зильберштейнъ", "occupation": "trader (торговц-)", "age": 33, "confidence": "PROBABLE", "note": "ages phrased jointly 'шестидесяти лѣтъ и ... тридцати трехъ лѣтъ отъ роду имѣющихъ, обоихъ въ посадѣ Сероцкѣ жительствующихъ'"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew?]", "original_script": "Чиновникъ гражданскаго состоянія [signature, unread flourish]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed 'ими и нами'; below officiant line a second hand signs Мошекъ Зильберштейнъ; margin carries the clerk's correction attestation for the month", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 3 March [corrected from February] 1890, 9 PM. Appeared personally Abram Wajngrod[?], szkolnik, 60, and Moszek Zylbersztejn, trader, 33, both residing in posad Serock, and declared that yesterday at 7 AM in posad Serock died a child of male sex named [unclear: Joel/Uel] Cukier, son of Szlama and of the mother Sura nee Motkiewicz[?], aged nine months. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by them and by us.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

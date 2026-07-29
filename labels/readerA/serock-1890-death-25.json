@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_23-26.jpg",
+               "sha256": "bef4519680b7bb84bf61dc22e492f4e80db3a4d6bd70d6931e675495857337fc",
+               "position": "right page, upper act (No.25)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 25, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "same neater hand as act 24"},
+  "fields": {
+    "registration_date": {"value": "1890-07-21 20:00", "original_script": "21 Іюля (двад-цать перваго) тысяча восемьсотъ девяностаго года въ восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "day written in digits with the day-word repeated in parentheses — this is one date twice, NOT a dual (Julian/Gregorian) date; no second calendar day-word inked"},
+    "event_date": {"value": "1890-07-20 19:00", "original_script": "вчераш-няго числа въ семь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Dawid [unclear: Ochberg/Hochberg]", "original_script": "Давидъ [unclear: Охбергъ/Гохбергъ]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "ink reads Охбергъ without initial Г; declarant 1 signs Гохбергъ — possible same family and clerk's dropped letter, but the ink is preserved as written; closing has only 'о кончинѣ дитяти', no surname repeat"},
+      "age": {"value": 2, "original_script": "два года отъ роду имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "[unclear: умеръ/умерло] дитя ... сынъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb ending inspected first per protocol — reads умеръ (masc.) before neuter дитя, a clerk's slip; male confirmed by Давидъ and сынъ"}
+    },
+    "father": {"name": {"value": "[unclear: Szmil/Szmul]", "original_script": "сынъ Шм[unclear: и/у]ля", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Blima Dwojra nee Szafran", "original_script": "а жены его Блимы Двойры ур[ожденной] Шафранъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — child death act"},
+    "declarants": [
+      {"name": "Beniamin Hochberg", "original_script": "Беніаминъ Гох-бергъ; own signature 'Беняминъ Гохбергъ' below", "occupation": "tavern keeper (шинкарь)", "age": 23, "confidence": "PROBABLE", "note": "same surname as the deceased child (modulo the dropped initial letter) — kinship possible but NOT stated, not assumed"},
+      {"name": "Moszek Mitelbach", "original_script": "Мошекъ Мительбахъ; own signature 'Мошко Мительбахъ' below", "occupation": "carter (извощикъ)", "age": 24, "confidence": "PROBABLE", "note": "act 17 of this register has the same carter aged 25; 24 here — ~1 year discrepancy within normal witness-age noise, flagged"}
+    ],
+    "officiant": {"value": "Pszybyszewski (as signed)", "original_script": "Чиновникъ Гражданскаго Состоянія Пржибышевск[ій]", "confidence": "PROBABLE"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed in Cyrillic", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 21 July 1890, 8 PM. Appeared personally Beniamin Hochberg, tavern keeper, 23, and Moszek Mitelbach, carter, 24, both residing in posad Serock, and declared that yesterday at 7 PM in posad Serock died a child named Dawid Ochberg[?], son of Szmil[?] and his wife Blima Dwojra nee Szafran, aged two years. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

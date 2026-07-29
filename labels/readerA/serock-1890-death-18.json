@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_15-18.jpg",
+               "sha256": "e50978e991626106ba4f6cf56108eb23c1d6c78ff5fe795283b21c253969c064",
+               "position": "right page, lower act (No.18)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 18, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-06-04 09:00", "original_script": "четвертаго Іюня тысяча восемьсотъ девяностаго года въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-06-03 17:00", "original_script": "третьяго Іюня въ пять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Sura Bajla Berensztejn", "original_script": "Сура Байля Беренштейнъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents called 'супруговъ Береш-тейнъ' (hyphenated across line break, joined) — surname repeated in the spouses clause, internal check passes"},
+      "age": {"value": 3, "original_script": "три года отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first per protocol"}
+    },
+    "father": {"name": {"value": "[unclear: Chanin/Chanon]", "original_script": "дочь Хан[unclear: и/о]на", "confidence": "UNCLEAR", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Chaja Brajna nee Orensztajn", "original_script": "и Хаи Брайны урожденной Оренштайнъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "Брайны read with Б-bowl; initial О of maiden name clear"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — child death act"},
+    "declarants": [
+      {"name": "Mendel Kupersztejn", "original_script": "Мендель Куперштейнъ; own signature 'М. Куперштейнъ' below", "occupation": "contractor (подрядчикъ)", "age": 26, "confidence": "PROBABLE"},
+      {"name": "Josek [unclear: Rubinsztejn/Rabinsztajn]", "original_script": "Іоско Рубинштейнъ; Latin-script signature reads 'Josef Rabinsztajn'", "occupation": "blacksmith (кузнецъ)", "age": 34, "confidence": "UNCLEAR", "note": "body text vowel у vs signature 'a' — both surname forms retained"}
+    ],
+    "officiant": {"value": "[unclear: M. Przybyszewski?]", "original_script": "Чиновникъ гражданскаго состоянія М. Пржибышевск[ій]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed (one Cyrillic, one Latin)", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 4 June 1890, 9 AM. Appeared personally Mendel Kupersztejn, contractor, 26, and Josek Rubinsztejn[?], blacksmith, 34, both residing in posad Serock, and declared that on 3 June at 5 PM died in posad Serock a child of female sex named Sura Bajla Berensztejn, aged three years, daughter of Chanin[?] and Chaja Brajna nee Orensztajn, the Berensztejn spouses residing in posad Serock. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

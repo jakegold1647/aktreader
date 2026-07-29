@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_23-26.jpg",
+               "sha256": "bef4519680b7bb84bf61dc22e492f4e80db3a4d6bd70d6931e675495857337fc",
+               "position": "left page, lower act (No.24)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 24, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "neater hand than acts 13-23; officiant signs in full 'Пшибышевскій'"},
+  "fields": {
+    "registration_date": {"value": "1890-07-18 20:00", "original_script": "восем-надцатаго Іюля тысяча восемьсотъ девяностаго года во восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-07-17 11:00", "original_script": "вчерашняго числа во одиннадцать часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Szyja Hersz Melnik", "original_script": "Шія Гершъ Мель-никъ [hyphenated across line break, joined]", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula says only 'о кончинѣ дитяти' — no genitive surname repeat to check"},
+      "age": {"value": 1, "original_script": "лѣтъ отъ роду одинъ годъ имѣющее", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "original_script": "умерло дитя ... сынъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "no 'мужескаго пола' phrase inked; sex from сынъ and male given names; умерло (neuter) inspected first per protocol"}
+    },
+    "father": {"name": {"value": "Mordka", "original_script": "сынъ Мордки", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Ruchla Laja nee Nowodworska", "original_script": "и жены его Рухли Лаи урож-денной Новодворской", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — infant death act"},
+    "declarants": [
+      {"name": "[unclear: Calko/Icek] Rubinsztejn", "original_script": "[unclear: Цалко/Ицко] Рубинштейнъ", "occupation": "blacksmith (кузнецъ)", "age": 49, "confidence": "UNCLEAR", "note": "given name cramped at line end; act 26 of this register has a clearly-written Ицекъ Рубинштейнъ, blacksmith, 49 — supports an Icek reading here; NB act 18 has a Rubinsztejn blacksmith aged 34 with a different given name — different man; all flagged for arbitration"},
+      {"name": "Szlama [unclear: Gonski/Gynski]", "original_script": "Шляма Г[unclear: он/ын]скій", "occupation": "carter (извощикъ)", "age": 60, "confidence": "UNCLEAR"}
+    ],
+    "officiant": {"value": "Pszybyszewski (as signed)", "original_script": "Чиновникъ Гражданскаго состоянія Пшибышевскій", "confidence": "PROBABLE", "note": "first act in the wave where the officiant signature is written out fully and legibly"},
+    "signatures_note": {"value": "act read to the witnesses and signed by us only; witnesses declared themselves illiterate", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 18 July 1890, 8 PM. Appeared personally Calko[?] Rubinsztejn, blacksmith, 49, and Szlama Gonski[?], carter, 60, both residing in posad Serock, and declared that yesterday at 11 AM in posad Serock died a child named Szyja Hersz Melnik, son of Mordka and his wife Ruchla Laja nee Nowodworska, aged one year. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us. The witnesses declared themselves illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

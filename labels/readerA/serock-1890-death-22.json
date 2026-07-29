@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_19-22.jpg",
+               "sha256": "fa3c74f40f88bb6df6668b791fa19b166e0a09423709264880b701ff11cc5385",
+               "position": "right page, lower act (No.22)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 22, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "in-line corrections: 'безъ имени' and 'Левинсона' inserted above the line; margin correction note countersigned"},
+  "fields": {
+    "registration_date": {"value": "1890-07-09 15:00", "original_script": "девятаго Іюля тысяча восемьсотъ девяностаго года въ три часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-07-09 05:00", "original_script": "сего числа текущаго въ пять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": null, "original_script": "безъ имени [interlinear insertion above the line, attested by margin note 'Исправлено ... добавлено']", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "explicitly stated unnamed, added as an authenticated correction"},
+      "age": {"value": "6 days", "original_script": "шесть дней отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерло дитя женскаго пола ... дочь", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb form умерло inspected first; пола wording and дочь agree"}
+    },
+    "father": {"name": {"value": "[unclear: Szyja/Szujka] Mortka Lewinson", "original_script": "дочь Ш[unclear: уй/ый]ка Мортки [Левинсона inserted above the line]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "surname Левинсонъ added interlinearly and attested in the margin correction note; first given name cramped"}},
+    "mother": {"name": {"value": "Ruchla Leja nee Lewiner", "original_script": "и жены его Рухли Леи урожденной Левинеръ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "same surname as declarant 2 (Левинеръ) — possible kinship, NOT stated, not assumed"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — newborn death act"},
+    "declarants": [
+      {"name": "Lejbka [unclear: Poniaczyk/Ponczyk]", "original_script": "Лейбка Пон[unclear: я]чикъ", "occupation": "trader (торговщикъ)", "age": 45, "confidence": "UNCLEAR"},
+      {"name": "Moszek Lewiner", "original_script": "Мошекъ Левинеръ; Latin-script signature 'Moszek Lewiner' below", "occupation": "trader (торговщикъ)", "age": 70, "confidence": "PROBABLE", "note": "Latin signature resolves the surname"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew(ski)?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржиб...]; margin correction note also carries his initials", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by one witness (Moszek Lewiner, Latin script); margin note attests the two in-line corrections", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 9 July 1890, 3 PM. Appeared personally Lejbka Poniaczyk[?], trader, 45, and Moszek Lewiner, trader, 70, both residing in posad Serock, and declared that this day at 5 AM died in posad Serock a child of female sex, without a name [inserted], aged six days, daughter of Szyja[?] Mortka Lewinson [surname inserted] and his wife Ruchla Leja nee Lewiner, residing in posad Serock. Upon eyewitness certification of the death of this child, this act was read to the witnesses and signed by us and by one witness.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

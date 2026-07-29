@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_07-10.jpg",
+               "sha256": "ce4bf8d38b2d1c033494363468056daeced0b1643624dd82661ad419c1b486fe",
+               "position": "right page, lower act (No.10)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 10, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-04-04 09:00", "original_script": "четвертаго Апрѣля тысяча восемьсотъ девяностаго года въ девять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-04-03 03:00", "original_script": "вчерашняго числа въ три часа утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "event_place": {"value": "village [unclear: Janki/Jamki]", "original_script": "умерла въ деревнѣ Я[unclear: н/м]ки", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "death outside Serock, in a village; second declarant is from Popowo-Koscielne nearby"},
+    "principal": {
+      "name": {"value": "Chaja Sura Fogelman", "original_script": "Хая-Сура Фогельманъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "compound given name hyphenated in large letters; closing formula repeats 'о кончинѣ Фогельманъ' — internal genitive check passes"},
+      "age": {"value": 10, "original_script": "десяти лѣтъ отъ роду имѣющей", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерла ending inspected before name parsing per protocol"}
+    },
+    "father": {"name": {"value": "Iser", "original_script": "дочь Исера", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Ruchla nee Berman", "original_script": "и Рухли урожденной Берманъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'оставивъ послѣ себя' clause — deceased was a 10-year-old child"},
+    "declarants": [
+      {"name": "Alter Blumberg", "original_script": "Альтеръ Блюмбергъ, изъ Сероцка; Latin signature 'Alter Blumberg' below", "occupation": "trader (торговщикъ)", "age": 22, "confidence": "PROBABLE", "note": "same person, same age as in act 9 of the same register — within-register consistency holds"},
+      {"name": "Icek [unclear: Wajnkraf/Wajnkranc]", "original_script": "Ицекъ Вайнкра[unclear: фъ/нцъ], изъ Попово-Костельна", "occupation": "trader (торговщикъ)", "age": 28, "confidence": "UNCLEAR", "note": "surname ending ambiguous in both body text and his signature below the act"}
+    ],
+    "officiant": {"value": "[unclear: Przybysz...?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржиб...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses, signed by us and by them; both declarants signed (Alter Blumberg in Latin script; Icek Wajnkraf[?] in a rough hand)", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 4 April 1890, 9 AM. Appeared personally Alter Blumberg, trader, 22, of Serock, and Icek Wajnkraf[?], trader, 28, of Popowo-Koscielne, and declared that yesterday at 3 AM in the village of Janki[?] died Chaja Sura Fogelman, daughter of Iser and Ruchla nee Berman, aged 10 years. Upon eyewitness certification of the death of Fogelman, this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

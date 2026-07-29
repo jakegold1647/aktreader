@@ -1,0 +1,29 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-07-29-wave-005"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_23-26.jpg",
+               "sha256": "bef4519680b7bb84bf61dc22e492f4e80db3a4d6bd70d6931e675495857337fc",
+               "position": "left page, upper act (No.23)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 23, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-07-12 11:00", "original_script": "двѣнад-цатаго Іюля тысяча восемьсотъ девяностаго года въ одиннадцать часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date only — no dual day-word inked"},
+    "event_date": {"value": "1890-07-11 23:00", "original_script": "вчерашняго числа въ одиннадцать часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Dwojra [unclear: Puszczyk/Puszyk]", "original_script": "Двойра Пу[unclear: щ/ш]икъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "large letters; щ tail favored (Puszczyk); no genitive surname repeat in the closing — it says 'о кончинѣ дитяти', a boilerplate slip for a 90-year-old"},
+      "age": {"value": 90, "original_script": "девяносто лѣтъ отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "age of the elderly is often the clerk's estimate — treat as approximate"},
+      "sex": {"value": "female", "original_script": "умерла", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерла ending (р+л+а) inspected before name parsing per protocol"}
+    },
+    "father": {"name": {"value": null, "original_script": "дочь неизвѣстныхъ родителей", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "clerk explicitly wrote 'of unknown parents'"}},
+    "mother": {"name": {"value": null, "original_script": "дочь неизвѣстныхъ родителей", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "BLANK", "note": "no 'оставивъ послѣ себя' clause inked for this adult — marital status and survivors not stated; do not infer"},
+    "declarants": [
+      {"name": "Szymla [unclear: Kac?]", "original_script": "Шимля Кацъ(?)", "occupation": "trader (торговщикъ)", "age": 60, "confidence": "UNCLEAR", "note": "short surname cramped at line end; Кацъ favored"},
+      {"name": "Berek Koltun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE", "note": "same man as acts 13/15/16 (cemetery attendant there, работникъ here); age 65 consistent"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszew(ski)?]", "original_script": "Чиновникъ гражданскаго состоянія [signature flourish Пржибыш...]", "confidence": "UNCLEAR"},
+    "signatures_note": {"value": "act read to witnesses and signed by us only; witnesses declared themselves illiterate", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 12 July 1890, 11 AM. Appeared personally Szymla Kac[?], trader, 60, and Berek Koltun, laborer, 65, both residing in posad Serock, and declared that yesterday at 11 PM in posad Serock died Dwojra Puszczyk[?], daughter of unknown parents, aged ninety years. Upon eyewitness certification of the death of this [child - sic], this act was read to the witnesses and signed by us; the witnesses declared themselves illiterate.",
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
