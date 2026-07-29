@@ -98,9 +98,15 @@ def test_wave_generator_accepts_blind_same_family_sessions_with_limitation(
 ) -> None:
     spec = _spec(tmp_path)
     spec["readers"]["B"]["reader_family"] = "family-a"
+    spec["blind_group_id"] = "serock-1877-births-01-10-wave-006"
 
-    briefs = build_reader_briefs(spec)
+    briefs = build_reader_briefs(spec, verify_artifacts=False)
 
+    assert briefs["blind_group_id"] == "serock-1877-births-01-10-wave-006"
+    assert briefs["artifact_verification"] == {
+        "bytes_reverified": False,
+        "basis": "COORDINATOR_RELAYED_PINS",
+    }
     assert briefs["independence"] == {
         "distinct_reader_ids": True,
         "distinct_model_families": False,

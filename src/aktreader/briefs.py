@@ -74,8 +74,21 @@ def build_reader_briefs(
         "prompt",
         "readers",
     }
-    if set(spec) != required or spec.get("schema_version") != "1.0.0":
-        raise BriefGenerationError(f"wave specification keys must be exactly {sorted(required)}")
+    optional = {"blind_group_id"}
+    if (
+        not required.issubset(spec)
+        or set(spec) - required - optional
+        or spec.get("schema_version") != "1.0.0"
+    ):
+        raise BriefGenerationError(
+            f"wave specification requires {sorted(required)} and permits {sorted(optional)}"
+        )
+    explicit_blind_group = spec.get("blind_group_id")
+    if explicit_blind_group is not None and (
+        not isinstance(explicit_blind_group, str)
+        or not re.fullmatch(r"[a-z0-9][a-z0-9-]+", explicit_blind_group)
+    ):
+        raise BriefGenerationError("blind_group_id must be a lowercase slug when supplied")
     unit = spec["register_unit"]
     unit_required = {
         "unit_id",
@@ -154,12 +167,16 @@ def build_reader_briefs(
             f"artifact coverage must exactly match act range; missing={missing}, outside={outside}"
         )
 
-    blind_group_id = _blind_group(spec)
+    blind_group_id = explicit_blind_group or _blind_group(spec)
     output: dict[str, Any] = {
         "schema_version": "1.0.0",
         "blind_group_id": blind_group_id,
         "register_unit": unit,
         "act_range": act_range,
+        "artifact_verification": {
+            "bytes_reverified": verify_artifacts,
+            "basis": ("LOCAL_BYTES_SHA256" if verify_artifacts else "COORDINATOR_RELAYED_PINS"),
+        },
         "independence": {
             "distinct_reader_ids": True,
             "distinct_model_families": (reader_a["reader_family"] != reader_b["reader_family"]),

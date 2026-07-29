@@ -1,0 +1,78 @@
+{
+  "wave": "wave-006",
+  "blind_group_id": "serock-1877-births-01-10-wave-006",
+  "register": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1877,
+    "act_type": "birth",
+    "language": "pl",
+    "clerk_year_proxy": "serock-1877"
+  },
+  "prompt_version": "1.4.0",
+  "prompt_sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
+  "label_schema": "schemas/reader-label-1.0.0-v1.4.schema.json",
+  "acts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "artifacts": [
+    {
+      "path": "E:\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_01-02.jpg",
+      "filename": "Serock_1877_births_01-02.jpg",
+      "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+      "bytes": 859651,
+      "width_px": 3044,
+      "height_px": 2412,
+      "page_index": 0,
+      "acts_covered": [
+        1,
+        2
+      ],
+      "layout": "two-page spread; acts in reading order left page then right page; act number in margin"
+    },
+    {
+      "path": "E:\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_03-06.jpg",
+      "filename": "Serock_1877_births_03-06.jpg",
+      "sha256": "d0e3d5e8acee6b3e314ca18909b25a3b3518112454e69f1b1362755ad056b514",
+      "bytes": 957211,
+      "width_px": 3044,
+      "height_px": 2412,
+      "page_index": 0,
+      "acts_covered": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "layout": "two-page spread; acts in reading order left page then right page; act number in margin"
+    },
+    {
+      "path": "E:\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_07-10.jpg",
+      "filename": "Serock_1877_births_07-10.jpg",
+      "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+      "bytes": 952751,
+      "width_px": 3044,
+      "height_px": 2412,
+      "page_index": 0,
+      "acts_covered": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "layout": "two-page spread; acts in reading order left page then right page; act number in margin"
+    }
+  ],
+  "source_note": "Harvested from skanoteka zespol id318 (0826d) unit sy=1877 kt=1; hashes independently recomputed by coordinator 2026-07-29 from E:\\DNA\\BulkData\\Serock_0826d\\1877\\births",
+  "corpus_gap_note": "The 1877 births unit jumps 19-22 -> 27-30; no file covers acts 23-26. Coordinator has NOT verified whether this is absent at source or a fetch gap; do not treat 23-26 as unread until checked.",
+  "language_note": "Polish-language era. Cyrillic gate must NOT apply (target.language = pl). This wave is the language-conditional guard's first production test."
+}
