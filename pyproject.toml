@@ -7,6 +7,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Jake Goldstein" }]
 dependencies = [
     "jsonschema>=4.23,<5",
+    "pillow>=11,<13",
 ]
 
 [project.scripts]

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/adjudication-answers-1.0.0.json",
+  "title": "AKTREADER adjudication answers",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "packet_id",
+    "wave_id",
+    "spec_sha256",
+    "questions_sha256",
+    "verifier",
+    "answered_at",
+    "answers"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "adjudication-answers-1\\.0\\.0\\.schema\\.json$"
+    },
+    "schema_version": {"const": "1.0.0"},
+    "packet_id": {"type": "string", "minLength": 1},
+    "wave_id": {"type": "string", "minLength": 1},
+    "spec_sha256": {"$ref": "#/$defs/sha256"},
+    "questions_sha256": {"$ref": "#/$defs/sha256"},
+    "verifier": {
+      "type": "object",
+      "required": ["verifier_id", "script_expertise", "correction_consent"],
+      "properties": {
+        "verifier_id": {"type": "string", "minLength": 1},
+        "script_expertise": {
+          "enum": ["NON_READER", "READER", "VERIFIED_EXPERT"]
+        },
+        "correction_consent": {
+          "type": "object",
+          "required": ["status", "training_eligible"],
+          "properties": {
+            "status": {"enum": ["GRANTED", "DECLINED", "NOT_RECORDED"]},
+            "training_eligible": {"type": "boolean"}
+          },
+          "additionalProperties": false,
+          "oneOf": [
+            {
+              "properties": {
+                "status": {"const": "GRANTED"},
+                "training_eligible": {"const": true}
+              }
+            },
+            {
+              "properties": {
+                "status": {"enum": ["DECLINED", "NOT_RECORDED"]},
+                "training_eligible": {"const": false}
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "answered_at": {"type": "string", "format": "date-time"},
+    "answers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "question_id",
+          "choice_id",
+          "verbatim_answer",
+          "interpretation",
+          "methods"
+        ],
+        "properties": {
+          "question_id": {"type": "string", "minLength": 1},
+          "choice_id": {"type": "string", "minLength": 1},
+          "verbatim_answer": {"type": "string", "minLength": 1},
+          "interpretation": {"type": "string", "minLength": 1},
+          "methods": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "LETTERFORM_LINEUP",
+                "BILINGUAL_ANCHOR",
+                "INDEX_CROSS_CHECK",
+                "DIRECT_SCRIPT_READING",
+                "STRUCTURAL_CROSS_CHECK"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

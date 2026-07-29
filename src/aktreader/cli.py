@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from aktreader import __version__
+from aktreader.adjudication import generate_packet, ingest_answers
 from aktreader.batch import (
     BatchJob,
     BatchRunner,
@@ -127,6 +128,32 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
+    adjudicate = subparsers.add_parser(
+        "adjudicate",
+        help="generate an offline human adjudication packet or ingest its answers",
+    )
+    adjudicate.add_argument("--wave", required=True)
+    adjudicate.add_argument(
+        "--spec",
+        type=Path,
+        help="wave specification; defaults to human_check/waves/wave-<id>.json",
+    )
+    adjudicate.add_argument(
+        "--output-dir",
+        type=Path,
+        help="packet directory; defaults to human_check/generated/wave-<id>",
+    )
+    adjudicate.add_argument(
+        "--answers",
+        type=Path,
+        help="ingest a downloaded answers JSON into an existing packet directory",
+    )
+    adjudicate.add_argument("--max-questions", type=int, default=10)
+    adjudicate.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace generation artifacts; ingested results remain immutable",
+    )
     evaluate = subparsers.add_parser(
         "eval", help="generate the clerk-year-sequestered SerockBench report"
     )
@@ -392,6 +419,54 @@ def _command_batch_run(args: argparse.Namespace) -> int:
     return 0 if report["status"] == "COMPLETE" else 1
 
 
+def _command_adjudicate(args: argparse.Namespace) -> int:
+    wave_id = args.wave.strip()
+    if not wave_id:
+        raise CliConfigurationError("--wave must be a nonblank identifier")
+    wave_slug = wave_id if wave_id.casefold().startswith("wave-") else f"wave-{wave_id}"
+    output_raw = args.output_dir or PROJECT_ROOT / "human_check" / "generated" / wave_slug
+
+    if args.answers is not None:
+        if args.spec is not None or args.replace_existing:
+            raise CliConfigurationError(
+                "--spec and --replace-existing are generation-only options"
+            )
+        packet_dir = local_input_path(output_raw, role="adjudication packet directory")
+        if not packet_dir.is_dir():
+            raise CliConfigurationError(
+                f"adjudication packet directory is not a directory: {packet_dir}"
+            )
+        answers = local_input_path(args.answers, role="adjudication answers")
+        if not answers.is_file():
+            raise CliConfigurationError(f"adjudication answers is not a file: {answers}")
+        report = ingest_answers(
+            project_root=PROJECT_ROOT,
+            packet_dir=packet_dir,
+            answers_path=answers,
+        )
+    else:
+        spec_raw = args.spec or PROJECT_ROOT / "human_check" / "waves" / f"{wave_slug}.json"
+        spec = local_input_path(spec_raw, role="adjudication wave specification")
+        if not spec.is_file():
+            raise CliConfigurationError(
+                f"adjudication wave specification is not a file: {spec}"
+            )
+        output_dir = local_output_path(output_raw, role="adjudication packet directory")
+        if output_dir == spec or output_dir in spec.parents:
+            raise CliConfigurationError(
+                "adjudication output directory must not contain or overwrite its specification"
+            )
+        report = generate_packet(
+            project_root=PROJECT_ROOT,
+            spec_path=spec,
+            output_dir=output_dir,
+            wave_id=wave_id,
+            max_questions=args.max_questions,
+            replace_existing=args.replace_existing,
+        )
+    _emit_json(report)
+    return 0
+
 def _training_clerk_year_ids(path: Path | None) -> list[str]:
     if path is None:
         return []
@@ -464,6 +539,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "reader-inspect": _command_reader_inspect,
         "reader-infer": _command_reader_infer,
         "batch-run": _command_batch_run,
+        "adjudicate": _command_adjudicate,
         "eval": _command_eval,
     }
     if args.command is None:
