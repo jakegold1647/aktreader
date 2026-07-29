@@ -87,9 +87,7 @@ def build_reader_briefs(
         "clerk_year_id",
     }
     if not isinstance(unit, dict) or set(unit) != unit_required:
-        raise BriefGenerationError(
-            f"register_unit keys must be exactly {sorted(unit_required)}"
-        )
+        raise BriefGenerationError(f"register_unit keys must be exactly {sorted(unit_required)}")
     act_range = spec["act_range"]
     if not isinstance(act_range, dict) or set(act_range) != {"start", "end"}:
         raise BriefGenerationError("act_range requires exactly start and end")
@@ -120,8 +118,6 @@ def build_reader_briefs(
     reader_b = _validate_reader(readers["B"], "readers.B")
     if reader_a["reader_id"] == reader_b["reader_id"]:
         raise BriefGenerationError("blind readers must have distinct reader IDs")
-    if reader_a["reader_family"] == reader_b["reader_family"]:
-        raise BriefGenerationError("blind readers must have distinct model families")
 
     artifacts = spec["artifacts"]
     if not isinstance(artifacts, list) or not artifacts:
@@ -138,9 +134,7 @@ def build_reader_briefs(
     }
     for artifact in artifacts:
         if not isinstance(artifact, dict) or set(artifact) != artifact_keys:
-            raise BriefGenerationError(
-                f"artifact keys must be exactly {sorted(artifact_keys)}"
-            )
+            raise BriefGenerationError(f"artifact keys must be exactly {sorted(artifact_keys)}")
         if not _SHA256.fullmatch(str(artifact["sha256"])):
             raise BriefGenerationError("artifact SHA-256 is invalid")
         if verify_artifacts:
@@ -166,14 +160,17 @@ def build_reader_briefs(
         "blind_group_id": blind_group_id,
         "register_unit": unit,
         "act_range": act_range,
+        "independence": {
+            "distinct_reader_ids": True,
+            "distinct_model_families": (reader_a["reader_family"] != reader_b["reader_family"]),
+            "correlated_blind_spots_possible": True,
+        },
         "reader_a": [],
         "reader_b": [],
     }
     for act_no in range(start, end + 1):
         artifact = by_act[act_no]
-        record_id = (
-            f"{_slug(unit['town'])}-{unit['year']}-{unit['act_type']}-{act_no}"
-        )
+        record_id = f"{_slug(unit['town'])}-{unit['year']}-{unit['act_type']}-{act_no}"
         artifact_payload = {
             "path": artifact["path"],
             "sha256": artifact["sha256"],

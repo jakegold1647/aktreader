@@ -64,6 +64,16 @@ def test_v14_full_label_enforces_structural_and_semantic_grounding() -> None:
         validate_instance(payload, FULL_SCHEMA)
 
 
+def test_v14_polish_present_evidence_does_not_require_cyrillic() -> None:
+    payload = _full_payload()
+    payload["target"]["language"] = "pl"
+    payload["transcription"]["original_script"] = "Działo się w Serocku. Stawił się Jan Kowalski."
+    payload["observations"]["principal.name"]["value"] = "Jan Kowalski"
+    payload["observations"]["principal.name"]["original_script"] = "Jan Kowalski"
+
+    validate_instance(payload, FULL_SCHEMA)
+
+
 def test_v14_full_label_rejects_blank_present_original_script() -> None:
     payload = _full_payload()
     payload["observations"]["principal.name"]["original_script"] = "   "

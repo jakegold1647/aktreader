@@ -80,7 +80,6 @@ def test_wave_generator_emits_matching_blind_paired_briefs(tmp_path: Path) -> No
         assert left["artifact"] == right["artifact"]
         assert left["prompt"] == right["prompt"]
         assert left["reader"]["reader_id"] != right["reader"]["reader_id"]
-        assert left["reader"]["reader_family"] != right["reader"]["reader_family"]
         assert left["reader"]["blind_group_id"] == right["reader"]["blind_group_id"]
         assert left["reader"]["other_reader_output_seen"] is False
         assert right["reader"]["other_reader_output_seen"] is False
@@ -94,9 +93,16 @@ def test_wave_generator_rejects_artifact_hash_drift(tmp_path: Path) -> None:
         build_reader_briefs(spec)
 
 
-def test_wave_generator_rejects_same_family_readers(tmp_path: Path) -> None:
+def test_wave_generator_accepts_blind_same_family_sessions_with_limitation(
+    tmp_path: Path,
+) -> None:
     spec = _spec(tmp_path)
     spec["readers"]["B"]["reader_family"] = "family-a"
 
-    with pytest.raises(BriefGenerationError, match="distinct model families"):
-        build_reader_briefs(spec)
+    briefs = build_reader_briefs(spec)
+
+    assert briefs["independence"] == {
+        "distinct_reader_ids": True,
+        "distinct_model_families": False,
+        "correlated_blind_spots_possible": True,
+    }
