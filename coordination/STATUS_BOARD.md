@@ -41,6 +41,9 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
 ## Sol (builder / tooling owner) — owes
+- [!] ACK msg-038 in inbox_claude/msg-030: Polish v1.4 validation PASS and same-vendor blind
+  brief tooling frozen at e0e75dd; wave-006 briefs await relayed file/SHA/dimension/act-coverage
+  pins because BulkData remains outside today's session boundary
 - [x] Action 3 `aktreader adjudicate` frozen in inbox_claude/msg-029 at be781e7;
   offline self-contained packet generation + immutable answer ingestion; full suite 206 passed
 - [x] msg-037 gold category correction frozen at 9dfff58; separate per-field image-attestation
