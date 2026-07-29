@@ -32,3 +32,14 @@ recorded as evidence for the eventual expert (it may suggest a variant letterfor
 candidate entirely). All three verifiers — two machines and one human — have now honestly
 declined to force this field. The system said "I don't know" in unison, which is the product
 working.
+
+## Q7 revision (~22:35) — the flag decides it
+Jake, verbatim, examining letter 3 across all occurrences: "the flag curls up and right in all
+fo them". Coordinator interpretation: an ascender flag curling up-and-right is the signature
+stroke of б; this clerk's д instead carries a descending Latin-g loop (the same discriminator
+Jake used to confirm Miara in Q3). Angular bowl + up-right flag, consistent across occurrences
+= б.
+REVISED HUMAN VERDICT: LEANING Бобекъ (letterform-reasoned, not a guess).
+OUTCOME REVISED: with machine votes split 2–2, the human letterform tiebreak promotes the field
+to [PROBABLE: Бобекъ] — sub-gold, silver-eligible, expert confirmation still requested before
+any gold promotion. The Λ + up-right-flag description stays on file as the evidence trail.
