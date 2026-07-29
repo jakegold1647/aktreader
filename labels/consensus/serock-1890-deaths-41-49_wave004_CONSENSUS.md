@@ -118,3 +118,78 @@ closure audit: the index predates the rectification.
 - All promotions await Reader C 2-of-3; NO RESOLVED appendix yet.
 - Acts 45 and 46 pre-nominated to the human gold sample if arbitration confirms either reading
   (identity-level forks, standing rule).
+
+---
+
+## WAVE 004 RESOLVED — Reader C arbitration applied (2-of-3 rule, 28 Jul 2026)
+Reader C: fresh blind session, 4–8× upscaled crops of the original pixels; full report at
+readerC_arbitration_wave004.md. 25 items: 20 disputes, 3 verification reads (single-coverage
+fields), 1 standing officiant item, 1 index spot-check.
+
+| # | Dispute | Verdict (C's certainty) | Promoted value |
+|---|---|---|---|
+| 1 | Act 45 IDENTITY FORK | «умеръ Іосекъ Маковскій», M, 71, пекарь; closing «Іоска Маковскаго» (SURE) | **Josek Makowski, baker, 71, son of the late Michel + Bejla** (parents agreed across the fork); "leaves widow" confirmed; widow's name/née stay single-coverage, NOT promoted |
+| 2 | Act 45 reg. date | «двадцать седьмаго Ноября» (SURE) | **27 Nov 1890** |
+| 3 | Act 46 IDENTITY FORK | «Ройза Борнштейнъ», 1 y, d. Янкеля + Шифры ур. Полковичъ (SURE) | **Rojza Bornsztejn, 1 y, Jankel + Szyfra née Polkowicz**; reg. 28 Nov was already agreed |
+| 4 | Act 41 reg. date | «двадцать третьяго Сентября» (LEANING) | [PROBABLE: 23 Sept] |
+| 5 | Act 42 reg. date | «шестаго Октября» (SURE) | **6 Oct** |
+| 6 | Act 42 principal | «Рыфка Охбергъ» + index row (SURE) | **Ryfka Ochberg** |
+| 7 | Act 43 age | «шесть дней» (SURE) | **6 days** (the Goldsztejn infant — act now fully resolved) |
+| 8 | Act 43 mother | «Цюрка» (SURE) | **Cyrka** |
+| 9 | Act 44 reg. date | «одиннадцатаго» (SURE) | **11 Oct** |
+| 10 | Act 44 given | «Мошекъ» (SURE) | **Moszek Wajngrod** |
+| 11 | Act 44 father | «Сруль» (SURE) | **Srul** |
+| 12 | Act 44 née slot | ink physically reads «урожденной неизвѣстно.» complete (SURE) | **STATED_UNKNOWN stands** — typed-state dispute resolved for the PRESENT-ink claim |
+| 13 | Act 44 declarant 1 | «Вайнгродъ, школьникъ, 65» (SURE) | **Abram Wajngrod, szkolnik, 65** |
+| 14 | Act 47 dates | reg «одиннадцатаго Декабря»; event «вчерашняго числа» — the «двѣнадцать» is the HOUR (SURE) | **reg. 11 Dec; event 10 Dec** (B's explicit-day parse was the hour word) |
+| 15 | Act 47 age | «полъ года», no «сорока…» present (SURE) | **½ year — infant** |
+| 16 | Act 47 parents | father «Мадехъ» (LEANING); mother = line-break compound «Лаи-/Гити» (SURE) | father [PROBABLE: Madech]; mother **Laja-Gita (compound)**; née Bogdan remains single-coverage, NOT promoted |
+| 17 | Act 48 reg. date | «двадцатаго Декабря» (SURE) | **20 Dec** |
+| 18 | Act 48 names | «Лейбка» IS the principal's middle name; father «Делушъ» (ink «Делюша») (SURE/LEANING) | **Dawid Lejbka Szejngolc**; father [PROBABLE: Delusz]; no slot transposition; age NB «три недѣли» |
+| 19 | Act 48 declarant 1 | NEITHER — C reads «Липа Штатингеръ»; index family «Штатынгеръ» | NEW [unclear: Штатингеръ/Штатынгеръ/Штамгеръ/Шмангеръ/Штамбергъ/Мота Штамъ] — no promotion; lexicon cross-ref: Штатзингеръ family (wave-003 acts 31/32) |
+| 20 | STANDING witness | «Колтунъ» in all 7 acts checked (39,40,41,42,47,48,49); «работникъ» in every wave-004 act; «кладбищный служитель» verbatim once, act 39 (SURE) | **NOT CLOSED.** C's 7-act evidence recorded as strong support for Колтунъ/работникъ, with act-39 occupation as genuine per-act variance — but the wave-003 verification reader's «Ковшунъ» in acts 36–38 remains unexplained. Item stays on the EXPERT-REVIEW list, first chair; fields remain excluded from silver corpus-wide |
+| 21 | Act 49 layers (verification) | Black: «Сура Розенекъ», «одну недѣлю», Янкеля + Рыфки ур. Едвабникъ (clear). Red: age «три мѣсяца» (clear), father «Мотки» (clear), surname «Гольдблюмъ» (LEANING), red given ≈ guess, red mother unresolved | **Black layer promoted in full: Sura Rozenek, 1 week, Jankel + Ryfka née Jedwabnik.** Red layer: age **3 months** + father **Mortka** promoted; surname [PROBABLE: Гольдблюмъ]; red mother stays [unclear]. **Act 49 → human/expert sample** (second rectification act; higher-resolution rescan recommended) |
+| 22 | Act 41 (verification) | «умеръ Рафалъ Зильберштейнъ», ~4 y (age LEANING), s. Мошка и Баси Зильберштейновъ, traders; declarants Маеръ Мендзилевскій лавочникъ 25 + Берекъ Колтунъ работникъ 65 (SURE) | **Rafal Zylbersztejn, son of Moszek + Basia (traders); declarant Majer Mendzylewski, shopkeeper, 25** — second vote supplied; age [PROBABLE: 4 y]. Witness token feeds #20 (not promoted) |
+| 23 | Act 42 filiation (verification) | age «полъ года» (clear); father «Манеса(?)» GUESS; mother «Блюмы Двойры(?)» LEANING; maiden «Шехтманъ(?)» GUESS — severe bleed-through | age **½ year** promoted (second vote). **Filiation UNRESOLVABLE at current scan quality** — all candidates pooled ([Szmul/Manes]; [Bejla Frajda/Bluma Dwojra]; née [Szelkobroda/Wielkobroda/Szechtman]), NOTHING promoted; **rescan queue** with act 49's red interlines |
+| 24 | Officiant (standing, all 9 acts) | «Пржибышевскій» — abbreviated scrawl, post-П cluster fits «рж» (LEANING) | [PROBABLE: Пржибышевскій] for the register year — sub-gold, one verdict covers all acts |
+| 25 | Index spot-check (10 lines) | as-written: 34 «Мяри Байля», 39 «Маковская Рухля», 40 «Бобекъ Гутманъ», 43 «Гольдш?тейнъ» (no given), 45 «Маковскій Іосекъ», 46 «Борнштейнъ Ройза», 47 «Зальцбергъ Іосекъ», 48 «Шейнгольцъ Давидъ Ле(й)бка», 49 «Розенекъ Сура» (SURE as-written) | Pre-rectification thesis CONFIRMED (40 and 49 both indexed under erroneous original names). Index row 34 «Мяри» independently corroborates the wave-003 Miara verdict; row 45 confirms the male reading |
+
+**Scoreboard (n=18 attributable disputes, not a leaderboard):** A prevailed 18/18 (#1–18, with
+#4 and #16-father inside A's own [unclear] pools); B 0; #19 resolved NEITHER (new candidate);
+#20 held open by coordinator ruling despite C's 7-act evidence; #24 resolved from the pooled
+candidates. Verification reads corroborated Reader A's single-coverage readings in acts 41 and
+49 (black layer) and the act-42 age; act-42 filiation is genuinely unresolvable at this scan
+quality. Reader B's misses concentrate in two classes: two wholesale identity forks (acts 45,
+46) and systematic ILLEGIBLE over-declaration (see lessons).
+
+### THE LESSONS OF WAVE 004
+1. **Phantom-identity catches #3 and #4.** Act 45: Reader B produced «Бася Коновская, F, 47»
+   where the ink reads a 71-year-old male baker — sex, name, age, and date all forked from one
+   умеръ/умерла misparse plus a date slip; B's OWN index transcription («Миновскій Юсекъ»,
+   male) contradicted his act read — an internal-consistency check between a reader's act and
+   index outputs is a cheap new validator candidate. Act 46: B produced a COMPLETE, internally
+   coherent alternative reading («Рухля Гросманъ», different parents, different née) — the
+   sharpest fork yet because it is not a fragment-phantom; only the agreed date survived.
+   Cross-vendor consensus caught both before gold, as designed.
+2. **The v1.3 rule was adopted but not executed.** B's ILLEGIBLE notes cite 2–3× inspection
+   against the rule's 4–8× floor; every field B declared ILLEGIBLE that C or the verification
+   pass inspected at 4–8× was readable except act-42's filiation and act-49's red interlines.
+   Wave-005 enforcement: notes must state ≥4× or the label fails ingest validation (mechanical
+   check recommended to the builder).
+3. **The pre-rectification index thesis is confirmed from the pixels** (item 25): the skorowidz
+   carries the erroneous original names for BOTH corrected acts (40, 49). The index is a
+   snapshot of the register before the corrections were entered and can never arbitrate
+   red-vs-black questions.
+4. **Item 20 discipline held:** even a 7-act SURE verdict does not close a cross-wave conflict
+   with an unexplained contrary fresh read. Expert review, first chair, fields still out of
+   silver.
+5. **Rescan queue (genuine scan-quality limits, not reader failure):** act 42 filiation
+   (bleed-through), act 49 red interlines, act 40's second red margin note in a different hand
+   (no-vote observation).
+
+### Disposition
+- All promotions above are consensus-PROBABLE (2-of-3). Silver ingest opens when the
+  coordinator posts the green-light to inbox_sol.
+- Human/expert sample additions: **acts 45, 46 (resolved identity forks, standing rule) and 49
+  (rectification act)** — joining acts 6, 34, 39, 40-surname, and the item-20 witness.
+- Wave 005 (acts 7–29) is GO — artifacts staged and hashed; closes the book.

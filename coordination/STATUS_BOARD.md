@@ -13,8 +13,8 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 | 001 | Serock 1890 deaths 1–2 | frozen | frozen (0d9f3bc) | merged | done | ✅ 9/9, appendix in wave-001 doc |
 | 002 | Serock 1890 deaths 3–6 | frozen | frozen (4839ac2) | merged (14 disputes) | done | ✅ appendix in wave-002 doc; A 12 / B 1.5; act 6 → human sample |
 | 003 | Serock 1890 deaths 30–40 (v1.2 both readers) | frozen (02725c6) | frozen (d679320) | merged (24 disputes + 4 verification acts) | done (arbiter + verifier) | ✅ appendix in wave-003 doc; A 23 / B 0.5; acts 34+39 → human sample (act-40 surname deadlocked 2–2, rides along); ERRATA: item 20 withdrawn → expert review |
-| 004 | Serock 1890 deaths 41–49 + SkZ index closure (v1.3.0 = 97dfa6a7… both readers; assigned msg-017) | frozen (0eddf76) | frozen (msg-014 hashes) | merged (24 items: 2 identity forks, acts 45+46) | pending | closure audit DRAFTED (SEROCK_1890_DEATHS_CLOSURE_AUDIT.md); index A-vs-B agreement 13/49; index predates red rectifications |
-| 005 | CANDIDATE: Serock 1890 deaths 7–29 (23 acts; closes the book) | — | — | — | — | pending assignment; 5 scan files to fetch |
+| 004 | Serock 1890 deaths 41–49 + SkZ index closure (v1.3.0 = 97dfa6a7… both readers; assigned msg-017) | frozen (0eddf76) | frozen (msg-014 hashes) | merged (24 items: 2 identity forks, acts 45+46) | done (25 items, readerC_arbitration_wave004.md) | ✅ appendix in wave-004 doc; A 18/18 attributable, B 0, 1 NEITHER; phantom catches #3+#4 (acts 45, 46); acts 45+46+49 → human sample; item 20 stays expert-review; act-42 filiation + act-49 red interlines → rescan queue; index pre-rectification thesis CONFIRMED |
+| 005 | Serock 1890 deaths 7–29 (23 acts; closes the book) | — | — | — | — | GO per wave-004 disposition; artifacts staged + hashed (wave005\ARTIFACTS.txt); assignment pending coordinator msg |
 
 ## Claude (coordinator / Reader A) — owes
 - [x] Wave-002 RESOLVED appendix (done 28 Jul)
