@@ -36,6 +36,10 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
 ## Sol (builder / Reader B) — owes
+- [x] msg-027 canonical prompt stamp fixed; physical snapshot retained in runtime fingerprint;
+  17 FAILED checkpoint rows re-bound without retry spend (inbox_claude/msg-020)
+- [x] msg-022 owner-only open-dataset fetcher + license-reviewed manifest frozen
+  (inbox_claude/msg-021); no dataset download performed
 - [ ] **WORK QUEUE msg-012 (9 items, priority-ordered)** — build-pin first, then forensics,
   fence tolerance, P2 addendum findings, silver materialization (coordinator confirmed),
   coverage want-list, LoRA gate prep, release polish, wave-004 tooling

@@ -1,0 +1,160 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-07-28",
+  "destination_root": "E:\\DNA\\BulkData\\Training_Sources_Open",
+  "owner_execution_only": true,
+  "application_downloads_datasets": false,
+  "standing_exclusions": [
+    "Yad Vashem",
+    "USHMM",
+    "Arolsen Archives",
+    "Geneteka",
+    "JRI-Poland"
+  ],
+  "datasets": [
+    {
+      "id": "digital-peter",
+      "title": "Digital Peter",
+      "status": "ELIGIBLE",
+      "recipe_role": "BASE_SCRIPT_ADAPTATION",
+      "license": {
+        "name": "MIT",
+        "url": "https://huggingface.co/datasets/ai-forever/Peter/blob/f7396bc0d39f208076d0d8af13b4644dc3bdd7f8/README.md",
+        "retrieved_at": "2026-07-28"
+      },
+      "source": {
+        "provider": "Hugging Face",
+        "repository_url": "https://huggingface.co/datasets/ai-forever/Peter",
+        "revision": "f7396bc0d39f208076d0d8af13b4644dc3bdd7f8"
+      },
+      "artifacts": [
+        {
+          "filename": "images.zip",
+          "url": "https://huggingface.co/datasets/ai-forever/Peter/resolve/f7396bc0d39f208076d0d8af13b4644dc3bdd7f8/images.zip?download=true",
+          "expected_size_bytes": 982693094,
+          "expected_sha256": "bd186a0e321669ccd14e1d43df0027d4b4eb4a448f0a9e0cac50de0175d54054",
+          "verification": "SHA256_AND_SIZE"
+        },
+        {
+          "filename": "annotations_train.json",
+          "url": "https://huggingface.co/datasets/ai-forever/Peter/resolve/f7396bc0d39f208076d0d8af13b4644dc3bdd7f8/annotations_train.json?download=true",
+          "expected_size_bytes": 12430428,
+          "expected_sha256": "1f8c046828890c99c04f8b1730528a5f67d4e0ab3b91928df5ad45892f28dae2",
+          "verification": "SHA256_AND_SIZE"
+        },
+        {
+          "filename": "annotations_val.json",
+          "url": "https://huggingface.co/datasets/ai-forever/Peter/resolve/f7396bc0d39f208076d0d8af13b4644dc3bdd7f8/annotations_val.json?download=true",
+          "expected_size_bytes": 1077715,
+          "expected_sha256": "e6b0e41a47642207b0fac522d62f095e0d9730f3db50813a98d20175301d2523",
+          "verification": "SHA256_AND_SIZE"
+        },
+        {
+          "filename": "annotations_test.json",
+          "url": "https://huggingface.co/datasets/ai-forever/Peter/resolve/f7396bc0d39f208076d0d8af13b4644dc3bdd7f8/annotations_test.json?download=true",
+          "expected_size_bytes": 980971,
+          "expected_sha256": "d2604bcfb80a006ab82e9902f7b2afbc099e52619efbcaad296384b455c773ee",
+          "verification": "SHA256_AND_SIZE"
+        }
+      ]
+    },
+    {
+      "id": "cyrillic-handwriting-dataset-v5",
+      "title": "Cyrillic Handwriting Dataset",
+      "status": "ELIGIBLE",
+      "recipe_role": "BASE_SCRIPT_ADAPTATION",
+      "license": {
+        "name": "CC0-1.0",
+        "url": "https://www.kaggle.com/datasets/constantinwerner/cyrillic-handwriting-dataset",
+        "retrieved_at": "2026-07-28"
+      },
+      "source": {
+        "provider": "Kaggle",
+        "repository_url": "https://www.kaggle.com/datasets/constantinwerner/cyrillic-handwriting-dataset",
+        "revision": "dataset-version-5",
+        "last_updated": "2025-10-22T13:36:21.893Z"
+      },
+      "artifacts": [
+        {
+          "filename": "cyrillic-handwriting-dataset-v5.zip",
+          "url": "https://www.kaggle.com/api/v1/datasets/download/constantinwerner/cyrillic-handwriting-dataset?datasetVersionNumber=5",
+          "expected_size_bytes": 1623532905,
+          "expected_sha256": null,
+          "verification": "SIZE_THEN_RECORD_SHA256"
+        }
+      ]
+    },
+    {
+      "id": "school-notebooks-ru",
+      "title": "school-notebooks-RU",
+      "status": "ELIGIBLE",
+      "recipe_role": "BASE_SCRIPT_ADAPTATION",
+      "license": {
+        "name": "MIT",
+        "url": "https://huggingface.co/datasets/ai-forever/school_notebooks_RU/blob/a10cd26104f054dc116a9dbc4a29c34b494eb9ae/README.md",
+        "retrieved_at": "2026-07-28"
+      },
+      "source": {
+        "provider": "Hugging Face",
+        "repository_url": "https://huggingface.co/datasets/ai-forever/school_notebooks_RU",
+        "revision": "a10cd26104f054dc116a9dbc4a29c34b494eb9ae"
+      },
+      "artifacts": [
+        {
+          "filename": "images.zip",
+          "url": "https://huggingface.co/datasets/ai-forever/school_notebooks_RU/resolve/a10cd26104f054dc116a9dbc4a29c34b494eb9ae/images.zip?download=true",
+          "expected_size_bytes": 2877174569,
+          "expected_sha256": "1c9158f66c9d26412d1e1118dd3bc2d1f9eac1eacc3553b95567d7db65bdb9dc",
+          "verification": "SHA256_AND_SIZE"
+        },
+        {
+          "filename": "annotations_train.json",
+          "url": "https://huggingface.co/datasets/ai-forever/school_notebooks_RU/resolve/a10cd26104f054dc116a9dbc4a29c34b494eb9ae/annotations_train.json?download=true",
+          "expected_size_bytes": 154513983,
+          "expected_sha256": "9436135b4fed7ee05e04d4ae32b9edfb46dd75fae7d022726ac23d1bf42aeee6",
+          "verification": "SHA256_AND_SIZE"
+        },
+        {
+          "filename": "annotations_val.json",
+          "url": "https://huggingface.co/datasets/ai-forever/school_notebooks_RU/resolve/a10cd26104f054dc116a9dbc4a29c34b494eb9ae/annotations_val.json?download=true",
+          "expected_size_bytes": 12096635,
+          "expected_sha256": "58906cc9cdad2514597a20ec9dfb2ff9663f14e65f67f7c2af6b8706ccd398e7",
+          "verification": "SHA256_AND_SIZE"
+        },
+        {
+          "filename": "annotations_test.json",
+          "url": "https://huggingface.co/datasets/ai-forever/school_notebooks_RU/resolve/a10cd26104f054dc116a9dbc4a29c34b494eb9ae/annotations_test.json?download=true",
+          "expected_size_bytes": 14388781,
+          "expected_sha256": "5f79f099af410328ce563a424faac3c69170fcd42f89d9d0c65f02a3ffc46018",
+          "verification": "SHA256_AND_SIZE"
+        }
+      ]
+    }
+  ],
+  "excluded_candidates": [
+    {
+      "id": "hkr-dataset",
+      "title": "HKR Dataset",
+      "status": "EXCLUDED",
+      "source_url": "https://github.com/abdoelsayed2016/HKR_Dataset/tree/2e7a86a7e5b2f304e14ba4de519d3cf7df893181",
+      "observed_license": "CC-BY-NC-ND-4.0; non-commercial research application required",
+      "reason": "Non-commercial, no-derivatives, and access-application terms fail the training-eligibility bar."
+    },
+    {
+      "id": "ehri-multilingual-dataset",
+      "title": "EHRI Multilingual Dataset",
+      "status": "EXCLUDED",
+      "source_url": "https://github.com/FloChiff/ehri-dataset/tree/20a5e002031c1f9e66176133b4602ed439db6521",
+      "observed_license": "CC-BY-4.0",
+      "reason": "The mixed source inventory explicitly includes Yad Vashem Archives material, which is a standing exclusion regardless of repository-level accessibility or license."
+    },
+    {
+      "id": "ehri-ner",
+      "title": "EHRI-NER",
+      "status": "EXCLUDED",
+      "source_url": "https://github.com/EHRI/EHRI-NER/tree/4cc26cd3532c22de76ba1191867105c88ee4e362",
+      "observed_license": "EUPL-1.2",
+      "reason": "Current upstream metadata is EUPL-1.2, not the requested CC-BY-4.0; corpus-level reuse and source exclusions require coordinator review before training use."
+    }
+  ]
+}

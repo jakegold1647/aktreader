@@ -329,3 +329,43 @@ promotes the field to consensus-PROBABLE. Fields where all three diverge stay [u
 Humans remain mandatory only where they always were: the sampled verification of gold/eval
 records and the clerk-year-sequestered holdouts. This keeps the human budget tiny and spent
 where it counts.
+
+---
+
+# §15. GOVERNING PRINCIPLE — the human is in the design, not the fallback
+Added 29 Jul 2026 at the owner's direction: "we should add that human back into it and stop
+pretending — if something's on the fence, use shape comparisons to have a human help."
+
+Full automation is NOT the goal of this project. It is not a milestone we are working toward
+and quietly failing to reach; it is a design we are rejecting. Every system in this space
+optimizes for output without a person in it, and every one of them therefore has to resolve
+ambiguity by guessing. That guess is the defect this project exists to eliminate.
+
+The commitments that follow from this:
+
+1. **Ambiguity is routed, not resolved.** When the evidence does not decide a field, the field
+   stays `[unclear]` and the question is routed to a human. No confidence threshold, no
+   tie-break heuristic, no "most likely" fallback ever converts uncertainty into an assertion.
+
+2. **Human attention is treated as the scarcest resource in the system.** The machinery exists
+   to spend it well: read everything, resolve what is resolvable, and surface only the handful
+   of decisions where a person's eyes are genuinely decisive. A pipeline that hands a human
+   1,000 lines to proofread has failed; one that hands them ten questions has succeeded.
+
+3. **The questions must be answerable by a non-reader of the script.** This is what makes human
+   help affordable and available. Shape comparison — the disputed glyph beside labeled,
+   uncontested examples of each candidate letter in the same hand — plus bilingual anchors and
+   arithmetic cross-checks. Demonstrated 28 Jul 2026: three identity questions resolved and one
+   machine deadlock broken by someone who reads no Cyrillic (§ human_check/).
+
+4. **Declining is a first-class answer.** "Can't tell" and "neither candidate" must always be
+   available and must cost nothing. A human forced to choose is just a slower guess.
+
+5. **Expertise is aimed, not replaced.** Readers of the script remain necessary for
+   publication-grade gold and for the residue the packet cannot settle. The system's job is to
+   make sure their scarce hours land on the fields that actually need them — and to capture
+   what they decide so the next model inherits it.
+
+The claim the project makes is therefore not "the machine reads these registers." It is: **the
+machine reads what it can read, states plainly what it cannot, and asks a person the right
+small questions — in a form they can answer without knowing the script.**
