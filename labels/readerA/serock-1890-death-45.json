@@ -1,0 +1,31 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_43-46.jpg",
+               "sha256": "12decd8ac58daa12f574ab663a70b452b5d49168e5b68af8d81a7b5a2eeb2767",
+               "position": "right page, upper act (No.45); pencil page number 66 top right"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 45, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "pale spiky hand, different from acts 41-44"},
+  "fields": {
+    "registration_date": {"value": "[unclear: 1890-11-27/1890-11-28] 09:00", "original_script": "Состоялось въ посадѣ Сероцкѣ двадцать [unclear: седмаго/осмаго] Ноября тысяча восемьсотъ девяносто[го] года въ девять часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "day-word at line-1 end zoomed 8x (x2350-2830,y258-328): reads 'седмаго' (->27th) more readily than 'осмаго' (->28th) but initial letter ambiguous; single date"},
+    "event_date": {"value": "[unclear: 1890-11-26/1890-11-27] 04:00", "original_script": "вчерашняго числа въ четыре часа утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "follows the unclear registration day"},
+    "principal": {
+      "name": {"value": "Josek Makowski", "original_script": "умеръ Іосекъ Ма-ковскій", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula repeats 'о кончинѣ Іоска Маковскаго' in genitive - internal check passed"},
+      "age": {"value": "71 years", "original_script": "семидесяти одинъ лѣтъ", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умеръ checked first at 4x (y588-780): terminal ъ, no ла; сынъ / оставивъ ... жену confirm"},
+      "occupation": {"value": "baker (пекарь)", "original_script": "пекарь", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "birthplace": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM"}
+    },
+    "father": {"name": {"value": "Michel/Michla [unclear: Михля?]", "original_script": "сынъ Михля", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "parents stated deceased (покойныхъ); filiation of a 71-year-old - formula-grade caution, PROBABLE at best even if strokes were clear"}},
+    "mother": {"name": {"value": "Bejla", "original_script": "и Бейли покой-ныхъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "both parents 'покойныхъ' = deceased"}},
+    "deceased_left_behind": {"value": "widowed wife [unclear: Chana?] nee [unclear: Sudeknica/Sudeknita]", "original_script": "оставивъ овдовѣвшую жену [unclear: Хану/Харну] урожденную [unclear: Судекница/Судекнита]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "widow given name zoomed 8x (x2400-2872,y755-830) - spiky hand leaves Хану uncertain; maiden name zoomed 7-8x (x1560-2500,y800-870) - С-у-д-е-к-н-и-[ц/т]-а, unusual surname, both candidates retained"},
+    "declarants": [
+      {"name": "Josek Rubinsztejn", "original_script": "Іосекъ Рубинштейнъ; Latin signature 'Josek Rubinsztajn'", "occupation": "smith (кузнецъ)", "age": 36, "confidence": "PROBABLE"},
+      {"name": "Icek Rubinsztejn", "original_script": "Ицекъ Рубинштейнъ", "occupation": "locksmith (слесарь)", "age": 50, "confidence": "PROBABLE"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго Состоянія [unclear: Пшибыш...?]", "confidence": "UNCLEAR", "observation_state": "PRESENT"},
+    "signatures_note": {"value": "signed by officiant and one witness (Latin-script 'Josek Rubinsztajn'); second witness illiterate", "original_script": "нами и однимъ свидѣтелемъ подписанъ, второй свидѣтель неграмотный", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 2[7/8] November 1890, 9 AM. Appeared personally Josek Rubinsztejn, smith, 36, and Icek Rubinsztejn, locksmith, 50, both residing in posad Serock, and declared that yesterday at 4 AM died Josek Makowski, baker, 71 years old, son of the late [Michel?] and Bejla, leaving behind his widowed wife [Chana?] nee [Sudeknica?]. Upon eyewitness certification of the death of Josek Makowski this act was read to the witnesses, signed by us and one witness, the second witness illiterate.",
+  "authority_warning": "extraction is not authority - verify against the scan"
+}

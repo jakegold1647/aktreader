@@ -1,0 +1,33 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_43-46.jpg",
+               "sha256": "12decd8ac58daa12f574ab663a70b452b5d49168e5b68af8d81a7b5a2eeb2767",
+               "position": "left page, lower act (No.44)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 44, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "large sprawling hand, different from acts 41-43"},
+  "fields": {
+    "registration_date": {"value": "1890-10-11 13:00", "original_script": "Состоялось въ посадѣ Сероцкѣ одиннадца-таго Октября тысяча восемьсотъ девяносто[го] года въ первомъ часу по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "'одиннадца-' verified at 8x (x1050-1436,y1125-1200); single date; 'въ первомъ часу по полудни' = in the first hour after noon"},
+    "event_date": {"value": "1890-10-10, hour not stated", "original_script": "вчерашняго числа умерло дитя", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "hour: BLANK - the formula slot where this register usually carries an hour has nothing inked in this act; day resolved from 'вчерашняго числа' relative to 11 Oct registration"},
+    "principal": {
+      "name": {"value": "Moszek Wajngrod", "original_script": "по имени Мошекъ Вайнгродъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula repeats 'о кончинѣ Мошка Вайнгрода' in genitive - internal check passed"},
+      "age": {"value": "4 years", "original_script": "четыре лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерло дитя мужескаго пола checked first at 4x (y1565-1700); 'сынъ' confirms"},
+      "birthplace": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM"}
+    },
+    "father": {"name": {"value": "Srul", "original_script": "сынъ Сруля", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "father Srul, but declarants both carry surname Wajngrod - kinship to deceased NOT stated in ink, not assumed"}},
+    "mother": {
+      "name": {"value": "Ruchla", "original_script": "и Рухли", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "maiden_name": {"value": "stated unknown", "original_script": "урожденной неизвѣстно", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "clerk explicitly wrote 'неизвѣстно' after урожденной - STATED_UNKNOWN, not blank; read at 4x (y1635-1765)"}
+    },
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no survivor clause for a 4-year-old"},
+    "declarants": [
+      {"name": "Abram Wajngrod", "original_script": "Абрамъ Вайнгродъ; signature below", "occupation": "szkolnik / synagogue beadle (школьникъ)", "age": 65, "confidence": "PROBABLE"},
+      {"name": "Mortka Wajngrod", "original_script": "Мортка Вайнгродъ; signature reads Мордка Вейнгродъ", "occupation": "trader (торговщикъ)", "age": 33, "confidence": "PROBABLE", "note": "body Мортка/Вайнгродъ vs signature Мордка/Вейнгродъ - both spellings retained"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго состоянія [unclear: Пшиб...?]", "confidence": "UNCLEAR", "observation_state": "PRESENT"},
+    "signatures_note": {"value": "act read to the witnesses, signed by us and by them; both declarants' signatures present", "original_script": "Актъ сей свидѣтелямъ прочитанъ, нами и ими подписанъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 11 October 1890, in the first hour after noon. Appeared personally Abram Wajngrod, synagogue beadle, 65, and Mortka Wajngrod, trader, 33, both residing in posad Serock, and declared that yesterday died a child of male sex named Moszek Wajngrod, four years old, son of Srul and Ruchla whose maiden name is unknown. Upon eyewitness certification of the death of Moszek Wajngrod this act was read to the witnesses and signed by us and by them.",
+  "authority_warning": "extraction is not authority - verify against the scan"
+}

@@ -1,0 +1,34 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_43-46.jpg",
+               "sha256": "12decd8ac58daa12f574ab663a70b452b5d49168e5b68af8d81a7b5a2eeb2767",
+               "position": "left page, upper act (No.43)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 43, "language": "ru", "clerk_year_proxy": "serock-1890", "hand_note": "different, rounder hand than acts 41-42"},
+  "fields": {
+    "registration_date": {"value": "1890-10-09 12:00", "original_script": "Состоялось въ посадѣ Сероцкѣ девятаго Октября тысяча восемьсотъ девяностаго года въ двѣнадцать часовъ полудня", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date, no second day-word; noon"},
+    "event_date": {"value": "1890-10-08 21:00", "original_script": "восьмаго Октября сего года умерло дитя, въ девять ча-совъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "explicit day-word ('вось-маго' hyphenated over line break), not 'вчерашняго числа'; hour inserted after 'дитя' in the ink order - transcribed as inked"},
+    "principal": {
+      "name": {"value": "(without a name) female infant Goldsztejn", "original_script": "женскаго пола, безъ имени", "confidence": "PROBABLE", "observation_state": "STATED_UNKNOWN", "note": "clerk explicitly wrote 'безъ имени' (without a name) - a stated fact, not a blank; closing formula accordingly says 'о кончинѣ дитяти' (of the child) without repeating a name - internally consistent"},
+      "age": {"value": "6 days", "original_script": "шесть дней имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "female", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерло дитя (neuter verb+noun) checked first at 4x (y600-740); женскаго пола and feminine имѣющая confirm female"},
+      "birthplace": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no birth-place clause inked"}
+    },
+    "father": {"name": {"value": "Abram", "original_script": "дочь Абрама", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {
+      "name": {"value": "Cyrka", "original_script": "и Цюрки", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "8x zoom (x860-1420,y710-775); к vs л checked - two-stroke к favored; genitive Цюрки -> nominative Цюрка"},
+      "maiden_name": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no урожденной clause inked"}
+    },
+    "family_surname": {"value": "Goldsztejn", "original_script": "суп-руговъ Гольдштейнъ (part underlined in ink)", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "Goldfarb-trap check performed: mid-word inspected at 8x (x330-790,y762-830); ending clearly -штейнъ with т-macron, no -фарбъ reading possible"},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no survivor clause for a 6-day-old infant"},
+    "declarants": [
+      {"name": "Icek Przykorski", "original_script": "Ицекъ Пржикорскій; signature Ицекъ Пржикорски", "occupation": "[unclear: ritual slaughterer (рѣзникъ)?]", "age": 26, "confidence": "PROBABLE", "note": "occupation word read рѣзникъ at 4x (y390-530), initial рѣ- clear, rest cramped - occupation graded unclear-one-candidate"},
+      {"name": "Gerszon Wielkobroda", "original_script": "Гершенъ Велькоброда; Latin signature 'Gerszon Wielkobroda'", "occupation": "baker (пекарь)", "age": 32, "confidence": "PROBABLE", "note": "body text Гершенъ vs Latin signature Gerszon - both retained; signature in Latin script is notable"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго состоянія [unclear: Пшибыш...?]", "confidence": "UNCLEAR", "observation_state": "PRESENT"},
+    "signatures_note": {"value": "act read to declarants, signed by us and by them; both declarants signed (one in Cyrillic, one in Latin script)", "original_script": "Актъ сей ... прочитанъ, нами и ими подписанъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 9 October 1890 at 12 noon. Appeared personally Icek Przykorski, [ritual slaughterer?], 26, and Gerszon Wielkobroda, baker, 32, both residing in posad Serock, and declared: that on the 8th of October of this year died a child, at 9 PM, of female sex, without a name, six days old, daughter of Abram and Cyrka, the Goldsztejn spouses. Upon eyewitness certification of the death of the child, this act was read and signed by us and by them.",
+  "authority_warning": "extraction is not authority - verify against the scan"
+}

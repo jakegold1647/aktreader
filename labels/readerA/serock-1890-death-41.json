@@ -1,0 +1,30 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+               "sha256": "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+               "position": "right page, upper act (No.41); left page (39/40) out of scope"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 41, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "[unclear: 1890-09-03/1890-09-23] 07:00", "original_script": "Состоялось въ посадѣ Сероцкѣ [unclear: -/двадцать] третьяго Сентября тысяча восемьсотъ девяностаго года въ семь часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "an inked word stands between 'Сероцкѣ' and line-2 'третьяго' at the line-1 end, heavily overlapped by pencil archive marks ('65', '95'); zoomed 8x on region x2500-2872,y245-325 of source - could be 'двадцать' (then 23 Sept) or a flourish/annotation (then 3 Sept); no second parenthesized day-word anywhere - single date, [unclear: third/twenty-third]"},
+    "event_date": {"value": "[unclear: 1890-09-02/1890-09-22] 06:00", "original_script": "вчерашняго числа въ шесть часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "'вчерашняго числа' resolved against the unclear registration date; hour six in the morning is clear"},
+    "principal": {
+      "name": {"value": "Rafal Zylbersztejn", "original_script": "Рафалъ Зильберштейнъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "closing formula repeats 'Рафала Зильберштейна' in genitive - internal check passed (crop 4.5x, y670-780)"},
+      "age": {"value": "4 years", "original_script": "четыре лѣтъ отъ роду имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "'че-' at line end + 'тыре' at next line start; line-break join, not a new word"},
+      "sex": {"value": "male", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умеръ checked FIRST at 4.5x zoom (y670-780): р-descender + terminal ъ, no ла; masculine participles имѣющій/родившійся agree"},
+      "birthplace": {"value": "Serock", "original_script": "родившійся въ посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+    },
+    "father": {"name": {"value": "Moszek", "original_script": "сынъ Мошка", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {"name": {"value": "Basia", "original_script": "и Баси супруговъ Зильберштейновъ торговцевъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "parents described as traders (торговцевъ); maiden name not inked - ABSENT_ON_FORM for this clerk's child-death formula"}},
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "survivor clause not part of the formula for a 4-year-old child; no 'оставивъ послѣ себя' inked anywhere in the act"},
+    "declarants": [
+      {"name": "Majer Mendzylewski", "original_script": "Маеръ Менджилевскій; signature below reads Маеръ Мендзилевскій", "occupation": "shopkeeper (лавочникъ)", "age": 25, "confidence": "PROBABLE", "note": "body text дж vs signature дз - both retained"},
+      {"name": "Berek [unclear: Kochin/Kolpin]", "original_script": "Берекъ [unclear: Кохинъ/Колпинъ]", "occupation": "laborer (работникъ)", "age": 65, "confidence": "UNCLEAR", "note": "middle glyph has tall ascender+loop, zoomed 7x (x1800-2360,y435-525) - still ambiguous; age word read 'шестиде-сяти пяти' at 7x (x2350-2872,y450-560), ш-hump-count favors шестидесяти over семидесяти"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго Состоянія [unclear: Пшибышевскій?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "flourish signature, first letters Пшиб- discernible"},
+    "signatures_note": {"value": "act read to declarants; signed by officiant and one witness (Маеръ Мендзилевскій); second declarant illiterate", "original_script": "Актъ сей ... прочитанъ, нами и однимъ свидѣтелемъ подписанъ, второй сви-дѣтель неграмотенъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, [unclear: 3rd/23rd] September 1890, 7 AM. Appeared personally Majer Mendzylewski, shopkeeper, 25, and Berek [unclear: Kochin/Kolpin], laborer, 65, both residing in posad Serock, and declared that yesterday at 6 AM died Rafal Zylbersztejn, 4 years of age, born in posad Serock, son of Moszek and Basia, the Zylbersztejn spouses, traders. Upon eyewitness certification of the death of Rafal Zylbersztejn this act was read, signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority - verify against the scan"
+}

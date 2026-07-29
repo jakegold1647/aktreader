@@ -1,0 +1,34 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_47-49.jpg",
+               "sha256": "c9ac79488497988f7e237edac6cbfdb2499c7cfd372c2572bb2abd39cac693f1",
+               "position": "right page, upper act (No.49); pencil page number 67; the lower right-page slot holds the UNNUMBERED annual closure protocol dated 31 December 1890 stating the year's death book was closed at forty-nine acts ('сорокъ девять актовъ о смерти') - noted only, not labeled, out of scope"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 49, "language": "ru", "clerk_year_proxy": "serock-1890",
+                "rectification_note": "act carries extensive RED-INK official corrections: several black fields struck through and replaced interlinearly in red, plus a red marginal authentication running vertically ('Исправленному ... вѣрить ...' with red officiant signature). Both layers captured below."},
+  "fields": {
+    "registration_date": {"value": "1890-12-28 11:00", "original_script": "Состоялось въ посадѣ Сероцкѣ двадцать восьмаго Декабря тысяча восемьсотъ девя-ностаго года въ одиннадцать часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "event_date": {"value": "1890-12-27 17:00", "original_script": "вчерашняго числа въ пять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "as first written: Sura Rozenek; as corrected in red: [unclear: Sura/Sara] [unclear: Geldfisz/Geldblum]", "original_script": "по имени [struck through in red: Сура Розенекъ] with red interlinear replacement [unclear: С(у/а)ра Гельдфишъ/Гельдблюмъ]; closing repeat '[struck: Суры Розенекъ]' likewise overwritten in red [unclear: Гельдблюмъ?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "black layer legible (Сура Розенекъ, struck); red replacement zoomed 8x (x2100-2840,y762-807 and closing x1436-2872,y948-1073) - Гельд- clear, tail admits -фишъ or -блюмъ; both red instances share the ambiguity"},
+      "age": {"value": "as first written: 1 week (struck); as corrected in red: 3 months", "original_script": "[struck: одну недѣлю] red: три мѣсяца, then unstruck: отъ роду имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "red 'три мѣсяца' read at 7x (x1550-2150,y820-892); black 'одну недѣлю' struck but legible"},
+      "sex": {"value": "female", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерло дитя женскаго пола checked first at overview+4x; feminine имѣющая and дочь agree; sex not touched by the red corrections"},
+      "birthplace": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM"}
+    },
+    "father": {"name": {"value": "as first written: Jankel; as corrected in red: Mortka", "original_script": "дочь Янкеля with red interlinear 'Мортки' above", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "red Мортки read at 6x (x1900-2850,y856-920)"}},
+    "mother": {
+      "name": {"value": "as first written: Ryfka (struck); red replacement [unclear: Frejda?]", "original_script": "и жены его [struck in red: Рыфки] red interline [unclear: фрейды?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "red interline over the mother clause zoomed 8x (x1550-2872,y880-935) - strokes admit фрейды but not certain"},
+      "maiden_name": {"value": "as first written: Jedwabnik (struck); red replacement [unclear: Butel?/Bungel?]", "original_script": "[struck in red, double-underlined: урожденной Едвабникъ] red interline [unclear: Бутель/Бунгель?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "black Едвабникъ legible under the red strike; red replacement token only partially resolvable at 8x - candidates retained, not completed from context"}
+    },
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no survivor clause for the infant"},
+    "declarants": [
+      {"name": "Berek Koltun", "original_script": "Берекъ Колтунъ", "occupation": "laborer (работникъ)", "age": 65, "confidence": "PROBABLE"},
+      {"name": "Lejbka Kendzior", "original_script": "Лейбка Кендзіоръ", "occupation": "shoemaker (сапожникъ)", "age": 54, "confidence": "PROBABLE", "note": "пятидесяти четырехъ"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго состоянія [unclear: Пржибыш...?]; red marginal authentication also signed [unclear: Пшибышевскій?]", "confidence": "UNCLEAR", "observation_state": "PRESENT"},
+    "signatures_note": {"value": "act read and signed by officiant only; witnesses illiterate; red marginal note certifies the corrections ('to the corrected text give credence...')", "original_script": "Актъ сей свидѣтелямъ прочитанъ и нами подписанъ. Свидѣтели неграмотные. Margin, red, vertical: Исправленному [въ ... частяхъ?] ... вѣрить ... Чиновникъ Гражданскаго Состоянія [signature]", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "margin note zoomed 5x (x1500-1680,y330-1110); standard rectification formula partially legible - transcribed only where read"}
+  },
+  "translation": "Took place in posad Serock, 28 December 1890 at 11 AM. Appeared personally Berek Koltun, laborer, 65, and Lejbka Kendzior, shoemaker, 54, both residing in posad Serock, and declared that yesterday at 5 PM died a child of female sex named [first written: Sura Rozenek, one week old; officially corrected in red to: [Sura/Sara] [Geldfisz/Geldblum], three months old], daughter of [first written Jankel, corrected in red to Mortka] and his wife [first written Ryfka nee Jedwabnik, struck; red replacement uncertain: Frejda? nee Butel?]. Upon eyewitness certification of the death this act was read and signed by us; the witnesses are illiterate. A red marginal note certifies the corrections.",
+  "authority_warning": "extraction is not authority - verify against the scan; this act has two ink layers (original + official red rectification) and consensus should treat them as separate assertions"
+}

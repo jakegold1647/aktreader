@@ -1,0 +1,33 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+               "sha256": "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+               "position": "right page, lower act (No.42)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 42, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-10-06 20:00", "original_script": "Состоялось въ посадѣ Сероцкѣ шестаго Октя-бря тысяча восемьсотъ девяностаго года въ восемь часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date, no parenthesized second day-word; 'вечера' = evening"},
+    "event_date": {"value": "1890-10-05 08:00", "original_script": "вчерашняго числа въ восемь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Ryfka Ochberg", "original_script": "по имени [unclear: Рыфка/Рывка] Охбергъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "ф/в ambiguous at 8x (x2060-2560,y1760-1825 closing repeat and 5x name line y1598-1664); closing formula repeats the name in genitive over heavy verso bleed-through - internal check consistent with Рыфки; family surname Охбергъ clear in 'супруговъ Охбергъ' at 8x"},
+      "age": {"value": "0.5 year (half a year)", "original_script": "полъ года имѣющая", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "read at 8x (x2380-2872,y1598-1664); feminine имѣющая"},
+      "sex": {"value": "female", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "умерла checked FIRST at 8x (x2050-2872,y1540-1625): terminal -ла present; 'дитя женска-го пола', 'по имени Рыфка', 'дочь' all agree"},
+      "birthplace": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no 'родившаяся въ' clause inked in this act"}
+    },
+    "father": {"name": {"value": "Szmul", "original_script": "дочь Шмуля", "confidence": "PROBABLE", "observation_state": "PRESENT"}},
+    "mother": {
+      "name": {"value": "[unclear: Bejla Frajda?]", "original_script": "и [unclear: Бейли Фрайды?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "two tokens between 'и' and 'урожденной' over heavy bleed-through; zoomed 8x (x1780-2872,y1645-1720); plausibly compound given name Бейла-Фрайда but strokes not fully resolvable"},
+      "maiden_name": {"value": "[unclear: Szelkobroda/Wielkobroda]", "original_script": "урожденной [unclear: Шельоброды/Велькоброды] (word underlined in ink)", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "zoomed 8x (x1490-2030,y1692-1772); ending -броды fairly clear, initial letters ambiguous; NOT completed from the second declarant's surname Велькоброда - both candidates retained"}
+    },
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no survivor clause for the infant; none inked"},
+    "declarants": [
+      {"name": "Berek [unclear: Kompin/Kolpin]", "original_script": "Берекъ Ко[unclear: м/л]-пинъ (hyphenated across line break; joined token tested in formula slot)", "occupation": "laborer (работникъ)", "age": 65, "confidence": "UNCLEAR", "note": "line-break surname split rule applied - single person 'Ко-пинъ', not two tokens; 8x zooms x2540-2872,y1272-1347 and x1450-1870,y1328-1398; age 'шестидесяти пяти лѣтъ' read at 6x (x1560-2660,y1330-1405)"},
+      {"name": "Abram Wielkobroda", "original_script": "Абрамъ Велькоброда", "occupation": "laborer (работникъ)", "age": 20, "confidence": "PROBABLE", "note": "'двадцати' ends the line and next line begins 'лѣтъ' - age exactly twenty; checked at 5x (y1382-1502)"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ Гражданскаго Состоянія [unclear: Пшибышевскій?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "same flourish signature as the upper act on this page"},
+    "signatures_note": {"value": "act read to the declarants, not signed by them: declarants illiterate; officiant only", "original_script": "актъ сей объявившимъ прочитанъ, ими не под-писанъ: объявившіе неграмотные", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 6 October 1890, 8 PM. Appeared personally Berek [unclear: Kompin/Kolpin], laborer, 65, and Abram Wielkobroda, laborer, 20, both residing in posad Serock, and declared that yesterday at 8 AM died a child of female sex named [unclear: Ryfka] Ochberg, half a year old, daughter of Szmul and [unclear: Bejla Frajda?] nee [unclear: Szelkobroda/Wielkobroda], the Ochberg spouses. Upon eyewitness certification of the death of [unclear: Ryfka] Ochberg this act was read to the declarants and not signed by them, the declarants being illiterate.",
+  "authority_warning": "extraction is not authority - verify against the scan"
+}

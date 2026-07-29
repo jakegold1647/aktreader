@@ -1,0 +1,33 @@
+{
+  "reader": {"identity": "claude (subscription session, Reader A)", "blind": true, "date": "2026-07-28",
+             "prompt_version": "1.3.0", "prompt_sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+             "blind_group_id": "serock-1890-deaths-41-49-wave-004"},
+  "artifact": {"path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_47-49.jpg",
+               "sha256": "c9ac79488497988f7e237edac6cbfdb2499c7cfd372c2572bb2abd39cac693f1",
+               "position": "left page, upper act (No.47)"},
+  "register": {"town": "Serock (посадъ Сероцкъ)", "year": 1890, "act_type": "death", "act_no": 47, "language": "ru", "clerk_year_proxy": "serock-1890"},
+  "fields": {
+    "registration_date": {"value": "1890-12-11 12:00", "original_script": "Состоялось въ посадѣ Сероцкѣ одинна-дцатаго Декабря тысяча восемьсотъ девяност[аго] года въ двѣнадцать часовъ полудня", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "single date; 'одинна-'/'дцатаго' joined across line break"},
+    "event_date": {"value": "1890-12-10 22:00", "original_script": "вчерашняго числа въ десять часовъ вечера", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+    "principal": {
+      "name": {"value": "Josek [unclear: Zalcberg/Zalberg]", "original_script": "по имени Іосекъ [unclear: Зальцбергъ/Зальбергъ]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "closing formula repeats 'о кончинѣ Іоска Зал[ьц]берга' - internal check consistent; presence of the ц between ль and б not resolvable at 8x in either instance"},
+      "age": {"value": "0.5 year (half a year)", "original_script": "полъ года имѣющій", "confidence": "PROBABLE", "observation_state": "PRESENT"},
+      "sex": {"value": "male", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "verb inspected first at 8x (x690-1270,y650-710): 'умеръ' with terminal ъ (clerk used masculine with дитя мужескаго пола); сынъ and имѣющій agree"},
+      "birthplace": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM"}
+    },
+    "father": {"name": {"value": "[unclear: Madech?/Manes?]", "original_script": "сынъ [unclear: Мадеха/Манеса]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "8x zoom (x880-1436,y768-828); middle glyph has д-type descender loop but Мадех is not a standard name; both parses retained"}},
+    "mother": {
+      "name": {"value": "[unclear: La-Gita?/Laja Gita?]", "original_script": "и Ла-|Гити (hyphen-break at page edge; joined token tested - treated as ONE compound female given name, not two persons)", "confidence": "UNCLEAR", "observation_state": "PRESENT", "note": "line-break split rule applied; 'Ла' ends the line at the page edge, 'Гити' opens the next; compound name like Laja-Gita plausible but not provable from this ink"},
+      "maiden_name": {"value": "Bogdan", "original_script": "урожденной Богданъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "note": "read at 8x (x395-895,y813-871); letters Б-о-г-д-а-н legible"}
+    },
+    "deceased_left_behind": {"value": null, "confidence": null, "observation_state": "ABSENT_ON_FORM", "note": "no survivor clause for the infant"},
+    "declarants": [
+      {"name": "Moszek Rozenberg", "original_script": "Мошекъ Розенбергъ; signature below 'Мошекъ Розенбергъ'", "occupation": "trader (торговщикъ)", "age": 36, "confidence": "PROBABLE"},
+      {"name": "Berek [unclear: Kaszu?/Koltun?]", "original_script": "Берекъ [unclear: Кашу/Калту(нъ)]", "occupation": "laborer (работникъ)", "age": 65, "confidence": "UNCLEAR", "note": "8x zoom (x1140-1436,y438-513): К-а then a 3-hump cluster then у, word ends at the page edge with no visible ъ; the humps admit ш (Кашу) or лт (Калту/Колту with unwritten -нъ); within this same register file acts 48 and 49 carry a clearly written 'Берекъ Колтунъ', 65, laborer - noted as within-register context only, NOT used to force the reading here"}
+    ],
+    "officiant": {"value": "[unclear: Przybyszewski?]", "original_script": "Чиновникъ гражданскаго состоянія [unclear: Пржибыш...?]", "confidence": "UNCLEAR", "observation_state": "PRESENT"},
+    "signatures_note": {"value": "act read to witnesses, signed by officiant and one witness (Мошекъ Розенбергъ); second witness illiterate", "original_script": "Актъ сей свидѣтелямъ прочитанъ нами и однимъ свидѣ-телемъ подписанъ. Второй свидѣт[ель] неграмотенъ", "confidence": "PROBABLE", "observation_state": "PRESENT"}
+  },
+  "translation": "Took place in posad Serock, 11 December 1890 at 12 noon. Appeared personally Moszek Rozenberg, trader, 36, and Berek [unclear: Kaszu/Koltun], laborer, 65, both residing in posad Serock, and declared that yesterday at 10 PM died a child of male sex named Josek [unclear: Zalcberg/Zalberg], half a year old, son of [unclear: Madech/Manes] and [unclear: La-Gita] nee Bogdan. Upon eyewitness certification of the death of Josek Zal[c]berg this act was read to the witnesses, signed by us and one witness; the second witness is illiterate.",
+  "authority_warning": "extraction is not authority - verify against the scan"
+}
