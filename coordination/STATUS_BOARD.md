@@ -1,4 +1,9 @@
 # STATUS BOARD — single source of truth
+⚠ SOL: READ inbox_sol/msg-036_protocol-restructure.md NOW — it predates your watcher snapshot so
+  the watcher will not fire for it. Role change + three actions (retro-audit, prompt v1.4,
+  adjudicate). Watcher flaw noted: it only detects messages arriving AFTER the watch starts;
+  always list inbox_sol before entering the idle loop.
+# STATUS BOARD — single source of truth
 ⚠ ESCALATIONS (Jake action needed):
 1. ~~Runtime blocked~~ RESOLVED 28 Jul: was Smart App Control; owner disabled it. llama-cli
    b10167 verified (exit 0), exe sha256 5719892E… posted in inbox_sol/msg-004. Model .gguf
@@ -35,7 +40,10 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - waves 001 + 002 acts 1–5 → silver; act 6 quarantined pending human check
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
-## Sol (builder / Reader B) — owes
+## Sol (builder / tooling owner) — owes
+- [x] ACK msg-036; builder/tooling-only role accepted — no further production Reader B passes
+- [x] Action 1 full read-only retro-audit frozen in inbox_claude/msg-027; all waves 001–004
+  Reader A/B, silver, and gold fail guarded ingest in their current stored formats
 - [x] ACK msg-032/msg-033/msg-034; four groundedness guards frozen and tested
   (inbox_claude/msg-025; LocalReader contract 1.1.2, fingerprint 17f9aaa3â€¦)
 - [x] Wave-005 Reader B passes both quarantined and retained under `labels/readerB/superseded/`;

@@ -1,0 +1,690 @@
+{
+  "audit_version": "1.0.0",
+  "groups": [
+    {
+      "files": [
+        {
+          "path": "labels/readerA/serock-1890-death-1.json",
+          "sha256": "e31445a2d0f1cd870599848ef411329b6b5c3c9d31ad204950140fb24806fc4c"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-2.json",
+          "sha256": "352f3aa3ea5f9cacfb4a1ebf4ec2e9bddcacc455558565314c0168ebef76c7cb"
+        }
+      ],
+      "group_id": "wave-001-reader-a",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 0,
+          "present_observation_count": 42,
+          "present_rate": 1.0,
+          "record_count": 2,
+          "reported_observation_count": 42
+        },
+        "groundedness": {
+          "affected_record_count": 2,
+          "cyrillic_applicable_count": 42,
+          "cyrillic_supported_count": 18,
+          "fully_grounded_count": 0,
+          "groundedness_rate": 0.0,
+          "present_observation_count": 42,
+          "transcription_supported_count": 0,
+          "violation_count": 66
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 42,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 24
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerB/serock-1890-death-1.json",
+          "sha256": "570a600717ab13c4bba432d9e46582f16c1a41814b5f1987edf27ebd60cd9d32"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-2.json",
+          "sha256": "657985cf472c4b685496c46f7ce6e3db64380ab3607f6cfc18c45661be23a7d4"
+        }
+      ],
+      "group_id": "wave-001-reader-b",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 6,
+          "present_observation_count": 40,
+          "present_rate": 0.869565,
+          "record_count": 2,
+          "reported_observation_count": 46
+        },
+        "groundedness": {
+          "affected_record_count": 2,
+          "cyrillic_applicable_count": 40,
+          "cyrillic_supported_count": 38,
+          "fully_grounded_count": 36,
+          "groundedness_rate": 0.9,
+          "present_observation_count": 40,
+          "transcription_supported_count": 38,
+          "violation_count": 4
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 2,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 2
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerA/serock-1890-death-3.json",
+          "sha256": "b40e72bcc989dee64d4d5e541ff18effc9c054a483c3908081829225cdd69d84"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-4.json",
+          "sha256": "93951f1ee90d356e05ecd071c5e9569d178f7f7646e69e8832256cb57b0fc834"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-5.json",
+          "sha256": "fa508ec317990284eb1fd2be3a48786160661816be0a78e77385a70beeebca7d"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-6.json",
+          "sha256": "5684a7cad54c05c5735f427a54318939b337ad449874073fe87912491ff6aef5"
+        }
+      ],
+      "group_id": "wave-002-reader-a",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 1,
+          "present_observation_count": 78,
+          "present_rate": 0.987342,
+          "record_count": 4,
+          "reported_observation_count": 79
+        },
+        "groundedness": {
+          "affected_record_count": 4,
+          "cyrillic_applicable_count": 78,
+          "cyrillic_supported_count": 38,
+          "fully_grounded_count": 0,
+          "groundedness_rate": 0.0,
+          "present_observation_count": 78,
+          "transcription_supported_count": 0,
+          "violation_count": 118
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 78,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 40
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerB/serock-1890-death-3.json",
+          "sha256": "e131a69eb2363832d3927dd94e425e8c3d3f8027796f140b8fdee09055e2bd86"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-4.json",
+          "sha256": "a5bfd6e2dcc63f44805530a0c8763df53d67c586dd0681d6a00c7cae4a005f65"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-5.json",
+          "sha256": "d1bff7412d4ff66919473cd40d2d602df10eb1714f83eee3eb3790d771e014ba"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-6.json",
+          "sha256": "2f7665fc6a3781f74928693dd7ba5bf077d79f172e4c3fc288b3780c5a35e224"
+        }
+      ],
+      "group_id": "wave-002-reader-b",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 14,
+          "present_observation_count": 81,
+          "present_rate": 0.852632,
+          "record_count": 4,
+          "reported_observation_count": 95
+        },
+        "groundedness": {
+          "affected_record_count": 4,
+          "cyrillic_applicable_count": 81,
+          "cyrillic_supported_count": 77,
+          "fully_grounded_count": 66,
+          "groundedness_rate": 0.814815,
+          "present_observation_count": 81,
+          "transcription_supported_count": 70,
+          "violation_count": 15
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 11,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 4
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerA/serock-1890-death-30.json",
+          "sha256": "8a3eaa620703aebea32bd5d77acdc8ffda116792944db2ab6a340a5abd381e4a"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-31.json",
+          "sha256": "b552c7057c13e1ed251047a49bb1d08c0a95560b54d4a9dada6264397b79c857"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-32.json",
+          "sha256": "1d88ed816255d0b97a2885c3e950ba800ee414eca228cf2f8b809fca1a0d56dd"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-33.json",
+          "sha256": "b28722c44899f9026fdb978350e13df280b3082bb5c492844126eb1e77758423"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-34.json",
+          "sha256": "86dc9352a293af34d68214b211cac515e8934b79e0fc3180d2f49e8be7731151"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-35.json",
+          "sha256": "b263232d84ea21ffbacf6e9117353bf27cfe469ceae3ebae9cbb136af6b0e072"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-36.json",
+          "sha256": "602ede78d0e8dcfd1c71d844fe945c42be44b0abd97c9d6719e8b618caa474a5"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-37.json",
+          "sha256": "f100c7a9164a7527d16d272e78c8fe57e98e473ce427624d75db8dfdecc78d9d"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-38.json",
+          "sha256": "5fb88735dbf87a6631882caa4c70a75c1c46b9ba3ca76a40a6379d2a0486a207"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-39.json",
+          "sha256": "76e6b8ff0bb68760de3d1b92ef433a6792cf8b787628b8918b3cc43837bd85eb"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-40.json",
+          "sha256": "bbddf964b9f52325569f3f2a9bb28f8ae9cd5399864662ce234a4c9af80e4d32"
+        }
+      ],
+      "group_id": "wave-003-reader-a",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 19,
+          "present_observation_count": 238,
+          "present_rate": 0.92607,
+          "record_count": 11,
+          "reported_observation_count": 257
+        },
+        "groundedness": {
+          "affected_record_count": 11,
+          "cyrillic_applicable_count": 238,
+          "cyrillic_supported_count": 116,
+          "fully_grounded_count": 0,
+          "groundedness_rate": 0.0,
+          "present_observation_count": 238,
+          "transcription_supported_count": 0,
+          "violation_count": 360
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 238,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 122
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerB/serock-1890-death-30.json",
+          "sha256": "c83618303624add190eb33ed646917a8665a864b77d4475957bfbda5a27619cf"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-31.json",
+          "sha256": "dfed9875d86e8b00cef4ecf5951ce959c95604ecb1ff2cef5e78ca0b2fb0f9a2"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-32.json",
+          "sha256": "548329b11676991a6bbe99e6043ff9d9e15701ac1f96d992dee2d9b7fab4ab49"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-33.json",
+          "sha256": "b991f9a44be746927f7537d11d82f12fcac3d45d130753d32e6aae8cd5f2043f"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-34.json",
+          "sha256": "e2876ed32ffe9d79138f05674f736e3f01d79377f51a7d865a6df94066b81bc4"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-35.json",
+          "sha256": "e1f7ec2cc040289dfd8f7f0f6bd3e4728d3bdbb7b34c0474f95bd66b4874a504"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-36.json",
+          "sha256": "8dfdb2f4ff7c0a03b4ec8b08e00b2763d3c4dcb9a85071f76b72924a58e8667f"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-37.json",
+          "sha256": "b203433defbf9a821eb5d78b1f676967f4ba6243dce42c94706f08cba2bc38e2"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-38.json",
+          "sha256": "fcddee538403d04a6ece98561f2850bacb03b8895f2d661c3d1b42b76e21390d"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-39.json",
+          "sha256": "7a071eecba46b21aefd12a942b1e2c5e46555affab1c36bda5864da87de6b71d"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-40.json",
+          "sha256": "bbee8e99a1bdc5bdac973233a9c0637cffdf3045ac48bb0ecd2e27a7e1e085f1"
+        }
+      ],
+      "group_id": "wave-003-reader-b",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 75,
+          "present_observation_count": 173,
+          "present_rate": 0.697581,
+          "record_count": 11,
+          "reported_observation_count": 248
+        },
+        "groundedness": {
+          "affected_record_count": 11,
+          "cyrillic_applicable_count": 173,
+          "cyrillic_supported_count": 162,
+          "fully_grounded_count": 142,
+          "groundedness_rate": 0.820809,
+          "present_observation_count": 173,
+          "transcription_supported_count": 153,
+          "violation_count": 31
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 20,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 11
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerA/serock-1890-death-41.json",
+          "sha256": "925a16adcb06a226c1c288fbed95d4b229680f5baab3b9ab5979e9bca89edffb"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-42.json",
+          "sha256": "138821329f459be4adfae96bdb39e9244e301c345bae74a6f9783943a3b4b26b"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-43.json",
+          "sha256": "04732a721f2bc48c0612517aaf112ecbc66cdb9bbf531dd55af9721128f8247d"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-44.json",
+          "sha256": "e65bef6b5db9b589d9b6c5a9761c9013878f4d58d8a5b3a156d48cf56142baf7"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-45.json",
+          "sha256": "8be1b549829861edcaea161924f0061192f1a10313e570c24cd8886dd17fc95e"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-46.json",
+          "sha256": "ed3dbaae6831094a02c4aa4cce4ef9b2cfe8e442147127877db8f7d17c0bdd31"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-47.json",
+          "sha256": "9f4a4a6786521c09b3bff2d1c3fdab6e62e70cb3e343c17c7a7015ef4ca0a2a7"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-48.json",
+          "sha256": "ffdd2af9ed48986c9d49fa626a8f3f3a5272b34c0a3d4c0f43468d49e8b2783c"
+        },
+        {
+          "path": "labels/readerA/serock-1890-death-49.json",
+          "sha256": "d139b73f6dc17e9c34714036d536f540489e41e91a051725c50f4536f8b0f50f"
+        },
+        {
+          "path": "labels/readerA/serock-1890-skz-index.json",
+          "sha256": "829ae00760cc663f6d282d1764a0bfdf4a1db3ebdbc82a50e04f5aac740fadbf"
+        }
+      ],
+      "group_id": "wave-004-reader-a",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 19,
+          "present_observation_count": 320,
+          "present_rate": 0.943953,
+          "record_count": 10,
+          "reported_observation_count": 339
+        },
+        "groundedness": {
+          "affected_record_count": 10,
+          "cyrillic_applicable_count": 320,
+          "cyrillic_supported_count": 190,
+          "fully_grounded_count": 0,
+          "groundedness_rate": 0.0,
+          "present_observation_count": 320,
+          "transcription_supported_count": 0,
+          "violation_count": 450
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 320,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 130
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/readerB/serock-1890-death-41.json",
+          "sha256": "fb1136c4e72f38452847a9137e9067edd530bab6734891ff2812db78513eb0fa"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-42.json",
+          "sha256": "3268c0de0ffd558c9c47c9d02169f0346168aaab6e1bdf93395ece6dccddd338"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-43.json",
+          "sha256": "8c407bd6cd9deb5b89577bff9af6326d36cf201c04c827c4f08d84d5eb605d39"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-44.json",
+          "sha256": "baea0cd6fd93fe824749b93185b90a5321ca27d3a97a7ab4ea4bb6893ebdb3fc"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-45.json",
+          "sha256": "bc551ceb54376edebbc8c2bca2cf6cd2704705f4bcaff9045879c397e93ae874"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-46.json",
+          "sha256": "6e315ea49ea8b16c0726fa69a0fcf8299e99c0272a7934a88a47a721ef053e52"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-47.json",
+          "sha256": "a92efcf5b6236711416dbaaff018e55784c01ba41e9a6a11d270367c3e7379f1"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-48.json",
+          "sha256": "a59a95e57c9e9b6a50ca8fddfbc014e3b1088dd7242ff82a05bd044b6b58d035"
+        },
+        {
+          "path": "labels/readerB/serock-1890-death-49.json",
+          "sha256": "8e802028163f1c62abfe9955d0e9eb10d356dfaf3247158c9ff380e83968bd9c"
+        },
+        {
+          "path": "labels/readerB/serock-1890-skz-index.json",
+          "sha256": "dc1fdff3f40f20ecea096af11fd54bf81bd366f8e91779ad3c612cb5d021e2a7"
+        }
+      ],
+      "group_id": "wave-004-reader-b",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 27,
+          "present_observation_count": 104,
+          "present_rate": 0.793893,
+          "record_count": 10,
+          "reported_observation_count": 131
+        },
+        "groundedness": {
+          "affected_record_count": 10,
+          "cyrillic_applicable_count": 104,
+          "cyrillic_supported_count": 93,
+          "fully_grounded_count": 69,
+          "groundedness_rate": 0.663462,
+          "present_observation_count": 104,
+          "transcription_supported_count": 78,
+          "violation_count": 37
+        }
+      },
+      "source_kind": "reader",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 26,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 11
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "labels/silver/records/serock-1890-death-1.json",
+          "sha256": "c486958c181b477bde47d666c620f43fb6288b0129c64ef7126665a9d81a162e"
+        },
+        {
+          "path": "labels/silver/records/serock-1890-death-2.json",
+          "sha256": "759c50068f180c0141406f63a7ffeae1a838d57413ab218bbc07f4b5c16731bb"
+        },
+        {
+          "path": "labels/silver/records/serock-1890-death-3.json",
+          "sha256": "0b3544ddd33a7fd07d26e71d427b5e27ad16e1074b05d0ced55fc2de120a14f5"
+        },
+        {
+          "path": "labels/silver/records/serock-1890-death-4.json",
+          "sha256": "f7d5dd9c289bae5e7ed0038f3aed953222ac759599dbf820ca8f6093c8775c41"
+        },
+        {
+          "path": "labels/silver/records/serock-1890-death-5.json",
+          "sha256": "f840c4682e7181f28fd95084ead1931bc6e6aad1c87fb56dbf6bcdd97d7136aa"
+        }
+      ],
+      "group_id": "silver-records",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 14,
+          "present_observation_count": 102,
+          "present_rate": 0.87931,
+          "record_count": 5,
+          "reported_observation_count": 116
+        },
+        "groundedness": {
+          "affected_record_count": 5,
+          "cyrillic_applicable_count": 102,
+          "cyrillic_supported_count": 97,
+          "fully_grounded_count": 0,
+          "groundedness_rate": 0.0,
+          "present_observation_count": 102,
+          "transcription_supported_count": 0,
+          "violation_count": 107
+        }
+      },
+      "source_kind": "silver",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 102,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 5
+      }
+    },
+    {
+      "files": [
+        {
+          "path": "gold/acts/pultusk-1877-death-13.json",
+          "sha256": "a1c3b8e0636fe4f6be6fe85fe9ecc049b6ebedbae5989068419119cf250b9726"
+        },
+        {
+          "path": "gold/acts/pultusk-1878-death-11.json",
+          "sha256": "4bc6b469ef7eec372b53be184417019cebcdbc4d7ce5638c8c25db49d4e30892"
+        },
+        {
+          "path": "gold/acts/pultusk-1885-death-10.json",
+          "sha256": "66276c20a67020cf2edd7afb5db0088ed9d936beb6bee65363dbb53f917b9a56"
+        },
+        {
+          "path": "gold/acts/pultusk-1886-death-33.json",
+          "sha256": "455baf4caf8daf4960c249e08788e800a812ec154fb3936670969957dd202076"
+        },
+        {
+          "path": "gold/acts/pultusk-1890-death-12.json",
+          "sha256": "454703c5761e3f3e084ab4f8a3921afc677b5dc4bde5950a07995f05fb8a4e94"
+        },
+        {
+          "path": "gold/acts/pultusk-1890-death-43.json",
+          "sha256": "db79690b8b345f825e4acf77ac40ae05ac69517383f68fbc079624a56304057f"
+        },
+        {
+          "path": "gold/acts/pultusk-1890-death-53.json",
+          "sha256": "f1d742c6ac31ff68e19478055a1373c2eb5161cdde761b7a1a83ab8ceedf4048"
+        },
+        {
+          "path": "gold/acts/serock-1876-marriage-11.json",
+          "sha256": "7ac51fcaebb00cc426b98727cb8cd6d5c850debcd18f2e0387772cf218978ef3"
+        },
+        {
+          "path": "gold/acts/serock-1877-birth-25.json",
+          "sha256": "82cf9056e7b14230a5c3821f613afc47976352657c1505e696ea24d7b8289818"
+        },
+        {
+          "path": "gold/acts/serock-1882-birth-2.json",
+          "sha256": "4938f92f5da77485fae5691a055952912599b8524428a96b3e19da8469713899"
+        },
+        {
+          "path": "gold/acts/serock-1883-birth-28.json",
+          "sha256": "1b825b3cba647c688dfc7959a622e5fc81956daff88a1710c932be09e91a2b44"
+        },
+        {
+          "path": "gold/acts/serock-1883-birth-29.json",
+          "sha256": "3cbc24d822752abd6b417938b02c9e018164a1f69375e42904fbf75146f5fcd5"
+        },
+        {
+          "path": "gold/acts/serock-1883-birth-30.json",
+          "sha256": "3e3c18d7e0778fd051f339829a1220c3c6f605dd92189a9aa2506cf29f450188"
+        },
+        {
+          "path": "gold/acts/serock-1884-birth-37.json",
+          "sha256": "2850150e48fda2d824b74a3b95b116fd3747990b2862a9c5b82f459aecd94803"
+        },
+        {
+          "path": "gold/acts/serock-1884-death-17.json",
+          "sha256": "04cb8c9bc752ad42282e4078e1dee2ae31931ba464283fc849bb07dd6e7205a8"
+        },
+        {
+          "path": "gold/acts/serock-1884-death-8.json",
+          "sha256": "f05f2b681aa6a4851fd5fe5b7d39d2ab438a8a429c83424c29541f9991036b39"
+        },
+        {
+          "path": "gold/acts/serock-1885-death-1.json",
+          "sha256": "61bf235d06d582f329b11da82c8880b025b585eb2a09a69dc72ed9691c3ea9ec"
+        },
+        {
+          "path": "gold/acts/serock-1885-death-6.json",
+          "sha256": "ea478f5e586530d2f0d77562860ee52915bebf60d55138f4b1af5c02f36a16d8"
+        },
+        {
+          "path": "gold/acts/serock-1888-birth-6.json",
+          "sha256": "d54f505250dce6badb70b698e88b91e45ac035e210840ad5a52253f16c9f8a7b"
+        },
+        {
+          "path": "gold/acts/serock-1888-death-14.json",
+          "sha256": "d190b3427d161026926a6d4a2ef6017e96c065f23452646fdd77798613572999"
+        },
+        {
+          "path": "gold/acts/serock-1888-death-37.json",
+          "sha256": "f20b5ea99b771cbcefd8edcd559d20507c00d473224cc371ea27c3eacc62979a"
+        },
+        {
+          "path": "gold/acts/serock-1890-birth-1.json",
+          "sha256": "70d2509e9e120bbba24a17e08351765ae6f1313ffd2ad54056b7c0be5fa78e96"
+        },
+        {
+          "path": "gold/acts/serock-1890-death-43.json",
+          "sha256": "cfe89f5cd723e83f9453f708229e0c3ce00629c288b18baf6d975e3f5ca6be84"
+        },
+        {
+          "path": "gold/acts/serock-1891-birth-5.json",
+          "sha256": "55366d6c123be2b0e53584486bdfc5b0727dd65e5c333355c15f9bb24f3c5035"
+        },
+        {
+          "path": "gold/acts/serock-1892-birth-12.json",
+          "sha256": "d7c9507d1282d06f4cdb1e2f929263ac55d1b4686dcf5ea4e67bbe3263836e0e"
+        },
+        {
+          "path": "gold/acts/serock-1892-death-11.json",
+          "sha256": "808d64004d605ade5be2c2a5ef9936229e16c7e0a20f3209232a5d8001401b2a"
+        },
+        {
+          "path": "gold/acts/serock-1893-marriage-3.json",
+          "sha256": "a0dcb60067611fcba901ee2a099865eb5087614cca22d84b8862fb3fab594136"
+        },
+        {
+          "path": "gold/acts/serock-1894-birth-9.json",
+          "sha256": "7fc82c0857bfae9acaf97254e5d08ca8b32bf04d08242866b6019bcffeeb0fc6"
+        },
+        {
+          "path": "gold/acts/serock-1896-marriage-2.json",
+          "sha256": "d425ff5cfddf105aba3735236c58e35cf64304a643e44e3c1a66a3ba2ec1694d"
+        },
+        {
+          "path": "gold/acts/serock-1899-birth-5.json",
+          "sha256": "24b39e245a60174abdf0583d9adbc67f812fe8144110a2b6e8e656916cdc7b1e"
+        },
+        {
+          "path": "gold/acts/serock-1899-birth-6.json",
+          "sha256": "8ca4bb8e5a58542cefd2778dc4b07a16121e83a2e5d5dafe8a8762003f0b5d21"
+        },
+        {
+          "path": "gold/acts/serock-1902-death-25.json",
+          "sha256": "4b74e2f480371fc3c2867eba06d1b1a686e36554047447df8ae77ec0c81bf90b"
+        },
+        {
+          "path": "gold/acts/serock-1902-marriage-3.json",
+          "sha256": "553c21aa73de70c1cdd6390a331dfb3432b916393e5c33022ccc753d8f604e69"
+        },
+        {
+          "path": "gold/acts/serock-1903-death-5.json",
+          "sha256": "708e4a35ed76992ffc0613d8a1ceb43a413bc9d793f6cf859091fdb2124ce19c"
+        },
+        {
+          "path": "gold/acts/serock-1903-death-6.json",
+          "sha256": "f7443eee0b3b89b2274786b0481b1c855e3001d835b0b09002e547a9e6234566"
+        },
+        {
+          "path": "gold/acts/serock-1903-marriage-23.json",
+          "sha256": "0ef2a50c405b60bd5f74e44012331520a24d8707d18a4cc2c0451abfd1bcb742"
+        }
+      ],
+      "group_id": "gold-acts",
+      "quality_metrics": {
+        "coverage": {
+          "non_present_observation_count": 1917,
+          "present_observation_count": 556,
+          "present_rate": 0.224828,
+          "record_count": 36,
+          "reported_observation_count": 2473
+        },
+        "groundedness": {
+          "affected_record_count": 36,
+          "cyrillic_applicable_count": 556,
+          "cyrillic_supported_count": 50,
+          "fully_grounded_count": 0,
+          "groundedness_rate": 0.0,
+          "present_observation_count": 556,
+          "transcription_supported_count": 0,
+          "violation_count": 1062
+        }
+      },
+      "source_kind": "gold",
+      "status": "FAIL",
+      "violation_codes": {
+        "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION": 556,
+        "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC": 506
+      }
+    }
+  ],
+  "policy": {
+    "coverage": "PRESENT observations / all reported evidence leaves",
+    "groundedness": "PRESENT observations satisfying applicable Cyrillic presence and continuous-transcription substring support",
+    "labels_modified": false
+  }
+}
