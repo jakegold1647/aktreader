@@ -105,19 +105,19 @@ memorization from contaminating the benchmark.
 
 ## Gold, silver, and quarantine
 
-- `GOLD` is human-verified, clerk-year-sequestered, and evaluation-only.
-- `SILVER` is resolved 2-of-3 machine consensus, training-eligible, and never evaluation data.
-- An identity-level fork has no tier until the required human sample resolves it.
+- `GOLD` requires a per-field image reference and dated human attestation under
+  `schemas/gold-attestation-1.0.0.schema.json`; research-note-derived fields are explicitly not
+  benchmark eligible.
+- `SILVER` requires guarded v1.4 labels with real continuous transcriptions. The five legacy
+  materialized silver records are void as stored and excluded from training until rebuilt.
+- Identity forks and machine deadlocks route to adjudication. A non-reader's letterform decision
+  is discrimination between proposals, not independent transcription; `NEITHER / SOMETHING ELSE`
+  and `CAN'T TELL` remain first-class outcomes.
 
-The current machine-readable catalog is
-[`labels/silver/manifest.json`](../labels/silver/manifest.json). It assigns acts 1–5 to silver,
-pins both source labels plus the consensus and Reader C documents by SHA-256, and leaves act 6
-quarantined. Acts 1–5 now have deterministic, schema-validated materialized payloads under
-`labels/silver/records/`; every payload is content-addressed by the manifest. Tier-level
-`training_eligible` is not permission to violate an eval split: all five current silver acts carry
-the Serock-1890 clerk-year that is also in the present gold holdout. The training exporter checks
-the complete clerk-year set before reading or emitting examples and hard-fails against the
-current holdout.
+The 29 July read-only gold audit found 0/36 stored acts fully image-attested. The earlier 0%
+machine-transcription score for gold was a category error and is superseded by the gold-specific
+attestation report. Existing records are preserved as research-derived evidence, while
+`aktreader adjudicate` becomes the only path to new benchmark-eligible gold.
 
 No label or training export may contain material from Yad Vashem, USHMM, Arolsen, Geneteka, or
 JRI-Poland indexes. The factory labels only user-supplied permitted register scans.

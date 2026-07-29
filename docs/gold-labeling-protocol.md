@@ -31,6 +31,20 @@ Existing notes do not document two independent reader passes for each field, so 
 default to `PROBABLE`, even when the note calls the act documented. `CONFIDENT` remains reserved for
 the P2 multi-pass contract.
 
+## Gold attestation contract (v1.0)
+
+Machine-reader continuous-transcription support does not apply to human gold. Instead, every
+asserted gold field must have a sidecar conforming to
+schemas/gold-attestation-1.0.0.schema.json: an artifact SHA-256 plus source-pixel region or act
+locator, and a dated attestation naming the verifier, method, and verbatim answer.
+VERIFIED_FROM_IMAGE fields may be benchmark eligible; DERIVED_FROM_RESEARCH fields must use the
+research-note extraction method and are not benchmark truth.
+
+The read-only 29 July audit found **0/36** stored acts fully compliant. Existing records remain
+frozen research artifacts, not erased or silently upgraded. The adjudication command is the route
+for creating future attestations; publication-grade gold should still be sampled by a reader of
+the script.
+
 ## Provenance and correction flywheel
 
 Each record stores the source-note path, SHA-256, section locator, local artifact path/checksum when

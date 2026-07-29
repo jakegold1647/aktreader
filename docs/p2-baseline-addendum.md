@@ -86,6 +86,12 @@ The result is a real weak baseline, not a passing model: it recovered some plaus
 but almost no exact filiation. The single-reader contract emitted no CONFIDENT observations, so
 wrong-but-CONFIDENT is correctly `N/A (0/0)`, not a passing zero.
 
+**Gold-provenance limitation.** These metrics compare predictions with the frozen 36-record
+research-note-derived corpus. The gold-attestation re-audit found **0/36** acts with complete
+per-field image references and dated human attestations. The 1.30% filiation result stands as the
+recorded before-picture, but it is not publication-grade image-verified benchmark accuracy. See
+`docs/audits/gold-attestation-audit-2026-07-29.md`.
+
 For future inference, the reduced schema now forbids the literal scalar placeholders `unknown`,
 `unclear`, `n/a`, and `none` case-insensitively, forcing typed absence into the non-present
 oneOf branch. This changes the schema pin and runtime fingerprint; the completed checkpoint is

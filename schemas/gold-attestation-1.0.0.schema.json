@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/gold-attestation-1.0.0.json",
+  "title": "AKTREADER per-field gold attestation sidecar",
+  "description": "A human-attested provenance contract for fields proposed as benchmark gold. Machine-reader transcription support is deliberately not part of this contract.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "record_id",
+    "record_sha256",
+    "field_attestations"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "pattern": "gold-attestation-1\\.0\\.0\\.schema\\.json$"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "record_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]+$"
+    },
+    "record_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "field_attestations": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_-]+|\\.[0-9]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/fieldAttestation"
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "width", "height", "coordinate_space"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0},
+        "y": {"type": "integer", "minimum": 0},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1},
+        "coordinate_space": {"const": "source_pixels"}
+      },
+      "additionalProperties": false
+    },
+    "imageReference": {
+      "type": "object",
+      "required": ["artifact_sha256"],
+      "properties": {
+        "artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "region": {"$ref": "#/$defs/bbox"},
+        "act_locator": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {"required": ["region"]},
+        {"required": ["act_locator"]}
+      ]
+    },
+    "attestation": {
+      "type": "object",
+      "required": [
+        "attestor_id",
+        "method",
+        "attested_at",
+        "verbatim_answer"
+      ],
+      "properties": {
+        "attestor_id": {"type": "string", "minLength": 1},
+        "method": {
+          "enum": [
+            "LETTERFORM_LINEUP",
+            "BILINGUAL_ANCHOR",
+            "INDEX_CROSS_CHECK",
+            "DIRECT_SCRIPT_READING",
+            "STRUCTURAL_CROSS_CHECK",
+            "RESEARCH_NOTE_EXTRACTION"
+          ]
+        },
+        "attested_at": {"type": "string", "format": "date-time"},
+        "verbatim_answer": {"type": "string", "minLength": 1},
+        "adjudication_packet_sha256": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "fieldAttestation": {
+      "type": "object",
+      "required": [
+        "evidence_class",
+        "image_reference",
+        "attestation",
+        "benchmark_eligible"
+      ],
+      "properties": {
+        "evidence_class": {
+          "enum": ["VERIFIED_FROM_IMAGE", "DERIVED_FROM_RESEARCH"]
+        },
+        "image_reference": {"$ref": "#/$defs/imageReference"},
+        "attestation": {"$ref": "#/$defs/attestation"},
+        "benchmark_eligible": {"type": "boolean"}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "evidence_class": {"const": "VERIFIED_FROM_IMAGE"}
+            },
+            "required": ["evidence_class"]
+          },
+          "then": {
+            "properties": {
+              "attestation": {
+                "properties": {
+                  "method": {
+                    "enum": [
+                      "LETTERFORM_LINEUP",
+                      "BILINGUAL_ANCHOR",
+                      "INDEX_CROSS_CHECK",
+                      "DIRECT_SCRIPT_READING",
+                      "STRUCTURAL_CROSS_CHECK"
+                    ]
+                  }
+                }
+              },
+              "benchmark_eligible": {"const": true}
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "evidence_class": {"const": "DERIVED_FROM_RESEARCH"}
+            },
+            "required": ["evidence_class"]
+          },
+          "then": {
+            "properties": {
+              "attestation": {
+                "properties": {
+                  "method": {"const": "RESEARCH_NOTE_EXTRACTION"}
+                }
+              },
+              "benchmark_eligible": {"const": false}
+            }
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}
