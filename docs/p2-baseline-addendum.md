@@ -1,12 +1,24 @@
 # P2 local baseline addendum
 
-**Status:** probe remediation implemented; single-job validation pending; metrics intentionally
-blank.
+**Status:** measured local baseline and protocol-restructure findings frozen; benchmark remains
+under construction and is not publication-grade.
 
 **Recorded:** 2026-07-28
 
+**Updated:** 2026-07-29
+
 This addendum records the measured “before” picture. It does not report a successful benchmark
 run and does not convert failed jobs into zero-valued metrics.
+
+## Executive findings
+
+| Question | Measured answer |
+|---|---|
+| Did the local baseline run? | Yes: 20/24 jobs succeeded; corrected filiation field exact match was **1/77 (1.30%)**. |
+| Is that publication-grade benchmark accuracy? | No: the frozen comparison corpus is research-derived and **0/36** stored acts satisfy the image-attestation contract. |
+| Did blind disagreement add safety value? | Yes: it intercepted multiple phantom-identity forks before gold, but those disputed-only catches are not an accuracy estimate. |
+| Did well-formed labels prove that a reader read the page? | No: wave 005 produced schema-valid fabricated fields when coverage was pressured without groundedness. |
+| What protocol follows from the evidence? | Blind reader -> fresh blind same-vendor verification -> adjudication packet -> human decision, with correlated blind spots explicitly retained as a limitation. |
 
 ## Measured failure matrix
 
@@ -99,12 +111,40 @@ not rebound. The hardened schema is pending its own grammar probe before any fai
 A longer-act retry must likewise use a separately fingerprinted output budget so it cannot be
 silently mixed with the completed 8,192-token jobs.
 
+## Phantom identities intercepted by blind disagreement
+
+Blind disagreement caught four identity-level forks before they could become gold:
+
+- act 6: a surname split across a line break (`Gersz-/weld`) became a phantom spouse,
+  "Gersz Weksler," and cascaded into the principal's sex, name, age, filiation, and survivor
+  structure;
+- act 39: a male "Lejb Majkowski" parse forked from the arbitrated female principal Ruchla
+  Makowska;
+- act 45: a complete "Basia Konowska, female, 47" identity forked from Josek Makowski, male,
+  baker, 71; and
+- act 46: a complete Ruchla Grosman/Wolberg family forked from Rojza Bornsztejn, age one.
+
+These are safety catches, not benchmark accuracy. Each came from a disagreement-selected sample,
+and the surviving resolution remains subject to the tier's human-attestation requirements.
+Their valid claim is narrower: independent reads exposed internally plausible phantom people
+that a single reader could have promoted unnoticed. The frozen evidence is in the
+[Wave 002](../labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md),
+[Wave 003](../labels/consensus/serock-1890-deaths-30-40_wave003_CONSENSUS.md), and
+[Wave 004](../labels/consensus/serock-1890-deaths-41-49_wave004_CONSENSUS.md) consensus records.
+
 ## Coverage pressure without groundedness
 
 Wave 005 measured a second failure mode in the subscription-session label factory. The first
 Reader B pass under-claimed and was detectable through low coverage. A replacement pass produced
 much higher coverage but included confident-looking fields not present on the page. Pressure to
 raise coverage without a paired groundedness measure converted abstention into fabrication.
+
+The coordinator caused the pressure and records that role explicitly. The replacement was ordered
+with the first pass's thinness quantified against Reader A's much larger field count, creating a
+coverage target without an equal groundedness constraint. This is therefore a supervisory-protocol
+failure, not merely a reader failure: **pressure to increase coverage without a groundedness check
+can convert an abstaining reader into a fabricating one.** The ruling and quarantine are frozen in
+[coordination msg-032](../coordination/inbox_sol/msg-032_wave005-fabrication-ruling.md).
 
 Four mechanical gates now prevent recurrence:
 
@@ -123,3 +163,61 @@ the verified guard-bound baseline configuration fingerprint is
 
 Historical evidence remains loadable for audit, but ungrounded labels cannot enter new consensus
 or training. This distinction preserves failed passes without grandfathering their claims.
+
+## Read-only retro-audit: coverage paired with groundedness
+
+The four guards were applied retrospectively without modifying any label. Coverage answers
+"how much did the reader assert?"; groundedness answers "how much of the PRESENT material meets
+the applicable script gate and occurs in the reader's continuous transcription?" The paired
+results prevent a larger label from masquerading as a better read.
+
+| Label set | Records | Coverage | Fully grounded / PRESENT | Groundedness |
+|---|---:|---:|---:|---:|
+| wave-001 Reader A | 2 | 100.0% | 0/42 | **0.0%** |
+| wave-001 Reader B | 2 | 87.0% | 36/40 | **90.0%** |
+| wave-002 Reader A | 4 | 98.7% | 0/78 | **0.0%** |
+| wave-002 Reader B | 4 | 85.3% | 66/81 | **81.5%** |
+| wave-003 Reader A | 11 | 92.6% | 0/238 | **0.0%** |
+| wave-003 Reader B | 11 | 69.8% | 142/173 | **82.1%** |
+| wave-004 Reader A | 10 | 94.4% | 0/320 | **0.0%** |
+| wave-004 Reader B | 10 | 79.4% | 69/104 | **66.3%** |
+| silver records | 5 | 87.9% | 0/102 | **0.0%** |
+
+Reader A's readings were more often correct in the independent spot-check, while Reader A's
+stored format was less evidentiary: it omitted continuous transcriptions, so every PRESENT claim
+failed transcription support. Reader B's canonical format carried transcriptions and therefore
+scored 66.3%-90.0% grounded across waves 001-004, despite the later wave-005 fabrication finding.
+The guards measure recorded evidence, not factual luck. Full counts and violation classes are in
+the [groundedness retro-audit](audits/grounding-retro-audit-2026-07-29.md).
+
+### Gold is a separate evidence class
+
+Applying machine-reader transcription support to human gold was a category error; the raw 0%
+transcription-support result for gold is void as a gold-quality judgment. Gold instead requires
+an image reference and a dated, attributed human attestation for every asserted field. Under
+that contract, the stored corpus contains **0 contract-valid attestations, 0 fields verified
+directly from images, and 0/36 fully image-verified benchmark-eligible acts**. Three acts were
+verified in a 28 July human packet, but their attestations have not been materialized into the
+stored gold records, so the audit does not infer or backfill them. See the
+[gold attestation audit](audits/gold-attestation-audit-2026-07-29.md).
+
+This is why the baseline's **1/77 (1.30%)** filiation result is retained as a research-derived
+before-picture but must not be described as publication-grade image-verified accuracy.
+
+## Restructured verification protocol
+
+The evidence no longer supports an assumption of two reliable cross-vendor readers. The frozen
+protocol is:
+
+1. one blind reader produces a v1.4-or-later label with continuous original-order transcription;
+2. a fresh, blind same-vendor session independently verifies every field that matters;
+3. `aktreader adjudicate` packages every residue without revealing prior answers to the decider;
+4. a human makes the final decision and supplies the applicable attestation.
+
+Same-vendor verification is weaker than cross-vendor diversity, and correlated blind spots remain
+possible. It is nevertheless empirically useful: in a three-act blind check, the fresh session
+disagreed with the first reader on **2/3** acts and caught two material errors--act 26's nine weeks
+misread as nine months, and act 12's surname Goldberg misread as Hozenberg. Those observations
+justify the verification pass; they do not establish an overall error rate or eliminate the need
+for adjudication and human decision. The governing ruling is
+[coordination msg-038](../coordination/inbox_sol/msg-038_ack-and-wave006-v14.md).
