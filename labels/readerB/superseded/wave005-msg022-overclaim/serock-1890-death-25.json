@@ -1,0 +1,474 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-25.reader-b-openai-sol-ultra-redo-msg028",
+  "record_id": "serock-1890-death-25",
+  "created_at": "2026-07-29T00:18:00-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-29-redo-msg028",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-07-29-wave-005",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_23-26.jpg",
+    "sha256": "bef4519680b7bb84bf61dc22e492f4e80db3a4d6bd70d6931e675495857337fc",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1346,
+      "y": 0,
+      "width": 1526,
+      "height": 1292,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 25,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 1346,
+        "y": 0,
+        "width": 1526,
+        "height": 284,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 1346,
+        "y": 181,
+        "width": 1526,
+        "height": 388,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, their ages, occupations, and residence"
+    },
+    "event": {
+      "bbox": {
+        "x": 1346,
+        "y": 465,
+        "width": 1526,
+        "height": 349,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death date or relative date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 1346,
+        "y": 594,
+        "width": 1526,
+        "height": 401,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 1346,
+        "y": 749,
+        "width": 1526,
+        "height": 349,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parents, mother's maiden-name phrase, or omitted filiation"
+    },
+    "closing": {
+      "bbox": {
+        "x": 1346,
+        "y": 982,
+        "width": 1526,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, reading, signatures, and marginal corrections"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-25#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-25#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-25#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-25#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-25#declarant-1",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-25#officiant",
+      "role": "officiant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 25. Состоялось в посаде Сероцк [unclear: двадцать первого/двадцать третьего] Августа тысяча восемьсот девяностого года в восемь часов вечера. Явились лично Самуил [unclear: Берг?], купец двадцати семи лет, и Мошек Мительман, дворник тридцати лет, жительствующие в посаде Сероцк, и объявили, что вчерашнего числа в семь часов вечера умерло дитя мужескаго пола по имени Давид [unclear: Шабль?] Шварц, одного года от роду, сын [unclear: Хаима?] и [unclear: Гитли?], супругов Шварц. Maiden-name phrase не разрешена. Акт сей прочитан и подписан.",
+    "translation": "Act 25. Registered in Serock on [unclear: 21/23 August] 1890 at 8 p.m. Samuel [unclear: Berg?], 27, a merchant, and Moszek Mitelman, 30, a caretaker, reported that the previous day at 7 p.m. the male child Dawid [unclear middle name] Szwarc, age one, son of [unclear: Chaim?] and [unclear: Gitla?] Szwarc, died."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерло дитя мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "act_no": {
+      "value": 25,
+      "original_script": "№ 25",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсот девяностого года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": "[unclear: 21 August 1890, 8 p.m./23 August 1890, 8 p.m.]",
+      "original_script": "[unclear: двадцать первого Августа, восемь часов вечера/двадцать третьего Августа, восемь часов вечера]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "21 August 1890, 8 p.m.",
+          "original_script": "двадцать первого Августа, восемь часов вечера"
+        },
+        {
+          "value": "23 August 1890, 8 p.m.",
+          "original_script": "двадцать третьего Августа, восемь часов вечера"
+        }
+      ],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "event_date": {
+      "value": "previous day",
+      "original_script": "previous day",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "event_time": {
+      "value": "7 p.m.",
+      "original_script": "7 p.m.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "event_place": {
+      "value": "Serock",
+      "original_script": "Serock",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "[unclear: Давид Шабль Шварц?]",
+      "original_script": "[unclear: Давид [unclear: Шабль?] Шварц?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Давид Шабль Шварц",
+          "original_script": "Давид [unclear: Шабль?] Шварц"
+        }
+      ],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "principal.sex": {
+      "value": "male",
+      "original_script": "мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "1 year",
+      "original_script": "1 year",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "father.name": {
+      "value": "[unclear: Хаим Шварц?]",
+      "original_script": "[unclear: Хаим [unclear]?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Хаим Шварц",
+          "original_script": "Хаим [unclear]"
+        }
+      ],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "mother.name": {
+      "value": "[unclear: Гитля Шварц?]",
+      "original_script": "[unclear: Гитля [unclear]?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Гитля Шварц",
+          "original_script": "Гитля [unclear]"
+        }
+      ],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "BLANK",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No урожденной or equivalent maiden-name phrase is visible after the native/4x filiation review."
+      ]
+    },
+    "declarants.0.name": {
+      "value": "[unclear: Самуил Берг?]",
+      "original_script": "[unclear: Самуил [unclear: Берг?]?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Самуил Берг",
+          "original_script": "Самуил [unclear: Берг?]"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "declarants.0.age": {
+      "value": "27 years",
+      "original_script": "27 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": "купец",
+      "original_script": "купец",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Мошек Мительман",
+      "original_script": "Мошек Мительман",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "30 years",
+      "original_script": "30 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "дворник",
+      "original_script": "дворник",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "officiant": {
+      "value": "[unclear: civil registrar signature??]",
+      "original_script": "[unclear: подпись чиновника гражданского состояния?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "civil registrar signature?",
+          "original_script": "подпись чиновника гражданского состояния"
+        }
+      ],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "signatures_note": {
+      "value": "act read and signed",
+      "original_script": "акт сей свидетелям прочитан, ими и нами подписан",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "No material marginal correction is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Replacement blind subscription-session label read from native and 4x/8x crops of the public civil-register scan; superseded non-read retained separately."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

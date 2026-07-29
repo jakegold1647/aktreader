@@ -16,8 +16,8 @@ from aktreader.batch import (
     BatchRunner,
     InferenceIdentity,
     atomic_write_json,
-    load_manifest_jobs,
     atomic_write_text,
+    load_manifest_jobs,
 )
 from aktreader.cli_support import (
     CliConfigurationError,
@@ -36,7 +36,11 @@ from aktreader.cli_support import (
 from aktreader.consensus import merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
 from aktreader.evaluation import evaluate_predictions, load_prediction_records
-from aktreader.labels import load_reader_label
+from aktreader.grounding import (
+    load_grounded_reader_label,
+    paired_quality_metrics,
+    validate_cross_reader_grounding,
+)
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
@@ -188,7 +192,7 @@ def _command_label_validate(args: argparse.Namespace) -> int:
         path = local_input_path(raw_path, role="reader label")
         if not path.is_file():
             raise CliConfigurationError(f"reader label is not a file: {path}")
-        label = load_reader_label(path)
+        label = load_grounded_reader_label(path)
         results.append(
             {
                 "path": str(path),
@@ -199,6 +203,7 @@ def _command_label_validate(args: argparse.Namespace) -> int:
                 "schema_kind": label.schema_kind,
                 "confidence_cap": label.confidence_cap,
                 "source_sha256": label.source_sha256,
+                "quality_metrics": paired_quality_metrics((label,)),
             }
         )
     _emit_json({"status": "PASS", "labels": results, "count": len(results)})
@@ -226,13 +231,15 @@ def _command_consensus_merge(args: argparse.Namespace) -> int:
     if output == schema_path:
         raise CliConfigurationError("consensus output must not overwrite its schema")
 
-    left = load_reader_label(left_path)
-    right = load_reader_label(right_path)
+    left = load_grounded_reader_label(left_path)
+    right = load_grounded_reader_label(right_path)
     result = merge_labels(left, right)
+    grounding_incidents = validate_cross_reader_grounding(left, right)
     findings = (
         validate_dates(result)
         + validate_formula_positions(left)
         + validate_formula_positions(right)
+        + grounding_incidents
     )
     record = build_consensus_record(
         result,
@@ -253,6 +260,8 @@ def _command_consensus_merge(args: argparse.Namespace) -> int:
             "field_count": summary["field_count"],
             "dual_disagreement_count": summary["dual_disagreement_count"],
             "validator_finding_count": summary["validator_finding_count"],
+            "groundedness_incident_count": len(grounding_incidents),
+            "quality_metrics": paired_quality_metrics((left, right)),
             "arbitration_request_count": len(record["arbitration"]["requests"]),
         }
     )
@@ -280,10 +289,16 @@ def _command_reader_infer(args: argparse.Namespace) -> int:
         raise CliConfigurationError("inference output must not overwrite any input file")
     result = reader.read(scan, batch_brief=brief)
     atomic_write_json(output, result.payload)
+    stdout_path = output.with_suffix(".stdout.txt")
+    stderr_path = output.with_suffix(".stderr.txt")
+    atomic_write_text(stdout_path, result.stdout)
+    atomic_write_text(stderr_path, result.stderr)
     _emit_json(
         {
             "status": "SUCCEEDED",
             "output": str(output),
+            "raw_stdout": str(stdout_path),
+            "raw_stderr": str(stderr_path),
             "runtime_fingerprint": reader.runtime_fingerprint,
             "inference_fingerprint": result.inference_fingerprint,
         }
@@ -312,7 +327,10 @@ def _command_batch_run(args: argparse.Namespace) -> int:
 
     def read_job(job: BatchJob) -> Mapping[str, Any]:
         try:
-            return reader.read(job.scan_path, batch_brief=brief_for_job(job)).payload
+            result = reader.read(job.scan_path, batch_brief=brief_for_job(job))
+            atomic_write_text(job.output_path.with_suffix(".stdout.txt"), result.stdout)
+            atomic_write_text(job.output_path.with_suffix(".stderr.txt"), result.stderr)
+            return result.payload
         except LocalReaderError as error:
             if not error.has_process_diagnostics:
                 raise
@@ -340,7 +358,10 @@ def _command_batch_run(args: argparse.Namespace) -> int:
             f"label:{reader.artifact_hashes['schema']};"
             f"model:{reader.artifact_hashes.get('model_schema', reader.artifact_hashes['schema'])}"
         ),
-        decoding_config=generation_report(reader.config),
+        decoding_config={
+            **generation_report(reader.config),
+            "runtime_fingerprint": reader.runtime_fingerprint,
+        },
     )
     runner = BatchRunner(
         jobs=jobs,

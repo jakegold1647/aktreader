@@ -11,7 +11,12 @@ from pathlib import Path
 
 from aktreader.consensus import ConsensusResult, merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
-from aktreader.labels import ReaderLabel, load_reader_label
+from aktreader.grounding import (
+    load_grounded_reader_label,
+    paired_quality_metrics,
+    validate_cross_reader_grounding,
+)
+from aktreader.labels import ReaderLabel
 from aktreader.validators.corpus import validate_corpus
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
@@ -86,12 +91,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     findings_by_record: dict[str, list[ValidationFinding]] = {}
     all_source_labels: list[ReaderLabel] = []
     for reader_a_path, reader_b_path in pairs:
-        reader_a = load_reader_label(reader_a_path)
-        reader_b = load_reader_label(reader_b_path)
+        reader_a = load_grounded_reader_label(reader_a_path)
+        reader_b = load_grounded_reader_label(reader_b_path)
         result = merge_labels(reader_a, reader_b)
         merged.append((reader_a, reader_b, result))
         all_source_labels.extend((reader_a, reader_b))
         findings_by_record[result.record_id] = list(validate_dates(result))
+        findings_by_record[result.record_id].extend(
+            validate_cross_reader_grounding(reader_a, reader_b)
+        )
         for label in (reader_a, reader_b):
             source_checks = validate_dates(label) + validate_formula_positions(label)
             findings_by_record[result.record_id].extend(_source_findings(source_checks, label))
@@ -128,6 +136,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "written": written,
                 "selected_pair_count": len(written),
                 "unpaired_reader_a": unpaired_reader_a,
+                "groundedness_incident_count": sum(
+                    finding.severity == "GROUNDEDNESS_INCIDENT"
+                    for findings in findings_by_record.values()
+                    for finding in findings
+                ),
+                "quality_metrics": paired_quality_metrics(all_source_labels),
             },
             ensure_ascii=False,
             sort_keys=True,

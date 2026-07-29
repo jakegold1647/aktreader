@@ -1,0 +1,469 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-12.reader-b-openai-sol-ultra-redo-msg028",
+  "record_id": "serock-1890-death-12",
+  "created_at": "2026-07-29T00:18:00-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-29-redo-msg028",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-07-29-wave-005",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_11-14.jpg",
+    "sha256": "6fc220f7a07c27601d789baa99f0c33a1ee77e4d6e3aa7ed2b07457a65fc4557",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 0,
+      "y": 1092,
+      "width": 1526,
+      "height": 1292,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 12,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 0,
+        "y": 1092,
+        "width": 1526,
+        "height": 284,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 0,
+        "y": 1273,
+        "width": 1526,
+        "height": 388,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, their ages, occupations, and residence"
+    },
+    "event": {
+      "bbox": {
+        "x": 0,
+        "y": 1557,
+        "width": 1526,
+        "height": 349,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death date or relative date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 0,
+        "y": 1686,
+        "width": 1526,
+        "height": 401,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 0,
+        "y": 1841,
+        "width": 1526,
+        "height": 349,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parents, mother's maiden-name phrase, or omitted filiation"
+    },
+    "closing": {
+      "bbox": {
+        "x": 0,
+        "y": 2074,
+        "width": 1526,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, reading, signatures, and marginal corrections"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-12#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-12#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-12#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-12#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-12#declarant-1",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-12#officiant",
+      "role": "officiant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 12. Состоялось в посаде Сероцк [unclear: двадцать первого?] Апреля тысяча восемьсот девяностого года в девять часов вечера. Явились лично Янкель [illegible: фамилия], тридцати шести лет, и Янкель Финкельштейн, тридцати трех лет, и объявили, что вчерашнего числа в восемь часов вечера в посаде Сероцк умерло дитя женскаго пола по имени Ривка [unclear: Черна?] Гольдберг, трех лет от роду, дочь [unclear: Шея/Шеи] и Рифки урожденной Кринковской, супругов Гольдберг, постоянных жителей Каменца, временно пребывающих в Сероцке. Акт сей прочитан и подписан.",
+    "translation": "Act 12. Registered in Serock on [unclear: about 21 April] 1890 at 9 p.m. Two declarants reported that the previous day at 8 p.m. the female child Riwka [unclear: Czerna?] Goldberg, age three, daughter of [unclear: Szeja/Szei] and Rifka née Krinkowska, permanent residents of Kamieniec temporarily in Serock, died."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерло дитя женскаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "act_no": {
+      "value": 12,
+      "original_script": "№ 12",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсот девяностого года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": "[unclear: about 21 April 1890, 9 p.m.?]",
+      "original_script": "[unclear: [unclear: двадцать первое?] Апреля, девять часов вечера?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "about 21 April 1890, 9 p.m.",
+          "original_script": "[unclear: двадцать первое?] Апреля, девять часов вечера"
+        }
+      ],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "event_date": {
+      "value": "previous day",
+      "original_script": "previous day",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "event_time": {
+      "value": "8 p.m.",
+      "original_script": "8 p.m.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "event_place": {
+      "value": "Serock",
+      "original_script": "Serock",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "[unclear: Ривка Черна Гольдберг?]",
+      "original_script": "[unclear: Ривка [unclear: Черна?] Гольдберг?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Ривка Черна Гольдберг",
+          "original_script": "Ривка [unclear: Черна?] Гольдберг"
+        }
+      ],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "женскаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "3 years",
+      "original_script": "3 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "father.name": {
+      "value": "[unclear: Шея Гольдберг/Шеи Гольдберг]",
+      "original_script": "[unclear: Шея Гольдберг/Шеи Гольдберг]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Шея Гольдберг",
+          "original_script": "Шея Гольдберг"
+        },
+        {
+          "value": "Шеи Гольдберг",
+          "original_script": "Шеи Гольдберг"
+        }
+      ],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "mother.name": {
+      "value": "Рифка Гольдберг",
+      "original_script": "Рифка Гольдберг",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "Кринковская",
+      "original_script": "Кринковская",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "declarants.0.name": {
+      "value": "[unclear: Янкель?]",
+      "original_script": "[unclear: Янкель [illegible]?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Янкель",
+          "original_script": "Янкель [illegible]"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "declarants.0.age": {
+      "value": "36 years",
+      "original_script": "36 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "first declarant occupation was attempted on the native, 4x, and targeted high-zoom crop but no responsible reading survived."
+      ]
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Янкель Финкельштейн",
+      "original_script": "Янкель Финкельштейн",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "33 years",
+      "original_script": "33 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "second declarant occupation was attempted on the native, 4x, and targeted high-zoom crop but no responsible reading survived."
+      ]
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "officiant": {
+      "value": "[unclear: civil registrar signature??]",
+      "original_script": "[unclear: подпись чиновника гражданского состояния?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "civil registrar signature?",
+          "original_script": "подпись чиновника гражданского состояния"
+        }
+      ],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "signatures_note": {
+      "value": "act read and signed",
+      "original_script": "акт сей свидетелям прочитан, ими и нами подписан",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "No material marginal correction is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Replacement blind subscription-session label read from native and 4x/8x crops of the public civil-register scan; superseded non-read retained separately."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

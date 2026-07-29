@@ -7,9 +7,6 @@ from typing import Any
 import pytest
 
 import aktreader.local_reader as local_reader_module
-ROOT = Path(__file__).resolve().parents[1]
-
-
 from aktreader.local_reader import (
     ArtifactValidationError,
     BatchBriefError,
@@ -20,6 +17,8 @@ from aktreader.local_reader import (
     PinnedArtifact,
     sha256_file,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _write(path: Path, content: bytes) -> Path:
@@ -36,11 +35,12 @@ def _reader_config(
     *,
     with_lora: bool = False,
     strict_schemas: bool = False,
+    prompt_filename: str = "reader_prompt.md",
 ) -> LocalReaderConfig:
     executable = _write(tmp_path / "llama-mtmd-cli.exe", b"pinned llama.cpp executable")
     model = _write(tmp_path / "model.gguf", b"pinned quantized model")
     mmproj = _write(tmp_path / "mmproj.gguf", b"pinned vision projector")
-    prompt = _write(tmp_path / "reader_prompt.md", b"pinned reader prompt")
+    prompt = _write(tmp_path / prompt_filename, b"pinned reader prompt")
     if strict_schemas:
         schema = ROOT / "schemas" / "reader-label-1.0.0.schema.json"
         model_schema = ROOT / "schemas" / "model-output-1.0.0.schema.json"
@@ -121,19 +121,19 @@ def _payload(brief: dict[str, Any], *, confidence: str | None = "PROBABLE") -> d
     elif confidence == "UNCLEAR":
         observation = {
             "value": "[unclear: Goldsztejn/Goldfarb]",
-            "original_script": "[unclear: Goldsztejn/Goldfarb]",
+            "original_script": "[unclear: Гольдштейн/Гольдфарб]",
             "confidence": "UNCLEAR",
             "observation_state": "PRESENT",
             "alternatives": [
-                {"value": "Goldsztejn", "original_script": "Goldsztejn"},
-                {"value": "Goldfarb", "original_script": "Goldfarb"},
+                {"value": "Goldsztejn", "original_script": "Гольдштейн"},
+                {"value": "Goldfarb", "original_script": "Гольдфарб"},
             ],
             "notes": [],
         }
     else:
         observation = {
             "value": "Goldsztejn",
-            "original_script": "Goldsztejn",
+            "original_script": "Гольдштейн",
             "confidence": confidence,
             "observation_state": "PRESENT",
             "alternatives": [],
@@ -146,8 +146,8 @@ def _payload(brief: dict[str, Any], *, confidence: str | None = "PROBABLE") -> d
             key: target[key] for key in ("year", "act_type", "act_no", "language")
         },
         "transcription": {
-            "original_script": "Goldsztejn",
-            "translation": "Goldsztejn",
+            "original_script": [observation["original_script"] or "пусто"],
+            "translation": ["Goldsztejn"],
         },
         "observations": {"principal.name": observation},
     }
@@ -172,7 +172,10 @@ def _expected_label(brief: dict[str, Any], model_payload: dict[str, Any]) -> dic
             }
         },
         "mentions": [],
-        "transcription": model_payload["transcription"],
+        "transcription": {
+            key: "\n".join(lines)
+            for key, lines in model_payload["transcription"].items()
+        },
         "observations": observations,
         "compliance": {
             "restricted_sources_used": False,
@@ -317,6 +320,7 @@ def test_local_command_is_deterministic_keyless_and_path_only(
     assert "ANTHROPIC_API_KEY" not in kwargs["env"]
     assert kwargs["env"]["HF_HUB_OFFLINE"] == "1"
     assert result.payload == _expected_label(brief, payload)
+    assert result.stdout
     assert result.stderr == "local diagnostics"
 
 
@@ -341,6 +345,54 @@ def test_reduced_output_is_strictly_validated_then_mechanically_stamped(
     assert result.payload["observations"]["principal.name"]["source_span_ids"] == [
         "act-region"
     ]
+
+def test_physical_prompt_snapshot_is_stamped_to_canonical_logical_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(
+        tmp_path,
+        strict_schemas=True,
+        prompt_filename="reader_prompt-v1.2.0.md",
+    )
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    brief["prompt"]["path"] = "prompts/reader_prompt-v1.2.0.md"
+    model_payload = _payload(brief)
+    _mock_success(monkeypatch, model_payload)
+
+    result = LocalReader(config).read(image, batch_brief=brief)
+
+    assert result.payload["prompt"] == {
+        "version": brief["prompt"]["version"],
+        "sha256": config.prompt.sha256,
+        "path": "prompts/reader_prompt.md",
+    }
+    assert result.fingerprint_manifest["prompt_binding"] == {
+        "logical_path": "prompts/reader_prompt.md",
+        "physical_filename": "reader_prompt-v1.2.0.md",
+        "sha256": config.prompt.sha256,
+    }
+
+
+def test_transcription_line_arrays_join_mechanically_into_full_label_strings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _reader_config(tmp_path, strict_schemas=True)
+    image = _write(tmp_path / "scan.jpg", b"scan pixels")
+    brief = _brief(config, image)
+    model_payload = _payload(brief)
+    model_payload["transcription"] = {
+        "original_script": ["Гольдштейн", "строка"],
+        "translation": ["translated one", "translated two"],
+    }
+    _mock_success(monkeypatch, model_payload)
+
+    result = LocalReader(config).read(image, batch_brief=brief)
+
+    assert result.payload["transcription"] == {
+        "original_script": "Гольдштейн\nстрока",
+        "translation": "translated one\ntranslated two",
+    }
 
 
 def test_reduced_schema_accepts_integer_observation_values(
@@ -494,9 +546,9 @@ def test_reader_stdout_scan_is_string_and_escape_aware(
     image = _write(tmp_path / "scan.jpg", b"scan pixels")
     brief = _brief(config, image)
     payload = _payload(brief)
-    payload["transcription"]["translation"] = (
+    payload["transcription"]["translation"] = [
         'literal braces { and }, an escaped quote " and a backslash \\'
-    )
+    ]
     _mock_chromed_stdout(monkeypatch, json.dumps(payload, ensure_ascii=False))
 
     result = LocalReader(config).read(image, batch_brief=brief)
@@ -531,7 +583,9 @@ def test_reader_stdout_accepts_only_whitespace_around_json_and_known_trailer(
     completion = f"\n \t{json.dumps(payload, ensure_ascii=False)}\n  "
     _mock_chromed_stdout(monkeypatch, completion)
 
-    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(brief, payload)
+    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(
+        brief, payload
+    )
 
 
 def test_reader_stdout_accepts_one_complete_json_fence(
@@ -544,7 +598,9 @@ def test_reader_stdout_accepts_one_complete_json_fence(
     completion = f"```json\n{json.dumps(payload, ensure_ascii=False)}\n```"
     _mock_chromed_stdout(monkeypatch, completion)
 
-    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(brief, payload)
+    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(
+        brief, payload
+    )
 
 @pytest.mark.parametrize(
     ("completion", "observed"),
@@ -607,7 +663,9 @@ def test_reader_preserves_direct_json_stdout_compatibility(
     payload = _payload(brief)
     _mock_stdout(monkeypatch, f" \n{json.dumps(payload, ensure_ascii=False)}\n\t")
 
-    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(brief, payload)
+    assert LocalReader(config).read(image, batch_brief=brief).payload == _expected_label(
+        brief, payload
+    )
 
 
 def test_blind_brief_rejects_reader_output_and_wrong_hashes(tmp_path: Path) -> None:

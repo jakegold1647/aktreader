@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from aktreader.grounding import GroundingValidationError, require_grounded_payload
 from aktreader.schema import ContractValidationError, validate_instance
 
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
@@ -45,7 +46,8 @@ _SAFE_ENVIRONMENT_KEYS = {
     "VK_ICD_FILENAMES",
     "WINDIR",
 }
-_CONTRACT_VERSION = "aktreader-local-reader-1.1.0"
+_CONTRACT_VERSION = "aktreader-local-reader-1.1.2"
+_CANONICAL_PROMPT_PATH = "prompts/reader_prompt.md"
 
 
 class LocalReaderError(RuntimeError):
@@ -145,6 +147,7 @@ class LocalReadResult:
     payload: dict[str, Any]
     inference_fingerprint: str
     fingerprint_manifest: dict[str, Any]
+    stdout: str
     stderr: str
 
 
@@ -458,6 +461,11 @@ class LocalReader:
             "contract_version": _CONTRACT_VERSION,
             "runtime": "llama.cpp-mtmd-cli",
             "artifacts": self._artifact_hashes,
+            "prompt_binding": {
+                "logical_path": _CANONICAL_PROMPT_PATH,
+                "physical_filename": self._paths["prompt"].name,
+                "sha256": self._artifact_hashes["prompt"],
+            },
             "generation": self._generation_manifest(),
         }
         self.runtime_fingerprint = _fingerprint(self._runtime_manifest)
@@ -590,6 +598,22 @@ class LocalReader:
         if not isinstance(act_region, Mapping):
             raise BatchBriefError("batch brief artifact.act_region must be an object")
 
+        model_transcription = model_payload.get("transcription")
+        if not isinstance(model_transcription, Mapping):
+            raise LocalReaderOutputError("model output requires a transcription object")
+        stamped_transcription: dict[str, str] = {}
+        for key in ("original_script", "translation"):
+            lines = model_transcription.get(key)
+            if (
+                not isinstance(lines, list)
+                or not lines
+                or not all(isinstance(line, str) and line for line in lines)
+            ):
+                raise LocalReaderOutputError(
+                    f"model transcription {key!r} requires non-empty string lines"
+                )
+            stamped_transcription[key] = "\n".join(lines)
+
         model_observations = model_payload.get("observations")
         if not isinstance(model_observations, Mapping):
             raise LocalReaderOutputError("model output requires an observations object")
@@ -604,10 +628,15 @@ class LocalReader:
                 "source_span_ids": ["act-region"],
             }
 
+        stamped_brief = dict(brief)
+        stamped_prompt = dict(brief["prompt"])
+        stamped_prompt["path"] = _CANONICAL_PROMPT_PATH
+        stamped_brief["prompt"] = stamped_prompt
+
         return {
             "$schema": "https://aktreader.org/schema/reader-label-1.0.0.json",
             "schema_version": "1.0.0",
-            **brief,
+            **stamped_brief,
             "source_spans": {
                 "act-region": {
                     "bbox": dict(act_region),
@@ -618,7 +647,7 @@ class LocalReader:
                 }
             },
             "mentions": [],
-            "transcription": model_payload["transcription"],
+            "transcription": stamped_transcription,
             "observations": stamped_observations,
             "compliance": {
                 "restricted_sources_used": False,
@@ -717,6 +746,12 @@ class LocalReader:
                 raise LocalReaderOutputError(
                     f"pipeline-stamped output violates the pinned label JSON schema: {error}"
                 ) from error
+            try:
+                require_grounded_payload(payload)
+            except GroundingValidationError as error:
+                raise LocalReaderOutputError(
+                    f"pipeline-stamped output violates the groundedness gate: {error}"
+                ) from error
         except LocalReaderError as error:
             error.stdout = completed.stdout
             error.stderr = completed.stderr
@@ -730,6 +765,7 @@ class LocalReader:
             payload=payload,
             inference_fingerprint=_fingerprint(manifest),
             fingerprint_manifest=manifest,
+            stdout=completed.stdout,
             stderr=completed.stderr,
         )
 

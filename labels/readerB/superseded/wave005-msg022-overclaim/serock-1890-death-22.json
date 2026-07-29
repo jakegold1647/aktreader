@@ -1,0 +1,454 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-22.reader-b-openai-sol-ultra-redo-msg028",
+  "record_id": "serock-1890-death-22",
+  "created_at": "2026-07-29T00:18:00-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-29-redo-msg028",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-07-29-wave-005",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave005\\Serock_1890_deaths_19-22.jpg",
+    "sha256": "fa3c74f40f88bb6df6668b791fa19b166e0a09423709264880b701ff11cc5385",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1346,
+      "y": 1092,
+      "width": 1526,
+      "height": 1292,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 22,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 1346,
+        "y": 1092,
+        "width": 1526,
+        "height": 284,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 1346,
+        "y": 1273,
+        "width": 1526,
+        "height": 388,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, their ages, occupations, and residence"
+    },
+    "event": {
+      "bbox": {
+        "x": 1346,
+        "y": 1557,
+        "width": 1526,
+        "height": 349,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death date or relative date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 1346,
+        "y": 1686,
+        "width": 1526,
+        "height": 401,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 1346,
+        "y": 1841,
+        "width": 1526,
+        "height": 349,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parents, mother's maiden-name phrase, or omitted filiation"
+    },
+    "closing": {
+      "bbox": {
+        "x": 1346,
+        "y": 2074,
+        "width": 1526,
+        "height": 310,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, reading, signatures, and marginal corrections"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-22#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-22#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-22#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-22#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-22#declarant-1",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-22#officiant",
+      "role": "officiant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 22. Состоялось в посаде Сероцк девятого Июля тысяча восемьсот девяностого года в три часа пополудни. Явились лично Лейбка [unclear: Ромин?], торговщик сорока лет, и Мошек Левинер, торговщик семидесяти лет, жительствующие оба в посаде Сероцк, и объявили, что сего числа текущего года в пять часов утра умерло дитя женскаго пола в посаде Сероцк, шесть дней от роду имеющее, дочь Ицека [unclear: Мортки?] и жены его Були Лии урожденной Левинер. Боковая поправка присутствует, но ее слова не разрешены. Акт сей прочитан и подписан.",
+    "translation": "Act 22. Registered in Serock on 9 July 1890 at 3 p.m. Lejbka [unclear surname], 40, and Moszek Lewiner, 70, both traders, reported that at 5 a.m. that day an unnamed female child, six days old, daughter of Icek [unclear: Mortka?] and Bula Lija née Lewiner, died. A side correction remains unresolved."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умерло дитя женскаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "act_no": {
+      "value": 22,
+      "original_script": "№ 22",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсот девяностого года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": "9 July 1890, 3 p.m.",
+      "original_script": "9 July 1890, 3 p.m.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "event_date": {
+      "value": "same day",
+      "original_script": "same day",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "event_time": {
+      "value": "5 a.m.",
+      "original_script": "5 a.m.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "event_place": {
+      "value": "Serock",
+      "original_script": "Serock",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "STATED_UNKNOWN",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "The child is described without a personal name; the identity group was reviewed at native and 4x scale."
+      ]
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "женскаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "6 days",
+      "original_script": "6 days",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "father.name": {
+      "value": "[unclear: Ицек Мортка?]",
+      "original_script": "[unclear: Ицек [unclear: Мортка?]?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Ицек Мортка",
+          "original_script": "Ицек [unclear: Мортка?]"
+        }
+      ],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "mother.name": {
+      "value": "Буля Лия",
+      "original_script": "Буля Лия",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "Левинер",
+      "original_script": "Левинер",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "declarants.0.name": {
+      "value": "[unclear: Лейбка Ромин?]",
+      "original_script": "[unclear: Лейбка [unclear]?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Лейбка Ромин",
+          "original_script": "Лейбка [unclear]"
+        }
+      ],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "declarants.0.age": {
+      "value": "40 years",
+      "original_script": "40 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.occupation": {
+      "value": "торговщик",
+      "original_script": "торговщик",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Мошек Левинер",
+      "original_script": "Мошек Левинер",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.age": {
+      "value": "70 years",
+      "original_script": "70 years",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.occupation": {
+      "value": "торговщик",
+      "original_script": "торговщик",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцк",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "officiant": {
+      "value": "[unclear: civil registrar signature??]",
+      "original_script": "[unclear: подпись чиновника гражданского состояния?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "civil registrar signature?",
+          "original_script": "подпись чиновника гражданского состояния"
+        }
+      ],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "Replacement blind read from the full native act crop plus the prepared 4x crop; hard identity/filiation strokes were rechecked at up to 8x. No Reader A or consensus content was consulted."
+      ]
+    },
+    "signatures_note": {
+      "value": "act read and signed",
+      "original_script": "акт сей свидетелям прочитан, ими и нами подписан",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": "[unclear: side correction adjoining the event/filiation lines?]",
+      "original_script": "[unclear: боковая поправка у строк акта?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "side correction adjoining the event/filiation lines",
+          "original_script": "боковая поправка у строк акта"
+        }
+      ],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "A narrow side correction is visible beside the act; its exact lexical content is unresolved and is not silently merged into the names."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Replacement blind subscription-session label read from native and 4x/8x crops of the public civil-register scan; superseded non-read retained separately."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

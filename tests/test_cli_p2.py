@@ -9,10 +9,10 @@ import pytest
 
 import aktreader.cli as cli_module
 import aktreader.local_reader as local_reader_module
-from aktreader.cli import main
 from aktreader.checkpoint import CheckpointStore, JobStatus
-from aktreader.local_reader import LocalInferenceError
+from aktreader.cli import main
 from aktreader.cli_support import load_local_reader_config
+from aktreader.local_reader import LocalInferenceError
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -93,6 +93,7 @@ class FakeLocalReader:
                 "observations": {},
             },
             inference_fingerprint="e" * 64,
+            stdout="raw successful stdout",
             stderr="",
         )
 
@@ -177,7 +178,13 @@ def test_reader_inspect_and_infer_use_injected_local_reader_only(
     )
     inference = json.loads(capsys.readouterr().out)
     assert inference["status"] == "SUCCEEDED"
+    assert inference["raw_stdout"] == str(output.with_suffix(".stdout.txt"))
+    assert inference["raw_stderr"] == str(output.with_suffix(".stderr.txt"))
     assert json.loads(output.read_text(encoding="utf-8"))["record_id"] == "one"
+    assert output.with_suffix(".stdout.txt").read_text(encoding="utf-8") == (
+        "raw successful stdout"
+    )
+    assert output.with_suffix(".stderr.txt").read_text(encoding="utf-8") == ""
     assert [item[0] for item in FakeLocalReader.reads] == [scan]
 
 
@@ -187,6 +194,7 @@ def test_consensus_merge_uses_only_two_explicit_labels_and_refuses_implicit_over
 ) -> None:
     source_path = ROOT / "labels" / "readerB" / "serock-1890-death-1.json"
     source = json.loads(source_path.read_text(encoding="utf-8"))
+    source["observations"] = {"principal.age": source["observations"]["principal.age"]}
     left = json.loads(json.dumps(source))
     right = json.loads(json.dumps(source))
     left["label_id"] = "synthetic.reader-claude"
@@ -319,6 +327,9 @@ def test_batch_run_resumes_without_rerunning_matching_success(
     first = json.loads(capsys.readouterr().out)
     assert first["progress"]["succeeded"] == 1
     assert len(FakeLocalReader.reads) == 1
+    snapshot = CheckpointStore(checkpoint).get_job("one")
+    fingerprint_inputs = json.loads(snapshot.job_json)["fingerprint_inputs"]
+    assert fingerprint_inputs["decoding_config"]["runtime_fingerprint"] == "f" * 64
     assert main(command) == 0
     second = json.loads(capsys.readouterr().out)
     assert second["progress"]["succeeded"] == 1

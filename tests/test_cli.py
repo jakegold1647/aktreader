@@ -41,10 +41,18 @@ def test_parser_exposes_no_api_key_or_network_backend_options() -> None:
     assert "hosted" not in help_text
 
 
-def test_prompt_verify_and_canonical_label_validation_are_machine_readable(capsys) -> None:
+def test_prompt_verify_and_canonical_label_validation_are_machine_readable(
+    tmp_path: Path, capsys
+) -> None:
     prompt_exit = main(["prompt-verify", "--root", str(PROJECT_ROOT)])
     prompt = json.loads(capsys.readouterr().out)
-    label_path = PROJECT_ROOT / "labels" / "readerB" / "serock-1890-death-1.json"
+    source_path = PROJECT_ROOT / "labels" / "readerB" / "serock-1890-death-1.json"
+    payload = json.loads(source_path.read_text(encoding="utf-8"))
+    payload["observations"] = {
+        "principal.age": payload["observations"]["principal.age"]
+    }
+    label_path = tmp_path / "grounded-label.json"
+    label_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
     label_exit = main(["label-validate", str(label_path)])
     labels = json.loads(capsys.readouterr().out)
 
@@ -53,4 +61,5 @@ def test_prompt_verify_and_canonical_label_validation_are_machine_readable(capsy
     assert len(prompt["sha256"]) == 64
     assert labels["count"] == 1
     assert labels["labels"][0]["schema_kind"] == "canonical"
+    assert labels["labels"][0]["quality_metrics"]["groundedness"]["violation_count"] == 0
     assert Path(labels["labels"][0]["path"]) == label_path
