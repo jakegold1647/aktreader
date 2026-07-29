@@ -1,4 +1,4 @@
-# CONSENSUS MERGE — wave 003: Serock 1890 deaths, acts 30–40
+﻿# CONSENSUS MERGE — wave 003: Serock 1890 deaths, acts 30–40
 Merged 28 Jul 2026 by the coordinating session (consensus stage — blindness no longer applies).
 Reader A = claude-fable-5, prompt v1.2.0 sha256 ea0e8375…, frozen commit 02725c6.
 Reader B = gpt-5.6 sol-ultra, prompt v1.2.0 sha256 ea0e8375… (symmetric provenance this wave), frozen commit d679320.
@@ -275,7 +275,8 @@ Item 20 (standing witness, 9 of 11 acts): the RESOLVED verdict «Колтунъ,
 SURE) is CONTRADICTED by the independent verification reader, who read the same man as «Берекъ
 Ковшунъ, кладбищный служитель» in acts 36–38; the arbiter himself saw «кладбищный служитель»
 in acts 35/39. Two fresh readers now split 1–1 on surname AND occupation. RULING: the item-20
-promotion is WITHDDRAWN to [unclear: Колтунъ/Ковшунъ] + occupation [unclear: работникъ/
+promotion is WITHDRAWN to [unclear: Колтунъ/Ковшунъ] + occupation [unclear: работникъ/
 кладбищный служитель]; field excluded from silver; added to the expert-review list alongside
 the act-40 surname deadlock. All other wave-003 promotions stand. Related minor flag: act-33
 declarant age now has three candidates (26/36/37) — targeted re-crop queued for a future pass.
+

@@ -1,13 +1,14 @@
 {
   "schema_version": "1.0.0",
   "profile_id": "p2-qwen3.5-9b-q5_k_m-f16",
-  "state": "MODEL_ASSETS_OWNER_FETCH_REQUIRED",
+  "state": "MTMD_REDUCED_SCHEMA_PROBE_REQUIRED",
   "target_hardware": "NVIDIA RTX 5060 Ti 16 GB",
   "runtime": {
-    "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-cli.exe",
+    "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-mtmd-cli.exe",
     "version": "10167 (ee3d1b54c)",
-    "sha256": "5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5",
-    "verification": "Coordinator observed exit 0 after the owner's OS-policy decision."
+    "sha256": "6866b9425ec02798087380e14d5a9c69ded092a914cd48f06cf9b803552f7bfc",
+    "frontend": "mtmd-cli",
+    "verification": "Local SHA-256 recorded; coordinator's grammar probe initialized successfully."
   },
   "official_reference_snapshot": {
     "repository": "Qwen/Qwen3.5-9B",
@@ -48,5 +49,11 @@
     "sha256": "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad"
   },
   "application_downloads_artifacts": false,
+  "model_schema": {
+    "version": "1.0.0",
+    "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
+    "sha256": "a6eb69d2732b691936b859ec91f1bd017d4b4e1cfa8381443317b767ced40c64",
+    "purpose": "Bounded grammar surface; application stamps identity and provenance."
+  },
   "inference_network_allowed": false
 }

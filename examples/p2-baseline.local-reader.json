@@ -2,8 +2,8 @@
   "schema_version": "1.0.0",
   "artifacts": {
     "executable": {
-      "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-cli.exe",
-      "sha256": "5719892edd89da2ce31d2b9f5f9c53c0cf244ec92294792a7f59e150e6e9aca5"
+      "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-mtmd-cli.exe",
+      "sha256": "6866b9425ec02798087380e14d5a9c69ded092a914cd48f06cf9b803552f7bfc"
     },
     "model": {
       "path": "E:\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\Qwen3.5-9B-Q5_K_M.gguf",
@@ -20,6 +20,10 @@
     "schema": {
       "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0.schema.json",
       "sha256": "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad"
+    },
+    "model_schema": {
+      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
+      "sha256": "a6eb69d2732b691936b859ec91f1bd017d4b4e1cfa8381443317b767ced40c64"
     }
   },
   "generation": {

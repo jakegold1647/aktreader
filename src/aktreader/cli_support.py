@@ -13,7 +13,9 @@ from aktreader.batch import BatchJob
 from aktreader.local_reader import LocalReader, LocalReaderConfig, PinnedArtifact
 
 READER_CONFIG_VERSION = "1.0.0"
-_REQUIRED_ARTIFACTS = frozenset({"executable", "model", "mmproj", "prompt", "schema"})
+_REQUIRED_ARTIFACTS = frozenset(
+    {"executable", "model", "mmproj", "prompt", "schema", "model_schema"}
+)
 _OPTIONAL_ARTIFACTS = frozenset({"lora"})
 _GENERATION_KEYS = frozenset(
     {
@@ -278,6 +280,7 @@ def load_local_reader_config(path: Path | str) -> LocalReaderConfig:
         mmproj=pins["mmproj"],
         prompt=pins["prompt"],
         schema=pins["schema"],
+        model_schema=pins["model_schema"],
         lora=lora,
         **validated_generation,
     )
@@ -294,7 +297,7 @@ def generation_report(config: LocalReaderConfig) -> dict[str, Any]:
         "timeout_seconds": config.timeout_seconds,
         "temperature": 0,
         "top_k": 1,
-        "reasoning": "off",
+        "frontend": "mtmd-cli",
     }
 
 
@@ -306,6 +309,7 @@ def reader_report(reader: LocalReader) -> dict[str, Any]:
         "mmproj": reader.config.mmproj,
         "prompt": reader.config.prompt,
         "schema": reader.config.schema,
+        "model_schema": reader.config.model_schema,
     }
     if reader.config.lora is not None:
         pins["lora"] = reader.config.lora

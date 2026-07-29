@@ -314,7 +314,10 @@ def _command_batch_run(args: argparse.Namespace) -> int:
     identity = InferenceIdentity(
         model_hash=model_identity(reader),
         prompt_hash=reader.artifact_hashes["prompt"],
-        schema=reader.artifact_hashes["schema"],
+        schema=(
+            f"label:{reader.artifact_hashes['schema']};"
+            f"model:{reader.artifact_hashes['model_schema']}"
+        ),
         decoding_config=generation_report(reader.config),
     )
     runner = BatchRunner(

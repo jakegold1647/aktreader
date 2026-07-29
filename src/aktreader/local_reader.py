@@ -51,6 +51,23 @@ _CONTRACT_VERSION = "aktreader-local-reader-1.0.0"
 class LocalReaderError(RuntimeError):
     """Base error raised by the fully local Reader."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        stdout: str | None = None,
+        stderr: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.stdout = stdout
+        self.stderr = stderr
+
+    @property
+    def has_process_diagnostics(self) -> bool:
+        """Whether a llama.cpp process ran and supplied raw output streams."""
+
+        return self.stdout is not None and self.stderr is not None
+
 
 class ArtifactValidationError(LocalReaderError):
     """A required local artifact is absent, remote-looking, or fails its checksum pin."""
@@ -92,6 +109,7 @@ class LocalReaderConfig:
     mmproj: PinnedArtifact
     prompt: PinnedArtifact
     schema: PinnedArtifact
+    model_schema: PinnedArtifact
     lora: PinnedArtifact | None = None
     context_size: int = 16_384
     max_output_tokens: int = 8_192
@@ -217,6 +235,17 @@ def _strip_known_reader_trailer(text: str) -> str:
     return text
 
 
+def _strip_complete_json_fence(text: str) -> str:
+    """Strip one complete Markdown JSON fence while rejecting surrounding prose."""
+
+    match = re.fullmatch(
+        r"\s*```(?:json)?[ \t]*\n(?P<body>.*?)\n```[ \t]*\s*",
+        text,
+        flags=re.DOTALL,
+    )
+    return match.group("body") if match is not None else text
+
+
 def _balanced_top_level_objects(text: str, *, source: str) -> list[tuple[int, int]]:
     """Return balanced top-level object spans using a JSON-string-aware scan."""
 
@@ -270,6 +299,7 @@ def _load_reader_stdout(stdout: str) -> dict[str, Any]:
 
     completion = _reader_completion_after_prompt_echo(stdout)
     completion = _strip_known_reader_trailer(completion)
+    completion = _strip_complete_json_fence(completion)
     objects = _balanced_top_level_objects(completion, source="Reader stdout")
     if len(objects) != 1:
         raise LocalReaderOutputError(
@@ -390,6 +420,7 @@ class LocalReader:
             "mmproj": config.mmproj,
             "prompt": config.prompt,
             "schema": config.schema,
+            "model_schema": config.model_schema,
         }
         if config.lora is not None:
             pins["lora"] = config.lora
@@ -397,24 +428,35 @@ class LocalReader:
         self._paths = {role: _verify_pin(pin, role=role) for role, pin in pins.items()}
         self._artifact_hashes = {role: pin.sha256 for role, pin in pins.items()}
 
+        schema_texts: dict[str, str] = {}
+        for role in ("schema", "model_schema"):
+            try:
+                schema_text = self._paths[role].read_text(encoding="utf-8")
+            except (OSError, UnicodeError) as error:
+                raise ArtifactValidationError(
+                    f"{role} is not readable UTF-8: {error}"
+                ) from error
+            try:
+                schema = _load_one_json_object(schema_text, source=role)
+            except LocalReaderOutputError as error:
+                raise ArtifactValidationError(
+                    f"{role} is not one strict JSON object: {error}"
+                ) from error
+            if _contains_external_ref(schema):
+                raise ArtifactValidationError(
+                    f"{role} contains an external $ref; local Reader accepts fragment refs only"
+                )
+            schema_texts[role] = schema_text
+
         try:
-            schema_text = self._paths["schema"].read_text(encoding="utf-8")
+            self._prompt_text = self._paths["prompt"].read_text(encoding="utf-8")
         except (OSError, UnicodeError) as error:
-            raise ArtifactValidationError(f"schema is not readable UTF-8: {error}") from error
-        try:
-            schema = _load_one_json_object(schema_text, source="schema")
-        except LocalReaderOutputError as error:
-            raise ArtifactValidationError(
-                f"schema is not one strict JSON object: {error}"
-            ) from error
-        if _contains_external_ref(schema):
-            raise ArtifactValidationError(
-                "schema contains an external $ref; local Reader accepts fragment refs only"
-            )
+            raise ArtifactValidationError(f"prompt is not readable UTF-8: {error}") from error
+        self._model_schema_text = schema_texts["model_schema"]
 
         self._runtime_manifest = {
             "contract_version": _CONTRACT_VERSION,
-            "runtime": "llama.cpp-cli",
+            "runtime": "llama.cpp-mtmd-cli",
             "artifacts": self._artifact_hashes,
             "generation": self._generation_manifest(),
         }
@@ -432,7 +474,7 @@ class LocalReader:
             "gpu_layers": self.config.gpu_layers,
             "image_max_tokens": self.config.image_max_tokens,
             "max_output_tokens": self.config.max_output_tokens,
-            "reasoning": "off",
+            "frontend": "mtmd-cli",
             "seed": self.config.seed,
             "temperature": 0,
             "top_k": 1,
@@ -483,7 +525,16 @@ class LocalReader:
 
         return brief, brief_text
 
+    @staticmethod
+    def _target_check_request(brief: Mapping[str, Any]) -> dict[str, Any]:
+        target = brief.get("target")
+        if not isinstance(target, Mapping):
+            raise BatchBriefError("batch brief target must be an object")
+        keys = ("year", "act_type", "act_no", "language")
+        return {key: target.get(key) for key in keys}
+
     def _command(self, image_path: Path, request_text: str) -> list[str]:
+        gpu_layers = "99" if self.config.gpu_layers == "all" else str(self.config.gpu_layers)
         command = [
             os.fspath(self._paths["executable"]),
             "-m",
@@ -492,38 +543,79 @@ class LocalReader:
             os.fspath(self._paths["mmproj"]),
             "--image",
             os.fspath(image_path),
-            "--system-prompt-file",
-            os.fspath(self._paths["prompt"]),
-            "--json-schema-file",
-            os.fspath(self._paths["schema"]),
-            "--prompt",
+            "-sys",
+            self._prompt_text,
+            "--json-schema",
+            self._model_schema_text,
+            "-p",
             request_text,
-            "--ctx-size",
+            "-c",
             str(self.config.context_size),
-            "--predict",
+            "-n",
             str(self.config.max_output_tokens),
             "--image-max-tokens",
             str(self.config.image_max_tokens),
-            "--seed",
+            "-s",
             str(self.config.seed),
             "--temp",
             "0",
             "--top-k",
             "1",
-            "--reasoning",
-            "off",
-            "--gpu-layers",
-            str(self.config.gpu_layers),
-            "--jinja",
-            "--single-turn",
-            "--simple-io",
-            "--no-context-shift",
-            "--no-display-prompt",
-            "--no-show-timings",
+            "-ngl",
+            gpu_layers,
         ]
         if "lora" in self._paths:
             command.extend(["--lora", os.fspath(self._paths["lora"])])
         return command
+
+    def _assemble_full_label(
+        self,
+        model_payload: Mapping[str, Any],
+        brief: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        expected_target = self._target_check_request(brief)
+        target_check = model_payload.get("target_check")
+        if not isinstance(target_check, Mapping):
+            raise LocalReaderOutputError("model output requires a target_check object")
+        for key, expected in expected_target.items():
+            if target_check.get(key) != expected:
+                raise LocalReaderOutputError(
+                    f"Reader changed target-check field {key!r}: "
+                    f"expected {expected!r}, observed {target_check.get(key)!r}"
+                )
+
+        artifact = brief.get("artifact")
+        act_region = artifact.get("act_region") if isinstance(artifact, Mapping) else None
+        if not isinstance(act_region, Mapping):
+            raise BatchBriefError("batch brief artifact.act_region must be an object")
+
+        return {
+            "$schema": "https://aktreader.org/schema/reader-label-1.0.0.json",
+            "schema_version": "1.0.0",
+            **brief,
+            "source_spans": {
+                "act-region": {
+                    "bbox": dict(act_region),
+                    "description": (
+                        "Entire supplied act region; the local model did not emit "
+                        "field-level bounding boxes."
+                    ),
+                }
+            },
+            "mentions": [],
+            "transcription": model_payload["transcription"],
+            "observations": model_payload["observations"],
+            "compliance": {
+                "restricted_sources_used": False,
+                "privacy_decision": "ALLOW",
+                "privacy_basis": "local batch privacy gate allowed this act before inference",
+                "training_eligible": False,
+                "training_basis": (
+                    "single local-reader output requires consensus or human verification"
+                ),
+            },
+            "authority_warning": "extraction is not authority — verify against the scan",
+        }
 
     def _fingerprint_manifest(
         self, *, image_sha256: str, batch_brief_sha256: str
@@ -546,11 +638,15 @@ class LocalReader:
         image = _resolve_local_file(Path(image_path), role="input image")
         image_sha256 = sha256_file(image)
         brief, brief_text = self._prepare_brief(batch_brief, image_sha256=image_sha256)
+        target_request = self._target_check_request(brief)
         request_text = (
-            "Read the supplied image as one blind AKTREADER pass. The following canonical "
-            "JSON is metadata only; reproduce these envelope values exactly and produce the "
-            "remaining schema fields from the image. Do not use any other Reader output.\n"
-            f"{brief_text}"
+            "Read the supplied image as one blind AKTREADER pass. Return only the bounded "
+            "model-facing schema. The application stamps identity and provenance after "
+            "generation; do not emit hashes, paths, timestamps, IDs, compliance fields, or "
+            "other mechanical metadata. Confirm the requested act in target_check and derive "
+            "all transcription and observations from the image. Do not use any other Reader "
+            "output. Requested target metadata:\n"
+            f"{_canonical_json(target_request)}"
         )
         command = self._command(image, request_text)
 
@@ -572,8 +668,12 @@ class LocalReader:
                 timeout=self.config.timeout_seconds,
             )
         except subprocess.TimeoutExpired as error:
+            stdout = error.stdout if isinstance(error.stdout, str) else ""
+            stderr = error.stderr if isinstance(error.stderr, str) else ""
             raise LocalInferenceError(
-                f"local inference exceeded {self.config.timeout_seconds} seconds"
+                f"local inference exceeded {self.config.timeout_seconds} seconds",
+                stdout=stdout,
+                stderr=stderr,
             ) from error
         except (OSError, UnicodeError) as error:
             raise LocalInferenceError(f"failed to execute pinned local runtime: {error}") from error
@@ -581,20 +681,31 @@ class LocalReader:
         if completed.returncode != 0:
             stderr_tail = completed.stderr[-4000:].strip()
             raise LocalInferenceError(
-                f"local runtime exited with code {completed.returncode}: {stderr_tail}"
+                f"local runtime exited with code {completed.returncode}: {stderr_tail}",
+                stdout=completed.stdout,
+                stderr=completed.stderr,
             )
 
-        payload = _load_reader_stdout(completed.stdout)
-        for key, expected in brief.items():
-            if payload.get(key) != expected:
-                raise LocalReaderOutputError(f"Reader changed batch-brief envelope field {key!r}")
-        _validate_confidence_ceiling(payload)
         try:
-            validate_instance(payload, self._paths["schema"])
-        except ContractValidationError as error:
-            raise LocalReaderOutputError(
-                f"Reader output violates the pinned JSON schema: {error}"
-            ) from error
+            model_payload = _load_reader_stdout(completed.stdout)
+            _validate_confidence_ceiling(model_payload)
+            try:
+                validate_instance(model_payload, self._paths["model_schema"])
+            except ContractValidationError as error:
+                raise LocalReaderOutputError(
+                    f"Reader output violates the pinned model JSON schema: {error}"
+                ) from error
+            payload = self._assemble_full_label(model_payload, brief)
+            try:
+                validate_instance(payload, self._paths["schema"])
+            except ContractValidationError as error:
+                raise LocalReaderOutputError(
+                    f"pipeline-stamped output violates the pinned label JSON schema: {error}"
+                ) from error
+        except LocalReaderError as error:
+            error.stdout = completed.stdout
+            error.stderr = completed.stderr
+            raise
 
         manifest = self._fingerprint_manifest(
             image_sha256=image_sha256,

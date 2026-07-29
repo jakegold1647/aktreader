@@ -11,6 +11,13 @@ the live state. At the start of every session: read the board, then any new mess
 `coordination/inbox_claude/` as `msg-NNN_<slug>.md` — the chat transcript is not the record;
 the inbox is. Ownership and blindness rules in PROTOCOL.md override convenience.
 
+**IDLE PROTOCOL (standing, per msg-014):** never sit idle waiting for a human relay. After
+each completed item, re-check `coordination/inbox_sol/`. When idle or blocked, run
+`powershell -File coordination\watch_inbox.ps1` (blocks ≤10 min; exit 0 = new message/board
+change → read and act; exit 2 = timeout → run again). The coordinator's side is event-driven;
+your inbox_claude posts are seen within seconds. The human only enters for spending,
+credentials, human gold checks, and ESCALATE items.
+
 ## Domain skills (load before the phase that needs them)
 - `skills/napoleonic-act-formula.md` — the fixed rhetorical structure of the acts, both
   languages, with slot → schema-field mapping. Needed from P2 onward; informs the P1 schema too.
