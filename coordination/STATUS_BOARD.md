@@ -12,7 +12,7 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 |---|---|---|---|---|---|---|
 | 001 | Serock 1890 deaths 1–2 | frozen | frozen (0d9f3bc) | merged | done | ✅ 9/9, appendix in wave-001 doc |
 | 002 | Serock 1890 deaths 3–6 | frozen | frozen (4839ac2) | merged (14 disputes) | done | ✅ appendix in wave-002 doc; A 12 / B 1.5; act 6 → human sample |
-| 003 | Serock 1890 deaths 30–40 (assigned msg-006; v1.2 both readers) | pending artifacts | pending artifacts | — | — | — |
+| 003 | Serock 1890 deaths 30–40 (v1.2 both readers) | frozen (02725c6) | frozen (d679320) | merged (24 disputes + 4 verification acts) | done (arbiter + verifier) | ✅ appendix in wave-003 doc; A 23 / B 0.5; acts 34+39 → human sample (act-40 surname deadlocked 2–2, rides along) |
 
 ## Claude (coordinator / Reader A) — owes
 - [x] Wave-002 RESOLVED appendix (done 28 Jul)
@@ -21,9 +21,9 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - [x] Wave 003 assigned (msg-006): Serock 1890 deaths 30–40, v1.2 both readers
 - [x] Wave-003 scans acquired + ARTIFACTS.txt delivered (msg-007); both readers unblocked
 - [x] Reader A blind pass, acts 30–40, prompt v1.2 — FROZEN at 02725c6 (11 labels)
-- [ ] Human gold-sample package for act 6 (crops + both readings + C report) for Jake
+- [ ] Human gold-sample package: **acts 6, 34, 39 pending Jake** (crops + both readings + C reports; act 40 rides along for its surname deadlock)
 - [x] Model fetched+verified by owner; reader-inspect READY (fingerprint 04adc59f…)
-- [!] Baseline run BLOCKED: all 17 jobs failed on stdout parsing (llama-cli b10167 banner/REPL chrome on stdout). Diagnosis + proposed fix → msg-008. GPU/vision path confirmed working. Awaiting Sol's parser patch + rerun instruction.
+- [!] Baseline BLOCKED (supersedes parser issue): b10167 grammar engine crashes on Qwen3.5 template (sampler init, <|im_start|>); probe matrix in msg-010/011. Parser itself now correct (attempts 1–3 fixed it). AWAITING: Sol pins a newer llama.cpp release (tag+URL+sha256) → owner fetch → grammar probe → rerun with --max-retries 3. Checkpoint rows at retry_count=2, untouched.
 - ACK: msg-001_ack-and-p2-boundaries.md (reply: inbox_sol/msg-003_silver-tier-and-v12.md)
 - ACK: msg-002_p2-gate.md (reply: inbox_sol/msg-005_p2-accepted.md)
 
@@ -34,6 +34,9 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
 ## Sol (builder / Reader B) — owes
+- [ ] **WORK QUEUE msg-012 (9 items, priority-ordered)** — build-pin first, then forensics,
+  fence tolerance, P2 addendum findings, silver materialization (coordinator confirmed),
+  coverage want-list, LoRA gate prep, release polish, wave-004 tooling
 - [x] READ inbox msg-001 and msg-002; ack both
 - [x] Prompt v1.1 release (patch text in labels/consensus/FOR_SOL_wave002_brief.md §3) + rehash
 - [x] P2 gate report with eval table (inbox_claude/msg-002_p2-gate.md)

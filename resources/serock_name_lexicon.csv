@@ -1,0 +1,109 @@
+normalized_form,type,variant,script,source_tier,source_ref
+Miara,surname,Miara,latin,1b,C_Serock F1/F2/F3
+Miara,surname,Мяра,cyrillic,1,W3 act34 RESOLVED
+Miara,surname,Micznik,latin,3,Serock_Survivors_Hunt (married surname of Chawa)
+Goldsztejn,surname,Goldsztejn,latin,1b,C_Serock F1
+Goldsztejn,surname,Goldsztajn,latin,3,1947 decree (INF)
+Goldsztejn,surname,Гольдштейнъ,cyrillic,1b,C_Serock F1
+Kanarek,surname,Kanarek,latin,1b,C_Serock F1/F3
+Kanarek,surname,Kania,latin,1b,C_Serock F1 (1876 act uncertain form)
+Herszfeld,surname,Herszfeld,latin,1,W2 act6 RESOLVED
+Herszfeld,surname,Гершвельдъ,cyrillic,1,W2 act6 (clerk writes ф as в)
+Auksztukalska,surname,Auksztukalska,latin,1,W1 act2 RESOLVED
+Auksztukalska,surname,Аукштукальская,cyrillic,1,W1 act2
+Auksztukalska,surname,Укштукальскій,cyrillic,1,W2 act3 (male form)
+Antoszewicz,surname,Antoszewicz,latin,1,W1/W2 triple-confirmed
+Antoszewicz,surname,Антошевичъ,cyrillic,1,W1 act5
+Malowanczyk,surname,Malowanczyk,latin,1,W1 act1
+Malowanczyk,surname,Малованчикъ,cyrillic,1,W1 act1
+Borensztejn,surname,Borensztejn,latin,1,W1 acts1-2
+Borensztejn,surname,Боренштейнъ,cyrillic,1,W1/W3
+Borensztejn,surname,Berenstein,latin,1,W1 act1 readerB variant pooled
+Zajczyk,surname,Zajczyk,latin,1,W2 act3
+Zajczyk,surname,Зайчикъ,cyrillic,1,W2 act3
+Tykulski,surname,Tykulski,latin,1,W2 act4
+Tykulski,surname,Тыкульскій,cyrillic,1,W2 act4
+Psznek,surname,Пшнекъ,cyrillic,1,W2 arb#7 (LEANING)
+Psznek,surname,Pienik,latin,5,YZK p489 (Reb Yidel Pienik)
+Cykor,surname,Цикоръ,cyrillic,1,W2 act5 RESOLVED
+Cukier,surname,Cukier,latin,4,SURV survivor list
+Cukier,surname,Zuker,latin,4,SURV survivor list
+Kaltun,surname,Калтунъ,cyrillic,1,W2 act4 RESOLVED
+Koltun,surname,Колтунъ,cyrillic,1,W3 arb#20 (SURE) — CONFLICT with Kowszun
+Kowszun,surname,Ковшунъ,cyrillic,1,VR acts36-38 — CONFLICT with Koltun
+Kendzior,surname,Kendzior,latin,1,W2 act5
+Kendzior,surname,Кендзюръ,cyrillic,1,W2 act5
+Kendzior,surname,Кейдзюръ,cyrillic,1,W3 arb#21 (LEANING)
+Wolman,surname,Вольманъ,cyrillic,1,W3 arb#5 (LEANING)
+Kaner,surname,Канеръ,cyrillic,1,W3 arb#17
+Sztatzinger,surname,Штатзингеръ,cyrillic,1,W3 arb#10 (LEANING)
+Zinderman,surname,Зиндерманъ,cyrillic,1,W3 arb#13
+Zilbersztejn,surname,Зильберштейнъ,cyrillic,1,VR act37 declarant
+Makowska,surname,Маковская,cyrillic,1,W3 arb#1
+Mendzilewski,surname,Мендзилевскій,cyrillic,1,W3 arb#23 (SURE x5)
+Bobek,surname,Бобекъ,cyrillic,1,W3 act40 DEADLOCKED 2-2
+Bodek,surname,Бодекъ,cyrillic,1,W3 act40 DEADLOCKED 2-2
+Kon,surname,Конъ,cyrillic,1,W3 arb#24
+Margulis,surname,Маргулисъ,cyrillic,1,VR act36
+Frydman,surname,Фридманъ,cyrillic,1,W3 act35
+Frydman,surname,Fridman,latin,4,SURV survivor list
+Rozenberg,surname,Rozenberg,latin,1b,C_Serock F1 (1876 witnesses)
+Rozenberg,surname,Розенбергъ,cyrillic,1,VR act36
+Wielkobroda,surname,Wielkobroda,latin,1b,ACTS (1902-03 declarants)
+Wielkobroda,surname,Велькоброда,cyrillic,1b,ACTS signatures
+Wielkobroda,surname,Wijelkabroda,latin,2,C_Serock F6 JRI 1889/4
+Wajngrod,surname,Wajngrod,latin,1b,C_Serock F5
+Kuligowski,surname,Kuligowski,latin,1b,C_Serock F8 (1903/23)
+Lewinsztejn,surname,Lewinsztejn,latin,1b,C_Serock F1 (rabbi)
+Boguslawski,surname,Boguslawski,latin,3,decree (Liba Boguslawska)
+Boguslawski,surname,Bogusławska,latin,3,decree
+Gutkowski,surname,Gutkowski,latin,5,martyrs G-list
+Gutkowski,surname,Gutkowska,latin,2,C_Serock F4 (1903 birth index)
+Sterdyner,surname,Стердынеръ,cyrillic,1,W3 arb#19 (LEANING)
+Sterdyner,surname,Sterdyner,latin,4,SURV survivor list x2
+Sterdyner,surname,Sterdiner,latin,5,YZK p489 (glazier)
+Konkol,surname,Konkol,latin,1,W1 act2 RESOLVED
+Konkol,surname,Конколь,cyrillic,1,W1 act2
+Konkol,surname,Konkl,latin,5,YZK (Konkl-Kanarek memoirist)
+Kutas,surname,Кутасъ,cyrillic,1,VR acts36/38
+Kutas,surname,Kutas,latin,1,VR Latin signature "Szlama Kutas"
+Kutljakowski,surname,Кутляковскій,cyrillic,1,W3/VR act38 (pooled)
+Jarzabek,surname,Jarząbek,latin,3,INF §9
+Jarzabek,surname,IAZHOMBEK,latin,3,ONO trap (transliteration round-trip)
+Weksler,anti-entry,Gersz Weksler,latin,1,W2 act6 PHANTOM (line-break artifact)
+Majkowski,anti-entry,Лейбъ Майковскій,cyrillic,1,W3 act39 PHANTOM
+Kanalek,anti-entry,KANALEK,latin,4,SURV near-miss (not Kanarek; b.1927 Pruszków)
+Pfluger,anti-entry,Пфлюгеръ,cyrillic,1,W2 arb#7 refuted
+Toper,anti-entry,Топеръ,cyrillic,1,W2 arb#8 refuted
+Turecki,anti-entry,Турецкій,cyrillic,1,W3... refuted W2 arb#4 (act3 declarant)
+Bejla,given,Бейля,cyrillic,1,W3 act34
+Bejla,given,Bajla,latin,2,JRI B-37/1886
+Josek,given,Іосекъ,cyrillic,1,W2 act3; W3 arb#22
+Josek,given,Josek,latin,1,VR Latin signature "Josek Rubinsztajn"
+Ruchla,given,Рухля,cyrillic,1,W1 act1; W3 act39
+Majer,given,Маеръ,cyrillic,1,W3 act37
+Majer,given,Majer,latin,1b,C_Serock F1
+Moszek,given,Мошекъ,cyrillic,1,W3 acts30/33; VR act36
+Chana,given,Хана,cyrillic,1,W1 act2; W2 act6
+Gitla,given,Gitla,latin,1b,C_Serock F1/F3
+Fejga,given,Fejga,latin,3,CKŻP card 13827227
+Masza,given,Masza,latin,3,CKŻP card 13827249
+Szaja,given,Шая,cyrillic,1,VR act37 filiation
+Lejb,given,Лейбъ,cyrillic,1,W2 act3 declarant
+Lejbka,given,Лейбка,cyrillic,1,VR act36
+Jankel,given,Янкель,cyrillic,1,W1 acts1-5; W3 act32
+Chaim,given,Хаимъ,cyrillic,1,W2 act5
+Boim,given,Боимъ,cyrillic,1,W3 arb#8 (unusual; possibly Bunim — FLAGGED)
+Szlama,given,Шляма,cyrillic,1,W2 act6; VR act38
+Berek,given,Берекъ,cyrillic,1,VR acts36/38
+Icek,given,Ицекъ,cyrillic,2,JRI B-2/1882 (uncle Icek)
+Dwojra,given,Двойра,cyrillic,1,W2 act5; VR act37
+Tauba,given,Тауба,cyrillic,1,W3 arb#11
+Elka,given,Элька,cyrillic,1,W3/VR act40 red-ink
+Michla,given,Михля,cyrillic,1,W3 arb#2
+Jochwet,given,Jochwet,latin,1b,C_Serock F1
+Sura,given,Сура,cyrillic,1,VR act35 (Сура Майта)
+Boruch,given,Борухъ,cyrillic,1,W2 act6; VR act37
+Pinkus,given,Пинкусъ,cyrillic,1,W2 arb#6
+Hersz,given,Гершъ,cyrillic,1,W2 act6 signature
+Gutman,given,Гутманъ,cyrillic,1,W3/VR act40 father
