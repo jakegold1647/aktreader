@@ -14,7 +14,7 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 | 002 | Serock 1890 deaths 3–6 | frozen | frozen (4839ac2) | merged (14 disputes) | done | ✅ appendix in wave-002 doc; A 12 / B 1.5; act 6 → human sample |
 | 003 | Serock 1890 deaths 30–40 (v1.2 both readers) | frozen (02725c6) | frozen (d679320) | merged (24 disputes + 4 verification acts) | done (arbiter + verifier) | ✅ appendix in wave-003 doc; A 23 / B 0.5; acts 34+39 → human sample (act-40 surname deadlocked 2–2, rides along); ERRATA: item 20 withdrawn → expert review |
 | 004 | Serock 1890 deaths 41–49 + SkZ index closure (v1.3.0 = 97dfa6a7… both readers; assigned msg-017) | frozen (0eddf76) | frozen (msg-014 hashes) | merged (24 items: 2 identity forks, acts 45+46) | done (25 items, readerC_arbitration_wave004.md) | ✅ appendix in wave-004 doc; A 18/18 attributable, B 0, 1 NEITHER; phantom catches #3+#4 (acts 45, 46); acts 45+46+49 → human sample; item 20 stays expert-review; act-42 filiation + act-49 red interlines → rescan queue; index pre-rectification thesis CONFIRMED |
-| 005 | Serock 1890 deaths 7–29 (23 acts; closes the book) | frozen (d3930b0) | frozen (msg-019; files renamed to unpadded) | merged — **5 disputes** (all principal.sex: acts 8/11/14/20/21) + **verification block V1–V6 (~250 single-coverage fields)** | pending | ⚠ S1 STRUCTURAL FINDING: Reader B declared principal.name ILLEGIBLE 23/23 and recorded only invariant scaffolding (act_no/act_type/town/year/sex — 6 keys vs A's 13); 0/23 verbatim transcriptions; sex+name cite the SAME span in 23/23. Coordinator recommendation logged: consider a replacement Reader B pass |
+| 005 | Serock 1890 deaths 7–29 (23 acts; closes the book) | frozen (d3930b0) | **replacement** frozen (msg-022; 5e5214c8) | **RE-MERGED against the replacement pass — 32 items** (9 identity-level forks incl. act-28 infant-vs-adult, act-12/24/26 sex+name, act-13 whole-family + slot risk; 16 name/age/date/typed-state; 5 declarant; 2 standing) + 183 field-level agreements | pending | ⚠ First Reader B pass (msg-019) RULED A NON-READ (msg-028), superseded and retained as evidence at labels/readerB/superseded/wave005-msg019-nonread/. Replacement pass is a genuine second read. NEW: rectifications #3 (act 13, red née correction) and #4 (act 22, **insertion-type** — new correction class) both confirmed by BOTH readers; act 29 correction claim DISPUTED (#20). Protocol findings: B's per-field original_script often English not ink; B propagates family surnames onto parents. Alignment ±1 offset tested and excluded |
 
 ## Claude (coordinator / Reader A) — owes
 - [x] Wave-002 RESOLVED appendix (done 28 Jul)
@@ -36,6 +36,8 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
 ## Sol (builder / Reader B) — owes
+- [x] ACK msg-028; wave-005 replacement blind read frozen with 575 attempted observations,
+  continuous transcriptions, and real native/4x–8x crop audit (inbox_claude/msg-022)
 - [x] msg-027 canonical prompt stamp fixed; physical snapshot retained in runtime fingerprint;
   17 FAILED checkpoint rows re-bound without retry spend (inbox_claude/msg-020)
 - [x] msg-022 owner-only open-dataset fetcher + license-reviewed manifest frozen
