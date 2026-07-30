@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "packet_id": "qualification-0001",
+  "created_on": "2026-07-29",
+  "purpose": "QUALIFICATION_ONLY_EXCLUDED_FROM_GOLD_AND_TRAINING",
+  "candidate_codes": ["H1", "H2", "H3"],
+  "records": [
+    {
+      "record_id": "serock-1890-death-1",
+      "source_language": "ru",
+      "source": {
+        "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg",
+        "sha256": "3a4ed2604cf2f02b9a32009749869548b639803b3ed5204eafeeb84a6f55e886"
+      },
+      "crop": {"x": 1400, "y": 40, "width": 1460, "height": 1170}
+    },
+    {
+      "record_id": "serock-1890-death-2",
+      "source_language": "ru",
+      "source": {
+        "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg",
+        "sha256": "3a4ed2604cf2f02b9a32009749869548b639803b3ed5204eafeeb84a6f55e886"
+      },
+      "crop": {"x": 1400, "y": 1110, "width": 1460, "height": 1240}
+    },
+    {
+      "record_id": "serock-1890-death-3",
+      "source_language": "ru",
+      "source": {
+        "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+        "sha256": "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9"
+      },
+      "crop": {"x": 70, "y": 35, "width": 1380, "height": 1080}
+    },
+    {
+      "record_id": "serock-1890-death-4",
+      "source_language": "ru",
+      "source": {
+        "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+        "sha256": "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9"
+      },
+      "crop": {"x": 70, "y": 980, "width": 1380, "height": 1360}
+    },
+    {
+      "record_id": "serock-1890-death-5",
+      "source_language": "ru",
+      "source": {
+        "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+        "sha256": "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9"
+      },
+      "crop": {"x": 1410, "y": 35, "width": 1390, "height": 1080}
+    }
+  ]
+}

@@ -46,7 +46,7 @@
     },
     "plan": {
       "path": "E:\\DNA\\Project_RegisterReader\\training\\plan-0001.json",
-      "sha256": "4280ad3818917c4ba5564337c589ed9a901cc0aabeb455f04f519a34667b6426"
+      "sha256": "10abf4b39effb1755aa56c37e7356993abea9d902f7eb5c50dc945594dba9b03"
     },
     "silver_manifest": {
       "path": "E:\\DNA\\Project_RegisterReader\\labels\\silver\\manifest.json",

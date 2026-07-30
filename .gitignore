@@ -31,3 +31,6 @@ models/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Generated human qualification packets contain distributable source crops
+/training/qualification-*/

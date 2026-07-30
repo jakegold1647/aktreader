@@ -53,6 +53,20 @@ Suggested unit ceilings are $30 per independent transcription and $25 per adjudi
 Release each milestone only after mechanical and expert acceptance. Never prepay the full
 production batch.
 
+## Qualification packet
+
+The five qualification crops are pinned in `training/qualification-source-0001.json` and are
+explicitly excluded from gold and training. Rebuild the three blind candidate archives with:
+
+```powershell
+$env:PYTHONPATH = "src"
+python tools/build_human_qualification_packet.py
+```
+
+Generated ZIPs and their receipt are placed in `training/qualification-0001/`. The builder
+verifies source hashes, refuses any path under BulkData, includes no observations or machine
+labels, and fails rather than overwrite a non-empty packet directory.
+
 ## Marketplace job post
 
 **Title:** Transcribe 19th-century Polish/Russian civil-register handwriting (Cyrillic,

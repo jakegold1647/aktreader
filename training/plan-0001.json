@@ -22,7 +22,8 @@
     "independent_transcribers_per_record": 2,
     "adjudicator_required": true,
     "machine_assistance_disclosed_and_excluded_from_qualification": true,
-    "acceptance_contract": "docs/human-gold-acquisition.md"
+    "acceptance_contract": "docs/human-gold-acquisition.md",
+    "qualification_source_manifest": "training/qualification-source-0001.json"
   },
   "model_bakeoff": {
     "purpose": "Select the local reader and independent verifier before spending on LoRA.",
