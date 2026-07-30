@@ -14,14 +14,19 @@ Measured probes separated the frontend failure from the grammar engine:
 - b10167 `llama-cli` crashes when its REPL prompt tokens pass through the active Qwen3.5 grammar;
 - the same build's `llama-mtmd-cli` initializes the inline JSON schema correctly;
 - the full label schema then caused repetition in long mechanical fields;
-- the frozen remediation gives the model only a bounded target check, transcription/translation,
-  and observations, while AKTREADER stamps identity and provenance after generation.
+- the frozen remediation gives the model only a bounded target check, line-array
+  transcription/translation, and observations, while AKTREADER stamps identity and provenance
+  after generation.
 
 The pinned frontend is `runtime\llama.cpp-b10167\llama-mtmd-cli.exe`, version
 `10167 (ee3d1b54c)`, SHA-256
 `6866b9425ec02798087380e14d5a9c69ded092a914cd48f06cf9b803552f7bfc`.
-The one-job reduced-schema probe remains pending. No baseline retry has been spent by this
-rebuild.
+A one-job reduced-schema probe generated a complete constrained label without a grammar
+crash, repetition loop, or truncation. Its first output exposed one validator-only failure:
+a non-present observation carried non-null confidence. The refrozen reduced schema now uses
+three mutually exclusive `oneOf` branches so PROBABLE-present, UNCLEAR-present, and null
+non-present evidence cannot be mixed. The confirming one-job probe remains pending; no
+baseline retry has been spent by this rebuild.
 
 ## Hardware profiles
 
@@ -179,10 +184,16 @@ blind pass cannot accidentally receive another Reader's work.
 
 ## Reproducibility fingerprint
 
+Each successful inference persists the raw llama.cpp stdout and stderr beside the assembled
+JSON label as `.stdout.txt` and `.stderr.txt`; failed jobs use `.failed.stdout.txt` and
+`.failed.stderr.txt`, with those paths recorded in the checkpoint error. This keeps the
+original model surface available for forensic review even after application stamping.
+
 Each successful result exposes:
 
 - the SHA-256 of the llama.cpp executable, model, projector, prompt, full label schema,
   reduced model schema, and optional LoRA;
+- the prompt's canonical logical label path plus its physical snapshot filename and SHA-256;
 - deterministic generation settings;
 - the input image SHA-256;
 - the canonical batch-brief SHA-256;

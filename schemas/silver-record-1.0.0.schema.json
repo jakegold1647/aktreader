@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/silver-record-1.0.0.json",
+  "title": "AKTREADER materialized silver record",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "record_id",
+    "tier",
+    "clerk_year",
+    "artifact",
+    "target",
+    "source_spans",
+    "observations",
+    "resolution",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {"const": "../../schemas/silver-record-1.0.0.schema.json"},
+    "schema_version": {"const": "1.0.0"},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+    "tier": {"const": "SILVER"},
+    "clerk_year": {
+      "type": "object",
+      "required": ["id", "basis", "clerk_id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "basis": {"const": "REGISTER_YEAR_PROXY"},
+        "clerk_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {"type": "object"},
+    "target": {"type": "object"},
+    "source_spans": {"type": "object"},
+    "observations": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/observation"}
+    },
+    "resolution": {
+      "type": "object",
+      "required": ["method", "confidence_cap", "consensus_document", "arbitration_document"],
+      "properties": {
+        "method": {"const": "BLIND_2_OF_3_MACHINE_CONSENSUS"},
+        "confidence_cap": {"const": "PROBABLE"},
+        "consensus_document": {"$ref": "#/$defs/sourceFile"},
+        "arbitration_document": {"$ref": "#/$defs/sourceFile"}
+      },
+      "additionalProperties": false
+    },
+    "authority_warning": {"const": "extraction is not authority â€” verify against the scan"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sourceFile": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "alternative": {
+      "type": "object",
+      "required": ["value", "original_script"],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "required": [
+        "value",
+        "original_script",
+        "confidence",
+        "observation_state",
+        "alternatives",
+        "source_span_ids",
+        "notes"
+      ],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]},
+        "confidence": {"enum": ["PROBABLE", "UNCLEAR", null]},
+        "observation_state": {
+          "enum": ["PRESENT", "ABSENT_ON_FORM", "BLANK", "STATED_UNKNOWN", "ILLEGIBLE"]
+        },
+        "alternatives": {"type": "array", "items": {"$ref": "#/$defs/alternative"}},
+        "source_span_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "notes": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

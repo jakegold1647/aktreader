@@ -18,7 +18,7 @@ def test_baseline_lock_uses_revision_pinned_owner_fetches() -> None:
     lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
     revision = lock["prebuilt_gguf"]["revision"]
 
-    assert lock["state"] == "MTMD_REDUCED_SCHEMA_FROZEN_PROBE_PENDING"
+    assert lock["state"] == "BASELINE_COMPLETE_SCHEMA_HARDENING_PENDING_PROBE"
     assert lock["application_downloads_artifacts"] is False
     assert lock["inference_network_allowed"] is False
     assert len(revision) == 40

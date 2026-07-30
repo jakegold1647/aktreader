@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
@@ -11,6 +12,14 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+FIELD_MAP_PATH = PROJECT_ROOT / "schemas" / "model-output-to-gold-map-1.0.0.json"
+FIELD_MAP_STATUSES = {
+    "MAP",
+    "UNSCORABLE_AGGREGATE",
+    "UNSCORABLE_NO_GOLD_PATH",
+    "UNSCORABLE_PROVENANCE",
+}
 FILIATION_PATHS = {
     "principal.name",
     "principal.maiden_name",
@@ -66,6 +75,78 @@ def _prediction_observations(record: dict[str, Any]) -> dict[str, dict[str, Any]
     return observations
 
 
+def load_model_output_field_map(path: Path = FIELD_MAP_PATH) -> dict[str, Any]:
+    """Load the version-pinned reduced-output to gold vocabulary map."""
+    try:
+        mapping = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise EvaluationIntegrityError(f"field vocabulary map is unreadable: {path}") from exc
+    if mapping.get("schema_version") != "1.0.0":
+        raise EvaluationIntegrityError("unsupported field vocabulary map version")
+    binding = mapping.get("model_output_schema")
+    if not isinstance(binding, dict):
+        raise EvaluationIntegrityError("field vocabulary map lacks model-output schema binding")
+    schema_path = PROJECT_ROOT / str(binding.get("path", ""))
+    try:
+        observed_hash = hashlib.sha256(schema_path.read_bytes()).hexdigest()
+    except OSError as exc:
+        raise EvaluationIntegrityError(
+            f"mapped model-output schema is unreadable: {schema_path}"
+        ) from exc
+    if observed_hash != binding.get("sha256"):
+        raise EvaluationIntegrityError("field vocabulary map/model-output schema SHA-256 mismatch")
+    entries = mapping.get("entries")
+    if not isinstance(entries, dict) or not entries:
+        raise EvaluationIntegrityError("field vocabulary map requires non-empty entries")
+    for key, entry in entries.items():
+        if not isinstance(key, str) or not isinstance(entry, dict):
+            raise EvaluationIntegrityError("field vocabulary map entries must be objects")
+        status = entry.get("status")
+        if status not in FIELD_MAP_STATUSES:
+            raise EvaluationIntegrityError(f"unsupported field-map status for {key!r}")
+        if status == "MAP":
+            if not isinstance(entry.get("gold_path"), str) or not entry["gold_path"]:
+                raise EvaluationIntegrityError(f"mapped key lacks gold_path: {key!r}")
+        elif not isinstance(entry.get("reason"), str) or not entry["reason"]:
+            raise EvaluationIntegrityError(f"unscorable key lacks reason: {key!r}")
+    return mapping
+
+
+def map_prediction_observations(
+    record: dict[str, Any],
+    gold_paths: set[str],
+    field_map: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], Counter[str]]:
+    """Map every prediction key or fail; never permit a silent namespace miss."""
+    mapped: dict[str, dict[str, Any]] = {}
+    dispositions: Counter[str] = Counter()
+    entries = field_map["entries"]
+    for model_key, evidence in _prediction_observations(record).items():
+        if model_key in gold_paths:
+            gold_path = model_key
+            status = "IDENTITY"
+        else:
+            entry = entries.get(model_key)
+            if entry is None:
+                raise EvaluationIntegrityError(
+                    f"{record.get('record_id', '<unknown>')}: unmapped model observation "
+                    f"key {model_key!r}"
+                )
+            status = entry["status"]
+            if status != "MAP":
+                dispositions[status] += 1
+                continue
+            gold_path = entry["gold_path"]
+        if gold_path in mapped:
+            raise EvaluationIntegrityError(
+                f"{record.get('record_id', '<unknown>')}: multiple model keys map to "
+                f"gold path {gold_path!r}"
+            )
+        mapped[gold_path] = evidence
+        dispositions[status] += 1
+    return mapped, dispositions
+
+
 def _gold_is_scorable(field: dict[str, Any]) -> bool:
     return (
         field.get("observation_state") != "NOT_ANNOTATED"
@@ -102,9 +183,7 @@ def validate_holdout_integrity(
     if gold_ids != holdout_ids:
         missing = sorted(gold_ids - holdout_ids)
         extra = sorted(holdout_ids - gold_ids)
-        raise EvaluationIntegrityError(
-            f"holdout record mismatch; missing={missing}, extra={extra}"
-        )
+        raise EvaluationIntegrityError(f"holdout record mismatch; missing={missing}, extra={extra}")
     if gold_clerk_years != holdout_clerk_years:
         raise EvaluationIntegrityError("holdout clerk-year set does not match the gold corpus")
     leakage = sorted(training & holdout_clerk_years)
@@ -133,6 +212,8 @@ def evaluate_predictions(
     if len(prediction_ids) != len(set(prediction_ids)):
         raise EvaluationIntegrityError("duplicate prediction record IDs")
     predictions = {record["record_id"]: record for record in prediction_list}
+    field_map = load_model_output_field_map()
+    field_dispositions: Counter[str] = Counter()
 
     leakage = validate_holdout_integrity(
         gold, holdout, training_clerk_year_ids=training_clerk_year_ids
@@ -156,8 +237,11 @@ def evaluate_predictions(
         prediction = predictions.get(gold_record["record_id"])
         if prediction is None:
             continue
-        predicted_fields = _prediction_observations(prediction)
         gold_fields = flatten_gold_fields(gold_record["fields"])
+        predicted_fields, dispositions = map_prediction_observations(
+            prediction, set(gold_fields), field_map
+        )
+        field_dispositions.update(dispositions)
         act_filiation_results: list[bool] = []
 
         for path, gold_field in gold_fields.items():
@@ -183,17 +267,15 @@ def evaluate_predictions(
             if not _gold_is_scorable(gold_field):
                 continue
             scored_fields += 1
-            exact = (
-                predicted_state == gold_state
-                and canonical_exact(predicted.get("value"))
-                == canonical_exact(gold_field.get("value"))
-            )
+            exact = predicted_state == gold_state and canonical_exact(
+                predicted.get("value")
+            ) == canonical_exact(gold_field.get("value"))
 
             if grade in calibration:
                 calibration[grade]["scored"] += 1
-                supported = exact or (grade == "UNCLEAR" and _alternative_contains(
-                    predicted, gold_field.get("value")
-                ))
+                supported = exact or (
+                    grade == "UNCLEAR" and _alternative_contains(predicted, gold_field.get("value"))
+                )
                 calibration[grade]["supported"] += int(supported)
                 calibration[grade]["exact"] += int(exact)
 
@@ -232,6 +314,11 @@ def evaluate_predictions(
             "coverage": matched_records / total_records if total_records else math.nan,
         },
         "holdout_integrity": leakage,
+        "field_vocabulary": {
+            "mapping_version": field_map["schema_version"],
+            "model_output_schema_sha256": field_map["model_output_schema"]["sha256"],
+            "dispositions": dict(sorted(field_dispositions.items())),
+        },
         "filiation_exact_match": {
             "fields_correct": filiation_correct,
             "fields_total": filiation_total,

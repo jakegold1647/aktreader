@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0.0",
+  "reviewed_on": "2026-07-28",
+  "policy": {
+    "allowed_spdx": [
+      "Apache-2.0",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "MIT",
+      "MIT-CMU"
+    ],
+    "copyleft_runtime_dependency_allowed": false
+  },
+  "declared_dependencies": {
+    "runtime": ["jsonschema", "pillow"],
+    "development": ["pytest", "ruff"],
+    "build": ["setuptools"]
+  },
+  "reviewed_packages": [
+    {"name": "attrs", "relationship": "jsonschema transitive", "spdx": "MIT"},
+    {"name": "colorama", "relationship": "pytest Windows transitive", "spdx": "BSD-3-Clause"},
+    {"name": "iniconfig", "relationship": "pytest transitive", "spdx": "MIT"},
+    {"name": "jsonschema", "relationship": "direct runtime", "spdx": "MIT"},
+    {
+      "name": "jsonschema-specifications",
+      "relationship": "jsonschema transitive",
+      "spdx": "MIT"
+    },
+    {
+      "name": "packaging",
+      "relationship": "pytest transitive",
+      "spdx": "Apache-2.0"
+    },
+    {"name": "pillow", "relationship": "direct runtime", "spdx": "MIT-CMU"},
+    {"name": "pluggy", "relationship": "pytest transitive", "spdx": "MIT"},
+    {"name": "pygments", "relationship": "pytest transitive", "spdx": "BSD-2-Clause"},
+    {"name": "pytest", "relationship": "direct development", "spdx": "MIT"},
+    {"name": "referencing", "relationship": "jsonschema transitive", "spdx": "MIT"},
+    {"name": "rpds-py", "relationship": "jsonschema transitive", "spdx": "MIT"},
+    {"name": "ruff", "relationship": "direct development; standalone binary", "spdx": "MIT"},
+    {"name": "setuptools", "relationship": "direct build", "spdx": "MIT"}
+  ],
+  "decision": "PASS",
+  "note": "The project itself remains unlicensed until Jake chooses AGPL or MIT. Dependency compatibility does not grant a project license."
+}

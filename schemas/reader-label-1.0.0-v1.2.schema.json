@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/reader-label-1.0.0.json",
+  "title": "AKTREADER immutable Reader observation label",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "label_id",
+    "record_id",
+    "created_at",
+    "reader",
+    "prompt",
+    "clerk_year",
+    "artifact",
+    "target",
+    "source_spans",
+    "mentions",
+    "transcription",
+    "observations",
+    "compliance",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schema_version": {"const": "1.0.0"},
+    "label_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "reader": {
+      "type": "object",
+      "required": [
+        "reader_id",
+        "reader_family",
+        "reader_version",
+        "mode",
+        "blind_group_id",
+        "other_reader_output_seen"
+      ],
+      "properties": {
+        "reader_id": {"type": "string", "minLength": 1},
+        "reader_family": {"type": "string", "minLength": 1},
+        "reader_version": {"type": "string", "minLength": 1},
+        "mode": {"enum": ["subscription_session", "local"]},
+        "blind_group_id": {"type": "string", "minLength": 1},
+        "other_reader_output_seen": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "prompt": {
+      "type": "object",
+      "required": ["version", "sha256", "path"],
+      "properties": {
+        "version": {"enum": ["1.0.0", "1.1.0", "1.2.0"]},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "path": {"const": "prompts/reader_prompt.md"}
+      },
+      "additionalProperties": false
+    },
+    "clerk_year": {
+      "type": "object",
+      "required": ["id", "basis", "clerk_id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "basis": {"enum": ["IDENTIFIED_CLERK", "REGISTER_YEAR_PROXY"]},
+        "clerk_id": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["path", "sha256", "width_px", "height_px", "page_index", "act_region"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "width_px": {"type": "integer", "minimum": 1},
+        "height_px": {"type": "integer", "minimum": 1},
+        "page_index": {"type": "integer", "minimum": 0},
+        "act_region": {"$ref": "#/$defs/bbox"}
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": ["town", "fond", "year", "act_type", "act_no", "language"],
+      "properties": {
+        "town": {"type": "string", "minLength": 1},
+        "fond": {"type": "string", "minLength": 1},
+        "year": {"type": "integer", "minimum": 1800, "maximum": 2100},
+        "act_type": {"enum": ["birth", "marriage", "death", "annex", "index_page"]},
+        "act_no": {"type": ["integer", "null"], "minimum": 1},
+        "language": {"enum": ["ru", "pl", "mixed", "unknown"]}
+      },
+      "additionalProperties": false
+    },
+    "source_spans": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z0-9][a-z0-9-]+$"},
+      "additionalProperties": {"$ref": "#/$defs/sourceSpan"}
+    },
+    "mentions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/mention"}
+    },
+    "transcription": {
+      "type": "object",
+      "required": ["original_script", "translation"],
+      "properties": {
+        "original_script": {"type": "string", "minLength": 1},
+        "translation": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "observations": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_-]+)*$"},
+      "additionalProperties": {"$ref": "#/$defs/evidence"}
+    },
+    "compliance": {
+      "type": "object",
+      "required": [
+        "restricted_sources_used",
+        "privacy_decision",
+        "privacy_basis",
+        "training_eligible",
+        "training_basis"
+      ],
+      "properties": {
+        "restricted_sources_used": {"const": false},
+        "privacy_decision": {"enum": ["ALLOW", "REFUSE"]},
+        "privacy_basis": {"type": "string", "minLength": 1},
+        "training_eligible": {"type": "boolean"},
+        "training_basis": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "authority_warning": {
+      "const": "extraction is not authority — verify against the scan"
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "bbox": {
+      "type": "object",
+      "required": ["x", "y", "width", "height", "coordinate_space"],
+      "properties": {
+        "x": {"type": "integer", "minimum": 0},
+        "y": {"type": "integer", "minimum": 0},
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1},
+        "coordinate_space": {"const": "source_pixels"}
+      },
+      "additionalProperties": false
+    },
+    "sourceSpan": {
+      "type": "object",
+      "required": ["bbox", "description"],
+      "properties": {
+        "bbox": {"$ref": "#/$defs/bbox"},
+        "description": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "mention": {
+      "type": "object",
+      "required": ["mention_id", "role"],
+      "properties": {
+        "mention_id": {"type": "string", "pattern": "^[a-z0-9-]+#[a-z0-9-]+$"},
+        "role": {
+          "enum": [
+            "principal",
+            "father",
+            "mother",
+            "spouse",
+            "spouse_father",
+            "spouse_mother",
+            "declarant",
+            "witness",
+            "officiant",
+            "survivor"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "alternative": {
+      "type": "object",
+      "required": ["value", "original_script"],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "value",
+        "original_script",
+        "confidence",
+        "observation_state",
+        "alternatives",
+        "source_span_ids",
+        "notes"
+      ],
+      "properties": {
+        "value": {},
+        "original_script": {"type": ["string", "null"]},
+        "confidence": {"enum": ["PROBABLE", "UNCLEAR", null]},
+        "observation_state": {
+          "enum": ["PRESENT", "ABSENT_ON_FORM", "BLANK", "STATED_UNKNOWN", "ILLEGIBLE"]
+        },
+        "alternatives": {"type": "array", "items": {"$ref": "#/$defs/alternative"}},
+        "source_span_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "notes": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {"properties": {"observation_state": {"const": "PRESENT"}}},
+          "then": {
+            "properties": {
+              "value": {"not": {"type": "null"}},
+              "confidence": {"enum": ["PROBABLE", "UNCLEAR"]}
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {"type": "null"},
+              "confidence": {"type": "null"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"confidence": {"const": "UNCLEAR"}}},
+          "then": {
+            "properties": {
+              "value": {"type": "string", "pattern": "^\\[unclear: .+\\]$"},
+              "alternatives": {"minItems": 1}
+            }
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

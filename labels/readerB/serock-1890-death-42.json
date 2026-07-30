@@ -1,0 +1,309 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-42.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-42",
+  "created_at": "2026-07-28T20:59:19.660187-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-41-49-wave-004",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+    "sha256": "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 1410,
+      "y": 1010,
+      "width": 1320,
+      "height": 1350,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 42,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 1410,
+        "y": 1010,
+        "width": 1320,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 1410,
+        "y": 1235,
+        "width": 1320,
+        "height": 337,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants and their stated attributes"
+    },
+    "event": {
+      "bbox": {
+        "x": 1410,
+        "y": 1550,
+        "width": 1320,
+        "height": 337,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death date or relative-date phrase, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 1410,
+        "y": 1685,
+        "width": 1320,
+        "height": 450,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 1410,
+        "y": 1820,
+        "width": 1320,
+        "height": 337,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage, maiden name, or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 1410,
+        "y": 2090,
+        "width": 1320,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-42#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-42#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-42#mother",
+      "role": "mother"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 42. Состоялось въ посадѣ Сероцкѣ третьяго Октября тысяча восемьсотъ девяностаго года. ... объявили, что вчера ... умерла [unclear: Рейзля Оренъ?]. [illegible: filiation clause].",
+    "translation": "Act 42. Registered in Serock on 3 October 1890. A female, whose name may read Reyzla Oren, died the preceding day. The filiation is not securely legible."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умеръ/умерла/умерло",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "act_no": {
+      "value": 42,
+      "original_script": "№ 42",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-10-03",
+        "gregorian": "1890-10-15",
+        "gregorian_derived": true
+      },
+      "original_script": "третьяго Октября",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-10-02",
+        "gregorian": "1890-10-14",
+        "gregorian_derived": true
+      },
+      "original_script": "вчера",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Gregorian is a marked 12-day derivation; relative dates are resolved against registration."
+      ]
+    },
+    "principal.sex": {
+      "value": "female",
+      "original_script": "умерла",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "[unclear: Reyzla Oren?]",
+      "original_script": "[unclear: Рейзля Оренъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Reyzla Oren",
+          "original_script": "[unclear: Рейзля Оренъ?]"
+        }
+      ],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "Single shaky candidate retained exactly as required by prompt v1.3."
+      ]
+    },
+    "principal.age": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "Age remained unreadable after 2× quadrant and 3× line inspection."
+      ]
+    },
+    "father.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Filiation remained unreadable after 2× quadrant and 3× line inspection; no index was consulted."
+      ]
+    },
+    "mother.name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Filiation remained unreadable after 2× quadrant and 3× line inspection; no index was consulted."
+      ]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No secure maiden-name reading is visible in the act."
+      ]
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "No material marginal correction is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Blind subscription-session label read from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

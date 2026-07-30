@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "profile_id": "p2-qwen3.5-9b-q5_k_m-f16",
-  "state": "MTMD_REDUCED_SCHEMA_FROZEN_PROBE_PENDING",
+  "state": "BASELINE_COMPLETE_SCHEMA_HARDENING_PENDING_PROBE",
   "target_hardware": "NVIDIA RTX 5060 Ti 16 GB",
   "runtime": {
     "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-mtmd-cli.exe",
@@ -52,8 +52,8 @@
   "model_schema": {
     "version": "1.0.0",
     "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
-    "sha256": "374f7c29ecf8ac73cc5d312a57802b013e49da0df5fb5a88eead86e62a5916e1",
-    "purpose": "Bounded grammar surface; application stamps identity and provenance."
+    "sha256": "c90d2b928937a98cd5d5b16af07e8d34834dd091f439591a507e8ab464f1d7a4",
+    "purpose": "Bounded grammar surface with oneOf-coupled uncertainty states and typed-absence placeholder rejection; application stamps identity and provenance."
   },
   "inference_network_allowed": false
 }

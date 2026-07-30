@@ -1,0 +1,263 @@
+{
+  "schema_version": "1.0.0",
+  "created_on": "2026-07-28",
+  "purpose": "owner-fetched expansion of the scan-backed P2 baseline ceiling",
+  "network_actions_performed": false,
+  "source_layout": {
+    "zespol_id": 318,
+    "code": "0826d",
+    "category_map": {
+      "birth": 1,
+      "marriage": 2,
+      "death": 3
+    },
+    "range_rule": "01-02, then four-act files 03-06, 07-10, ...",
+    "known_exception": "actual 1902 register is catalogued under sy=1900"
+  },
+  "summary": {
+    "not_localized_total": 12,
+    "ready_for_owner_fetch": 0,
+    "source_object_415": 5,
+    "collection_mapping_required": 7
+  },
+  "records": [
+    {
+      "record_id": "pultusk-1877-death-13",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1877,
+        "act_type": "death",
+        "act_no": 13
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "pultusk-1878-death-11",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1878,
+        "act_type": "death",
+        "act_no": 11
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "pultusk-1885-death-10",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1885,
+        "act_type": "death",
+        "act_no": 10
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "pultusk-1886-death-33",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1886,
+        "act_type": "death",
+        "act_no": 33
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "pultusk-1890-death-12",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1890,
+        "act_type": "death",
+        "act_no": 12
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "pultusk-1890-death-43",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1890,
+        "act_type": "death",
+        "act_no": 43
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "pultusk-1890-death-53",
+      "register": {
+        "fond": "84",
+        "town": "Pułtusk",
+        "year": 1890,
+        "act_type": "death",
+        "act_no": 53
+      },
+      "status": "COLLECTION_MAPPING_REQUIRED",
+      "skanoteka": null,
+      "notes": [
+        "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
+        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping."
+      ]
+    },
+    {
+      "record_id": "serock-1882-birth-2",
+      "register": {
+        "fond": "73/826/0",
+        "town": "Serock",
+        "year": 1882,
+        "act_type": "birth",
+        "act_no": 2
+      },
+      "status": "NOT_LOCALIZED",
+      "reason": "SOURCE_OBJECT_415",
+      "skanoteka": {
+        "zespol_id": 318,
+        "code": "0826d",
+        "unit": "UMZ-1882",
+        "sy": 1882,
+        "katalog": 1,
+        "file_range": "01-02",
+        "filename": "01-02.jpg",
+        "viewer_url": "https://skanoteka.genealodzy.pl/index.php?op=pg&id=318&sy=1882&kt=1&plik=01-02.jpg"
+      },
+      "notes": [
+        "The exact Skanoteka download object returned HTTP 415 after one fresh-viewer retry; keep fail-closed pending a later retry or maintainer repair."
+      ]
+    },
+    {
+      "record_id": "serock-1899-birth-5",
+      "register": {
+        "fond": "73/826/0",
+        "town": "Serock",
+        "year": 1899,
+        "act_type": "birth",
+        "act_no": 5
+      },
+      "status": "NOT_LOCALIZED",
+      "reason": "SOURCE_OBJECT_415",
+      "skanoteka": {
+        "zespol_id": 318,
+        "code": "0826d",
+        "unit": "UMZ-1899",
+        "sy": 1899,
+        "katalog": 1,
+        "file_range": "03-06",
+        "filename": "03-06.jpg",
+        "viewer_url": "https://skanoteka.genealodzy.pl/index.php?op=pg&id=318&sy=1899&kt=1&plik=03-06.jpg"
+      },
+      "notes": [
+        "The exact Skanoteka download object returned HTTP 415 after one fresh-viewer retry; keep fail-closed pending a later retry or maintainer repair."
+      ]
+    },
+    {
+      "record_id": "serock-1899-birth-6",
+      "register": {
+        "fond": "73/826/0",
+        "town": "Serock",
+        "year": 1899,
+        "act_type": "birth",
+        "act_no": 6
+      },
+      "status": "NOT_LOCALIZED",
+      "reason": "SOURCE_OBJECT_415",
+      "skanoteka": {
+        "zespol_id": 318,
+        "code": "0826d",
+        "unit": "UMZ-1899",
+        "sy": 1899,
+        "katalog": 1,
+        "file_range": "03-06",
+        "filename": "03-06.jpg",
+        "viewer_url": "https://skanoteka.genealodzy.pl/index.php?op=pg&id=318&sy=1899&kt=1&plik=03-06.jpg"
+      },
+      "notes": [
+        "The exact Skanoteka download object returned HTTP 415 after one fresh-viewer retry; keep fail-closed pending a later retry or maintainer repair."
+      ]
+    },
+    {
+      "record_id": "serock-1902-marriage-3",
+      "register": {
+        "fond": "73/826/0",
+        "town": "Serock",
+        "year": 1902,
+        "act_type": "marriage",
+        "act_no": 3
+      },
+      "status": "NOT_LOCALIZED",
+      "reason": "SOURCE_OBJECT_415",
+      "skanoteka": {
+        "zespol_id": 318,
+        "code": "0826d",
+        "unit": "UMZ-1900",
+        "sy": 1900,
+        "katalog": 2,
+        "file_range": "03-06",
+        "filename": "03-06.jpg",
+        "viewer_url": "https://skanoteka.genealodzy.pl/index.php?op=pg&id=318&sy=1900&kt=2&plik=03-06.jpg"
+      },
+      "notes": [
+        "The sy=1900 unit physically contains the 1902 register.",
+        "The exact Skanoteka download object returned HTTP 415 after one fresh-viewer retry; keep fail-closed pending a later retry or maintainer repair."
+      ]
+    },
+    {
+      "record_id": "serock-1903-marriage-23",
+      "register": {
+        "fond": "73/826/0",
+        "town": "Serock",
+        "year": 1903,
+        "act_type": "marriage",
+        "act_no": 23
+      },
+      "status": "NOT_LOCALIZED",
+      "reason": "SOURCE_OBJECT_415",
+      "skanoteka": {
+        "zespol_id": 318,
+        "code": "0826d",
+        "unit": "UMZ-1903",
+        "sy": 1903,
+        "katalog": 2,
+        "file_range": "23-26",
+        "filename": "23-26.jpg",
+        "viewer_url": "https://skanoteka.genealodzy.pl/index.php?op=pg&id=318&sy=1903&kt=2&plik=23-26.jpg"
+      },
+      "notes": [
+        "The exact Skanoteka download object returned HTTP 415 after one fresh-viewer retry; keep fail-closed pending a later retry or maintainer repair."
+      ]
+    }
+  ]
+}

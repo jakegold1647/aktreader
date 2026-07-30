@@ -1,0 +1,331 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-47.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-47",
+  "created_at": "2026-07-28T20:59:19.688778-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-41-49-wave-004",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_47-49.jpg",
+    "sha256": "c9ac79488497988f7e237edac6cbfdb2499c7cfd372c2572bb2abd39cac693f1",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 220,
+      "y": 120,
+      "width": 1280,
+      "height": 1130,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 47,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 220,
+        "y": 120,
+        "width": 1280,
+        "height": 226,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 220,
+        "y": 308,
+        "width": 1280,
+        "height": 282,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants and their stated attributes"
+    },
+    "event": {
+      "bbox": {
+        "x": 220,
+        "y": 572,
+        "width": 1280,
+        "height": 282,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death date or relative-date phrase, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 220,
+        "y": 685,
+        "width": 1280,
+        "height": 376,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 220,
+        "y": 798,
+        "width": 1280,
+        "height": 282,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage, maiden name, or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 220,
+        "y": 1024,
+        "width": 1280,
+        "height": 226,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-47#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-47#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-47#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-47#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-47#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 47. Состоялось въ посадѣ Сероцкѣ десятаго Декабря тысяча восемьсотъ девяностаго года. Явились лично Мошекъ Розенбергъ, торговецъ, и Берекъ Килтуръ, работникъ ... что второго числа сего мѣсяца въ десять часовъ вечера умеръ мужескаго пола по имени Юсекъ Зальцбергъ, [unclear: сорока ... лѣтъ?], сынъ Майера и Лаи.",
+    "translation": "Act 47. Registered in Serock on 10 December 1890. Moshek Rosenberg and Berek Kiltur reported that Yusek Zaltsberg, an adult male whose precise age is unclear, son of Mayer and Leia, died on 2 December at 10 p.m."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умеръ/умерла/умерло",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "act_no": {
+      "value": 47,
+      "original_script": "№ 47",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-12-10",
+        "gregorian": "1890-12-22",
+        "gregorian_derived": true
+      },
+      "original_script": "десятаго Декабря",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-12-02",
+        "gregorian": "1890-12-14",
+        "gregorian_derived": true
+      },
+      "original_script": "второго числа сего мѣсяца",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Gregorian is a marked 12-day derivation; relative dates are resolved against registration."
+      ]
+    },
+    "principal.sex": {
+      "value": "male",
+      "original_script": "умеръ мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "Yusek Zaltsberg",
+      "original_script": "Юсекъ Зальцбергъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "[unclear: 40-something years?]",
+      "original_script": "[unclear: сорока ... лѣтъ?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "40-something years",
+          "original_script": "[unclear: сорока ... лѣтъ?]"
+        }
+      ],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "father.name": {
+      "value": "Mayer Zaltsberg",
+      "original_script": "Майера ... Зальцбергъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.name": {
+      "value": "Leia Zaltsberg",
+      "original_script": "Лаи ... Зальцбергъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No secure maiden-name reading is visible in the act."
+      ]
+    },
+    "declarants.0.name": {
+      "value": "Moshek Rosenberg",
+      "original_script": "Мошекъ Розенбергъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Berek Kiltur",
+      "original_script": "Берекъ Килтуръ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "No material marginal correction is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Blind subscription-session label read from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

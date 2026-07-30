@@ -7,6 +7,7 @@ from aktreader.evaluation import (
     EvaluationIntegrityError,
     evaluate_predictions,
     flatten_gold_fields,
+    load_model_output_field_map,
     validate_holdout_integrity,
 )
 
@@ -164,3 +165,42 @@ def test_repository_holdout_matches_every_gold_record() -> None:
         "clerk_years": 21,
         "training_overlap": 0,
     }
+
+
+def test_reduced_snake_case_keys_map_to_nested_gold_paths() -> None:
+    gold = gold_record()
+    prediction = {
+        "record_id": gold["record_id"],
+        "observations": {
+            "father": evidence("Abram Goldsztejn"),
+            "mother": evidence("Ruchla Goldsztejn"),
+            "mother_maiden_name": evidence("Kanarek"),
+        },
+    }
+
+    report = evaluate_predictions([gold], [prediction], holdout_for(gold))
+
+    assert report["filiation_exact_match"]["fields_correct"] == 3
+    assert report["filiation_exact_match"]["fields_total"] == 3
+    assert report["field_vocabulary"]["mapping_version"] == "1.0.0"
+    assert report["field_vocabulary"]["dispositions"] == {"MAP": 3}
+
+
+def test_unmapped_model_key_fails_instead_of_scoring_as_missing() -> None:
+    gold = gold_record()
+    prediction = {
+        "record_id": gold["record_id"],
+        "observations": {"new_silent_mismatch": evidence("invented")},
+    }
+
+    with pytest.raises(EvaluationIntegrityError, match="unmapped model observation key"):
+        evaluate_predictions([gold], [prediction], holdout_for(gold))
+
+
+def test_field_map_is_bound_to_the_current_reduced_schema() -> None:
+    mapping = load_model_output_field_map()
+
+    assert mapping["schema_version"] == "1.0.0"
+    assert len(mapping["entries"]) == 81
+    assert mapping["entries"]["principal_name"]["gold_path"] == "principal.name"
+    assert mapping["entries"]["deceased_filiation"]["status"].startswith("UNSCORABLE_")

@@ -6,6 +6,12 @@ param([int]$TimeoutMinutes = 10)
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $inbox = Join-Path $root 'inbox_sol'
 $board = Join-Path $root 'STATUS_BOARD.md'
+# Report the current inbox contents BEFORE watching. A message that arrived while you were
+# working is invisible to the watch loop (it is in the baseline snapshot) — this is the fix for
+# the 29 Jul msg-036 miss. Always read anything newer than your last ACK before idling.
+Write-Output "INBOX NOW (read anything newer than your last ACK before idling):"
+Get-ChildItem $inbox -File | Sort-Object LastWriteTime | Select-Object -Last 5 |
+    ForEach-Object { Write-Output ("  {0}  {1}" -f $_.LastWriteTime.ToString('MM-dd HH:mm'), $_.Name) }
 $seen = @(Get-ChildItem $inbox -File | Select-Object -ExpandProperty Name)
 $boardStamp = (Get-Item $board).LastWriteTimeUtc
 $deadline = (Get-Date).AddMinutes($TimeoutMinutes)

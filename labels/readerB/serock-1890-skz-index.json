@@ -1,0 +1,492 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-skz-index.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-skz-index",
+  "created_at": "2026-07-28T21:03:28.950221-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-41-49-wave-004",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+    "sha256": "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 190,
+      "y": 180,
+      "width": 2520,
+      "height": 2140,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "index_page",
+    "act_no": null,
+    "language": "ru"
+  },
+  "source_spans": {
+    "left-table": {
+      "bbox": {
+        "x": 190,
+        "y": 180,
+        "width": 1290,
+        "height": 2140,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Index rows 1–32: ordinal, act number, sex mark, name/surname"
+    },
+    "right-table": {
+      "bbox": {
+        "x": 1450,
+        "y": 180,
+        "width": 1260,
+        "height": 1880,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Index rows 33–49: ordinal, act number, sex mark, name/surname"
+    }
+  },
+  "mentions": [],
+  "transcription": {
+    "original_script": "1. акт 2, F, [unclear: Купермановская Хана?]; 2. акт 18, M, [unclear: Вольманъ Абрамъ?]; 3. акт 40, [unclear: Бодекъ Лейка?]; 4. акт 48, [unclear: Вайнштейнъ Рейзя?]; 5. акт 28, F, [unclear: Вайнрубъ?]; 6. акт 44, Вайнгродъ Мейеръ; 7. акт 6, [unclear: Гринвальдъ Гитля Маша?]; 8. акт 32, [unclear: Гроневичъ Ицекъ?]; 9. акт 43, Гольдштейнъ; 10. акт 3, M, [unclear: Гайцеръ Юсекъ?]; 11. акт 20, [unclear: Гамеръ?]; 12. акт 21, [unclear: Гинзбургъ?]; 13. акт 26, [unclear: Гольдбринкъ Хана?]; 14. акт 33, [unclear: Гитлерманъ Мошекъ?]; 15. акт 41, Блюменфельдъ Радель; 16. акт 47, Зальцбергъ Юсекъ; 17. акт 30, M, [unclear: Каперъ Симонъ?]; 18. акт 38, [unclear: Килимовскій?]; 19. акт 22, F, [unclear: Левитанъ?]; 20. акт 1, F, [unclear: Ламковальдъ Рухля?]; 21. акт 34, [unclear: Левинштейнъ Шая-Беръ?]; 22. акт 27, [unclear: Лейра Хана?]; 23. акт 46, [unclear: Миронъ Лейка?]; 24. акт 37, [unclear: Мендельскій Мейеръ Шая?]; 25. акт 39, [unclear: Миновскій Рухля?]; 26. акт 45, Миновскій Юсекъ; 27. акт 25, M, [unclear: Ольбергъ Давидъ?]; 28. акт 42, [unclear: Озеръ Рейзля?]; 29. акт 9, F, [unclear: Перлштейнъ Фрайда-Рухля?]; 30. акт 23, [unclear: Тисманъ Фейга?]; 31. акт 12, F, [unclear: Розенбергъ Хана-Беришъ?]; 32. акт 13, [unclear: Розенбергъ Мали-Лейбъ?]; 33. акт 16, F, Розенталь Лея; 34. акт 49, [unclear: Розенекъ Фрума?]; 35. акт 4, M, [unclear: Талчинскій Хаимъ-Лейзеръ?]; 36. акт 10, F, [unclear: Розенблюмъ Лея-Сара?]; 37. акт 11, [unclear: Риттенштейнъ Фрайда?]; 38. акт 15, [unclear: Риттенштейнъ Лея-Хая?]; 39. акт 19, [unclear: Ритманъ Лея?]; 40. акт 35, Рубинштейнъ Фроимъ-Лейбъ; 41. акт 5, M, [unclear: Цинцеръ Лейбъ-Велвель?]; 42. акт 7, Цукеръ Гилель; 43. акт 8, [unclear: Цукеръ Жилка?]; 44. акт 24, M, [unclear: Штатманъ сынъ Розы ...?]; 45. акт 31, [unclear: Штатманъ Аврамъ-Беришъ?]; 46. акт 36, Шейнгольцъ Давидъ-Хаимъ; 47. акт 14, [unclear: Якубовичъ Ривка?]; 48. акт 17, [unclear: Мацга Лота?]; 49. акт 24, [unclear: Мар... Фейга?]",
+    "translation": "Annual Serock death index for 1890, transcribed as 49 ordered rows. The act-number column is preserved as written; uncertain names retain question-mark readings and are not used to revise the frozen act labels."
+  },
+  "observations": {
+    "page_type": {
+      "value": "death annual index",
+      "original_script": "Умершіе",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "left-table",
+        "right-table"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "1890",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "left-table",
+        "right-table"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "Сероцкъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "left-table",
+        "right-table"
+      ],
+      "notes": []
+    },
+    "entry_count": {
+      "value": 49,
+      "original_script": "№ по порядку 1–49",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "left-table",
+        "right-table"
+      ],
+      "notes": []
+    },
+    "entries": {
+      "value": [
+        {
+          "ordinal": 1,
+          "act_no": 2,
+          "sex_mark": "F",
+          "name_original": "[unclear: Купермановская Хана?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 2,
+          "act_no": 18,
+          "sex_mark": "M",
+          "name_original": "[unclear: Вольманъ Абрамъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 3,
+          "act_no": 40,
+          "sex_mark": null,
+          "name_original": "[unclear: Бодекъ Лейка?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 4,
+          "act_no": 48,
+          "sex_mark": null,
+          "name_original": "[unclear: Вайнштейнъ Рейзя?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 5,
+          "act_no": 28,
+          "sex_mark": "F",
+          "name_original": "[unclear: Вайнрубъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 6,
+          "act_no": 44,
+          "sex_mark": null,
+          "name_original": "Вайнгродъ Мейеръ",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 7,
+          "act_no": 6,
+          "sex_mark": null,
+          "name_original": "[unclear: Гринвальдъ Гитля Маша?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 8,
+          "act_no": 32,
+          "sex_mark": null,
+          "name_original": "[unclear: Гроневичъ Ицекъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 9,
+          "act_no": 43,
+          "sex_mark": null,
+          "name_original": "Гольдштейнъ",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 10,
+          "act_no": 3,
+          "sex_mark": "M",
+          "name_original": "[unclear: Гайцеръ Юсекъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 11,
+          "act_no": 20,
+          "sex_mark": null,
+          "name_original": "[unclear: Гамеръ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 12,
+          "act_no": 21,
+          "sex_mark": null,
+          "name_original": "[unclear: Гинзбургъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 13,
+          "act_no": 26,
+          "sex_mark": null,
+          "name_original": "[unclear: Гольдбринкъ Хана?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 14,
+          "act_no": 33,
+          "sex_mark": null,
+          "name_original": "[unclear: Гитлерманъ Мошекъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 15,
+          "act_no": 41,
+          "sex_mark": null,
+          "name_original": "Блюменфельдъ Радель",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 16,
+          "act_no": 47,
+          "sex_mark": null,
+          "name_original": "Зальцбергъ Юсекъ",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 17,
+          "act_no": 30,
+          "sex_mark": "M",
+          "name_original": "[unclear: Каперъ Симонъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 18,
+          "act_no": 38,
+          "sex_mark": null,
+          "name_original": "[unclear: Килимовскій?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 19,
+          "act_no": 22,
+          "sex_mark": "F",
+          "name_original": "[unclear: Левитанъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 20,
+          "act_no": 1,
+          "sex_mark": "F",
+          "name_original": "[unclear: Ламковальдъ Рухля?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 21,
+          "act_no": 34,
+          "sex_mark": null,
+          "name_original": "[unclear: Левинштейнъ Шая-Беръ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 22,
+          "act_no": 27,
+          "sex_mark": null,
+          "name_original": "[unclear: Лейра Хана?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 23,
+          "act_no": 46,
+          "sex_mark": null,
+          "name_original": "[unclear: Миронъ Лейка?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 24,
+          "act_no": 37,
+          "sex_mark": null,
+          "name_original": "[unclear: Мендельскій Мейеръ Шая?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 25,
+          "act_no": 39,
+          "sex_mark": null,
+          "name_original": "[unclear: Миновскій Рухля?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 26,
+          "act_no": 45,
+          "sex_mark": null,
+          "name_original": "Миновскій Юсекъ",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 27,
+          "act_no": 25,
+          "sex_mark": "M",
+          "name_original": "[unclear: Ольбергъ Давидъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 28,
+          "act_no": 42,
+          "sex_mark": null,
+          "name_original": "[unclear: Озеръ Рейзля?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 29,
+          "act_no": 9,
+          "sex_mark": "F",
+          "name_original": "[unclear: Перлштейнъ Фрайда-Рухля?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 30,
+          "act_no": 23,
+          "sex_mark": null,
+          "name_original": "[unclear: Тисманъ Фейга?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 31,
+          "act_no": 12,
+          "sex_mark": "F",
+          "name_original": "[unclear: Розенбергъ Хана-Беришъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 32,
+          "act_no": 13,
+          "sex_mark": null,
+          "name_original": "[unclear: Розенбергъ Мали-Лейбъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 33,
+          "act_no": 16,
+          "sex_mark": "F",
+          "name_original": "Розенталь Лея",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 34,
+          "act_no": 49,
+          "sex_mark": null,
+          "name_original": "[unclear: Розенекъ Фрума?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 35,
+          "act_no": 4,
+          "sex_mark": "M",
+          "name_original": "[unclear: Талчинскій Хаимъ-Лейзеръ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 36,
+          "act_no": 10,
+          "sex_mark": "F",
+          "name_original": "[unclear: Розенблюмъ Лея-Сара?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 37,
+          "act_no": 11,
+          "sex_mark": null,
+          "name_original": "[unclear: Риттенштейнъ Фрайда?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 38,
+          "act_no": 15,
+          "sex_mark": null,
+          "name_original": "[unclear: Риттенштейнъ Лея-Хая?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 39,
+          "act_no": 19,
+          "sex_mark": null,
+          "name_original": "[unclear: Ритманъ Лея?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 40,
+          "act_no": 35,
+          "sex_mark": null,
+          "name_original": "Рубинштейнъ Фроимъ-Лейбъ",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 41,
+          "act_no": 5,
+          "sex_mark": "M",
+          "name_original": "[unclear: Цинцеръ Лейбъ-Велвель?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 42,
+          "act_no": 7,
+          "sex_mark": null,
+          "name_original": "Цукеръ Гилель",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 43,
+          "act_no": 8,
+          "sex_mark": null,
+          "name_original": "[unclear: Цукеръ Жилка?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 44,
+          "act_no": 24,
+          "sex_mark": "M",
+          "name_original": "[unclear: Штатманъ сынъ Розы ...?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 45,
+          "act_no": 31,
+          "sex_mark": null,
+          "name_original": "[unclear: Штатманъ Аврамъ-Беришъ?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 46,
+          "act_no": 36,
+          "sex_mark": null,
+          "name_original": "Шейнгольцъ Давидъ-Хаимъ",
+          "name_state": "PROBABLE"
+        },
+        {
+          "ordinal": 47,
+          "act_no": 14,
+          "sex_mark": null,
+          "name_original": "[unclear: Якубовичъ Ривка?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 48,
+          "act_no": 17,
+          "sex_mark": null,
+          "name_original": "[unclear: Мацга Лота?]",
+          "name_state": "UNCLEAR"
+        },
+        {
+          "ordinal": 49,
+          "act_no": 24,
+          "sex_mark": null,
+          "name_original": "[unclear: Мар... Фейга?]",
+          "name_state": "UNCLEAR"
+        }
+      ],
+      "original_script": "1. акт 2, F, [unclear: Купермановская Хана?]; 2. акт 18, M, [unclear: Вольманъ Абрамъ?]; 3. акт 40, [unclear: Бодекъ Лейка?]; 4. акт 48, [unclear: Вайнштейнъ Рейзя?]; 5. акт 28, F, [unclear: Вайнрубъ?]; 6. акт 44, Вайнгродъ Мейеръ; 7. акт 6, [unclear: Гринвальдъ Гитля Маша?]; 8. акт 32, [unclear: Гроневичъ Ицекъ?]; 9. акт 43, Гольдштейнъ; 10. акт 3, M, [unclear: Гайцеръ Юсекъ?]; 11. акт 20, [unclear: Гамеръ?]; 12. акт 21, [unclear: Гинзбургъ?]; 13. акт 26, [unclear: Гольдбринкъ Хана?]; 14. акт 33, [unclear: Гитлерманъ Мошекъ?]; 15. акт 41, Блюменфельдъ Радель; 16. акт 47, Зальцбергъ Юсекъ; 17. акт 30, M, [unclear: Каперъ Симонъ?]; 18. акт 38, [unclear: Килимовскій?]; 19. акт 22, F, [unclear: Левитанъ?]; 20. акт 1, F, [unclear: Ламковальдъ Рухля?]; 21. акт 34, [unclear: Левинштейнъ Шая-Беръ?]; 22. акт 27, [unclear: Лейра Хана?]; 23. акт 46, [unclear: Миронъ Лейка?]; 24. акт 37, [unclear: Мендельскій Мейеръ Шая?]; 25. акт 39, [unclear: Миновскій Рухля?]; 26. акт 45, Миновскій Юсекъ; 27. акт 25, M, [unclear: Ольбергъ Давидъ?]; 28. акт 42, [unclear: Озеръ Рейзля?]; 29. акт 9, F, [unclear: Перлштейнъ Фрайда-Рухля?]; 30. акт 23, [unclear: Тисманъ Фейга?]; 31. акт 12, F, [unclear: Розенбергъ Хана-Беришъ?]; 32. акт 13, [unclear: Розенбергъ Мали-Лейбъ?]; 33. акт 16, F, Розенталь Лея; 34. акт 49, [unclear: Розенекъ Фрума?]; 35. акт 4, M, [unclear: Талчинскій Хаимъ-Лейзеръ?]; 36. акт 10, F, [unclear: Розенблюмъ Лея-Сара?]; 37. акт 11, [unclear: Риттенштейнъ Фрайда?]; 38. акт 15, [unclear: Риттенштейнъ Лея-Хая?]; 39. акт 19, [unclear: Ритманъ Лея?]; 40. акт 35, Рубинштейнъ Фроимъ-Лейбъ; 41. акт 5, M, [unclear: Цинцеръ Лейбъ-Велвель?]; 42. акт 7, Цукеръ Гилель; 43. акт 8, [unclear: Цукеръ Жилка?]; 44. акт 24, M, [unclear: Штатманъ сынъ Розы ...?]; 45. акт 31, [unclear: Штатманъ Аврамъ-Беришъ?]; 46. акт 36, Шейнгольцъ Давидъ-Хаимъ; 47. акт 14, [unclear: Якубовичъ Ривка?]; 48. акт 17, [unclear: Мацга Лота?]; 49. акт 24, [unclear: Мар... Фейга?]",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "left-table",
+        "right-table"
+      ],
+      "notes": [
+        "Rows were inspected at 2×; uncertain handwriting is marked inside each row.",
+        "The index was opened only after acts 41–49 were written, validated, and SHA-256 frozen.",
+        "Apparent duplicate act numbers are preserved as read rather than silently normalized."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death index dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Blind subscription-session label read from the public civil-register index scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -1,0 +1,326 @@
+{
+  "$schema": "../../schemas/reader-label-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1890-death-44.reader-b-openai-sol-ultra",
+  "record_id": "serock-1890-death-44",
+  "created_at": "2026-07-28T20:59:19.670354-04:00",
+  "reader": {
+    "reader_id": "reader-b-openai-sol-ultra",
+    "reader_family": "gpt",
+    "reader_version": "sol-ultra-2026-07-28",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1890-deaths-41-49-wave-004",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.3.0",
+    "sha256": "97dfa6a78b94a0d0cc4303021da5eb139b3bc8cc8c67998df682523507fd4c77",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_43-46.jpg",
+    "sha256": "12decd8ac58daa12f574ab663a70b452b5d49168e5b68af8d81a7b5a2eeb2767",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 220,
+      "y": 1030,
+      "width": 1280,
+      "height": 1320,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 44,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 220,
+        "y": 1030,
+        "width": 1280,
+        "height": 264,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, written single registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 220,
+        "y": 1250,
+        "width": 1280,
+        "height": 330,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants and their stated attributes"
+    },
+    "event": {
+      "bbox": {
+        "x": 220,
+        "y": 1558,
+        "width": 1280,
+        "height": 330,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death date or relative-date phrase, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 220,
+        "y": 1690,
+        "width": 1280,
+        "height": 440,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Death verb, deceased identity, sex morphology, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 220,
+        "y": 1822,
+        "width": 1280,
+        "height": 330,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Parentage, maiden name, or survivor clause where present"
+    },
+    "closing": {
+      "bbox": {
+        "x": 220,
+        "y": 2086,
+        "width": 1280,
+        "height": 264,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification, closing formula, corrections, and signatures"
+    }
+  },
+  "mentions": [
+    {
+      "mention_id": "serock-1890-death-44#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1890-death-44#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1890-death-44#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1890-death-44#declarant-0",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1890-death-44#declarant-1",
+      "role": "declarant"
+    }
+  ],
+  "transcription": {
+    "original_script": "№ 44. Состоялось въ посадѣ Сероцкѣ двенадцатаго Октября тысяча восемьсотъ девяностаго года. Явились лично Аврамъ Вайнгрубъ, шинкарь, шестидесяти семи лѣтъ, и Мортка Вайнгродъ, торговецъ, тридцати трехъ лѣтъ ... что вчерашняго числа умерло дитя мужескаго пола Мейеръ Вайнгродъ, четырехъ лѣтъ, сынъ Герца и Рухли.",
+    "translation": "Act 44. Registered in Serock on 12 October 1890. Abram Vaingrub and Mortka Vaingrod reported that Meyer Vaingrod, a four-year-old boy and son of Gersh and Ruchla, died the preceding day."
+  },
+  "observations": {
+    "act_type": {
+      "value": "death",
+      "original_script": "умеръ/умерла/умерло",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "act_no": {
+      "value": 44,
+      "original_script": "№ 44",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсотъ девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-10-12",
+        "gregorian": "1890-10-24",
+        "gregorian_derived": true
+      },
+      "original_script": "двенадцатаго Октября",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Only one date is physically written; Gregorian is a marked 12-day derivation."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-10-11",
+        "gregorian": "1890-10-23",
+        "gregorian_derived": true
+      },
+      "original_script": "вчерашняго числа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Gregorian is a marked 12-day derivation; relative dates are resolved against registration."
+      ]
+    },
+    "principal.sex": {
+      "value": "male",
+      "original_script": "дитя мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.name": {
+      "value": "Meyer Vaingrod",
+      "original_script": "Мейеръ Вайнгродъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.age": {
+      "value": "4 years",
+      "original_script": "четырехъ лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "father.name": {
+      "value": "Gersh Vaingrod",
+      "original_script": "Герца ... Вайнгродъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.name": {
+      "value": "Ruchla Vaingrod",
+      "original_script": "Рухли ... Вайнгродъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "No secure maiden-name reading is visible in the act."
+      ]
+    },
+    "declarants.0.name": {
+      "value": "Abram Vaingrub",
+      "original_script": "Аврамъ Вайнгрубъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Mortka Vaingrod",
+      "original_script": "Мортка Вайнгродъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": [
+        "No material marginal correction is visible for this act."
+      ]
+    }
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "Death act dated 1890; older than both the 100-year default and 80-year death convention.",
+    "training_eligible": true,
+    "training_basis": "Blind subscription-session label read from the public civil-register scan."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

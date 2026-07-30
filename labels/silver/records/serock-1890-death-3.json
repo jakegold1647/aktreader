@@ -1,0 +1,396 @@
+{
+  "$schema": "../../schemas/silver-record-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "record_id": "serock-1890-death-3",
+  "tier": "SILVER",
+  "clerk_year": {
+    "id": "73-826-0|serock|1890|clerk-unknown",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
+  "artifact": {
+    "path": "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+    "sha256": "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9",
+    "width_px": 2872,
+    "height_px": 2384,
+    "page_index": 0,
+    "act_region": {
+      "x": 70,
+      "y": 35,
+      "width": 1380,
+      "height": 1080,
+      "coordinate_space": "source_pixels"
+    }
+  },
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1890,
+    "act_type": "death",
+    "act_no": 3,
+    "language": "ru"
+  },
+  "source_spans": {
+    "registration": {
+      "bbox": {
+        "x": 250,
+        "y": 150,
+        "width": 1180,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Act number, venue, registration date, year, and hour"
+    },
+    "declarants": {
+      "bbox": {
+        "x": 250,
+        "y": 300,
+        "width": 1180,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Two declarants, occupations, ages, and common residence"
+    },
+    "event": {
+      "bbox": {
+        "x": 250,
+        "y": 500,
+        "width": 1180,
+        "height": 180,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Relative death date, hour, and place"
+    },
+    "principal": {
+      "bbox": {
+        "x": 250,
+        "y": 620,
+        "width": 1180,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Deceased child, sex, and age"
+    },
+    "filiation": {
+      "bbox": {
+        "x": 250,
+        "y": 710,
+        "width": 1180,
+        "height": 150,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Father and statement that the mother is unknown"
+    },
+    "closing": {
+      "bbox": {
+        "x": 250,
+        "y": 820,
+        "width": 1180,
+        "height": 200,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "Certification and signature formula"
+    }
+  },
+  "observations": {
+    "act_no": {
+      "value": 3,
+      "original_script": "№ 3",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    },
+    "act_type": {
+      "value": "death",
+      "original_script": "умерло",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "declarants.0.age": {
+      "value": "49 years",
+      "original_script": "сорока девяти лет",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.name": {
+      "value": "Lejb Uksztukalski",
+      "original_script": "Лейбъ Укштукальскій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "Coordinator-resolved by blind 2-of-3 machine consensus; confidence capped PROBABLE."
+      ]
+    },
+    "declarants.0.occupation": {
+      "value": "tailor",
+      "original_script": "портной",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.0.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцке",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The residence phrase applies to both declarants."
+      ]
+    },
+    "declarants.1.age": {
+      "value": "50 years",
+      "original_script": "пятидесяти лет",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.name": {
+      "value": "Mortka Wolman",
+      "original_script": "Мортка Вольманъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "Coordinator-resolved by blind 2-of-3 machine consensus; confidence capped PROBABLE."
+      ]
+    },
+    "declarants.1.occupation": {
+      "value": "shopkeeper",
+      "original_script": "лавочник",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": []
+    },
+    "declarants.1.residence": {
+      "value": "Serock",
+      "original_script": "жительствующие оба в посаде Сероцке",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarants"
+      ],
+      "notes": [
+        "The residence phrase applies to both declarants."
+      ]
+    },
+    "event_date": {
+      "value": {
+        "julian": "1890-01-29",
+        "gregorian": "1890-02-10",
+        "gregorian_derived": true,
+        "resolved_from_relative_phrase": true
+      },
+      "original_script": "вчерашняго числа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "event"
+      ],
+      "notes": [
+        "Coordinator-resolved by blind 2-of-3 machine consensus; confidence capped PROBABLE.",
+        "Resolved relative to the corrected registration date."
+      ]
+    },
+    "marginalia": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "closing"
+      ],
+      "notes": [
+        "No act-specific marginal annotation is visible."
+      ]
+    },
+    "mother.maiden_name": {
+      "value": null,
+      "original_script": "матери неизвестной",
+      "confidence": null,
+      "observation_state": "STATED_UNKNOWN",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "mother.name": {
+      "value": null,
+      "original_script": "матери неизвестной",
+      "confidence": null,
+      "observation_state": "STATED_UNKNOWN",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": []
+    },
+    "parent.name": {
+      "value": "Szejwa Zajczyk",
+      "original_script": "сынъ Шейвы",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Coordinator-resolved by blind 2-of-3 machine consensus; confidence capped PROBABLE.",
+        "The parent role remains unresolved; do not force father or mother."
+      ]
+    },
+    "principal.age": {
+      "value": "4 weeks",
+      "original_script": "четырех недель от роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "principal.maiden_name": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ABSENT_ON_FORM",
+      "alternatives": [],
+      "source_span_ids": [
+        "filiation"
+      ],
+      "notes": [
+        "Not applicable to the male infant."
+      ]
+    },
+    "principal.name": {
+      "value": "Josek Zajczyk",
+      "original_script": "Іосекъ Зайчикъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": [
+        "Coordinator-resolved by blind 2-of-3 machine consensus; confidence capped PROBABLE."
+      ]
+    },
+    "principal.sex": {
+      "value": "male",
+      "original_script": "дитя мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "principal"
+      ],
+      "notes": []
+    },
+    "registration_date": {
+      "value": {
+        "julian": "1890-01-30",
+        "gregorian": "1890-02-11",
+        "gregorian_derived": true
+      },
+      "original_script": "тридцатаго Января",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": [
+        "Coordinator-resolved by blind 2-of-3 machine consensus; confidence capped PROBABLE."
+      ]
+    },
+    "signatures_note": {
+      "value": "signed by the registrar and declarants",
+      "original_script": "акт сей свидетелями прочитан нами и оными подписан",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing"
+      ],
+      "notes": []
+    },
+    "town": {
+      "value": "Serock",
+      "original_script": "в посаде Сероцке",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration",
+        "event"
+      ],
+      "notes": []
+    },
+    "year": {
+      "value": 1890,
+      "original_script": "тысяча восемьсот девяностаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "registration"
+      ],
+      "notes": []
+    }
+  },
+  "resolution": {
+    "method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
+    "confidence_cap": "PROBABLE",
+    "consensus_document": {
+      "path": "labels/consensus/serock-1890-deaths-3-6_wave002_CONSENSUS.md",
+      "sha256": "6d4889ea64538397dfec587c02ea2aaa26e74e1d28ca37ebc1505eeb1bf2aa1b"
+    },
+    "arbitration_document": {
+      "path": "labels/consensus/readerC_arbitration_wave002.md",
+      "sha256": "9e57fbec382b7661c7ee4060f5f3d995035b5d1ce1d27ae1ce6eadee35b3f671"
+    }
+  },
+  "authority_warning": "extraction is not authority â€” verify against the scan"
+}

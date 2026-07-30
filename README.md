@@ -124,6 +124,36 @@ evaluation holdout contains Serock-1890; consequently the current SerockBench ho
 rejects all five silver records. Act 6 has no tier and remains quarantined pending the required
 human identity check.
 
+## Owner-only open training sources
+
+Open base-script corpora are provisioned outside AKTREADER with
+[`tools/fetch_open_datasets.ps1`](tools/fetch_open_datasets.ps1). The application never calls
+this script. The owner first reviews the immutable URLs, hashes or byte pins, licenses, and
+explicit exclusions in
+[`resources/open_datasets.manifest.json`](resources/open_datasets.manifest.json):
+
+```powershell
+.\tools\fetch_open_datasets.ps1 -ListOnly
+.\tools\fetch_open_datasets.ps1 -AcceptLicenses
+```
+
+The default destination is `E:\DNA\BulkData\Training_Sources_Open\<dataset-id>`. Downloads use
+`.partial` files, move only after verification, remain unexpanded, and receive adjacent
+`DOWNLOAD_RECEIPT.json` and `LICENSE_RECEIPT.json` files. A size-only upstream pin is accepted
+only once: its observed SHA-256 is recorded and becomes mandatory on later runs.
+
+| Dataset | LoRA recipe role | Eligibility basis |
+|---|---|---|
+| Digital Peter | Base-script adaptation | MIT, immutable Hugging Face revision and SHA-256 pins |
+| Cyrillic Handwriting Dataset v5 | Base-script adaptation | CC0, exact Kaggle version and byte pin; observed SHA-256 recorded |
+| school-notebooks-RU | Base-script adaptation | MIT, immutable Hugging Face revision and SHA-256 pins |
+
+No text-side lexicon corpus currently clears every gate. HKR is excluded for non-commercial,
+no-derivatives, and application-required terms. EHRI Multilingual is excluded because its mixed
+inventory explicitly includes standing-excluded Yad Vashem material. EHRI-NER currently
+publishes EUPL-1.2 rather than the requested CC-BY-4.0 and remains excluded pending a separate
+source-rights review. Yad Vashem, USHMM, Arolsen, Geneteka, and JRI-Poland remain excluded
+regardless of accessibility.
 ## P2 implementation and baseline
 
 P2 now contains:
@@ -164,7 +194,8 @@ bounded failed jobs can retry; unknown/multi-act targets route to review instead
 The baseline remains unspent until one `reader-infer` probe proves constrained output through
 the pinned mtmd frontend. Only then may `batch-run --max-retries 3
 --rebind-failed-fingerprints` preserve the existing retry audit and spend the final approved
-attempt. Failed jobs retain raw stdout/stderr paths in the checkpoint. Twelve gold records remain
+attempt. Every successful inference retains raw stdout/stderr beside its JSON label; failed
+jobs retain raw-stream paths in the checkpoint. Twelve gold records remain
 honestly marked `NOT_LOCALIZED`: five exact Serock source objects returned HTTP 415 and seven
 Pułtusk routes remain explicitly unresolved.
 
