@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "base_model": "Qwen3.5-9B",
+  "base_model_repository": "Qwen/Qwen3.5-9B",
+  "base_model_revision": "ef3d031a90d340a92d71f83ec17d054e100ce713",
+  "weights_format": "safetensors",
+  "objective": "supervised multimodal civil-register extraction",
+  "precision": "bf16",
+  "seed": 0,
+  "epochs": 1,
+  "learning_rate": 0.00002,
+  "effective_batch_size": 8,
+  "max_sequence_length": 8192,
+  "lora": {
+    "rank": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_modules": []
+  },
+  "trainer": {
+    "implementation": null,
+    "version": null,
+    "container_digest": null
+  },
+  "selection_rule": "Choose target_modules only after the pinned trainer prints the base-model module inventory; record the final exact list before training.",
+  "network_policy": "Training input and output artifacts are transferred explicitly; no genealogy sources are queried by the trainer."
+}

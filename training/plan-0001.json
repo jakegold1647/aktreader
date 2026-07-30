@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "plan_id": "aktreader-training-0001",
+  "measured_on": "2026-07-29",
+  "phase": "HUMAN_GOLD_THEN_CALIBRATION_THEN_LORA",
+  "paid_training_authorized": true,
+  "launch_rule": "Paid model training may start only when every preflight gate passes.",
+  "minimums": {
+    "grounded_training_records": 100,
+    "image_attested_holdout_records": 20
+  },
+  "inputs": {
+    "silver_manifest": "labels/silver/manifest.json",
+    "evaluation_holdout": "gold/clerk_year_holdout.json",
+    "gold_attestation_audit": "docs/audits/gold-attestation-audit-2026-07-29.json",
+    "lora_recipe": "examples/lora-recipe.example.json"
+  },
+  "human_gold_acquisition": {
+    "qualification_batch_records": 5,
+    "qualification_candidates": 3,
+    "production_batch_records": 25,
+    "independent_transcribers_per_record": 2,
+    "adjudicator_required": true,
+    "machine_assistance_disclosed_and_excluded_from_qualification": true,
+    "acceptance_contract": "docs/human-gold-acquisition.md"
+  },
+  "model_bakeoff": {
+    "purpose": "Select the local reader and independent verifier before spending on LoRA.",
+    "calibration_record_target": 25,
+    "calibration_record_ids": [],
+    "candidates": [
+      {
+        "role": "PRIMARY_READER",
+        "repository": "Qwen/Qwen3-VL-32B-Instruct",
+        "revision": "0cfaf48183f594c314753d30a4c4974bc75f3ccb",
+        "artifact_state": "REMOTE_REVISION_PINNED_BYTES_NOT_FETCHED"
+      },
+      {
+        "role": "INDEPENDENT_VERIFIER",
+        "repository": "OpenGVLab/InternVL3_5-38B-Instruct",
+        "revision": "526f5654fa1fd98391ae8819a14dfba465a308e3",
+        "artifact_state": "REMOTE_REVISION_PINNED_BYTES_NOT_FETCHED"
+      },
+      {
+        "role": "AUXILIARY_OCR_NOT_AUTHORITY",
+        "repository": "zai-org/GLM-OCR",
+        "revision": "ca5d8b3e287e52589e37c28385d9655ee4372f9d",
+        "artifact_state": "REMOTE_REVISION_PINNED_BYTES_NOT_FETCHED"
+      },
+      {
+        "role": "CYRILLICAPP_CODING_ONLY_EXCLUDED_FROM_RECORD_CONSENSUS",
+        "repository": "Qwen/Qwen3-Coder-Next",
+        "revision": "a7fbcb5c0e12d62a448eaa0e260346bf5dcc0feb",
+        "artifact_state": "REMOTE_REVISION_PINNED_BYTES_NOT_FETCHED"
+      }
+    ]
+  },
+  "network_policy": "No genealogy source is queried by the training worker. Inputs and outputs are transferred explicitly.",
+  "restricted_sources_used": false
+}

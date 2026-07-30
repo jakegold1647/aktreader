@@ -1,0 +1,198 @@
+{
+  "gates": [
+    {
+      "code": "GROUNDED_TRAINING_MINIMUM",
+      "detail": "0/100 grounded records",
+      "status": "BLOCKED"
+    },
+    {
+      "code": "IMAGE_ATTESTED_HOLDOUT_MINIMUM",
+      "detail": "0/20 fully image-verified holdout records",
+      "status": "BLOCKED"
+    },
+    {
+      "code": "CLERK_YEAR_ISOLATION",
+      "detail": "overlap=['73-826-0|serock|1890|clerk-unknown']",
+      "status": "BLOCKED"
+    },
+    {
+      "code": "TRAINER_RECIPE_PINNED",
+      "detail": "requires trainable base revision, non-empty target modules, and pinned trainer/container",
+      "status": "BLOCKED"
+    },
+    {
+      "code": "CALIBRATION_SET_MINIMUM",
+      "detail": "0/25 sequestered calibration records",
+      "status": "BLOCKED"
+    },
+    {
+      "code": "MODEL_BAKEOFF_REVISIONS_PINNED",
+      "detail": "all bakeoff candidates require exact 40-character repository revisions",
+      "status": "PASS"
+    }
+  ],
+  "input_pins": {
+    "evaluation_holdout": {
+      "path": "E:\\DNA\\Project_RegisterReader\\gold\\clerk_year_holdout.json",
+      "sha256": "8425c621a8b0f1104ba2bbff9acadc190fb0ff68371f76b0800d56521a9558c5"
+    },
+    "gold_attestation_audit": {
+      "path": "E:\\DNA\\Project_RegisterReader\\docs\\audits\\gold-attestation-audit-2026-07-29.json",
+      "sha256": "64be4f1f968326f712b4d23922d0eb260aff7405c2d5be4316a48bad17e93128"
+    },
+    "lora_recipe": {
+      "path": "E:\\DNA\\Project_RegisterReader\\examples\\lora-recipe.example.json",
+      "sha256": "20fb1261c7672cead4e7ad534c79ca7fbc04b23233d4d2cdec91707aced227b3"
+    },
+    "plan": {
+      "path": "E:\\DNA\\Project_RegisterReader\\training\\plan-0001.json",
+      "sha256": "4280ad3818917c4ba5564337c589ed9a901cc0aabeb455f04f519a34667b6426"
+    },
+    "silver_manifest": {
+      "path": "E:\\DNA\\Project_RegisterReader\\labels\\silver\\manifest.json",
+      "sha256": "4bbfe0823485844cb976172d6adf59db94cae29188be32eb523d762d50a58df7"
+    }
+  },
+  "measured_on": "2026-07-29",
+  "metrics": {
+    "calibration_record_count": 0,
+    "evaluation_overlap_clerk_year_ids": [
+      "73-826-0|serock|1890|clerk-unknown"
+    ],
+    "grounded_training_record_count": 0,
+    "image_attested_holdout_record_count": 0,
+    "minimum_calibration_records": 25,
+    "minimum_grounded_training_records": 100,
+    "minimum_image_attested_holdout_records": 20,
+    "silver_record_count": 5,
+    "training_clerk_year_ids": [
+      "73-826-0|serock|1890|clerk-unknown"
+    ]
+  },
+  "paid_training_authorized": true,
+  "paid_training_launch_allowed": false,
+  "plan_id": "aktreader-training-0001",
+  "record_grounding": [
+    {
+      "failures": [
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerA/serock-1890-death-1.json",
+          "violation_count": 33
+        },
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerB/serock-1890-death-1.json",
+          "violation_count": 3
+        }
+      ],
+      "grounded": false,
+      "record_id": "serock-1890-death-1"
+    },
+    {
+      "failures": [
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerA/serock-1890-death-2.json",
+          "violation_count": 33
+        },
+        {
+          "codes": [
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerB/serock-1890-death-2.json",
+          "violation_count": 1
+        }
+      ],
+      "grounded": false,
+      "record_id": "serock-1890-death-2"
+    },
+    {
+      "failures": [
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerA/serock-1890-death-3.json",
+          "violation_count": 27
+        },
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerB/serock-1890-death-3.json",
+          "violation_count": 2
+        }
+      ],
+      "grounded": false,
+      "record_id": "serock-1890-death-3"
+    },
+    {
+      "failures": [
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerA/serock-1890-death-4.json",
+          "violation_count": 30
+        },
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerB/serock-1890-death-4.json",
+          "violation_count": 6
+        }
+      ],
+      "grounded": false,
+      "record_id": "serock-1890-death-4"
+    },
+    {
+      "failures": [
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerA/serock-1890-death-5.json",
+          "violation_count": 30
+        },
+        {
+          "codes": [
+            "PRESENT_ORIGINAL_SCRIPT_NOT_IN_TRANSCRIPTION",
+            "PRESENT_RU_ORIGINAL_SCRIPT_HAS_NO_CYRILLIC"
+          ],
+          "failure": "GROUNDEDNESS_VIOLATIONS",
+          "path": "labels/readerB/serock-1890-death-5.json",
+          "violation_count": 2
+        }
+      ],
+      "grounded": false,
+      "record_id": "serock-1890-death-5"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "status": "BLOCKED"
+}

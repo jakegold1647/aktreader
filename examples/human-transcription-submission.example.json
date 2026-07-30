@@ -1,0 +1,26 @@
+{
+  "$schema": "../schemas/human-transcription-submission-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "assignment_id": "qualification-0001-h1",
+  "record_id": "serock-1890-death-1",
+  "artifact": {
+    "path": "assignments/qualification-0001/serock-1890-death-1.png",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "source_language": "ru",
+  "worker": {
+    "worker_code": "H1",
+    "marketplace": "UPWORK",
+    "independence_attested": true,
+    "machine_assistance_used": false,
+    "machine_assistance_detail": null
+  },
+  "submitted_at": "2026-07-29T12:00:00Z",
+  "transcription": {
+    "original_script": "Строка первая.\nСтрока вторая [unclear: имя].",
+    "line_count": 2,
+    "uncertainties": ["line 2: имя"],
+    "notes": []
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.local/schemas/human-transcription-submission-1.0.0.schema.json",
+  "title": "AktReader human transcription submission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "assignment_id",
+    "record_id",
+    "artifact",
+    "source_language",
+    "worker",
+    "submitted_at",
+    "transcription",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "1.0.0"},
+    "assignment_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
+    "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "source_language": {"enum": ["pl", "ru"]},
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worker_code",
+        "marketplace",
+        "independence_attested",
+        "machine_assistance_used",
+        "machine_assistance_detail"
+      ],
+      "properties": {
+        "worker_code": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]+$"},
+        "marketplace": {"enum": ["UPWORK", "FIVERR", "PROZ", "OTHER"]},
+        "independence_attested": {"const": true},
+        "machine_assistance_used": {"type": "boolean"},
+        "machine_assistance_detail": {"type": ["string", "null"]}
+      }
+    },
+    "submitted_at": {"type": "string", "format": "date-time"},
+    "transcription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["original_script", "line_count", "uncertainties", "notes"],
+      "properties": {
+        "original_script": {"type": "string", "minLength": 1},
+        "line_count": {"type": "integer", "minimum": 1},
+        "uncertainties": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "authority_warning": {
+      "const": "extraction is not authority — verify against the scan"
+    }
+  }
+}
