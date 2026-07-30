@@ -124,6 +124,23 @@ A submission fails before payment when any of these is missing:
 The project will convert accepted text to the Reader v1.4 schema. Every structured PRESENT
 observation must be a continuous substring of the worker's own transcription. Provenance is
 stamped mechanically; workers do not invent hashes or schema metadata.
+## Intake a complete qualification batch
+
+Place the returned JSON files under one directory (nested worker folders are allowed) only after
+all three candidates have submitted all five acts. Then run:
+
+```powershell
+$env:PYTHONPATH = "src"
+python tools/intake_human_qualification.py `
+  --submissions-dir .\path\to\returned-qualification-json
+```
+
+The intake gate requires the complete 3 x 5 matrix. It binds every return to the candidate code,
+lowercase assignment ID, record ID, source language, and exact crop SHA-256 in the packet receipt;
+it also reruns the no-AI qualification validator, rejects duplicate worker/record pairs, and
+content-addresses each returned file. It writes `training/qualification-0001/intake.json` only
+on a complete pass and refuses to overwrite an existing intake. A passing intake is ready for
+blind adjudication; it is not itself a score, payment approval, or gold promotion.
 
 ## Qualification and production acceptance
 
