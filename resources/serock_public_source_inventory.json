@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0.0",
+  "inventory_id": "serock-public-source-inventory-2026-07-29",
+  "created_at": "2026-07-29",
+  "scope": "Public web sources that may help locate or corroborate Serock civil-register acts.",
+  "warning": "Public visibility is not an open training license. Nothing in this inventory is gold or training-eligible merely because it is online.",
+  "admission_policy": {
+    "benchmark": "A field is benchmark truth only after a human verifies it against a pinned scan and records a gold-attestation sidecar.",
+    "training": "Only permitted scan-derived labels made by this project may enter training. JRI-Poland, Geneteka, JewishGen, memorial-institution, and unlicensed user-contributed content remain excluded.",
+    "reference": "Reference-only sources may identify a year, act type, act number, or candidate spelling for later image verification. They may not populate labels automatically."
+  },
+  "sources": [
+    {
+      "source_id": "nli-cahjp-serock-1812-1820",
+      "title": "Akta urodzenia, małżeństwa i śmierci z Serocku",
+      "url": "https://www.nli.org.il/en/archives/NNL_CAHJP990049014480205171/NLI",
+      "source_kind": "ARCHIVAL_CATALOG",
+      "holding_institution": "Central Archives for the History of the Jewish People, National Library of Israel",
+      "coverage": {
+        "place": "Serock",
+        "years": "1812-1820",
+        "extent": "174 leaves",
+        "languages": [
+          "Hebrew"
+        ],
+        "catalog_note": "The catalog describes Hebrew signatures and the years 1813/14 through 1819/20."
+      },
+      "access_status": "NO_ONLINE_ACCESS",
+      "rights_status": "NOT_REVIEWED_FOR_TRAINING",
+      "training_eligible": false,
+      "benchmark_eligible": false,
+      "value": "Confirms that a much earlier Serock manuscript survives, but it cannot seed the current corpus without separately obtained images and permission."
+    },
+    {
+      "source_id": "jewishgen-groups-orenstein-serock-four-acts",
+      "title": "Translation of Cyrillic Death & Marriage Records, Serock, Poland",
+      "url": "https://groups.jewishgen.org/g/main/topics?after=1163089320000000000&page=14760",
+      "source_kind": "PUBLIC_DISCUSSION_POST",
+      "coverage": {
+        "place": "Serock",
+        "years": "1878, 1882, 1900",
+        "acts": 4
+      },
+      "access_status": "POST_ONLINE_LEGACY_IMAGE_LINKS_UNAVAILABLE",
+      "rights_status": "NO_OPEN_TRAINING_LICENSE_FOUND",
+      "training_eligible": false,
+      "benchmark_eligible": false,
+      "value": "Provides four exact act coordinates and candidate identities. Use only to locate the corresponding permitted scans and to define verification targets.",
+      "act_leads_file": "resources/serock_public_act_leads.csv"
+    },
+    {
+      "source_id": "genopro-pieniek-public-gedcom",
+      "title": "Pieniek public family GEDCOM",
+      "url": "https://familytrees.genopro.com/eu7/pieniek/FamilyTree.ged",
+      "source_kind": "PUBLIC_USER_GEDCOM",
+      "coverage": {
+        "place": "Serock",
+        "years": "primarily 1875-1897",
+        "fields_seen": [
+          "name",
+          "year",
+          "event type",
+          "act number",
+          "family links"
+        ]
+      },
+      "access_status": "ONLINE",
+      "rights_status": "UNLICENSED_AND_SUBSTANTIALLY_JRI_DERIVED",
+      "training_eligible": false,
+      "benchmark_eligible": false,
+      "value": "Useful as a discovery map only. Its own source block identifies Jewish Records Indexing - Poland, which is excluded from AKTREADER training."
+    },
+    {
+      "source_id": "jewishgen-serock-yizkor",
+      "title": "The Book of Serock online translation",
+      "url": "https://www.jewishgen.org/yizkor/serock/serock.html",
+      "source_kind": "MEMORIAL_BOOK_TRANSLATION",
+      "coverage": {
+        "place": "Serock",
+        "years": "community history rather than act-level register coverage"
+      },
+      "access_status": "ONLINE",
+      "rights_status": "COPYING_RESTRICTED_BY_SOURCE_NOTICE",
+      "training_eligible": false,
+      "benchmark_eligible": false,
+      "value": "Name and community context only. It is not a civil-register transcription and must not be used as label truth."
+    },
+    {
+      "source_id": "ptg-skanoteka-serock-0826d",
+      "title": "PTG Skanoteka Serock Jewish civil-register scans, collection 0826d",
+      "url": "https://skanoteka.genealodzy.pl/id318",
+      "source_kind": "MANUSCRIPT_SCAN_VIEWER",
+      "coverage": {
+        "place": "Serock",
+        "fond": "73/826/0",
+        "document_classes": [
+          "births",
+          "marriages",
+          "deaths",
+          "annual handwritten indexes",
+          "marriage annexes"
+        ]
+      },
+      "access_status": "PUBLIC_VIEWER_WITH_INCOMPLETE_AND_IRREGULAR_YEAR_COVERAGE",
+      "rights_status": "USE_ONLY_UNDER_PROJECTS_EXISTING_USER_SUPPLIED_SCAN_POLICY",
+      "training_eligible": true,
+      "benchmark_eligible": false,
+      "value": "Primary image evidence. The annual handwritten indexes and duplicate certificates in annexes create zero-cost weak supervision, but human image attestation is still required for benchmark truth.",
+      "acquisition_note": "Do not scrape or mirror the viewer. The project already has a permitted local scan reservoir and uses polite, owner-controlled acquisition rules."
+    }
+  ],
+  "discovery_verdict": {
+    "open_scan_aligned_full_transcriptions_found": 0,
+    "exact_public_act_leads_found": 4,
+    "earlier_physical_manuscript_collections_found": 1,
+    "usable_zero_cost_start": "Use the permitted Serock scans already held by the owner. Pair each act with its in-register handwritten annual-index row, repeated name in the closing formula, and any duplicate certificate in the annexes. Treat those pairs as WEAK_REFERENCE until human-attested."
+  }
+}

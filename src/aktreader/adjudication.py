@@ -109,6 +109,13 @@ def _require_unique_ids(spec: Mapping[str, Any]) -> None:
             "candidate_id",
             f"{question['question_id']}.candidates",
         )
+        comparison_evidence = question.get("comparison_evidence", [])
+        if comparison_evidence:
+            require(
+                comparison_evidence,
+                "evidence_id",
+                f"{question['question_id']}.comparison_evidence",
+            )
 
 
 def _resolve_local_path(raw: Any, *, base: Path, role: str) -> Path:
@@ -264,6 +271,7 @@ def _render_question(
     base: Path,
 ) -> tuple[str, dict[str, Any]]:
     question_id = str(question["question_id"])
+    review_mode = str(question.get("review_mode", "LETTERFORM_CHOICE"))
     magnification = int(question.get("magnification", 6))
     disputed_uri, _ = _crop_png(
         question["artifact"],
@@ -271,13 +279,15 @@ def _render_question(
         role=f"{question_id}.artifact",
         magnification=magnification,
     )
-    disputed_glyph_uri, _ = _crop_png(
-        question["artifact"],
-        base=base,
-        role=f"{question_id}.artifact.glyph",
-        magnification=magnification,
-        glyph=True,
-    )
+    disputed_glyph_uri = None
+    if review_mode != "VISUAL_CORROBORATION":
+        disputed_glyph_uri, _ = _crop_png(
+            question["artifact"],
+            base=base,
+            role=f"{question_id}.artifact.glyph",
+            magnification=magnification,
+            glyph=True,
+        )
     candidate_by_id = {
         str(candidate["candidate_id"]): candidate for candidate in question["candidates"]
     }
@@ -325,6 +335,31 @@ def _render_question(
             f"{''.join(cards)}</section>"
         )
 
+    comparison_html: list[str] = []
+    comparison_manifest: list[dict[str, Any]] = []
+    for index, evidence in enumerate(question.get("comparison_evidence", [])):
+        evidence_id = str(evidence["evidence_id"])
+        uri, _ = _crop_png(
+            evidence["artifact"],
+            base=base,
+            role=f"{question_id}.comparison.{index}.{evidence_id}",
+            magnification=magnification,
+        )
+        comparison_manifest.append(
+            {
+                "evidence_id": evidence_id,
+                "label": evidence["label"],
+                "artifact_sha256": evidence["artifact"]["sha256"],
+                "artifact_bbox": evidence["artifact"]["bbox"],
+            }
+        )
+        comparison_html.append(
+            '<figure class="comparison-card">'
+            f'<img src="{uri}" alt="{_esc(evidence["label"])}">'
+            f"<figcaption><strong>{_esc(evidence['label'])}</strong>: "
+            f"{_esc(evidence['plain_text'])}</figcaption>"
+            "</figure>"
+        )
     anchor_html: list[str] = []
     for index, anchor in enumerate(question["bilingual_anchors"]):
         uri, _ = _crop_png(
@@ -363,19 +398,41 @@ def _render_question(
         "<span><strong>Can't tell</strong><br>"
         f"Consequence: {_esc(question['cant_tell_consequence'])}</span></label>"
     )
+
+    if review_mode == "VISUAL_CORROBORATION":
+        limit_html = (
+            '<p class="limit"><strong>Honest limit:</strong> this checks visual consistency '
+            "across repeated or independent regions. It does not independently prove the "
+            "transliteration or make publication-grade benchmark gold.</p>"
+        )
+        evidence_html = (
+            "<h3>Act-body target</h3>"
+            f'<img class="disputed" src="{disputed_uri}" alt="magnified act-body region">'
+            f'<p class="magnification">Original pixels shown at {magnification}× '
+            "nearest-neighbor.</p>"
+            "<h3>Repeated and independent evidence</h3>"
+            f'<div class="comparison-evidence">{"".join(comparison_html)}</div>'
+        )
+    else:
+        limit_html = (
+            '<p class="limit"><strong>Honest limit:</strong> compare the proposed shapes. '
+            "This is not independent transcription; both proposals may be wrong.</p>"
+        )
+        evidence_html = (
+            f'<img class="disputed" src="{disputed_uri}" alt="magnified disputed region">'
+            f'<img class="disputed-glyph" src="{disputed_glyph_uri}" '
+            'alt="magnified disputed glyph">'
+            f'<p class="magnification">Original pixels shown at {magnification}× '
+            "nearest-neighbor.</p>"
+            "<h3>Same-hand letterform lineup</h3>"
+            f'<div class="lineup">{"".join(lineup_html)}</div>'
+        )
     section = (
         f'<article class="question" data-question-id="{_esc(question_id)}">'
         f"<header><span>Question {_esc(question_id)}</span>"
         f"<span>{_esc(question['selection_reason'])}</span></header>"
         f"<h2>{_esc(question['claim'])}</h2>"
-        '<p class="limit"><strong>Honest limit:</strong> compare the proposed shapes. '
-        "This is not independent transcription; both proposals may be wrong.</p>"
-        f'<img class="disputed" src="{disputed_uri}" alt="magnified disputed region">'
-        f'<img class="disputed-glyph" src="{disputed_glyph_uri}" '
-        'alt="magnified disputed glyph">'
-        f'<p class="magnification">Original pixels shown at {magnification}× nearest-neighbor.</p>'
-        "<h3>Same-hand letterform lineup</h3>"
-        f'<div class="lineup">{"".join(lineup_html)}</div>'
+        f"{limit_html}{evidence_html}"
         f'<div class="anchors">{"".join(anchor_html)}</div>'
         f'<ul class="checks">{check_html}</ul>'
         f"<h3>{_esc(question['question'])}</h3>"
@@ -386,6 +443,7 @@ def _render_question(
         '<label><input type="checkbox" value="LETTERFORM_LINEUP"> Letterform lineup</label>'
         '<label><input type="checkbox" value="BILINGUAL_ANCHOR"> Bilingual anchor</label>'
         '<label><input type="checkbox" value="INDEX_CROSS_CHECK"> Index cross-check</label>'
+        '<label><input type="checkbox" value="VISUAL_CORROBORATION"> Visual corroboration</label>'
         '<label><input type="checkbox" value="DIRECT_SCRIPT_READING"> Direct script reading</label>'
         '<label><input type="checkbox" value="STRUCTURAL_CROSS_CHECK"> Structural check</label>'
         "</fieldset></article>"
@@ -397,11 +455,13 @@ def _render_question(
         "field_path": question["field_path"],
         "clerk_year_id": question["clerk_year_id"],
         "selection_reason": question["selection_reason"],
+        "review_mode": review_mode,
         "artifact_sha256": question["artifact"]["sha256"],
         "artifact_bbox": question["artifact"]["bbox"],
         "candidate_ids": list(candidate_by_id),
         "candidates": list(question["candidates"]),
         "lineup_exemplar_ids": lineup_manifest,
+        "comparison_evidence": comparison_manifest,
         "neither_consequence": question["neither_consequence"],
         "cant_tell_consequence": question["cant_tell_consequence"],
     }
@@ -451,7 +511,11 @@ gap:1rem }} .candidate-column {{ border:1px solid var(--line);border-radius:10px
 align-items:center;margin:1rem 0 }} .exemplar img {{ max-width:72px;image-rendering:pixelated }}
 .exemplar img.word {{ max-width:100% }} figcaption {{ grid-column:1/-1 }} .warning {{ display:block;
 color:#c66 }} .anchors {{ display:flex;gap:1rem;flex-wrap:wrap }} .anchor img {{ max-width:380px;
-image-rendering:pixelated }} .choices {{ display:grid;gap:.6rem }}
+image-rendering:pixelated }} .comparison-evidence {{ display:grid;
+grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem }} .comparison-card {{
+border:1px solid var(--line);border-radius:10px;padding:1rem;margin:0 }} .comparison-card img {{
+display:block;max-width:100%;image-rendering:pixelated;margin:auto }} .choices {{
+display:grid;gap:.6rem }}
 .choice {{ display:flex;gap:.7rem;
 padding:.8rem;border:1px solid var(--line);border-radius:8px }}
 .escape {{ border-color:var(--accent) }}
@@ -535,7 +599,11 @@ def generate_packet(
     sections: list[str] = []
     question_manifest: list[dict[str, Any]] = []
     for question in selected:
-        lineup = mine_lineup(question, spec["exemplar_catalog"])
+        lineup = (
+            {}
+            if question.get("review_mode") == "VISUAL_CORROBORATION"
+            else mine_lineup(question, spec["exemplar_catalog"])
+        )
         section, manifest_item = _render_question(
             question,
             lineup,
@@ -585,7 +653,11 @@ def generate_packet(
                 "choice_id": "FILL_ME",
                 "verbatim_answer": "FILL_ME",
                 "interpretation": "FILL_ME",
-                "methods": ["LETTERFORM_LINEUP"],
+                "methods": (
+                    ["VISUAL_CORROBORATION", "INDEX_CROSS_CHECK"]
+                    if item["review_mode"] == "VISUAL_CORROBORATION"
+                    else ["LETTERFORM_LINEUP"]
+                ),
             }
             for item in question_manifest
         ],
@@ -708,10 +780,15 @@ def ingest_answers(
                 "consequence_execution": "EVENT_EMITTED_NO_LABEL_MUTATION",
             }
         )
-        if choice_id in candidate_ids:
-            selected = next(
-                item for item in question["candidates"] if item["candidate_id"] == choice_id
+        selected = (
+            next(
+                (item for item in question["candidates"] if item["candidate_id"] == choice_id),
+                None,
             )
+            if choice_id in candidate_ids
+            else None
+        )
+        if selected is not None and selected.get("effect", "ATTEST_FIELD") == "ATTEST_FIELD":
             event = {
                 "question_id": question_id,
                 "packet_id": manifest["packet_id"],
@@ -728,7 +805,9 @@ def ingest_answers(
                 "answered_at": answers["answered_at"],
                 "verifier": answers["verifier"],
                 "training_eligible": (
-                    consent["status"] == "GRANTED" and consent["training_eligible"] is True
+                    consent["status"] == "GRANTED"
+                    and consent["training_eligible"] is True
+                    and selected.get("correction_eligible", True) is True
                 ),
             }
             definitive_events.append(event)
@@ -751,6 +830,7 @@ def ingest_answers(
                         "artifact_sha256": question["artifact_sha256"],
                         "region": question["artifact_bbox"],
                     },
+                    "corroborating_image_references": question.get("comparison_evidence", []),
                     "attestation": {
                         "attestor_id": answers["verifier"]["verifier_id"],
                         "method": answer["methods"][0],
@@ -758,7 +838,7 @@ def ingest_answers(
                         "verbatim_answer": answer["verbatim_answer"],
                         "adjudication_packet_sha256": manifest["packet_sha256"],
                     },
-                    "benchmark_eligible": True,
+                    "benchmark_eligible": selected.get("benchmark_eligible", True) is True,
                 }
             )
         else:

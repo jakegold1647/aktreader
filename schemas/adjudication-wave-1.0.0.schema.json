@@ -62,7 +62,10 @@
         "label": {"type": "string", "minLength": 1},
         "value": {},
         "glyph": {"type": "string", "minLength": 1, "maxLength": 4},
-        "consequence": {"type": "string", "minLength": 1}
+        "consequence": {"type": "string", "minLength": 1},
+        "effect": {"enum": ["ATTEST_FIELD", "ROUTE_EXPERT"]},
+        "benchmark_eligible": {"type": "boolean"},
+        "correction_eligible": {"type": "boolean"}
       },
       "additionalProperties": false
     },
@@ -83,6 +86,20 @@
         "label": {"type": "string", "minLength": 1},
         "result": {"enum": ["SUPPORTS", "CONTRADICTS", "NEUTRAL"]},
         "interpretation": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "comparisonEvidence": {
+      "type": "object",
+      "required": ["evidence_id", "label", "plain_text", "artifact"],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "label": {"type": "string", "minLength": 1},
+        "plain_text": {"type": "string", "minLength": 1},
+        "artifact": {"$ref": "#/$defs/imageRegion"}
       },
       "additionalProperties": false
     },
@@ -113,6 +130,9 @@
         "record_sha256": {"$ref": "#/$defs/sha256"},
         "field_path": {"type": "string", "minLength": 1},
         "clerk_year_id": {"type": "string", "minLength": 1},
+        "review_mode": {
+          "enum": ["LETTERFORM_CHOICE", "VISUAL_CORROBORATION"]
+        },
         "selection_reason": {
           "enum": [
             "IDENTITY_FORK",
@@ -137,6 +157,12 @@
           "maxItems": 4,
           "items": {"$ref": "#/$defs/candidate"}
         },
+        "comparison_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {"$ref": "#/$defs/comparisonEvidence"}
+        },
         "bilingual_anchors": {
           "type": "array",
           "items": {"$ref": "#/$defs/anchor"}
@@ -148,7 +174,20 @@
         "neither_consequence": {"type": "string", "minLength": 1},
         "cant_tell_consequence": {"type": "string", "minLength": 1}
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "review_mode": {"const": "VISUAL_CORROBORATION"}
+            },
+            "required": ["review_mode"]
+          },
+          "then": {
+            "required": ["comparison_evidence"]
+          }
+        }
+      ]
     },
     "exemplar": {
       "type": "object",

@@ -1,0 +1,119 @@
+{
+  "$schema": "../../../schemas/adjudication-answers-1.0.0.schema.json",
+  "answered_at": "FILL_ME_ISO_8601",
+  "answers": [
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-06",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-32",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-39",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-02",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-03",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-30",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-33",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-47",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-37",
+      "verbatim_answer": "FILL_ME"
+    },
+    {
+      "choice_id": "FILL_ME",
+      "interpretation": "FILL_ME",
+      "methods": [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK"
+      ],
+      "question_id": "q-serock-1890-death-43",
+      "verbatim_answer": "FILL_ME"
+    }
+  ],
+  "packet_id": "adjudication-wave-serock-1890-zero-cost-holdout-01",
+  "questions_sha256": "5c6abd769b6c73cddaa75571fff469ba291a33fbd17688bf7c3577f7c1dccf4c",
+  "schema_version": "1.0.0",
+  "spec_sha256": "8896b73a1cdca1c5c7c163291ba96043b0cb2038b297f76ff7a8aff1ef906343",
+  "verifier": {
+    "correction_consent": {
+      "status": "NOT_RECORDED",
+      "training_eligible": false
+    },
+    "script_expertise": "NON_READER",
+    "verifier_id": "FILL_ME"
+  },
+  "wave_id": "serock-1890-zero-cost-holdout-01"
+}

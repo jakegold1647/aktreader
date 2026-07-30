@@ -1,0 +1,1087 @@
+{
+    "$schema":  "../../schemas/adjudication-wave-1.0.0.schema.json",
+    "schema_version":  "1.0.0",
+    "wave_id":  "serock-1890-zero-cost-holdout-01",
+    "title":  "Serock 1890 — zero-cost provisional holdout (10 acts)",
+    "questions":  [
+                      {
+                          "question_id":  "q-serock-1890-death-02",
+                          "record_id":  "serock-1890-death-2",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "CORROBORATION_CONFLICT",
+                          "claim":  "Machine resolution proposes Chana Auksztukalska; Reader A retained an A/L opening and suffix uncertainty while Reader B shortened the surname.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg",
+                                           "sha256":  "3a4ed2604cf2f02b9a32009749869548b639803b3ed5204eafeeb84a6f55e886",
+                                           "bbox":  {
+                                                        "x":  1580,
+                                                        "y":  1450,
+                                                        "width":  1180,
+                                                        "height":  180,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  1580,
+                                                              "y":  1450,
+                                                              "width":  1180,
+                                                              "height":  180,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Chana Auksztukalska"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Chana Auksztukalska"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "closing-repeat",
+                                                          "label":  "Closing-formula repeat",
+                                                          "plain_text":  "Same act; the grammatical ending may differ.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_01-02.jpg",
+                                                                           "sha256":  "3a4ed2604cf2f02b9a32009749869548b639803b3ed5204eafeeb84a6f55e886",
+                                                                           "bbox":  {
+                                                                                        "x":  1580,
+                                                                                        "y":  1660,
+                                                                                        "width":  1180,
+                                                                                        "height":  190,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      },
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  460,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The annual index supports the Auksztukalska family form, but this question asks only whether the visible shapes are consistent."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 2."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-03",
+                          "record_id":  "serock-1890-death-3",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "CORROBORATION_CONFLICT",
+                          "claim":  "Machine resolution proposes Josek Zajczyk; the readers agreed on the surname but differed on the Josek/Iosif given-name form.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+                                           "sha256":  "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9",
+                                           "bbox":  {
+                                                        "x":  340,
+                                                        "y":  500,
+                                                        "width":  1060,
+                                                        "height":  190,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  340,
+                                                              "y":  500,
+                                                              "width":  1060,
+                                                              "height":  190,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Josek Zajczyk"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Josek Zajczyk"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  930,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The independent index row is the main cross-check because the closing formula does not clearly repeat the name."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 3."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-06",
+                          "record_id":  "serock-1890-death-6",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "IDENTITY_FORK",
+                          "claim":  "Identity fork: Reader A read Boruch Moszko Herszfeld, while Reader B read a female Sura/Rena Moszka entry.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+                                           "sha256":  "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9",
+                                           "bbox":  {
+                                                        "x":  1690,
+                                                        "y":  1510,
+                                                        "width":  1060,
+                                                        "height":  190,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  1690,
+                                                              "y":  1510,
+                                                              "width":  1060,
+                                                              "height":  190,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Boruch Moszko Herszfeld"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Boruch Moszko Herszfeld"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "closing-repeat",
+                                                          "label":  "Closing-formula repeat",
+                                                          "plain_text":  "Same act; the grammatical ending may differ.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\Serock_1890_deaths_03-06.jpg",
+                                                                           "sha256":  "5636dbdf806e58a811094a477cb20337977be4dd32f2ef98ff9933d7b2403af9",
+                                                                           "bbox":  {
+                                                                                        "x":  1600,
+                                                                                        "y":  1760,
+                                                                                        "width":  1160,
+                                                                                        "height":  210,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      },
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  775,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The annual index and closing repeat were used to support the Reader A identity, but the fork remains a human question."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 6."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-30",
+                          "record_id":  "serock-1890-death-30",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "CORROBORATION_CONFLICT",
+                          "claim":  "Machine resolution proposes Moszek Kaner; Reader A retained Kaner/Kajer while Reader B proposed Kats.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+                                           "sha256":  "2a35c3b1b9b20b8a1a741736cca81c8552b0343d3c93204b3422dd4b9bd69740",
+                                           "bbox":  {
+                                                        "x":  1680,
+                                                        "y":  1460,
+                                                        "width":  1040,
+                                                        "height":  190,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  1680,
+                                                              "y":  1460,
+                                                              "width":  1040,
+                                                              "height":  190,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Moszek Kaner"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Moszek Kaner"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "closing-repeat",
+                                                          "label":  "Closing-formula repeat",
+                                                          "plain_text":  "Same act; the grammatical ending may differ.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_27-30.jpg",
+                                                                           "sha256":  "2a35c3b1b9b20b8a1a741736cca81c8552b0343d3c93204b3422dd4b9bd69740",
+                                                                           "bbox":  {
+                                                                                        "x":  1660,
+                                                                                        "y":  1660,
+                                                                                        "width":  1070,
+                                                                                        "height":  190,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      },
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  1300,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Body, closing genitive, and annual index are shown because the middle surname strokes caused the disagreement."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 30."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-32",
+                          "record_id":  "serock-1890-death-32",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "IDENTITY_FORK",
+                          "claim":  "Identity fork: Reader A read Jankiel Groniewicz, while Reader B read Hershl Gronevich.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+                                           "sha256":  "4317591739940cd91d23ed29a19bc01ff3e39fc43e4982edc6b73fa8a8a5fca4",
+                                           "bbox":  {
+                                                        "x":  300,
+                                                        "y":  1380,
+                                                        "width":  1140,
+                                                        "height":  230,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  300,
+                                                              "y":  1380,
+                                                              "width":  1140,
+                                                              "height":  230,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Jankiel Groniewicz"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Jankiel Groniewicz"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "closing-repeat",
+                                                          "label":  "Closing-formula repeat",
+                                                          "plain_text":  "Same act; the grammatical ending may differ.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+                                                                           "sha256":  "4317591739940cd91d23ed29a19bc01ff3e39fc43e4982edc6b73fa8a8a5fca4",
+                                                                           "bbox":  {
+                                                                                        "x":  400,
+                                                                                        "y":  1600,
+                                                                                        "width":  1030,
+                                                                                        "height":  210,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      },
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  825,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The surname splits across a line in the body; the closing repeat and index row provide the comparison."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 32."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-33",
+                          "record_id":  "serock-1890-death-33",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "CORROBORATION_CONFLICT",
+                          "claim":  "Machine resolution proposes Moszek Zinderman; Reader A retained Zinderman/Zunderman while Reader B proposed Zilberman.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_31-34.jpg",
+                                           "sha256":  "4317591739940cd91d23ed29a19bc01ff3e39fc43e4982edc6b73fa8a8a5fca4",
+                                           "bbox":  {
+                                                        "x":  1580,
+                                                        "y":  680,
+                                                        "width":  1160,
+                                                        "height":  190,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  1580,
+                                                              "y":  680,
+                                                              "width":  1160,
+                                                              "height":  190,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Moszek Zinderman"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Moszek Zinderman"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  1138,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The annual index is the independent comparison; the closing region does not provide a clean separate crop."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 33."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-37",
+                          "record_id":  "serock-1890-death-37",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "GOLD_SINGLE_COVERAGE",
+                          "claim":  "Machine resolution proposes Majer Szaja Mendzilewski; Reader B marked the principal illegible and Reader A retained a Szapsa/Szajsa ambiguity.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_35-38.jpg",
+                                           "sha256":  "7589125ade3b2d904875190f1949671fd98280b1885d47dd734f0b9798f6d62b",
+                                           "bbox":  {
+                                                        "x":  1580,
+                                                        "y":  520,
+                                                        "width":  1140,
+                                                        "height":  230,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  1580,
+                                                              "y":  520,
+                                                              "width":  1140,
+                                                              "height":  230,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Majer Szaja Mendzilewski"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Majer Szaja Mendzilewski"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "closing-repeat",
+                                                          "label":  "Closing-formula repeat",
+                                                          "plain_text":  "Same act; the grammatical ending may differ.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_35-38.jpg",
+                                                                           "sha256":  "7589125ade3b2d904875190f1949671fd98280b1885d47dd734f0b9798f6d62b",
+                                                                           "bbox":  {
+                                                                                        "x":  1580,
+                                                                                        "y":  720,
+                                                                                        "width":  1140,
+                                                                                        "height":  210,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      },
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  1665,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The scan is degraded. Corroboration is provisional even if the closing and index shapes align."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 37."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-39",
+                          "record_id":  "serock-1890-death-39",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "IDENTITY_FORK",
+                          "claim":  "Identity fork: Reader A read Ruchla Makowska, while Reader B read Leib Maykovsky.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+                                           "sha256":  "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+                                           "bbox":  {
+                                                        "x":  370,
+                                                        "y":  480,
+                                                        "width":  1050,
+                                                        "height":  210,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  370,
+                                                              "y":  480,
+                                                              "width":  1050,
+                                                              "height":  210,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Ruchla Makowska"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Ruchla Makowska"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "closing-repeat",
+                                                          "label":  "Closing-formula repeat",
+                                                          "plain_text":  "Same act; the grammatical ending may differ.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave003\\Serock_1890_deaths_39-42.jpg",
+                                                                           "sha256":  "fe50ec137204de014bc34af985974db498875097fa6f73edc9d0ae6d26e81ea5",
+                                                                           "bbox":  {
+                                                                                        "x":  370,
+                                                                                        "y":  650,
+                                                                                        "width":  1050,
+                                                                                        "height":  200,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      },
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  1718,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The body name, closing inflection, and annual index row are all shown because the two machine identities differ in sex and given name."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 39."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-43",
+                          "record_id":  "serock-1890-death-43",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name.observation_state",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "GOLD_SINGLE_COVERAGE",
+                          "claim":  "Machine resolution says the infant is explicitly recorded without a given name, while the annual index gives only Goldsztejn.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_43-46.jpg",
+                                           "sha256":  "12decd8ac58daa12f574ab663a70b452b5d49168e5b68af8d81a7b5a2eeb2767",
+                                           "bbox":  {
+                                                        "x":  340,
+                                                        "y":  500,
+                                                        "width":  1100,
+                                                        "height":  420,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  340,
+                                                              "y":  500,
+                                                              "width":  1100,
+                                                              "height":  420,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "STATED_UNKNOWN (unnamed Goldsztejn infant)"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "STATED_UNKNOWN (unnamed Goldsztejn infant)"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  875,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "This checks the typed absence and blank given-name pattern; it does not ask a non-reader to translate the phrase independently."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 43."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      },
+                      {
+                          "question_id":  "q-serock-1890-death-47",
+                          "record_id":  "serock-1890-death-47",
+                          "record_sha256":  "090a8d06690fd36c66e699ab7c4ce7bf2a1c5bb9af7eafd901f9e8df129a65bc",
+                          "field_path":  "principal.name",
+                          "clerk_year_id":  "73-826-0|serock|1890|register-year",
+                          "review_mode":  "VISUAL_CORROBORATION",
+                          "selection_reason":  "CORROBORATION_CONFLICT",
+                          "claim":  "Machine resolution proposes Josek Zalcberg; the readers differed only in Josek/Yusek and Zalcberg/Zaltsberg transliteration.",
+                          "question":  "Do the displayed shapes visually corroborate the provisional machine resolution, or do you see a concrete conflict?",
+                          "artifact":  {
+                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_47-49.jpg",
+                                           "sha256":  "c9ac79488497988f7e237edac6cbfdb2499c7cfd372c2572bb2abd39cac693f1",
+                                           "bbox":  {
+                                                        "x":  340,
+                                                        "y":  700,
+                                                        "width":  1100,
+                                                        "height":  230,
+                                                        "coordinate_space":  "source_pixels"
+                                                    },
+                                           "glyph_bbox":  {
+                                                              "x":  340,
+                                                              "y":  700,
+                                                              "width":  1100,
+                                                              "height":  230,
+                                                              "coordinate_space":  "source_pixels"
+                                                          }
+                                       },
+                          "magnification":  4,
+                          "candidates":  [
+                                             {
+                                                 "candidate_id":  "corroborated",
+                                                 "label":  "Visually corroborated",
+                                                 "value":  {
+                                                               "outcome":  "HUMAN_VISUAL_CORROBORATION",
+                                                               "proposed_value":  "Josek Zalcberg"
+                                                           },
+                                                 "glyph":  "≈",
+                                                 "consequence":  "record image-attestation evidence only; do not promote to benchmark gold or training data",
+                                                 "effect":  "ATTEST_FIELD",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             },
+                                             {
+                                                 "candidate_id":  "conflict",
+                                                 "label":  "Visible conflict",
+                                                 "value":  {
+                                                               "outcome":  "VISIBLE_CONFLICT",
+                                                               "proposed_value":  "Josek Zalcberg"
+                                                           },
+                                                 "glyph":  "≠",
+                                                 "consequence":  "preserve uncertainty and route the field to a Cyrillic reader",
+                                                 "effect":  "ROUTE_EXPERT",
+                                                 "benchmark_eligible":  false,
+                                                 "correction_eligible":  false
+                                             }
+                                         ],
+                          "comparison_evidence":  [
+                                                      {
+                                                          "evidence_id":  "annual-index",
+                                                          "label":  "Annual-index row",
+                                                          "plain_text":  "Independent register cross-check; surname comes first and the handwriting differs.",
+                                                          "artifact":  {
+                                                                           "path":  "E:\\DNA\\Decode_Package\\01_Cyrillic_Serock\\wave004\\Serock_1890_deaths_SkZ.jpg",
+                                                                           "sha256":  "bde041a94772033ab67abfcf3a4a94efb0a7e873e2cfcfd92d6a4b4de98e3018",
+                                                                           "bbox":  {
+                                                                                        "x":  270,
+                                                                                        "y":  1245,
+                                                                                        "width":  1050,
+                                                                                        "height":  85,
+                                                                                        "coordinate_space":  "source_pixels"
+                                                                                    }
+                                                                       }
+                                                      }
+                                                  ],
+                          "bilingual_anchors":  [
+
+                                                ],
+                          "structural_checks":  [
+                                                    {
+                                                        "label":  "Comparison rule",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "Compare distinctive word-shape sequences. Different handwriting, surname-first index order, and grammatical endings are not conflicts by themselves."
+                                                    },
+                                                    {
+                                                        "label":  "Known machine state",
+                                                        "result":  "NEUTRAL",
+                                                        "interpretation":  "The annual index row is the clean independent comparison; ordinary grammatical endings and transliteration differences are not visual conflicts."
+                                                    },
+                                                    {
+                                                        "label":  "Index act number",
+                                                        "result":  "SUPPORTS",
+                                                        "interpretation":  "The displayed annual-index row carries act number 47."
+                                                    }
+                                                ],
+                          "neither_consequence":  "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+                          "cant_tell_consequence":  "preserve uncertainty and route to a Cyrillic reader with no penalty"
+                      }
+                  ],
+    "exemplar_catalog":  [
+
+                         ]
+}

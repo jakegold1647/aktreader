@@ -1,0 +1,15 @@
+{
+  "answer_ingest_mutates_labels": false,
+  "images_embedded": true,
+  "mandatory_questions_exceeded_cap": false,
+  "network_required": false,
+  "nominal_question_cap": 10,
+  "packet_id": "adjudication-wave-serock-1890-zero-cost-holdout-01",
+  "packet_sha256": "6828d741b5c7fd55d1536ea6f7d3719f213b8798929ebce79201bac98ae311ae",
+  "question_count": 10,
+  "questions_sha256": "5c6abd769b6c73cddaa75571fff469ba291a33fbd17688bf7c3577f7c1dccf4c",
+  "schema_version": "1.0.0",
+  "spec_path": "E:\\DNA\\Project_RegisterReader\\human_check\\waves\\wave-serock-1890-zero-cost-holdout-01.json",
+  "spec_sha256": "8896b73a1cdca1c5c7c163291ba96043b0cb2038b297f76ff7a8aff1ef906343",
+  "wave_id": "serock-1890-zero-cost-holdout-01"
+}

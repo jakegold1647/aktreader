@@ -1,10 +1,11 @@
 # Human adjudication packets
 
 `aktreader adjudicate` turns the residue left by reading and verification into a small,
-self-contained question set. It does not ask a human to transcribe a register. Each question
-shows a plain-language claim, a 4–8× disputed crop, 3–6 uncontested same-clerk examples of every
-candidate glyph, available bilingual anchors, structural checks, and the consequence of every
-choice.
+self-contained question set. It does not ask a human to transcribe a register. A question can
+use a same-hand **letterform choice** (a disputed glyph plus 3–6 uncontested examples of each
+candidate) or **visual corroboration** (a field crop beside repeated occurrences and independent
+index rows). Both modes show a plain-language claim, available anchors and structural checks,
+and the consequence of every choice.
 
 ## Build a packet
 
@@ -23,6 +24,16 @@ network dependency. If an exemplar has a precise `glyph_bbox`, it is used. Other
 requires `character_index`, makes a visibly disclosed proportional character crop, and keeps
 the full word beside it.
 
+### Visual corroboration
+
+Set `review_mode` to `VISUAL_CORROBORATION` and provide one or more pinned
+`comparison_evidence` regions, such as the closing-formula repeat and annual-index row. The mode
+shows complete word-shape crops and deliberately skips same-hand exemplar mining. A candidate
+with `effect: ROUTE_EXPERT` is treated like neither/can't-tell: it emits expert-review and tier
+events but no attestation. Set `benchmark_eligible: false` and `correction_eligible: false` when
+a non-reader is checking consistency rather than independently reading the script; that records
+useful human evidence without silently promoting it to benchmark gold or training data.
+
 Question selection is deterministic:
 
 1. identity forks;
@@ -31,9 +42,9 @@ Question selection is deterministic:
 4. single-coverage fields on gold nominees.
 
 The nominal cap is ten. Identity forks and deadlocks are mandatory and may exceed it.
-`EXCLUDE_TRANSCRIPTION_QUEUE` items are never selected. For each candidate, generation fails
-closed unless it can mine at least three uncontested instances of the proposed glyph from the
-same clerk-year; it selects at most six.
+`EXCLUDE_TRANSCRIPTION_QUEUE` items are never selected. For each **letterform-choice** candidate,
+generation fails closed unless it can mine at least three uncontested instances of the proposed
+glyph from the same clerk-year; it selects at most six.
 
 ## Record and ingest answers
 

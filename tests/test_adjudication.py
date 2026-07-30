@@ -303,3 +303,147 @@ def test_cli_generates_packet_and_refuses_unpinned_artifact(tmp_path: Path, caps
     )
     assert failure == 2
     assert "sha256 mismatch" in capsys.readouterr().err
+
+
+def _visual_wave_spec(tmp_path: Path) -> Path:
+    spec_path = _wave_spec(tmp_path)
+    payload = json.loads(spec_path.read_text(encoding="utf-8"))
+    image_path = tmp_path / "scan.png"
+    digest = _digest(image_path)
+    question = payload["questions"][0]
+    question["review_mode"] = "VISUAL_CORROBORATION"
+    question["claim"] = "The machines propose one principal identity across three regions."
+    question["question"] = (
+        "Do the repeated word shapes corroborate the proposed identity, or is there a conflict?"
+    )
+    question["comparison_evidence"] = [
+        {
+            "evidence_id": "closing-repeat",
+            "label": "Closing-formula repeat",
+            "plain_text": "A repeated occurrence from the same act.",
+            "artifact": _artifact(image_path, digest, 24),
+        },
+        {
+            "evidence_id": "annual-index",
+            "label": "Annual-index row",
+            "plain_text": "An independent register cross-check.",
+            "artifact": _artifact(image_path, digest, 48),
+        },
+    ]
+    question["candidates"] = [
+        {
+            "candidate_id": "corroborated",
+            "label": "Visually corroborated",
+            "value": {"outcome": "CORROBORATED", "proposed_value": "Bobek"},
+            "glyph": "≈",
+            "consequence": "record human corroboration without automatic promotion",
+            "effect": "ATTEST_FIELD",
+            "benchmark_eligible": False,
+            "correction_eligible": False,
+        },
+        {
+            "candidate_id": "conflict",
+            "label": "Visible conflict",
+            "value": {"outcome": "CONFLICT"},
+            "glyph": "≠",
+            "consequence": "preserve uncertainty and route to expert review",
+            "effect": "ROUTE_EXPERT",
+            "benchmark_eligible": False,
+            "correction_eligible": False,
+        },
+    ]
+    payload["exemplar_catalog"] = []
+    spec_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    return spec_path
+
+
+def _visual_answers(packet_dir: Path, *, choice_id: str) -> dict[str, object]:
+    template = json.loads((packet_dir / "answers.template.json").read_text(encoding="utf-8"))
+    template["verifier"] = {
+        "verifier_id": "owner",
+        "script_expertise": "NON_READER",
+        "correction_consent": {
+            "status": "NOT_RECORDED",
+            "training_eligible": False,
+        },
+    }
+    template["answered_at"] = "2026-07-30T01:00:00-04:00"
+    template["answers"][0] = {
+        "question_id": "q-act40-surname",
+        "choice_id": choice_id,
+        "verbatim_answer": "the repeated shapes align",
+        "interpretation": "visual corroboration only",
+        "methods": ["VISUAL_CORROBORATION", "INDEX_CROSS_CHECK"],
+    }
+    return template
+
+
+def test_visual_corroboration_packet_skips_lineup_and_stays_nonbenchmark(
+    tmp_path: Path,
+) -> None:
+    spec_path = _visual_wave_spec(tmp_path)
+    packet_dir = tmp_path / "visual-packet"
+    generate_packet(
+        project_root=PROJECT_ROOT,
+        spec_path=spec_path,
+        output_dir=packet_dir,
+        wave_id="003",
+    )
+
+    packet = (packet_dir / "packet.html").read_text(encoding="utf-8")
+    assert "Repeated and independent evidence" in packet
+    assert "Same-hand letterform lineup" not in packet
+    questions = json.loads((packet_dir / "questions.json").read_text(encoding="utf-8"))
+    assert questions["questions"][0]["lineup_exemplar_ids"] == {}
+    assert len(questions["questions"][0]["comparison_evidence"]) == 2
+    template = json.loads((packet_dir / "answers.template.json").read_text(encoding="utf-8"))
+    assert template["answers"][0]["methods"] == [
+        "VISUAL_CORROBORATION",
+        "INDEX_CROSS_CHECK",
+    ]
+
+    answers_path = tmp_path / "visual-answers.json"
+    answers_path.write_text(
+        json.dumps(_visual_answers(packet_dir, choice_id="corroborated"), ensure_ascii=False),
+        encoding="utf-8",
+    )
+    report = ingest_answers(
+        project_root=PROJECT_ROOT,
+        packet_dir=packet_dir,
+        answers_path=answers_path,
+    )
+
+    result_dir = Path(report["result_dir"])
+    assert report["definitive_answer_count"] == 1
+    assert report["training_eligible_correction_count"] == 0
+    attestation = json.loads(
+        (result_dir / "gold-attestation-events.json").read_text(encoding="utf-8")
+    )["events"][0]
+    assert attestation["benchmark_eligible"] is False
+    assert len(attestation["corroborating_image_references"]) == 2
+
+
+def test_visual_conflict_candidate_routes_to_expert(tmp_path: Path) -> None:
+    spec_path = _visual_wave_spec(tmp_path)
+    packet_dir = tmp_path / "visual-conflict-packet"
+    generate_packet(
+        project_root=PROJECT_ROOT,
+        spec_path=spec_path,
+        output_dir=packet_dir,
+        wave_id="003",
+    )
+    answers_path = tmp_path / "visual-conflict-answers.json"
+    answers_path.write_text(
+        json.dumps(_visual_answers(packet_dir, choice_id="conflict"), ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    report = ingest_answers(
+        project_root=PROJECT_ROOT,
+        packet_dir=packet_dir,
+        answers_path=answers_path,
+    )
+
+    assert report["definitive_answer_count"] == 0
+    assert report["expert_review_count"] == 1
+    assert report["gold_attestation_event_count"] == 0
