@@ -122,6 +122,7 @@ def build_qualification_packet(
     for candidate_code in candidate_codes:
         if not isinstance(candidate_code, str) or not candidate_code:
             raise QualificationPacketError("candidate codes must be non-empty strings")
+        assignment_id = f"{source_manifest.get('packet_id')}-{candidate_code.casefold()}"
         assignment = {
             "schema_version": "1.0.0",
             "packet_id": source_manifest.get("packet_id"),
@@ -139,7 +140,7 @@ def build_qualification_packet(
                 submission = {
                     "$schema": "human-transcription-submission-1.0.0.schema.json",
                     "schema_version": "1.0.0",
-                    "assignment_id": f"{source_manifest.get('packet_id')}-{candidate_code}",
+                    "assignment_id": assignment_id,
                     "record_id": record["record_id"],
                     "artifact": record["artifact"],
                     "source_language": record["source_language"],

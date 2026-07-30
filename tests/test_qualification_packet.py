@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from aktreader.human_gold import validate_human_transcription
 from aktreader.qualification import QualificationPacketError, build_qualification_packet
 
 
@@ -67,6 +68,16 @@ def test_builds_deterministic_blind_candidate_archives(tmp_path: Path) -> None:
             "artifact",
         }
         assert b"observations" not in archive.read("assignment.json")
+        submission = json.loads(archive.read("submissions/synthetic-1890-death-1.json"))
+        submission["submitted_at"] = "2026-07-30T00:00:00Z"
+        submission["transcription"]["original_script"] = "Строка"
+        submission["transcription"]["line_count"] = 1
+        schema_path = (
+            Path(__file__).resolve().parents[1]
+            / "schemas/human-transcription-submission-1.0.0.schema.json"
+        )
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        validate_human_transcription(submission, schema, qualification=True)
 
 
 def test_refuses_bulkdata_source_even_when_hash_matches(tmp_path: Path) -> None:

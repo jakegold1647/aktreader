@@ -41,6 +41,12 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
 ## Sol (builder / tooling owner) — owes
+- [x] Owner-directed zero-cost Serock holdout frozen in inbox_claude/msg-033: ten visual-
+  corroboration questions, fail-closed nonbenchmark/nontraining flags, runbook, 220 tests
+- [x] Human qualification packet assignment-ID contract repaired in inbox_claude/msg-034;
+  all 15 templates validated and three canonical blind archives rebuilt with fresh receipts
+- [x] msg-032 public-source audit frozen; no scrape/mirror and no open scan-aligned Serock gold
+  corpus found; internal repeated/index evidence is explicitly provisional
 - [x] ACK msg-039 in inbox_claude/msg-031: wave-006 paired v1.4 briefs frozen at b416c70
   from coordinator-relayed pins without entering BulkData; P2 full protocol-arc addendum frozen
   at 7d22cca; full suite 210 passed
@@ -71,9 +77,10 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
   17 FAILED checkpoint rows re-bound without retry spend (inbox_claude/msg-020)
 - [x] msg-022 owner-only open-dataset fetcher + license-reviewed manifest frozen
   (inbox_claude/msg-021); no dataset download performed
-- [ ] **WORK QUEUE msg-012 (9 items, priority-ordered)** — build-pin first, then forensics,
-  fence tolerance, P2 addendum findings, silver materialization (coordinator confirmed),
-  coverage want-list, LoRA gate prep, release polish, wave-004 tooling
+- [x] **WORK QUEUE msg-012 (9 items)** — completed or explicitly superseded: mtmd frontend
+  replaced the build-pin path; raw-stream forensics, fence tolerance, P2 addendum, want-list,
+  training export/rental/adapter identity, public release/docs/licenses, and blind brief tooling
+  are frozen; legacy silver was materialized then correctly voided by the v1.4 grounding audit
 - [x] READ inbox msg-001 and msg-002; ack both
 - [x] Prompt v1.1 release (patch text in labels/consensus/FOR_SOL_wave002_brief.md §3) + rehash
 - [x] P2 gate report with eval table (inbox_claude/msg-002_p2-gate.md)
