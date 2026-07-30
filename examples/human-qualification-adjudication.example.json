@@ -1,0 +1,61 @@
+{
+  "$schema": "../schemas/human-qualification-adjudication-1.0.0.schema.json",
+  "schema_version": "1.0.0",
+  "packet_id": "qualification-0001",
+  "intake_report": {
+    "path": "../training/qualification-0001/intake.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "adjudicator": {
+    "adjudicator_code": "ADJ1",
+    "qualifications": "describe relevant pre-1917 Russian or Polish paleography experience",
+    "independent_of_candidates": true,
+    "adjudicated_at": "2026-07-30T12:00:00Z"
+  },
+  "records": [
+    {
+      "record_id": "serock-1890-death-1",
+      "adjudicated_original_script": "Replace with the line-preserving adjudicated transcription.",
+      "line_count": 1,
+      "candidate_assessments": [
+        {
+          "candidate_code": "H1",
+          "legible_character_count": 100,
+          "character_error_count": 0,
+          "material_error_count": 0,
+          "material_hallucination_count": 0,
+          "uncertain_regions_guessed_count": 0,
+          "unreadable_regions_marked": true,
+          "original_spelling_preserved": true,
+          "independence_declaration_complete": true,
+          "notes": []
+        },
+        {
+          "candidate_code": "H2",
+          "legible_character_count": 100,
+          "character_error_count": 0,
+          "material_error_count": 0,
+          "material_hallucination_count": 0,
+          "uncertain_regions_guessed_count": 0,
+          "unreadable_regions_marked": true,
+          "original_spelling_preserved": true,
+          "independence_declaration_complete": true,
+          "notes": []
+        },
+        {
+          "candidate_code": "H3",
+          "legible_character_count": 100,
+          "character_error_count": 0,
+          "material_error_count": 0,
+          "material_hallucination_count": 0,
+          "uncertain_regions_guessed_count": 0,
+          "unreadable_regions_marked": true,
+          "original_spelling_preserved": true,
+          "independence_declaration_complete": true,
+          "notes": []
+        }
+      ]
+    }
+  ],
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

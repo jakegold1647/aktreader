@@ -124,6 +124,7 @@ A submission fails before payment when any of these is missing:
 The project will convert accepted text to the Reader v1.4 schema. Every structured PRESENT
 observation must be a continuous substring of the worker's own transcription. Provenance is
 stamped mechanically; workers do not invent hashes or schema metadata.
+
 ## Intake a complete qualification batch
 
 Place the returned JSON files under one directory (nested worker folders are allowed) only after
@@ -151,6 +152,33 @@ The adjudicator scores each candidate on five acts:
 - all unreadable regions marked instead of guessed;
 - original spelling and pre-1917 letters preserved;
 - independence/tool declaration complete.
+
+The adjudicator fills one record block per act and one assessment per candidate using
+`examples/human-qualification-adjudication.example.json`. Counting terms are binding:
+
+- `legible_character_count` is the adjudicator-attested count of image-supported characters in
+  the resolved text; `character_error_count` counts substitutions, insertions, and omissions
+  against those characters;
+- `material_error_count` counts any wrong, omitted, or invented name, date, age, sex, or
+  relationship; `material_hallucination_count` is the invented-content subset;
+- `uncertain_regions_guessed_count` counts places where the candidate supplied unmarked text
+  where the adjudicator concludes an uncertainty marker was required.
+
+The raw candidate returns and intake pins remain the audit evidence for these human counts. Once
+all five record blocks are complete, run:
+
+```powershell
+$env:PYTHONPATH = "src"
+python tools/score_human_qualification.py `
+  --adjudication .\path\to\qualification-adjudication.json
+```
+
+The scorer verifies the adjudication schema and intake fingerprint, requires every candidate on
+every record, checks the adjudicated line counts, aggregates character accuracy exactly, and
+requires zero material errors, zero hallucinations, and zero guessed uncertain regions. The
+production hiring gate passes only when at least two candidates meet every criterion. The score
+report explicitly grants neither payment approval nor gold promotion; those remain owner and
+protocol decisions.
 
 Hire the best two passing transcribers. If fewer than two pass, recruit again; do not relax the
 threshold. Production is delivered in five-act milestones. Audit one record in every milestone

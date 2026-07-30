@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.local/schemas/human-qualification-adjudication-1.0.0.schema.json",
+  "title": "AktReader human qualification adjudication",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "packet_id",
+    "intake_report",
+    "adjudicator",
+    "records",
+    "authority_warning"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../schemas/human-qualification-adjudication-1.0.0.schema.json"
+    },
+    "schema_version": {"const": "1.0.0"},
+    "packet_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]+$"},
+    "intake_report": {"$ref": "#/$defs/pin"},
+    "adjudicator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adjudicator_code",
+        "qualifications",
+        "independent_of_candidates",
+        "adjudicated_at"
+      ],
+      "properties": {
+        "adjudicator_code": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]+$"},
+        "qualifications": {"type": "string", "minLength": 1},
+        "independent_of_candidates": {"const": true},
+        "adjudicated_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/record"}
+    },
+    "authority_warning": {
+      "const": "extraction is not authority — verify against the scan"
+    }
+  },
+  "$defs": {
+    "pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "adjudicated_original_script",
+        "line_count",
+        "candidate_assessments"
+      ],
+      "properties": {
+        "record_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$"},
+        "adjudicated_original_script": {"type": "string", "minLength": 1},
+        "line_count": {"type": "integer", "minimum": 1},
+        "candidate_assessments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/assessment"}
+        }
+      }
+    },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_code",
+        "legible_character_count",
+        "character_error_count",
+        "material_error_count",
+        "material_hallucination_count",
+        "uncertain_regions_guessed_count",
+        "unreadable_regions_marked",
+        "original_spelling_preserved",
+        "independence_declaration_complete",
+        "notes"
+      ],
+      "properties": {
+        "candidate_code": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]+$"},
+        "legible_character_count": {"type": "integer", "minimum": 1},
+        "character_error_count": {"type": "integer", "minimum": 0},
+        "material_error_count": {"type": "integer", "minimum": 0},
+        "material_hallucination_count": {"type": "integer", "minimum": 0},
+        "uncertain_regions_guessed_count": {"type": "integer", "minimum": 0},
+        "unreadable_regions_marked": {"type": "boolean"},
+        "original_spelling_preserved": {"type": "boolean"},
+        "independence_declaration_complete": {"type": "boolean"},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
