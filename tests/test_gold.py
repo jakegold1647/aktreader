@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-from aktreader.gold import load_gold_records, sha256_file, validate_corpus
+import pytest
+
+from aktreader.gold import load_gold_records, resolve_recorded_path, sha256_file, validate_corpus
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -78,12 +80,22 @@ def test_gold_act_files_contain_no_restricted_source_provenance() -> None:
 
 
 def test_recorded_source_and_artifact_checksums_match_disk() -> None:
-    for record in load_gold_records(ROOT):
-        source_note = Path(record["provenance"]["source_note"])
+    records = load_gold_records(ROOT)
+    if not any(
+        resolve_recorded_path(record["provenance"]["source_note"], ROOT).is_file()
+        for record in records
+    ):
+        pytest.skip(
+            "owner-local source corpus is not present in this checkout; "
+            "scan images and source notes are intentionally not redistributed"
+        )
+
+    for record in records:
+        source_note = resolve_recorded_path(record["provenance"]["source_note"], ROOT)
         assert source_note.is_file()
         assert sha256_file(source_note) == record["provenance"]["source_note_sha256"]
 
         if record["artifact"]["status"] == "LOCAL":
-            artifact = Path(record["artifact"]["path"])
+            artifact = resolve_recorded_path(record["artifact"]["path"], ROOT)
             assert artifact.is_file()
             assert sha256_file(artifact) == record["artifact"]["sha256"]

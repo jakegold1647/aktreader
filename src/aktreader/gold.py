@@ -28,6 +28,11 @@ OBSERVATION_STATES = {
 }
 FORBIDDEN_GOLD_SOURCES = ("yad vashem", "ushmm", "arolsen")
 
+# Gold provenance strings are frozen evidence and keep the drive root they were
+# recorded under; the corpus itself has since moved. Resolution (not the record)
+# remaps that legacy root onto wherever the DNA tree lives relative to this repo.
+LEGACY_DNA_ROOTS = ("E:\\DNA\\", "E:/DNA/")
+
 
 class GoldValidationError(ValueError):
     """Raised when a gold record violates the evidence contract."""
@@ -40,6 +45,24 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def resolve_recorded_path(raw: str, repo_root: Path) -> Path:
+    """Resolve a recorded provenance path against the current corpus location.
+
+    The recorded string is never rewritten. If it no longer exists and carries a
+    known legacy DNA drive root, the same relative path is tried under the DNA
+    tree that contains this repository (repo_root's parent).
+    """
+    recorded = Path(raw)
+    if recorded.is_file():
+        return recorded
+    for legacy in LEGACY_DNA_ROOTS:
+        if raw.startswith(legacy):
+            candidate = repo_root.resolve().parent / raw[len(legacy) :].replace("\\", "/")
+            if candidate.is_file():
+                return candidate
+    return recorded
 
 
 def load_gold_records(root: Path) -> list[dict[str, Any]]:
