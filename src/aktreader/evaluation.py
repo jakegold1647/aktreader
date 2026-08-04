@@ -34,8 +34,36 @@ FILIATION_PATHS = {
 }
 
 
+FIELD_FAMILY_LEAVES = {
+    "name": "names",
+    "maiden_name": "names",
+    "registration_date": "dates",
+    "event_date": "dates",
+    "year": "dates",
+    "age": "ages",
+    "occupation": "person_attributes",
+    "residence": "person_attributes",
+    "birthplace": "person_attributes",
+    "sex": "person_attributes",
+    "marital_status": "person_attributes",
+    "relationship": "person_attributes",
+}
+
+
 class EvaluationIntegrityError(ValueError):
     """Raised when a benchmark or training split violates evaluation integrity."""
+
+
+def field_family(path: str) -> str:
+    """Group a gold path into its reporting family; unknown leaves stay visible."""
+    return FIELD_FAMILY_LEAVES.get(path.rsplit(".", 1)[-1], "register_other")
+
+
+def _record_script_era(record: dict[str, Any]) -> str:
+    """Report the register language as recorded; never infer an era from a year."""
+    register = record.get("register")
+    language = register.get("language") if isinstance(register, dict) else None
+    return language if isinstance(language, str) and language else "unknown"
 
 
 def _is_evidence(value: Any) -> bool:
@@ -232,11 +260,13 @@ def evaluate_predictions(
     unclear_count = 0
     illegible_count = 0
     scored_fields = 0
+    strata: dict[tuple[str, str], Counter[str]] = {}
 
     for gold_record in gold:
         prediction = predictions.get(gold_record["record_id"])
         if prediction is None:
             continue
+        era = _record_script_era(gold_record)
         gold_fields = flatten_gold_fields(gold_record["fields"])
         predicted_fields, dispositions = map_prediction_observations(
             prediction, set(gold_fields), field_map
@@ -245,6 +275,10 @@ def evaluate_predictions(
         act_filiation_results: list[bool] = []
 
         for path, gold_field in gold_fields.items():
+            stratum: Counter[str] | None = None
+            if _gold_is_scorable(gold_field):
+                stratum = strata.setdefault((era, field_family(path)), Counter())
+                stratum["gold_scorable"] += 1
             predicted = predicted_fields.get(path)
             if predicted is None:
                 if path in FILIATION_PATHS and _gold_is_scorable(gold_field):
@@ -270,6 +304,15 @@ def evaluate_predictions(
             exact = predicted_state == gold_state and canonical_exact(
                 predicted.get("value")
             ) == canonical_exact(gold_field.get("value"))
+
+            if stratum is not None:
+                stratum["predicted"] += 1
+                stratum["exact"] += int(exact)
+                if grade == "CONFIDENT":
+                    stratum["confident"] += 1
+                    stratum["wrong_confident"] += int(not exact)
+                if grade == "UNCLEAR" or predicted_state == "ILLEGIBLE":
+                    stratum["abstained"] += 1
 
             if grade in calibration:
                 calibration[grade]["scored"] += 1
@@ -301,6 +344,28 @@ def evaluate_predictions(
             "supported": counts["supported"],
             "exact_rate": counts["exact"] / scored if scored else None,
             "support_rate": counts["supported"] / scored if scored else None,
+        }
+
+    stratified: dict[str, dict[str, dict[str, Any]]] = {}
+    for (era, family), counts in sorted(strata.items()):
+        gold_scorable = counts["gold_scorable"]
+        predicted_count = counts["predicted"]
+        confident = counts["confident"]
+        stratified.setdefault(era, {})[family] = {
+            "gold_scorable": gold_scorable,
+            "predicted": predicted_count,
+            "coverage": predicted_count / gold_scorable if gold_scorable else None,
+            "exact": counts["exact"],
+            "exact_rate": counts["exact"] / predicted_count if predicted_count else None,
+            "wrong_but_confident": {
+                "wrong": counts["wrong_confident"],
+                "confident": confident,
+                "rate": counts["wrong_confident"] / confident if confident else None,
+            },
+            "abstention": {
+                "abstained": counts["abstained"],
+                "rate": counts["abstained"] / predicted_count if predicted_count else None,
+            },
         }
 
     matched_records = len(set(predictions) & {record["record_id"] for record in gold})
@@ -340,6 +405,7 @@ def evaluate_predictions(
             ),
         },
         "calibration": calibration_table,
+        "stratified": stratified,
         "abstention": {
             "unclear_fields": unclear_count,
             "illegible_fields": illegible_count,
