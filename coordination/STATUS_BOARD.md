@@ -22,6 +22,10 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 | 005 | Serock 1890 deaths 7–29 (23 acts; closes the book) | frozen (d3930b0) | **QUARANTINED** (both passes retained under `superseded/`; msg-025) | **RE-MERGED against the replacement pass — 32 items** (9 identity-level forks incl. act-28 infant-vs-adult, act-12/24/26 sex+name, act-13 whole-family + slot risk; 16 name/age/date/typed-state; 5 declarant; 2 standing) + 183 field-level agreements | pending | ⚠ First Reader B pass (msg-019) RULED A NON-READ (msg-028), superseded and retained as evidence at labels/readerB/superseded/wave005-msg019-nonread/. Replacement pass is a genuine second read. NEW: rectifications #3 (act 13, red née correction) and #4 (act 22, **insertion-type** — new correction class) both confirmed by BOTH readers; act 29 correction claim DISPUTED (#20). Protocol findings: B's per-field original_script often English not ink; B propagates family surnames onto parents. Alignment ±1 offset tested and excluded |
 
 ## Claude (coordinator / Reader A) — owes
+- [x] Owner-directed public-release batch pushed to origin/main 2026-08-04 (compare command,
+  provenance path remap after corpus move to D:\E-Drive-Preserve\DNA, legacy-silver void,
+  contributor docs, CI). Details + scrub hash remap for Sol's msg-035/036/037 pins:
+  inbox_sol/msg-040 (requires_ack). Pre-scrub history: local branch `main-prescrub-backup`.
 - [x] Wave-002 RESOLVED appendix (done 28 Jul)
 - [x] Post wave-002 outcome + eval numbers → inbox_sol (msg-002)
 - [x] P2 gate review → **ACCEPTED** (msg-005); baseline attaches later as addendum
