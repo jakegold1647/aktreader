@@ -34,6 +34,7 @@ from aktreader.cli_support import (
     require_keys,
     require_local_only_data,
 )
+from aktreader.comparison import compare_reader_labels
 from aktreader.consensus import merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
 from aktreader.evaluation import evaluate_predictions, load_prediction_records
@@ -51,10 +52,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _emit_json(payload: Mapping[str, Any], *, stream: Any = None) -> None:
-    print(
-        json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2),
-        file=sys.stdout if stream is None else stream,
-    )
+    target = sys.stdout if stream is None else stream
+    rendered = json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2)
+    encoding = getattr(target, "encoding", None)
+    if encoding:
+        try:
+            rendered.encode(encoding)
+        except UnicodeEncodeError:
+            rendered = rendered.encode(encoding, errors="backslashreplace").decode(encoding)
+    target.write(rendered)
+    target.write("\n")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -166,6 +173,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     evaluate.add_argument("--training-clerk-years", type=Path)
     evaluate.add_argument("--output", type=Path)
+
+    compare = subparsers.add_parser(
+        "compare",
+        help="compare two local reader-label collections without inference or network access",
+    )
+    compare.add_argument("left", type=Path, help="left label file or directory")
+    compare.add_argument("right", type=Path, help="right label file or directory")
+    compare.add_argument("--output", type=Path, help="optional JSON report path")
+    compare.add_argument(
+        "--max-disagreements",
+        type=int,
+        default=100,
+        help="maximum disagreement details to include in the report (default: 100)",
+    )
+    compare.add_argument(
+        "--require-grounded",
+        action="store_true",
+        help="fail closed unless every input label passes the continuous-transcription gate",
+    )
     return parser
 
 
@@ -527,6 +553,37 @@ def _command_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def _path_is_within(path: Path, root: Path) -> bool:
+    return path == root or root in path.parents
+
+
+def _command_compare(args: argparse.Namespace) -> int:
+    left_path = local_input_path(args.left, role="left comparison input")
+    right_path = local_input_path(args.right, role="right comparison input")
+    if left_path == right_path:
+        raise CliConfigurationError("comparison requires two distinct input paths")
+
+    output = local_output_path(args.output, role="comparison output") if args.output else None
+    if output is not None and (
+        _path_is_within(output, left_path) or _path_is_within(output, right_path)
+    ):
+        raise CliConfigurationError(
+            "comparison output must not be inside either input file or directory"
+        )
+
+    report = compare_reader_labels(
+        left_path,
+        right_path,
+        max_disagreements=args.max_disagreements,
+        require_grounded=args.require_grounded,
+    )
+    if output is not None:
+        report = {**report, "output": str(output)}
+        atomic_write_json(output, report)
+    _emit_json(report)
+    return 0
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run one local-only CLI command with concise, non-secret error reporting."""
     parser = build_parser()
@@ -541,6 +598,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "batch-run": _command_batch_run,
         "adjudicate": _command_adjudicate,
         "eval": _command_eval,
+        "compare": _command_compare,
     }
     if args.command is None:
         parser.print_help()
