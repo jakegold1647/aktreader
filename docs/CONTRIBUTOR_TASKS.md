@@ -9,14 +9,15 @@ Claim a task by opening an issue (or commenting on an existing one) so work is n
 If a task turns out to be bigger than its scope says, stop and say so in the issue — shrinking
 scope is always acceptable here, silently expanding it is not.
 
-## 1. Test the supported Python range and Windows in CI — *good first issue*
+## 1. Test Windows in CI — *good first issue*
 
-**Why:** the package declares Python 3.10+ and the project is developed on Windows, but CI
-currently tests only Python 3.12 on Ubuntu. Version- or platform-specific breakage is invisible.
+**Why:** the project is developed on Windows, but every CI job runs on Ubuntu. Platform-specific
+breakage is invisible. (The Python-version half of this task is done: CI now tests 3.11–3.13,
+and the declared floor was raised to 3.11 to match reality.)
 
-**Scope:** extend the matrix in `.github/workflows/ci.yml` to cover Python 3.10 and 3.12 on
-`ubuntu-latest` plus one `windows-latest` job. Fix any genuine portability issues that surface
-(path handling and console encoding are the likely culprits).
+**Scope:** add one `windows-latest` job to the matrix in `.github/workflows/ci.yml` running the
+same steps. Fix any genuine portability issues that surface (path handling and console encoding
+are the likely culprits).
 
 **Acceptance:** CI is green on all matrix cells; no test is skipped to get there other than the
 documented owner-local checksum skip.
