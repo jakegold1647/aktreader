@@ -42,3 +42,7 @@ tmp/
 human_check/crops/
 human_check/generated/
 human_check/*.html
+
+# local virtualenvs
+.venv/
+.cvenv/
