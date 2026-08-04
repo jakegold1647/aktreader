@@ -37,3 +37,8 @@ Thumbs.db
 
 # local-only: invalid/superseded generated packets, not for distribution
 tmp/
+
+# Local review packets may embed source scan crops. They are not part of the public release.
+human_check/crops/
+human_check/generated/
+human_check/*.html
