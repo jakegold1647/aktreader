@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install package and development tools
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+      - name: Smoke check the local CLI
+        run: |
+          python -m aktreader --version
+          python -m aktreader doctor --json
+          python -m aktreader prompt-verify --root .
+          python -m aktreader compare labels/readerA labels/readerB --output "$RUNNER_TEMP/reader-comparison.json"
+      - name: Lint
+        run: python -m ruff check .
+      - name: Test
+        run: python -m pytest -q
+      - name: Check dependency license inventory
+        run: python -m tools.check_dependency_licenses
