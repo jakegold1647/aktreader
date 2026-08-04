@@ -44,6 +44,10 @@ endpoints (none), a CI guard test that fails if networking modules appear in `sr
 and a pinned dependency statement (SBOM-style) covering the five runtime dependencies. Small,
 high-leverage for trust; owner-gated only in the wording of the guarantee.
 
+**Shipped 2026-08-04:** `tests/test_no_egress.py` (static import blocklist + pinned runtime
+dependency set + socket-disabled runs of `doctor`/`prompt-verify`/`eval`) and the README
+section "Verifiable no-egress".
+
 ## Sequencing
 
 4 → 1 → 3 → 2. The no-egress guard is an afternoon; the stratified report is the benchmark

@@ -63,6 +63,23 @@ consent, and a clerk-year-separated holdout. See [the training transition gate](
 - Never scrape archives, bulk-ingest restricted memorial data, or add a correction to training
   without recorded consent.
 
+## Verifiable no-egress
+
+"Local-only" is asserted by tests, not by this paragraph. The inventory of network endpoints
+is: none.
+
+- `tests/test_no_egress.py` (CI-enforced) parses every module in `src/aktreader` and fails if
+  any networking-capable module is imported, and pins the runtime dependency set so a network
+  client cannot arrive transitively without that test changing in the same review.
+- The same file re-runs representative CLI paths (`doctor`, `prompt-verify`, `eval`) with
+  socket creation disabled; any attempt to open a socket fails the run.
+- Runtime dependencies are `jsonschema` and `pillow` only; the full reviewed license inventory
+  (14 packages, including transitive) is `dependency-licenses.json`.
+- The only external process the package ever starts is the content-pinned local
+  `llama-mtmd-cli` reader subprocess. Owner-side acquisition scripts under `tools/` do use the
+  network and are documented in "Owner-only open training sources"; they are not part of the
+  installed package.
+
 ## Install and run
 
 Python 3.10 or newer is supported. With `uv`:
