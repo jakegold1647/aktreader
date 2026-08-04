@@ -32,8 +32,8 @@ def test_silver_is_training_only_and_act_six_is_untiered() -> None:
         f"serock-1890-death-{act_no}" for act_no in range(1, 6)
     ]
     assert all(record["tier"] == "SILVER" for record in records)
-    assert all(record["training_eligible"] is True for record in records)
-    assert all(record["training_materialized"] is True for record in records)
+    assert all(record["training_eligible"] is False for record in records)
+    assert all(record["training_materialized"] is False for record in records)
     assert all(record["eval_eligible"] is False for record in records)
     assert all(record["human_verified"] is False for record in records)
     assert payload["quarantine"][0]["record_id"] == "serock-1890-death-6"

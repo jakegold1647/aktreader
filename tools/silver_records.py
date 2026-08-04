@@ -223,7 +223,13 @@ def _patch_observations(act_no: int, observations: dict[str, Any]) -> dict[str, 
             original_script="[unclear: Іосекъ Пшнекъ?]",
             confidence="UNCLEAR",
             alternatives=[{"value": "Josek Psznek", "original_script": "Іосекъ Пшнекъ"}],
-            notes=[*note, "Surname matches the mother's née-name word-shape; internal letters remain cramped."],
+            notes=[
+                *note,
+                (
+                    "Surname matches the mother's née-name word-shape; internal letters "
+                    "remain cramped."
+                ),
+            ],
         )
         resolved["declarants.1.name"] = _resolved(
             resolved["declarants.1.name"],

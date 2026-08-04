@@ -98,7 +98,7 @@ def _grounded_export_fixture(tmp_path: Path) -> tuple[Path, Path]:
 
 
 def test_current_gold_holdout_rejects_all_serock_1890_silver() -> None:
-    with pytest.raises(TrainingExportError, match="clerk-year leakage"):
+    with pytest.raises(TrainingExportError, match="record is not training eligible"):
         build_training_export(
             workspace_root=ROOT,
             silver_manifest_path=SILVER,
@@ -118,10 +118,17 @@ def test_historical_silver_fails_grounding_even_with_non_overlapping_holdout(
         },
     )
 
+    manifest = json.loads(SILVER.read_text(encoding="utf-8"))
+    for record in manifest["records"]:
+        record["training_eligible"] = True
+        record["training_materialized"] = True
+    manifest_path = tmp_path / "legacy-eligible-manifest.json"
+    _write_json(manifest_path, manifest)
+
     with pytest.raises(TrainingExportError, match="source label is not grounded"):
         build_training_export(
             workspace_root=ROOT,
-            silver_manifest_path=SILVER,
+            silver_manifest_path=manifest_path,
             evaluation_holdout_path=holdout,
         )
 
@@ -145,11 +152,17 @@ def test_grounded_non_overlapping_export_is_content_addressed(tmp_path: Path) ->
 def test_holdout_must_explicitly_forbid_overlap(tmp_path: Path) -> None:
     holdout = tmp_path / "holdout.json"
     _write_json(holdout, {"holdout_clerk_year_ids": []})
+    manifest = json.loads(SILVER.read_text(encoding="utf-8"))
+    for record in manifest["records"]:
+        record["training_eligible"] = True
+        record["training_materialized"] = True
+    manifest_path = tmp_path / "eligible-manifest.json"
+    _write_json(manifest_path, manifest)
 
     with pytest.raises(TrainingExportError, match="explicitly"):
         build_training_export(
             workspace_root=ROOT,
-            silver_manifest_path=SILVER,
+            silver_manifest_path=manifest_path,
             evaluation_holdout_path=holdout,
         )
 

@@ -94,7 +94,10 @@ def build_want_list() -> dict[str, Any]:
                     "skanoteka": None,
                     "notes": [
                         "Fond 84 is Pułtusk, not Serock zespół 318/0826d.",
-                        "Do not invent a unit or file range; owner/coordinator must supply the Pułtusk catalogue mapping.",
+                        (
+                            "Do not invent a unit or file range; owner/coordinator must supply "
+                            "the Pułtusk catalogue mapping."
+                        ),
                     ],
                 }
             )

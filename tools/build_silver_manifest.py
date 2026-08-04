@@ -66,7 +66,6 @@ def build_manifest() -> dict[str, Any]:
     for act_no in range(1, 6):
         wave = 1 if act_no <= 2 else 2
         provenance = _provenance(act_no, wave)
-        consensus = provenance["consensus_document"]
         records.append(
             {
                 "record_id": f"serock-1890-death-{act_no}",
@@ -74,8 +73,8 @@ def build_manifest() -> dict[str, Any]:
                 "clerk_year_id": CLERK_YEAR_ID,
                 "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
                 "confidence_cap": "PROBABLE",
-                "training_eligible": True,
-                "training_materialized": True,
+                "training_eligible": False,
+                "training_materialized": False,
                 "eval_eligible": False,
                 "human_verified": False,
                 "resolved_fields": {
@@ -95,7 +94,7 @@ def build_manifest() -> dict[str, Any]:
         "tier_definition": {
             "name": "SILVER",
             "basis": "BLIND_2_OF_3_MACHINE_CONSENSUS",
-            "training_eligible": True,
+            "training_eligible": False,
             "eval_eligible": False,
             "human_verified": False,
         },

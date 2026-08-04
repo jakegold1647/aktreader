@@ -23,7 +23,7 @@
       "properties": {
         "name": {"const": "SILVER"},
         "basis": {"const": "BLIND_2_OF_3_MACHINE_CONSENSUS"},
-        "training_eligible": {"const": true},
+        "training_eligible": {"const": false},
         "eval_eligible": {"const": false},
         "human_verified": {"const": false}
       },
@@ -108,8 +108,8 @@
         "clerk_year_id": {"type": "string", "minLength": 1},
         "resolution_method": {"const": "BLIND_2_OF_3_MACHINE_CONSENSUS"},
         "confidence_cap": {"const": "PROBABLE"},
-        "training_eligible": {"const": true},
-        "training_materialized": {"const": true},
+        "training_eligible": {"const": false},
+        "training_materialized": {"const": false},
         "eval_eligible": {"const": false},
         "human_verified": {"const": false},
         "resolved_fields": {

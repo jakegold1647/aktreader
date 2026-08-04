@@ -5,7 +5,7 @@
   "tier_definition": {
     "name": "SILVER",
     "basis": "BLIND_2_OF_3_MACHINE_CONSENSUS",
-    "training_eligible": true,
+    "training_eligible": false,
     "eval_eligible": false,
     "human_verified": false
   },
@@ -16,8 +16,8 @@
       "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
-      "training_eligible": true,
-      "training_materialized": true,
+      "training_eligible": false,
+      "training_materialized": false,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
@@ -57,8 +57,8 @@
       "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
-      "training_eligible": true,
-      "training_materialized": true,
+      "training_eligible": false,
+      "training_materialized": false,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
@@ -98,8 +98,8 @@
       "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
-      "training_eligible": true,
-      "training_materialized": true,
+      "training_eligible": false,
+      "training_materialized": false,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
@@ -139,8 +139,8 @@
       "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
-      "training_eligible": true,
-      "training_materialized": true,
+      "training_eligible": false,
+      "training_materialized": false,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {
@@ -180,8 +180,8 @@
       "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
       "resolution_method": "BLIND_2_OF_3_MACHINE_CONSENSUS",
       "confidence_cap": "PROBABLE",
-      "training_eligible": true,
-      "training_materialized": true,
+      "training_eligible": false,
+      "training_materialized": false,
       "eval_eligible": false,
       "human_verified": false,
       "resolved_fields": {

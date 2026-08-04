@@ -1,5 +1,11 @@
 # P2 evaluation report
 
+> Historical diagnostic report. The initial wave diagnostics below remain for auditability;
+> the current local baseline is recorded in the [P2 baseline addendum](p2-baseline-addendum.md).
+> It reports 20/36 evaluated records, 1/77 exact filiation fields, 0/20 exact filiation acts,
+> and 0/36 fully image-attested benchmark records. These are research-derived diagnostics, not
+> publication-grade accuracy.
+
 **Status:** P2 gate accepted; Wave 001/002 diagnostics recorded; baseline addendum **NOT RUN**
 
 **Report date:** 2026-07-28
@@ -65,9 +71,9 @@ the fork before gold. Act 6 is now explicitly quarantined in `gold/manifest.json
 mandatory human sample, regardless of Reader C's decisive vote.
 
 Acts 3–5 also remain outside `gold/`: their resolved fields are consensus-PROBABLE, while this
-repository's eval holdout is human-verified. No Wave 002 field has been added to gold. They are
-now machine-readable `SILVER` records—training-only, never evaluation—pending any later sampled
-human promotion.
+repository's eval holdout is human-verified. No Wave 002 field has been added to gold. They
+remain machine-readable historical `SILVER` records—never evaluation and currently void as
+training data—pending a rebuild from grounded v1.4 labels and any later sampled human promotion.
 
 Evidence:
 
@@ -76,12 +82,13 @@ Evidence:
 
 ### Tier disposition
 
-The machine-readable [silver manifest](../labels/silver/manifest.json) assigns resolved acts 1–5
-to `SILVER`: training-eligible 2-of-3 consensus, never evaluation, never human-verified. It pins
+The machine-readable [silver manifest](../labels/silver/manifest.json) retains resolved acts 1–5
+as historical `SILVER` evidence, never evaluation and currently not training-eligible. It pins
 all source labels and resolution documents by SHA-256 and content-addresses five materialized
-field payloads. The training exporter rejects the current holdout because Serock-1890 appears in
-both sets; a model-ready export is possible only with an explicitly selected, non-overlapping
-evaluation holdout. Act 6 remains untiered and quarantined pending the mandatory human check.
+field payloads. The retro-audit voided these records as training inputs because their source
+labels lack the v1.4 continuous-transcription grounding contract; the five payloads remain
+rebuildable audit evidence. Act 6 remains untiered and quarantined pending the mandatory human
+check.
 
 ## Prompt v1.1 correction
 
@@ -117,7 +124,10 @@ ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f
 
 Frozen v1.1 remains auditable at commit `156393b`; it was not rewritten in place.
 
-## LocalReader baseline — NOT RUN
+## Historical initial LocalReader baseline — NOT RUN
+
+The following section records the state before the first baseline run. It is retained for
+auditability and is superseded by `docs/p2-baseline-addendum.md`.
 
 The owner resolved the former Smart App Control block as an owner-level OS-policy decision;
 standard Defender remains active. The coordinator verified the exact runtime, but the locked
@@ -213,7 +223,10 @@ wrong-but-CONFIDENT. A metric with no denominator cannot satisfy a target. An UN
 valid only when its alternatives preserve the unresolved evidence instead of silently choosing
 one reading.
 
-## Exact local CLI commands — documented, not launched
+## Historical local CLI commands — documented, not launched
+
+These commands describe the pre-baseline state. Use the current addendum and the README for the
+release-candidate status.
 
 The validation commands below were exercised; the inference command was not. `batch-run` remains
 unrun until the two owner-fetched GGUF files match the committed hashes. The runtime, prompt,
