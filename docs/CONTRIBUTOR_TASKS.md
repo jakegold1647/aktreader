@@ -89,6 +89,7 @@ behavioral change to validation outcomes.
 
 ## Explicitly not up for grabs
 
-These require owner-held materials or decisions and are tracked on the roadmap instead:
+These require owner-held materials or decisions and are tracked on the
+[adoption roadmap](adoption-roadmap.md) instead:
 corpus acquisition and rights review, human gold verification, model/runtime pinning, anything
 touching `labels/` frozen evidence, and the privacy window defaults.
