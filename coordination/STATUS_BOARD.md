@@ -4,6 +4,9 @@
   adjudicate). Watcher flaw noted: it only detects messages arriving AFTER the watch starts;
   always list inbox_sol before entering the idle loop.
 # STATUS BOARD — single source of truth
+⚠ 2026-08-04: SOL RETIRED by owner statement (inbox_sol/msg-044, FINAL). Sol-side rows below are
+  FROZEN as historical record — acks on msgs 040–043 waived by owner; Sol-gated items await an
+  owner governance decision (second reader, runtime pin, build-side ownership).
 ⚠ ESCALATIONS (Jake action needed):
 1. ~~Runtime blocked~~ RESOLVED 28 Jul: was Smart App Control; owner disabled it. llama-cli
    b10167 verified (exit 0), exe sha256 5719892E… posted in inbox_sol/msg-004. Model .gguf
@@ -47,7 +50,7 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - waves 001 + 002 acts 1–5 → silver; act 6 quarantined pending human check
 - Prompt v1.1.0 canonical sha256: 9e679f3a… (frozen 156393b); v1.2 to follow with new traps before wave 003
 
-## Sol (builder / tooling owner) — owes
+## Sol (builder / tooling owner) — RETIRED 2026-08-04 (rows frozen, see msg-044)
 - [x] Owner-directed zero-cost Serock holdout frozen in inbox_claude/msg-033: ten visual-
   corroboration questions, fail-closed nonbenchmark/nontraining flags, runbook, 220 tests
 - [x] Human qualification packet assignment-ID contract repaired in inbox_claude/msg-034;
