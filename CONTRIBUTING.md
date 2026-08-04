@@ -1,8 +1,31 @@
 # Contributing to AKTREADER
 
-AKTREADER treats provenance and uncertainty as product behavior. A contribution is not complete
-when it merely produces plausible text; it must preserve the path from scan pixels to every
-assertion.
+Contributions are welcome — this project is small enough that one good pull request moves it
+visibly. AKTREADER treats provenance and uncertainty as product behavior: a contribution is not
+complete when it merely produces plausible text; it must preserve the path from scan pixels to
+every assertion.
+
+You do not need archive scans, model weights, or GPU hardware to contribute. The test suite,
+label validators, consensus merge, and the `compare` command all run against tracked fixtures in
+an ordinary checkout.
+
+## Getting started
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+(On Linux/macOS use `.venv/bin/python` instead.) A checksum test that binds evaluation records
+to owner-local source files skips itself automatically when those files are absent — that is
+expected in a public checkout.
+
+If you are looking for somewhere to start, see
+[`docs/CONTRIBUTOR_TASKS.md`](docs/CONTRIBUTOR_TASKS.md) for scoped, self-contained tasks with
+acceptance criteria, or open an issue describing what you want to improve. Domain knowledge
+(Cyrillic paleography, Jewish onomastics, Napoleonic act structure) is valuable but optional:
+the `skills/` directory teaches the domain, and plenty of pending work is pure Python.
 
 ## Before opening a change
 
@@ -38,5 +61,7 @@ Pull requests should state:
 4. whether benchmark comparability changes; and
 5. whether the change touches privacy, consent, or training/evaluation isolation.
 
-The repository currently has no project license. Contributions cannot be accepted for reuse
-until Jake selects and adds the project license.
+The application code is MIT-licensed. Derived corpus records and labels carry the CC BY 4.0
+data note in [`LICENSE`](LICENSE); source scan images are not redistributed. Contributions must
+preserve that boundary and must not add copied archival images, private source paths,
+credentials, or unreviewed personal data.

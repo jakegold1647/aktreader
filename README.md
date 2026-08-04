@@ -1,128 +1,125 @@
 # AKTREADER
 
-AKTREADER produces institutionally usable evidence objects from difficult handwritten
-records — structured records, uncertainty you can act on, local deployment, machine-readable
-provenance, and feedback loops that accumulate expertise instead of discarding it.
+AKTREADER is a local, uncertainty-honest reader for handwritten civil-register acts from
+partitioned Poland. It turns a user-supplied scan into a structured evidence object with
+original-script transcription, translation, filiation, dates, witnesses, provenance, and
+explicit abstention when the image does not decide a reading.
 
-The first pilot reads civil-register acts from partitioned Poland and keeps every extracted field
-traceable to the scan.
+The product claim is deliberately narrow: the machine reads what it can support, marks what it
+cannot, and routes ambiguous fields to a human. It does not make genealogy or identity
+conclusions.
 
-> **Project status: P2 gate accepted; constrained baseline blocked on one mtmd probe.** The
-> local-only Reader, external-label ingest, consensus, validators, resumable batch engine,
-> SerockBench harness, and leakage-safe silver export are implemented. The measured “before”
-> baseline found two failures: b10167 `llama-cli` crashes when Qwen3.5’s chat template is combined
-> with grammar sampling, while unconstrained output either repetition-loops or returns a hollow
-> schema-shaped shell. The same build’s `llama-mtmd-cli` initializes grammar successfully; a
-> reduced-schema one-job probe must pass before the final capped retry. No benchmark accuracy is
-> inferred from unit tests or diagnostics.
+> **Release status: public-release candidate, not a production-grade reader yet.** The local
+> pipeline and review tooling are implemented. The first local baseline evaluated 20/36 records,
+> with 1/77 exact filiation fields and 0/20 exact filiation acts. That is a real, weak baseline,
+> not a success claim. The current corpus has 0/36 fully image-attested benchmark records, so
+> those numbers are research-derived diagnostics rather than publication-grade accuracy. See
+> [the current baseline addendum](docs/p2-baseline-addendum.md).
 
-## Why this project exists
+## What is included
 
-Historical-record tooling still leaves four practical gaps:
+- A local-only Python package and CLI; no hosted model API, API key, inference server, or
+  automatic model download.
+- Content-pinned `llama-mtmd-cli` integration for an owner-provisioned open-weights vision model.
+- Strict label validation, original-script grounding, typed absence states, consensus, human
+  adjudication packets, resumable batch execution, privacy preflight, and SerockBench metrics.
+- A 36-record evaluation corpus, frozen prompts and schemas, provenance manifests, and a
+  documented failure history.
 
-- confidence scores often accompany a forced reading, while researchers need actionable
-  abstention and preserved alternatives;
-- page transcripts are not register-native records with filiation, roles, and typed absence;
-- hosted workflows depend on accounts or page credits, while preservation needs a local path;
-- plausible text can fabricate a person or swap a role. Two AKTREADER blind-review waves caught
-  that phantom-person failure class before promotion.
+AKTREADER is not currently a hosted translation website. It does not ship model weights or
+archive scans. Users supply their own images and separately provision the runtime/model files
+described in [local model and runtime](docs/local-model.md).
 
-AKTREADER concentrates on the evidence layers above raw recognition: act-format structure,
-filiation-first extraction, explicit uncertainty, and wrong-but-confident evaluation. Every label
-carries machine-readable model identity, software and prompt versions/hashes, blind status,
-artifact binding, and uncertainty. Labels produced manually in two independent subscription AI
-sessions can be imported as files; the application never calls those assistants.
+## Current evidence and limitations
 
-The pilot goal is to reconstruct the Jewish community of Pułtusk from civil registers as a
-reviewable evidence graph. No record becomes a person-level conclusion merely because a model
-suggests it.
+The baseline is intentionally reported in full:
+
+| Measure | Result |
+| --- | ---: |
+| Prediction coverage | 55.56% (20/36) |
+| Filiation field exact match | 1.30% (1/77) |
+| Filiation act exact match | 0.00% (0/20) |
+| Wrong-but-CONFIDENT | N/A (0/0) |
+| PROBABLE calibration | 27.86% (39/140) |
+| Observation-state accuracy | 99.30% (141/142) |
+
+The corpus is evaluation-only and sequestered by 21 clerk-year IDs. Its records are
+research-derived; the attestation audit currently finds 0/36 fully image-verified acts. The
+1.30% result must not be presented as validated handwriting accuracy.
+
+Historical machine-consensus payloads remain audit evidence, not training data. Training is
+blocked until new v1.4-or-later labels have grounded continuous transcriptions, recorded
+consent, and a clerk-year-separated holdout. See [the training transition gate](docs/training-transition.md).
 
 ## Non-negotiable behavior
 
 - Never fill a missing or unreadable field from expectation.
 - Preserve unresolved alternatives as `[unclear: X/Y]`.
 - Keep `ABSENT_ON_FORM`, `BLANK`, and `ILLEGIBLE` distinct.
-- Treat act-local person mentions as evidence; later identity links remain reviewable
-  hypotheses.
+- Keep every assertion tied to source spans, artifact hashes, reader identity, and prompt/schema
+  pins.
+- Include `extraction is not authority - verify against the scan` in generated outputs.
 - Refuse acts inside the configured privacy window by default.
-- Keep source spans and artifact provenance with extracted assertions.
-- Include “extraction is not authority — verify against the scan” in generated outputs.
-- Never scrape archive sites or bulk-ingest memorial-institution data.
-- Never put an API backend, hosted-model key, or automatic model download in the Reader path.
-- Never add a correction to training data without recorded consent.
+- Never scrape archives, bulk-ingest restricted memorial data, or add a correction to training
+  without recorded consent.
 
-## Local-only Reader
+## Install and run
 
-The application invokes a content-pinned `llama-mtmd-cli` executable directly as a subprocess. It
-does not start an inference server, send HTTP to localhost, use a hosted SDK, or accept an API
-key.
-
-- **16 GB development default:** Qwen3.5-9B Q5_K_M with an F16 vision projector; the exact
-  revision, byte sizes, hashes, and local paths are frozen in
-  [`examples/p2-baseline.artifacts.json`](examples/p2-baseline.artifacts.json).
-- **24 GB quality profile:** Qwen3.6-27B Q4.
-- **Smaller fallback:** Qwen3.5-4B.
-
-Those are provisional hardware profiles, not handwriting accuracy claims. Qwen's published OCR
-scores do not test nineteenth-century Russian or Polish cursive. See
-[local model and runtime](docs/local-model.md).
-
-## Development
-
-Python 3.10 or newer is supported. Python 3.12 is the development version.
-
-With [`uv`](https://docs.astral.sh/uv/):
+Python 3.10 or newer is supported. With `uv`:
 
 ```powershell
 uv sync --group dev
-uv run pytest
-uv run ruff check .
-uv run aktreader doctor
+uv run aktreader --version
+uv run aktreader doctor --json
+uv run aktreader prompt-verify --root .
 ```
 
-Without `uv`, use an isolated environment:
+Without `uv`:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\aktreader.exe doctor
+.\.venv\Scripts\python.exe -m aktreader --version
+.\.venv\Scripts\python.exe -m aktreader doctor --json
+.\.venv\Scripts\python.exe -m aktreader prompt-verify --root .
 ```
 
-The source tree uses the `src/` layout. The local CLI exposes `prompt-verify`,
-`label-validate`, `consensus-merge`, `reader-inspect`, `reader-infer`, `batch-run`, and `eval`
-in addition to `doctor`. `reader-infer` and `batch-run` are execution commands. The generic
-[example Reader configuration](examples/local-reader.config.example.json) intentionally cannot
-run; the [P2 baseline configuration](examples/p2-baseline.local-reader.json) contains real pins
-for the executable, model, projector, frozen v1.2 prompt/schema, and reduced model-output schema.
-
-## Gold corpus
-
-P1 contains 36 act-level JSON records: 29 Serock acts and seven already-verified Pułtusk
-supplements. Rebuild and validate them with:
+The CLI also provides `label-validate`, `consensus-merge`, `reader-inspect`, `reader-infer`,
+`batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in reader
+comparison without supplying scans or model files:
 
 ```powershell
-uv run python -m tools.build_gold
-uv run pytest
+python -m aktreader compare labels/readerA labels/readerB --output comparison-report.json
 ```
 
-See the [labeling protocol](docs/gold-labeling-protocol.md),
-[coverage manifest](gold/manifest.json), and [five-act spot-check list](gold/spot_check.json).
-All currently permitted verified acts are Russian-language; the missing Polish slice is recorded
-as a coverage gap instead of being filled from tentative or prohibited material.
+See [local comparisons](docs/comparisons.md). `reader-infer` and `batch-run` execute local
+inference; the other commands validate or process existing artifacts.
 
-All 36 records are evaluation-only and sequestered by 21 clerk-year IDs in
-[`gold/clerk_year_holdout.json`](gold/clerk_year_holdout.json). Their correction consent is not
-recorded, so none is training-eligible.
+The generic [Reader configuration](examples/local-reader.config.example.json) intentionally
+cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
+real pins for a separately provisioned executable, model, projector, prompt, and output schema.
 
-Machine consensus is kept separate. [`labels/silver/manifest.json`](labels/silver/manifest.json)
-assigns resolved acts 1–5 to the training-only `SILVER` tier, pins every source label and
-arbitration document by SHA-256, content-addresses five materialized field payloads, and excludes
-them from evaluation. The training exporter fails before writing an example if a chosen
-evaluation holdout contains Serock-1890; consequently the current SerockBench holdout correctly
-rejects all five silver records. Act 6 has no tier and remains quarantined pending the required
-human identity check.
+## Repository map
+
+- `src/aktreader/`: package and CLI implementation.
+- `schemas/`: versioned label, model-output, gold, and adjudication contracts.
+- `prompts/` and `skills/`: frozen reader instructions and domain constraints.
+- `gold/`: evaluation records and clerk-year holdout metadata.
+- `labels/`: attributable reader and consensus evidence, including quarantined historical data.
+- `docs/`: architecture, benchmark, local-runtime, training, and human-review contracts.
+- `tests/`: focused regression and contract tests.
+
+## Public-release boundary
+
+The application code is released under the MIT License. Bundled derived records and labels carry
+the CC BY 4.0 data note in [`LICENSE`](LICENSE). Source scan images are not redistributed;
+provenance hashes and crop coordinates are retained where they are needed for reproducibility.
+Local human-review packets may contain scan derivatives and are intentionally excluded from the
+public release.
+
+The project is a release candidate for the repository and CLI, not a claim that the reader has
+met the original 90% filiation target. A hosted single-act UI, image-attested benchmark release,
+and grounded training set remain future work.
 
 ## Owner-only open training sources
 
@@ -130,17 +127,9 @@ Open base-script corpora are provisioned outside AKTREADER with
 [`tools/fetch_open_datasets.ps1`](tools/fetch_open_datasets.ps1). The application never calls
 this script. The owner first reviews the immutable URLs, hashes or byte pins, licenses, and
 explicit exclusions in
-[`resources/open_datasets.manifest.json`](resources/open_datasets.manifest.json):
-
-```powershell
-.\tools\fetch_open_datasets.ps1 -ListOnly
-.\tools\fetch_open_datasets.ps1 -AcceptLicenses
-```
-
-The default destination is `E:\DNA\BulkData\Training_Sources_Open\<dataset-id>`. Downloads use
+[`resources/open_datasets.manifest.json`](resources/open_datasets.manifest.json). Downloads use
 `.partial` files, move only after verification, remain unexpanded, and receive adjacent
-`DOWNLOAD_RECEIPT.json` and `LICENSE_RECEIPT.json` files. A size-only upstream pin is accepted
-only once: its observed SHA-256 is recorded and becomes mandatory on later runs.
+download and license receipts.
 
 | Dataset | LoRA recipe role | Eligibility basis |
 |---|---|---|
@@ -148,83 +137,32 @@ only once: its observed SHA-256 is recorded and becomes mandatory on later runs.
 | Cyrillic Handwriting Dataset v5 | Base-script adaptation | CC0, exact Kaggle version and byte pin; observed SHA-256 recorded |
 | school-notebooks-RU | Base-script adaptation | MIT, immutable Hugging Face revision and SHA-256 pins |
 
-No text-side lexicon corpus currently clears every gate. HKR is excluded for non-commercial,
-no-derivatives, and application-required terms. EHRI Multilingual is excluded because its mixed
-inventory explicitly includes standing-excluded Yad Vashem material. EHRI-NER currently
-publishes EUPL-1.2 rather than the requested CC-BY-4.0 and remains excluded pending a separate
-source-rights review. Yad Vashem, USHMM, Arolsen, Geneteka, and JRI-Poland remain excluded
-regardless of accessibility.
-## P2 implementation and baseline
+No text-side lexicon corpus currently clears every gate. Yad Vashem, USHMM, Arolsen, Geneteka,
+and JRI-Poland remain excluded regardless of accessibility; the full exclusion rationale lives
+in the manifest.
 
-P2 now contains:
+## Roadmap
 
-- one fully local, checksum-pinned llama.cpp Reader;
-- first-class machine-readable provenance for runtime, model, prompt, schema, artifact, blind
-  status, and uncertainty;
-- immutable canonical and explicitly downgraded legacy label ingest;
-- strict field-level blind consensus and `[unclear: X/Y]` disagreements;
-- date, formula-position, witness-age, and within-clerk-year validators;
-- a crash-safe SQLite batch state machine with atomic outputs and progress totals;
-- fail-closed privacy preflight;
-- SerockBench filiation, calibration, wrong-but-confident, abstention, and observation-state
-  metrics with clerk-year leakage rejection.
+1. Finish image-attested human qualification and rebuild the grounded training pool.
+2. Re-run the local reader against a properly attested, clerk-year-separated holdout.
+3. Add the Pultusk batch only after its corpus-acquisition and rights gate is explicitly cleared.
+4. Ship a small single-act interface after the local CLI and evidence contracts are stable.
 
-The batch runner fingerprints the scan, crop/target, model, prompt, schema, decoding settings,
-privacy policy, and output destination. A matching success is skipped on resume only while its
-output remains a readable JSON object; a missing or damaged output is requeued. Interrupted and
-bounded failed jobs can retry; unknown/multi-act targets route to review instead of being guessed.
+See [the architecture notes](docs/architecture.md), [SerockBench](docs/serockbench.md), and
+[the public contribution launch prompt](docs/DEEP_RESEARCH_PUBLIC_CONTRIBUTION_LAUNCH_PROMPT.md)
+for the longer-term plan.
 
-### Local baseline status
+## Contributing
 
-| Measure | Result |
-|---|---:|
-| Baseline run | **NOT RUN** |
-| Gold records evaluated | **0/36** |
-| Scan-backed gold records available for the first run | **24/36** |
-| Runtime verification | **PASS — b10167 mtmd grammar initialization** |
-| Model/projector pins | **Verified local artifacts** |
-| Raw failure probes | **5 grammar crashes; repetition loop; hollow shell** |
-| Clerk-year groups sequestered | **21** |
-| Prediction coverage | **N/A** |
-| Filiation exact match | **N/A** |
-| Wrong-but-CONFIDENT rate | **N/A** |
-| CONFIDENT / PROBABLE / UNCLEAR calibration | **N/A** |
-| Observation-state accuracy | **N/A** |
+Contributions are welcome, and most of the codebase is workable without scans, model weights, or
+GPU hardware. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) for the evidence and privacy
+rules, then pick something from [`docs/CONTRIBUTOR_TASKS.md`](docs/CONTRIBUTOR_TASKS.md) — a
+list of scoped starter tasks with acceptance criteria, several tagged *good first issue*.
 
-The baseline remains unspent until one `reader-infer` probe proves constrained output through
-the pinned mtmd frontend. Only then may `batch-run --max-retries 3
---rebind-failed-fingerprints` preserve the existing retry audit and spend the final approved
-attempt. Every successful inference retains raw stdout/stderr beside its JSON label; failed
-jobs retain raw-stream paths in the checkpoint. Twelve gold records remain
-honestly marked `NOT_LOCALIZED`: five exact Serock source objects returned HTTP 415 and seven
-Pułtusk routes remain explicitly unresolved.
+## License and dependency inventory
 
-See [SerockBench](docs/serockbench.md), the [label factory](docs/label-factory.md), the
-[baseline addendum](docs/p2-baseline-addendum.md), and the
-[P2 evaluation report](docs/p2-evaluation.md).
-
-## Roadmap and phase gates
-
-1. **P0 — scaffold and landscape:** completed.
-2. **P1 — Serock-seeded gold corpus:** completed and owner-approved.
-3. **P2 — local MVP pipeline:** implementation gate accepted; prompt v1.3 is frozen for new
-   factory waves while the measured baseline remains pinned to exact v1.2 snapshots. The real
-   baseline attaches after the mtmd reduced-schema probe. The performance targets remain
-   filiation exact-match at least 90% and wrong-but-confident below 2%; no model result is
-   claimed yet.
-4. **P3 — Pułtusk batch:** begins only after the explicit corpus-acquisition gate.
-5. **P4 — name and place variant bridge.**
-6. **P5 — publication and single-act interface.**
-
-See [the architecture notes](docs/architecture.md) and
-[the dated landscape review](docs/landscape.md).
-
-## License
-
-No open-source license has been selected yet. The P5 decision is explicitly reserved for Jake
-(AGPL or MIT). Until a license is added, the repository is not yet offered for reuse.
-
-Every declared runtime, development, build, and known transitive dependency is inventoried in
-[`dependency-licenses.json`](dependency-licenses.json); run
+See [`LICENSE`](LICENSE) for the MIT code license and CC BY 4.0 data note. The declared runtime,
+development, build, and known transitive dependencies are inventoried in
+[`dependency-licenses.json`](dependency-licenses.json). Run
 `python -m tools.check_dependency_licenses` after dependency changes. See
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for evidence and privacy rules.
