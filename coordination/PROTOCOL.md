@@ -1,6 +1,7 @@
-# COORDINATION PROTOCOL — Claude (coordinator/Reader A) ⇄ Sol (builder/Reader B)
-v1.0 — 28 Jul 2026. Both agents work in this repo; this directory is the message bus.
-The human (Jake) is the trigger, not the channel: he just tells each side "check your inbox."
+# COORDINATION PROTOCOL — coordinator/Reader A + per-wave blind Reader B instances
+v1.1 — 4 Aug 2026 (v1.0 28 Jul 2026). Amended per msg-044 (Sol retired) and msg-046
+(owner-authorized governance change): the coordinator absorbs the build side; Reader B is a
+fresh blind agent instance per wave. The human (Jake) remains the trigger, not the channel.
 
 ## Directory layout
 - `coordination/inbox_sol/`    — messages FROM Claude TO Sol
@@ -12,12 +13,30 @@ The human (Jake) is the trigger, not the channel: he just tells each side "check
 - Ack = a one-line entry in YOUR OWN next outgoing message ("ack msg-003") or an `ACK: msg-NNN`
   line added to STATUS_BOARD under your column. Read messages are never deleted — they are the log.
 
-## Ownership boundaries (unchanged, now codified)
-Claude-owned (Sol reads, never writes): `labels/readerA/`, `labels/consensus/`, `coordination/inbox_sol/`
-Sol-owned (Claude reads, never writes): `labels/readerB/`, `src/`, `tests/`, `gold/`, `schemas/`,
-  `prompts/`, `tools/`, `docs/`, `coordination/inbox_claude/`
-Shared read-only for both: `SPEC.md` amendments go through a message first, then whoever owns the edit applies it.
-STATUS_BOARD: each side edits ONLY its own column/rows.
+## Ownership boundaries (amended v1.1, effective msg-044)
+Coordinator-owned: `labels/readerA/`, `labels/consensus/`, `coordination/inbox_sol/`, and —
+  transferred from Sol per msg-046 — `src/`, `tests/`, `gold/`, `schemas/`, `prompts/`, `tools/`,
+  `docs/`.
+`labels/readerB/`: written only from the verbatim output of a fresh Reader B instance (see
+  Reader B section below). The coordinator ingests and freezes these files but must never alter,
+  supplement, or reinterpret a reading — ingest is copy-and-commit, nothing else.
+`coordination/inbox_claude/`: closed to new senders (historical log; Sol's messages preserved).
+`SPEC.md`: amendments are recorded in a coordination message first, then applied.
+STATUS_BOARD: coordinator edits; Sol's frozen section is history and is never edited.
+
+## Reader B (v1.1 — fresh blind instances)
+Each wave's Reader B pass is executed by a FRESH agent instance with no session contamination:
+- It receives ONLY: the frozen wave brief (b416c70 format), the scan crops for its acts, and the
+  pinned prompt/schema v1.4 (prompt sha256 5d14dcb8…, label schema
+  `schemas/reader-label-1.0.0-v1.4.schema.json`). Nothing else.
+- It must NEVER see: Reader A outputs, prior-wave labels or consensus files, coordination traffic,
+  STATUS_BOARD, or any conversation history from the coordinator's session.
+- Its identity is recorded per wave in the freeze commit and the wave row, as
+  `readerB-w<NNN>-<YYYYMMDD>` (e.g. `readerB-w006-20260805`).
+- The same blind-pass discipline applies unchanged: labels committed to freeze (commit = frozen,
+  no exceptions), scan-only audits before freeze, no consensus reads until its own labels for
+  those acts are committed.
+Reader C / arbiter rules are unchanged from v1.0.
 
 ## Blindness rule (overrides everything above)
 During any blind wave: the reader with a pending pass must not open the other reader's labels for

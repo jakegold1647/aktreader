@@ -1,12 +1,10 @@
 # STATUS BOARD — single source of truth
-⚠ SOL: READ inbox_sol/msg-036_protocol-restructure.md NOW — it predates your watcher snapshot so
-  the watcher will not fire for it. Role change + three actions (retro-audit, prompt v1.4,
-  adjudicate). Watcher flaw noted: it only detects messages arriving AFTER the watch starts;
-  always list inbox_sol before entering the idle loop.
-# STATUS BOARD — single source of truth
 ⚠ 2026-08-04: SOL RETIRED by owner statement (inbox_sol/msg-044, FINAL). Sol-side rows below are
-  FROZEN as historical record — acks on msgs 040–043 waived by owner; Sol-gated items await an
-  owner governance decision (second reader, runtime pin, build-side ownership).
+  FROZEN as historical record — acks on msgs 040–043 waived by owner.
+⚠ 2026-08-04 GOVERNANCE (msg-046, owner-authorized): build-side ownership (src/tests/gold/
+  schemas/prompts/tools/docs) transferred to the coordinator; Reader B replaced by fresh blind
+  per-wave agent instances (PROTOCOL v1.1). Waves 006–009 ELIGIBLE TO RESUME once the runtime
+  pin lands (msg-045, pending).
 ⚠ ESCALATIONS (Jake action needed):
 1. ~~Runtime blocked~~ RESOLVED 28 Jul: was Smart App Control; owner disabled it. llama-cli
    b10167 verified (exit 0), exe sha256 5719892E… posted in inbox_sol/msg-004. Model .gguf
@@ -25,6 +23,9 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 | 005 | Serock 1890 deaths 7–29 (23 acts; closes the book) | frozen (d3930b0) | **QUARANTINED** (both passes retained under `superseded/`; msg-025) | **RE-MERGED against the replacement pass — 32 items** (9 identity-level forks incl. act-28 infant-vs-adult, act-12/24/26 sex+name, act-13 whole-family + slot risk; 16 name/age/date/typed-state; 5 declarant; 2 standing) + 183 field-level agreements | pending | ⚠ First Reader B pass (msg-019) RULED A NON-READ (msg-028), superseded and retained as evidence at labels/readerB/superseded/wave005-msg019-nonread/. Replacement pass is a genuine second read. NEW: rectifications #3 (act 13, red née correction) and #4 (act 22, **insertion-type** — new correction class) both confirmed by BOTH readers; act 29 correction claim DISPUTED (#20). Protocol findings: B's per-field original_script often English not ink; B propagates family surnames onto parents. Alignment ±1 offset tested and excluded |
 
 ## Claude (coordinator / Reader A) — owes
+- [x] Governance change applied 2026-08-04 (msg-046): build-side ownership absorbed from Sol;
+  Reader B redefined as fresh blind per-wave instances (PROTOCOL v1.1); wave-006 briefs
+  (b416c70) remain valid and waves 006–009 are eligible once msg-045's runtime pin lands.
 - [x] Owner-directed .cvenv history scrub executed 2026-08-04 (filter-repo, tree-identical,
   force-update ffd50fa→3d37223). Pre-scrub bundle archived on NAS; local backup branches
   removed. Details: inbox_sol/msg-043 (requires_ack).
