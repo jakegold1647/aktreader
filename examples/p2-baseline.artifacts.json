@@ -4,11 +4,11 @@
   "state": "BASELINE_COMPLETE_SCHEMA_HARDENING_PENDING_PROBE",
   "target_hardware": "NVIDIA RTX 5060 Ti 16 GB",
   "runtime": {
-    "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-mtmd-cli.exe",
-    "version": "10167 (ee3d1b54c)",
-    "sha256": "6866b9425ec02798087380e14d5a9c69ded092a914cd48f06cf9b803552f7bfc",
+    "path": "E:\\DNA\\Project_RegisterReader\runtime\\llama.cpp-b10274\\llama-mtmd-cli.exe",
+    "version": "10274 (474c92e72)",
+    "sha256": "f447adf75f4134a1fdc9b14c61bfdc93a3c8ba6bbe19b9cf5b85a9de7482fd33",
     "frontend": "mtmd-cli",
-    "verification": "Local SHA-256 recorded; coordinator's grammar probe initialized successfully."
+    "verification": "Local SHA-256 recorded from the msg-045 owner-authorized fetch (GitHub release digest match); coordinator grammar probe on b10274 initialized samplers and emitted schema-constrained JSON (2026-08-04)."
   },
   "official_reference_snapshot": {
     "repository": "Qwen/Qwen3.5-9B",

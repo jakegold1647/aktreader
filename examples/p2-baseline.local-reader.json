@@ -2,8 +2,8 @@
   "schema_version": "1.0.0",
   "artifacts": {
     "executable": {
-      "path": "E:\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10167\\llama-mtmd-cli.exe",
-      "sha256": "6866b9425ec02798087380e14d5a9c69ded092a914cd48f06cf9b803552f7bfc"
+      "path": "E:\\DNA\\Project_RegisterReader\runtime\\llama.cpp-b10274\\llama-mtmd-cli.exe",
+      "sha256": "f447adf75f4134a1fdc9b14c61bfdc93a3c8ba6bbe19b9cf5b85a9de7482fd33"
     },
     "model": {
       "path": "E:\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\Qwen3.5-9B-Q5_K_M.gguf",
