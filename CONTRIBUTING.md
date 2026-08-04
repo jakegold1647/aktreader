@@ -29,7 +29,7 @@ the `skills/` directory teaches the domain, and plenty of pending work is pure P
 
 ## Before opening a change
 
-- Use Python 3.10 or newer in an isolated environment.
+- Use Python 3.11 or newer in an isolated environment.
 - Install the development group and run `python -m pytest`.
 - Run `python -m ruff check .` when Ruff is installed.
 - Run `python -m tools.check_dependency_licenses` after any dependency edit.

@@ -197,7 +197,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def environment_report() -> dict[str, object]:
     """Return deterministic facts useful at the P2 gate."""
-    supported = sys.version_info >= (3, 10)
+    supported = sys.version_info >= (3, 11)
     return {
         "aktreader_version": __version__,
         "implementation": platform.python_implementation(),
@@ -217,7 +217,7 @@ def _command_doctor(args: argparse.Namespace) -> int:
     else:
         print(f"AKTREADER {report['aktreader_version']} ({report['phase']} local pipeline)")
         print(f"Python {report['python_version']} ({report['implementation']})")
-        print(f"Python >= 3.10: {'yes' if report['python_supported'] else 'no'}")
+        print(f"Python >= 3.11: {'yes' if report['python_supported'] else 'no'}")
         print("Reader backend: local open weights only")
         print("Network required: no")
     return 0 if report["python_supported"] else 1

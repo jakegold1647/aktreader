@@ -3,7 +3,7 @@ name = "aktreader"
 version = "0.0.1"
 description = "A register-reading machine: scan in, graded genealogical evidence out. Structured, uncertainty-honest extraction of 19th-century civil register acts from partitioned Poland (Russian Cyrillic 1868-1915, Polish before/after)."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Jake Goldstein" }]
 dependencies = [
     "jsonschema>=4.23,<5",

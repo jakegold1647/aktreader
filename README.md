@@ -82,7 +82,8 @@ is: none.
 
 ## Install and run
 
-Python 3.10 or newer is supported. With `uv`:
+Python 3.11 or newer is supported (3.10 lacks `tomllib` and rejects some ISO
+date-time forms the label files use). With `uv`:
 
 ```powershell
 uv sync --group dev
