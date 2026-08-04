@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "model_output_schema": {
     "path": "schemas/model-output-1.0.0.schema.json",
-    "sha256": "c90d2b928937a98cd5d5b16af07e8d34834dd091f439591a507e8ab464f1d7a4"
+    "sha256": "a0c3f12b330cb8f4dbbf474defb9a634003c3aa1b2572cf36fa0b1f32c158996"
   },
   "gold_schema_version": "1.1.0",
   "entries": {
