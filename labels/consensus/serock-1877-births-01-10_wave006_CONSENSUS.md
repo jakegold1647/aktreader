@@ -152,3 +152,49 @@ weigh signature against Cyrillic body per the bilingual-anchor rule.
 
 No act promotes to silver from this merge alone. Acts 3, 9, 10 are one arbitration pass from
 promotion; acts 1, 2, 6, 7 carry identity-level forks and are gated on Reader C + human queue.
+
+---
+
+## ADDENDUM — ARBITRATION APPLIED AND JULY PASS RULED (4 Aug 2026, late evening)
+
+Reader C (`readerC-w006-20260804`, frozen `b940c44`) arbitrated all 18 items:
+**17 to Reader B, 1 BOTH-UNCLEAR (act-9 née К/В), plus act-1 child initial
+BOTH-UNCLEAR within its ruling.** Act 6 was not a region error: both readers
+boxed the true №6 quadrant; the July Reader A body wraps a family that is not
+on the page.
+
+**Coordinator ruling (msg-048, wave-005 precedent):** the July Reader A pass
+(`0f02480`, acts 1–8) is **COMPROMISED** — one confabulated act body, three
+unlisted registration-date errors, trades not in the ink, 17/18 arbitrated
+against. It is superseded verbatim at
+`labels/readerA/superseded/wave006-july-pass-ruled-compromised/`. The fresh
+instance pass `readerA-w006-20260804` is promoted to canonical Reader A
+(promotion `dfd85b2`, envelope normalization follows the 3e8fce2 pattern).
+
+**Post-promotion comparison (canonical A′ vs B):** acts 3–9 carry **zero**
+value conflicts; residual value conflicts are act-1 witness1.age /
+witness1.name / witness2.name (C items 1/10 cover the substance: ages read 31
+per the year-constant witness; names per B) and act-10 mother.maiden_name +
+witness1.name (minor, post-swap residuals, optional human).
+
+**Adopted values:** per Reader C's 18 rulings — B's reading stands on every
+ruled item; arbiter-flagged act-6 = Icek / Fiszbin household; Finding 3 is
+REVERSED (B's «лавочникъ» 'shopkeeper' was the correct letterform; the July
+pass carried trades not in the ink).
+
+**Tier outcomes (2-of-3 gating):**
+| Act | Outcome |
+|---|---|
+| 1 | silver EXCEPT child.given_name (А/Я/Ха initial) → HUMAN queue |
+| 2 | SILVER (Berek, Cytrynowicz, Malka Ruchla née Borensztejn) |
+| 3 | SILVER |
+| 4 | SILVER (child initial noted resolved by C to B's Golda reading context) |
+| 5 | SILVER |
+| 6 | SILVER (Icek, father Mortka Fiszbin — B wholesale per C) |
+| 7 | SILVER (Ruchla Laja, née Kon) |
+| 8 | SILVER (née Mielnik per line-break split) |
+| 9 | silver EXCEPT mother.maiden_name (К/В initial) → HUMAN queue |
+| 10 | silver EXCEPT mother.maiden_name + witness1.name (minor residuals, optional human) |
+
+**Human gold-sample queue additions:** act-1 child initial (identity-critical),
+act-9 née initial — joining the standing acts 6/34/39 (1890) package.

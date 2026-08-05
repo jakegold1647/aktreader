@@ -47,6 +47,9 @@ Consensus files may only be read by a reader after its own labels for those acts
 ## Wave lifecycle (the standing loop)
 1. Claude posts wave assignment → `inbox_sol/` (act list, artifact, prompt version to use).
 2. Both readers label blind, commit to freeze (commit = frozen, no exceptions).
+   v1.2 (msg-048): EVERY reader pass runs on a fresh instance — coordinator-session
+   reads are retired after the wave-006 July-pass ruling; spawn instructions must
+   include the envelope spec (relative $schema, birth-N ids, positional mention ids).
 3. Claude merges → `labels/consensus/<wave>_CONSENSUS.md`, routes disputes to a fresh Reader C.
 4. Claude appends RESOLVED appendix, posts outcome summary + eval-table numbers → `inbox_sol/`.
 5. Sol ingests resolved fields into gold/eval, posts gate reports & build questions → `inbox_claude/`.

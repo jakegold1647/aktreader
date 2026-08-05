@@ -6,7 +6,7 @@
     "fond": "73/826/0",
     "year": 1877,
     "act_type": "birth",
-    "language": "pl",
+    "language": "ru",
     "clerk_year_proxy": "serock-1877"
   },
   "prompt_version": "1.4.0",
@@ -74,5 +74,5 @@
   ],
   "source_note": "Harvested from skanoteka zespol id318 (0826d) unit sy=1877 kt=1; hashes independently recomputed by coordinator 2026-07-29 from E:\\DNA\\BulkData\\Serock_0826d\\1877\\births",
   "corpus_gap_note": "The 1877 births unit jumps 19-22 -> 27-30; no file covers acts 23-26. Coordinator has NOT verified whether this is absent at source or a fetch gap; do not treat 23-26 as unread until checked.",
-  "language_note": "Polish-language era. Cyrillic gate must NOT apply (target.language = pl). This wave is the language-conditional guard's first production test."
+  "language_note": "ERRATUM 2026-08-04 (msg-048): originally pinned language=pl with a note that the Cyrillic gate must not apply. All ten acts are Russian chancery Cyrillic (Russification window 1868-1915); both blind readers independently overrode the pin from the ink. Corrected to ru; original wording preserved here: 'Polish-language era. Cyrillic gate must NOT apply (target.language = pl). This wave is the language-conditional guard's first production test.'"
 }
