@@ -1,8 +1,8 @@
 {
-  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "$schema": "schemas/reader-label-1.0.0-v1.4.schema.json",
   "schema_version": "1.0.0",
-  "label_id": "readerb-w006-serock-1877-b-07",
-  "record_id": "serock-1877-b-07",
+  "label_id": "readerb-w006-serock-1877-birth-7",
+  "record_id": "serock-1877-birth-7",
   "created_at": "2026-08-04T12:30:00Z",
   "reader": {
     "reader_id": "readerB-w006-20260804",
@@ -17,62 +17,446 @@
     "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
     "path": "prompts/reader_prompt.md"
   },
-  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "clerk_year": {
+    "id": "serock-1877",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
   "artifact": {
     "path": "D:\\E-Drive-Preserve\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_07-10.jpg",
     "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
-    "width_px": 3044, "height_px": 2412, "page_index": 0,
-    "act_region": {"x": 420, "y": 230, "width": 1130, "height": 1000, "coordinate_space": "source_pixels"}
+    "width_px": 3044,
+    "height_px": 2412,
+    "page_index": 0,
+    "act_region": {
+      "x": 420,
+      "y": 230,
+      "width": 1130,
+      "height": 1000,
+      "coordinate_space": "source_pixels"
+    }
   },
-  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 7, "language": "ru"},
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1877,
+    "act_type": "birth",
+    "act_no": 7,
+    "language": "ru"
+  },
   "source_spans": {
-    "act-region": {"bbox": {"x": 420, "y": 230, "width": 1130, "height": 1000, "coordinate_space": "source_pixels"}, "description": "entire act no. 7, left page top, including margin annotation"},
-    "opening": {"bbox": {"x": 420, "y": 230, "width": 1130, "height": 170, "coordinate_space": "source_pixels"}, "description": "venue and registration date/hour lines"},
-    "declarant-witnesses": {"bbox": {"x": 420, "y": 400, "width": 1130, "height": 270, "coordinate_space": "source_pixels"}, "description": "declarant and witnesses slot"},
-    "presentation-birth": {"bbox": {"x": 420, "y": 670, "width": 1130, "height": 230, "coordinate_space": "source_pixels"}, "description": "presentation slot: sex, birth place, dual birth date"},
-    "mother-naming": {"bbox": {"x": 420, "y": 900, "width": 1130, "height": 140, "coordinate_space": "source_pixels"}, "description": "mother slot and naming slot"},
-    "closing-signatures": {"bbox": {"x": 420, "y": 1040, "width": 1130, "height": 190, "coordinate_space": "source_pixels"}, "description": "closing formula and signature block"}
+    "act-region": {
+      "bbox": {
+        "x": 420,
+        "y": 230,
+        "width": 1130,
+        "height": 1000,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "entire act no. 7, left page top, including margin annotation"
+    },
+    "opening": {
+      "bbox": {
+        "x": 420,
+        "y": 230,
+        "width": 1130,
+        "height": 170,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "venue and registration date/hour lines"
+    },
+    "declarant-witnesses": {
+      "bbox": {
+        "x": 420,
+        "y": 400,
+        "width": 1130,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "declarant and witnesses slot"
+    },
+    "presentation-birth": {
+      "bbox": {
+        "x": 420,
+        "y": 670,
+        "width": 1130,
+        "height": 230,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "presentation slot: sex, birth place, dual birth date"
+    },
+    "mother-naming": {
+      "bbox": {
+        "x": 420,
+        "y": 900,
+        "width": 1130,
+        "height": 140,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "mother slot and naming slot"
+    },
+    "closing-signatures": {
+      "bbox": {
+        "x": 420,
+        "y": 1040,
+        "width": 1130,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "closing formula and signature block"
+    }
   },
   "mentions": [
-    {"mention_id": "serock-1877-b-07#child", "role": "principal"},
-    {"mention_id": "serock-1877-b-07#father", "role": "father"},
-    {"mention_id": "serock-1877-b-07#father", "role": "declarant"},
-    {"mention_id": "serock-1877-b-07#mother", "role": "mother"},
-    {"mention_id": "serock-1877-b-07#witness1", "role": "witness"},
-    {"mention_id": "serock-1877-b-07#witness2", "role": "witness"},
-    {"mention_id": "serock-1877-b-07#officiant", "role": "officiant"}
+    {
+      "mention_id": "serock-1877-birth-7#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1877-birth-7#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1877-birth-7#declarant",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1877-birth-7#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1877-birth-7#witness-1",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-7#witness-2",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-7#officiant",
+      "role": "officiant"
+    }
   ],
   "transcription": {
     "original_script": "№ 7. Попово. Состоялось въ Посадѣ Сероцкѣ одиннадцатаго / двадцать третьяго Февраля тысяча восемьсотъ семьдесятъ седьмаго года, въ два часа по полудни. Явился лично Мойсеева Закона Гаскель Соляржъ, торговщикъ, двадцати семи лѣтъ отъ роду, въ деревнѣ Поповѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Шмаи Соляржа, лавочника, тридцати одного лѣтъ отъ роду, и Абрама Вайнгрода, школьника, сорока четырехъ лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца женскаго пола, объявляя, что онъ родился въ деревнѣ Поповѣ третьяго / пятнадцатаго Февраля текущаго года, въ семь часовъ утра, отъ законной его жены Шейндли, урожденной Конъ, [unclear: девятнадцати?] лѣтъ отъ роду. Младенцу этому даны имена Рухля Лая. Актъ сей объявляющему и свидѣтелямъ прочитанъ, и затѣмъ объявляющимъ, свидѣтелями, а также нами подписанъ. [unclear: Haskel Solarsz?]. Абрамъ Вайнгродъ. Szmaja Solarz. Содержащій Акты Гражданскаго Состоянія",
     "translation": "No. 7. Popowo. It took place in the posad of Serock on the 11th / 23rd of February 1877, at two o'clock in the afternoon. There appeared in person Haskel Solarz, of the Mosaic faith, petty trader, aged twenty-seven, residing in the village of Popowo, in the presence of witnesses of the Mosaic faith Szmaja Solarz, shopkeeper, aged thirty-one, and Abram Wajngrod, synagogue beadle, aged forty-four, residing here in Serock, and presented to us an infant of the female sex, declaring that she was born in the village of Popowo on the 3rd / 15th of February of the current year, at seven o'clock in the morning, of his lawful wife Szejndla nee Kon, aged [unclear: 19?]. This infant was given the names Ruchla Laja. This act was read to the declarant and witnesses and then signed by the declarant, the witnesses, and by us. Signatures: a Latin-script signature read as Haskel Solarsz (shaky); Abram Wajngrod; Szmaja Solarz (Latin script); the maintainer of civil status acts."
   },
   "observations": {
-    "margin.note": {"value": "No. 7, Popowo", "original_script": "№ 7. Попово.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["act-region"], "notes": []},
-    "act_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Wave brief stated pl; the ink is Russian Cyrillic."]},
-    "registration.date": {"value": "1877-02-23", "original_script": "одиннадцатаго / двадцать третьяго Февраля тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Dual date physically present: 11/23 February 1877; 12-day gap consistent."]},
-    "registration.hour": {"value": "14:00 (afternoon)", "original_script": "въ два часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": []},
-    "declarant.name": {"value": "Haskel Solarz", "original_script": "Гаскель Соляржъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Given name line-broken (Гас-/кель); joined reading tested in slot. Latin closing signature read shakily as 'Haskel Solarsz'. Same Solarz family cluster as acts 1 and 4 (Popowo)."]},
-    "declarant.occupation": {"value": "petty trader", "original_script": "торговщикъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "declarant.age": {"value": 27, "original_script": "двадцати семи лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "declarant.residence": {"value": "village Popowo", "original_script": "въ деревнѣ Поповѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "father.same_as_declarant": {"value": true, "original_script": "отъ законной его жены", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "witness1.name": {"value": "Szmaja Solarz", "original_script": "Шмаи Соляржа", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Latin signature 'Szmaja Solarz' matches; same surname as declarant — possible kinsman, kinship not stated."]},
-    "witness1.occupation": {"value": "shopkeeper", "original_script": "лавочника, тридцати одного", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness1.age": {"value": 31, "original_script": "тридцати одного лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.name": {"value": "Abram Wajngrod", "original_script": "Абрама Вайнгрода", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": []},
-    "witness2.occupation": {"value": "synagogue beadle (szkolnik)", "original_script": "школьника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.age": {"value": 44, "original_script": "сорока четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": ["Consistent with his age 44 in acts 3 and 10."]},
-    "child.sex": {"value": "female", "original_script": "женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Female names given; no circumcision wording."]},
-    "child.birth_date": {"value": "1877-02-15", "original_script": "третьяго / пятнадцатаго Февраля текущаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Dual date physically present: 3/15 February 1877; 12-day gap consistent."]},
-    "child.birth_hour": {"value": "07:00 (morning)", "original_script": "въ семь часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
-    "child.birth_place": {"value": "village Popowo", "original_script": "родился въ деревнѣ Поповѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Clerk used masculine родился despite female child; transcribed as inked."]},
-    "mother.given_name": {"value": "Szejndla", "original_script": "жены Шейндли", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "mother.maiden_name": {"value": "Kon", "original_script": "урожденной Конъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "mother.age": {"value": "[unclear: 19?]", "original_script": "[unclear: девятнадцати?] лѣтъ отъ роду", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": 19, "original_script": "девятнадцати"}], "source_span_ids": ["mother-naming"], "notes": ["Digit-word line-broken and crowded; inspected at 5x (source x420-1550, y920-1020); single shaky candidate retained."]},
-    "child.given_name": {"value": "Ruchla Laja", "original_script": "даны имена Рухля Лая", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": ["Two given names, one female child."]},
-    "signatures.note": {"value": "Declarant and one witness signed in Latin script; other witness in Cyrillic.", "original_script": "Абрамъ Вайнгродъ. Szmaja Solarz.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.title": {"value": "Maintainer of Civil Status Acts (registrar)", "original_script": "Содержащій Акты Гражданскаго Состоянія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.signature": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Inspected at 2.4x act crop (source x420-1550, y1150-1230); flourish does not resolve into letters."]}
+    "margin.note": {
+      "value": "No. 7, Popowo",
+      "original_script": "№ 7. Попово.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "act-region"
+      ],
+      "notes": []
+    },
+    "act_language": {
+      "value": "ru",
+      "original_script": "Состоялось въ Посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Wave brief stated pl; the ink is Russian Cyrillic."
+      ]
+    },
+    "registration.date": {
+      "value": "1877-02-23",
+      "original_script": "одиннадцатаго / двадцать третьяго Февраля тысяча восемьсотъ семьдесятъ седьмаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Dual date physically present: 11/23 February 1877; 12-day gap consistent."
+      ]
+    },
+    "registration.hour": {
+      "value": "14:00 (afternoon)",
+      "original_script": "въ два часа по полудни",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": []
+    },
+    "declarant.name": {
+      "value": "Haskel Solarz",
+      "original_script": "Гаскель Соляржъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Given name line-broken (Гас-/кель); joined reading tested in slot. Latin closing signature read shakily as 'Haskel Solarsz'. Same Solarz family cluster as acts 1 and 4 (Popowo)."
+      ]
+    },
+    "declarant.occupation": {
+      "value": "petty trader",
+      "original_script": "торговщикъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "declarant.age": {
+      "value": 27,
+      "original_script": "двадцати семи лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "declarant.residence": {
+      "value": "village Popowo",
+      "original_script": "въ деревнѣ Поповѣ жительствующій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "father.same_as_declarant": {
+      "value": true,
+      "original_script": "отъ законной его жены",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "witness1.name": {
+      "value": "Szmaja Solarz",
+      "original_script": "Шмаи Соляржа",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Latin signature 'Szmaja Solarz' matches; same surname as declarant — possible kinsman, kinship not stated."
+      ]
+    },
+    "witness1.occupation": {
+      "value": "shopkeeper",
+      "original_script": "лавочника, тридцати одного",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness1.age": {
+      "value": 31,
+      "original_script": "тридцати одного лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.name": {
+      "value": "Abram Wajngrod",
+      "original_script": "Абрама Вайнгрода",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "witness2.occupation": {
+      "value": "synagogue beadle (szkolnik)",
+      "original_script": "школьника",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.age": {
+      "value": 44,
+      "original_script": "сорока четырехъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": [
+        "Consistent with his age 44 in acts 3 and 10."
+      ]
+    },
+    "child.sex": {
+      "value": "female",
+      "original_script": "женскаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Female names given; no circumcision wording."
+      ]
+    },
+    "child.birth_date": {
+      "value": "1877-02-15",
+      "original_script": "третьяго / пятнадцатаго Февраля текущаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Dual date physically present: 3/15 February 1877; 12-day gap consistent."
+      ]
+    },
+    "child.birth_hour": {
+      "value": "07:00 (morning)",
+      "original_script": "въ семь часовъ утра",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": []
+    },
+    "child.birth_place": {
+      "value": "village Popowo",
+      "original_script": "родился въ деревнѣ Поповѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Clerk used masculine родился despite female child; transcribed as inked."
+      ]
+    },
+    "mother.given_name": {
+      "value": "Szejndla",
+      "original_script": "жены Шейндли",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "Kon",
+      "original_script": "урожденной Конъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "mother.age": {
+      "value": "[unclear: 19?]",
+      "original_script": "[unclear: девятнадцати?] лѣтъ отъ роду",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": 19,
+          "original_script": "девятнадцати"
+        }
+      ],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Digit-word line-broken and crowded; inspected at 5x (source x420-1550, y920-1020); single shaky candidate retained."
+      ]
+    },
+    "child.given_name": {
+      "value": "Ruchla Laja",
+      "original_script": "даны имена Рухля Лая",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Two given names, one female child."
+      ]
+    },
+    "signatures.note": {
+      "value": "Declarant and one witness signed in Latin script; other witness in Cyrillic.",
+      "original_script": "Абрамъ Вайнгродъ. Szmaja Solarz.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.title": {
+      "value": "Maintainer of Civil Status Acts (registrar)",
+      "original_script": "Содержащій Акты Гражданскаго Состоянія",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.signature": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": [
+        "Inspected at 2.4x act crop (source x420-1550, y1150-1230); flourish does not resolve into letters."
+      ]
+    }
   },
   "compliance": {
     "restricted_sources_used": false,

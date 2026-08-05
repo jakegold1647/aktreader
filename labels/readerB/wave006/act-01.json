@@ -1,8 +1,8 @@
 {
-  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "$schema": "schemas/reader-label-1.0.0-v1.4.schema.json",
   "schema_version": "1.0.0",
-  "label_id": "readerb-w006-serock-1877-b-01",
-  "record_id": "serock-1877-b-01",
+  "label_id": "readerb-w006-serock-1877-birth-1",
+  "record_id": "serock-1877-birth-1",
   "created_at": "2026-08-04T12:00:00Z",
   "reader": {
     "reader_id": "readerB-w006-20260804",
@@ -17,62 +17,482 @@
     "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
     "path": "prompts/reader_prompt.md"
   },
-  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "clerk_year": {
+    "id": "serock-1877",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
   "artifact": {
     "path": "D:\\E-Drive-Preserve\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_01-02.jpg",
     "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
-    "width_px": 3044, "height_px": 2412, "page_index": 1,
-    "act_region": {"x": 1440, "y": 150, "width": 1604, "height": 1080, "coordinate_space": "source_pixels"}
+    "width_px": 3044,
+    "height_px": 2412,
+    "page_index": 1,
+    "act_region": {
+      "x": 1440,
+      "y": 150,
+      "width": 1604,
+      "height": 1080,
+      "coordinate_space": "source_pixels"
+    }
   },
-  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 1, "language": "ru"},
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1877,
+    "act_type": "birth",
+    "act_no": 1,
+    "language": "ru"
+  },
   "source_spans": {
-    "act-region": {"bbox": {"x": 1440, "y": 150, "width": 1604, "height": 1080, "coordinate_space": "source_pixels"}, "description": "entire act no. 1, right page top, including margin annotation"},
-    "opening": {"bbox": {"x": 1440, "y": 150, "width": 1604, "height": 180, "coordinate_space": "source_pixels"}, "description": "venue and registration date/hour lines"},
-    "declarant-witnesses": {"bbox": {"x": 1440, "y": 330, "width": 1604, "height": 280, "coordinate_space": "source_pixels"}, "description": "declarant and witnesses slot"},
-    "presentation-birth": {"bbox": {"x": 1440, "y": 610, "width": 1604, "height": 250, "coordinate_space": "source_pixels"}, "description": "presentation slot: sex, birth place, dual birth date"},
-    "mother-naming": {"bbox": {"x": 1440, "y": 860, "width": 1604, "height": 180, "coordinate_space": "source_pixels"}, "description": "mother slot and naming slot"},
-    "closing-signatures": {"bbox": {"x": 1440, "y": 1040, "width": 1604, "height": 190, "coordinate_space": "source_pixels"}, "description": "closing formula and signature block"}
+    "act-region": {
+      "bbox": {
+        "x": 1440,
+        "y": 150,
+        "width": 1604,
+        "height": 1080,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "entire act no. 1, right page top, including margin annotation"
+    },
+    "opening": {
+      "bbox": {
+        "x": 1440,
+        "y": 150,
+        "width": 1604,
+        "height": 180,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "venue and registration date/hour lines"
+    },
+    "declarant-witnesses": {
+      "bbox": {
+        "x": 1440,
+        "y": 330,
+        "width": 1604,
+        "height": 280,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "declarant and witnesses slot"
+    },
+    "presentation-birth": {
+      "bbox": {
+        "x": 1440,
+        "y": 610,
+        "width": 1604,
+        "height": 250,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "presentation slot: sex, birth place, dual birth date"
+    },
+    "mother-naming": {
+      "bbox": {
+        "x": 1440,
+        "y": 860,
+        "width": 1604,
+        "height": 180,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "mother slot and naming slot"
+    },
+    "closing-signatures": {
+      "bbox": {
+        "x": 1440,
+        "y": 1040,
+        "width": 1604,
+        "height": 190,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "closing formula and signature block"
+    }
   },
   "mentions": [
-    {"mention_id": "serock-1877-b-01#child", "role": "principal"},
-    {"mention_id": "serock-1877-b-01#father", "role": "father"},
-    {"mention_id": "serock-1877-b-01#father", "role": "declarant"},
-    {"mention_id": "serock-1877-b-01#mother", "role": "mother"},
-    {"mention_id": "serock-1877-b-01#witness1", "role": "witness"},
-    {"mention_id": "serock-1877-b-01#witness2", "role": "witness"},
-    {"mention_id": "serock-1877-b-01#officiant", "role": "officiant"}
+    {
+      "mention_id": "serock-1877-birth-1#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1877-birth-1#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1877-birth-1#declarant",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1877-birth-1#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1877-birth-1#witness-1",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-1#witness-2",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-1#officiant",
+      "role": "officiant"
+    }
   ],
   "transcription": {
     "original_script": "№ 1. Попово. Состоялось въ Посадѣ Сероцкѣ третьяго / пятнадцатаго Января тысяча восемьсотъ семьдесятъ седьмаго года, въ десять часовъ утра. Явился лично Мойсеева Закона Довидъ Соляржъ, пахцяржъ, шестидесяти четырехъ лѣтъ отъ роду, въ деревнѣ Поповѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Файвеся Розенберга, лавочника, [unclear: тридцати восьми/тридцати одного] лѣтъ отъ роду, и Мортки [unclear: Фишбина/Фришбина], мясника, сорока четырехъ лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца мужескаго пола, объявляя, что онъ родился въ деревнѣ Поповѣ двадцать седьмаго Декабря / восьмаго Января тысяча восемьсотъ семьдесятъ шестаго / седьмаго года, въ четыре часа утра, отъ законной его жены Хавы, урожденной Бурштынъ, сорока двухъ лѣтъ отъ роду. Младенцу этому при обрѣзаніи дано имя [unclear: Янкель/Анкель]. Актъ сей объявляющему и свидѣтелямъ прочитанъ, а затѣмъ объявляющимъ, свидѣтелями, а также нами подписанъ. dawid soliarz. Мордка Фришбинъ. [unclear: Файвелъ Розенбергъ?]. Содержащій Акты Гражданскаго Состоянія",
     "translation": "No. 1. Popowo. It took place in the posad of Serock on the 3rd / 15th of January 1877, at ten o'clock in the morning. There appeared in person Dawid Soliarz, of the Mosaic faith, leaseholder (pachciarz), aged sixty-four, residing in the village of Popowo, in the presence of witnesses of the Mosaic faith Fajwes Rozenberg, shopkeeper, aged [unclear: 38/31], and Mortka [unclear: Fiszbin/Friszbin], butcher, aged forty-four, residing here in Serock, and presented to us an infant of the male sex, declaring that he was born in the village of Popowo on the 27th of December / 8th of January 1876/1877, at four o'clock in the morning, of his lawful wife Chawa nee Bursztyn, aged forty-two. At his circumcision this infant was given the name [unclear: Jankiel/Ankiel]. This act was read to the declarant and witnesses and then signed by the declarant, the witnesses, and by us. Signatures: dawid soliarz (Latin script); Mordka Friszbin; probably Fajwel Rozenberg; the maintainer of civil status acts (flourish signature)."
   },
   "observations": {
-    "margin.note": {"value": "No. 1, Popowo", "original_script": "№ 1. Попово.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["act-region"], "notes": ["margin carries act number and event village"]},
-    "act_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Wave brief stated language pl; the ink is Russian chancery Cyrillic throughout (consistent with post-1868 practice). Read from the page; Cyrillic grounding rule applied."]},
-    "registration.date": {"value": "1877-01-15", "original_script": "третьяго / пятнадцатаго Января тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Dual date physically present: 3 January Julian / 15 January Gregorian 1877; 12-day gap consistent for 1800s."]},
-    "registration.hour": {"value": "10:00 (morning)", "original_script": "въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": []},
-    "declarant.name": {"value": "Dawid Soliarz", "original_script": "Довидъ Соляржъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [{"value": "Dowid Soliarz", "original_script": "Довидъ Соляржъ"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Cursive body word alone is ambiguous; the Latin-script signature 'dawid soliarz' in the closing block supports the reading Soliarz.", "Same surname signed in Latin in act 4 ('Icek Fajbus Soliarz')."]},
-    "declarant.occupation": {"value": "pachciarz (leaseholder)", "original_script": "пахцяржъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": ["Polish occupational term pachciarz rendered in Cyrillic."]},
-    "declarant.age": {"value": 64, "original_script": "шестидесяти четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "declarant.residence": {"value": "village Popowo", "original_script": "въ деревнѣ Поповѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "father.same_as_declarant": {"value": true, "original_script": "отъ законной его жены", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": ["Formula names the child as born of the declarant's lawful wife; declarant is the father."]},
-    "witness1.name": {"value": "Fajwes Rozenberg", "original_script": "Файвеся Розенберга", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Genitive on page; probable Cyrillic signature 'Файвелъ Розенбергъ' in closing block."]},
-    "witness1.occupation": {"value": "shopkeeper", "original_script": "лавочника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": ["Word carries a leading flourish that can be misread as 'славочника'; slot and recurrence across acts support лавочника."]},
-    "witness1.age": {"value": "[unclear: 38/31]", "original_script": "[unclear: тридцати восьми/тридцати одного]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": 38, "original_script": "тридцати восьми"}, {"value": 31, "original_script": "тридцати одного"}], "source_span_ids": ["declarant-witnesses"], "notes": ["Digit-word shaky at 4.5x; the same witness is written aged 31 in later acts of this register (within-register consistency flag, not decided here)."]},
-    "witness2.name": {"value": "[unclear: Mortka Fiszbin/Mortka Friszbin]", "original_script": "[unclear: Фишбина/Фришбина]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Mortka Fiszbin", "original_script": "Фишбина"}, {"value": "Mortka Friszbin", "original_script": "Фришбина"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Own signature reads 'Мордка Фришбинъ' but the р-stroke is itself ambiguous; Fiszbin is the commoner surname."]},
-    "witness2.occupation": {"value": "butcher", "original_script": "мясника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.age": {"value": 44, "original_script": "сорока четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "child.sex": {"value": "male", "original_script": "мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Consistent with circumcision naming clause."]},
-    "child.birth_date": {"value": "1877-01-08", "original_script": "двадцать седьмаго Декабря / восьмаго Января тысяча восемьсотъ семьдесятъ шестаго / седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Dual date physically present: 27 December 1876 Julian / 8 January 1877 Gregorian; 12-day gap consistent."]},
-    "child.birth_hour": {"value": "04:00 (morning)", "original_script": "въ четыре часа утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
-    "child.birth_place": {"value": "village Popowo", "original_script": "родился въ деревнѣ Поповѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
-    "mother.given_name": {"value": "Chawa", "original_script": "жены Хавы", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "mother.maiden_name": {"value": "Bursztyn", "original_script": "урожденной Бурштынъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "mother.age": {"value": 42, "original_script": "сорока двухъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "child.given_name": {"value": "[unclear: Jankiel/Ankiel]", "original_script": "[unclear: Янкель/Анкель]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Jankiel", "original_script": "Янкель"}, {"value": "Ankiel", "original_script": "Анкель"}], "source_span_ids": ["mother-naming"], "notes": ["Initial capital inspected at 7x-8x (source x2150-2700, y875-975): loop-initial letter reads as Я or А; both full readings retained. Jankiel is the commoner name but the ink was not allowed to be completed from priors."]},
-    "signatures.note": {"value": "Declarant signed in Latin script; both witnesses signed in Cyrillic (one probable).", "original_script": "dawid soliarz. Мордка Фришбинъ.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Third signature read as [unclear: Файвелъ Розенбергъ?]."]},
-    "officiant.title": {"value": "Maintainer of Civil Status Acts (registrar)", "original_script": "Содержащій Акты Гражданскаго Состоянія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.signature": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Inspected at 3.5x and 5x crops of closing-signatures region (source x1500-3044, y1020-1190); ornate flourish does not resolve into letters."]}
+    "margin.note": {
+      "value": "No. 1, Popowo",
+      "original_script": "№ 1. Попово.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "act-region"
+      ],
+      "notes": [
+        "margin carries act number and event village"
+      ]
+    },
+    "act_language": {
+      "value": "ru",
+      "original_script": "Состоялось въ Посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Wave brief stated language pl; the ink is Russian chancery Cyrillic throughout (consistent with post-1868 practice). Read from the page; Cyrillic grounding rule applied."
+      ]
+    },
+    "registration.date": {
+      "value": "1877-01-15",
+      "original_script": "третьяго / пятнадцатаго Января тысяча восемьсотъ семьдесятъ седьмаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Dual date physically present: 3 January Julian / 15 January Gregorian 1877; 12-day gap consistent for 1800s."
+      ]
+    },
+    "registration.hour": {
+      "value": "10:00 (morning)",
+      "original_script": "въ десять часовъ утра",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": []
+    },
+    "declarant.name": {
+      "value": "Dawid Soliarz",
+      "original_script": "Довидъ Соляржъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Dowid Soliarz",
+          "original_script": "Довидъ Соляржъ"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Cursive body word alone is ambiguous; the Latin-script signature 'dawid soliarz' in the closing block supports the reading Soliarz.",
+        "Same surname signed in Latin in act 4 ('Icek Fajbus Soliarz')."
+      ]
+    },
+    "declarant.occupation": {
+      "value": "pachciarz (leaseholder)",
+      "original_script": "пахцяржъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": [
+        "Polish occupational term pachciarz rendered in Cyrillic."
+      ]
+    },
+    "declarant.age": {
+      "value": 64,
+      "original_script": "шестидесяти четырехъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "declarant.residence": {
+      "value": "village Popowo",
+      "original_script": "въ деревнѣ Поповѣ жительствующій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "father.same_as_declarant": {
+      "value": true,
+      "original_script": "отъ законной его жены",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Formula names the child as born of the declarant's lawful wife; declarant is the father."
+      ]
+    },
+    "witness1.name": {
+      "value": "Fajwes Rozenberg",
+      "original_script": "Файвеся Розенберга",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Genitive on page; probable Cyrillic signature 'Файвелъ Розенбергъ' in closing block."
+      ]
+    },
+    "witness1.occupation": {
+      "value": "shopkeeper",
+      "original_script": "лавочника",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": [
+        "Word carries a leading flourish that can be misread as 'славочника'; slot and recurrence across acts support лавочника."
+      ]
+    },
+    "witness1.age": {
+      "value": "[unclear: 38/31]",
+      "original_script": "[unclear: тридцати восьми/тридцати одного]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": 38,
+          "original_script": "тридцати восьми"
+        },
+        {
+          "value": 31,
+          "original_script": "тридцати одного"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": [
+        "Digit-word shaky at 4.5x; the same witness is written aged 31 in later acts of this register (within-register consistency flag, not decided here)."
+      ]
+    },
+    "witness2.name": {
+      "value": "[unclear: Mortka Fiszbin/Mortka Friszbin]",
+      "original_script": "[unclear: Фишбина/Фришбина]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Mortka Fiszbin",
+          "original_script": "Фишбина"
+        },
+        {
+          "value": "Mortka Friszbin",
+          "original_script": "Фришбина"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Own signature reads 'Мордка Фришбинъ' but the р-stroke is itself ambiguous; Fiszbin is the commoner surname."
+      ]
+    },
+    "witness2.occupation": {
+      "value": "butcher",
+      "original_script": "мясника",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.age": {
+      "value": 44,
+      "original_script": "сорока четырехъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "child.sex": {
+      "value": "male",
+      "original_script": "мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Consistent with circumcision naming clause."
+      ]
+    },
+    "child.birth_date": {
+      "value": "1877-01-08",
+      "original_script": "двадцать седьмаго Декабря / восьмаго Января тысяча восемьсотъ семьдесятъ шестаго / седьмаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Dual date physically present: 27 December 1876 Julian / 8 January 1877 Gregorian; 12-day gap consistent."
+      ]
+    },
+    "child.birth_hour": {
+      "value": "04:00 (morning)",
+      "original_script": "въ четыре часа утра",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": []
+    },
+    "child.birth_place": {
+      "value": "village Popowo",
+      "original_script": "родился въ деревнѣ Поповѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": []
+    },
+    "mother.given_name": {
+      "value": "Chawa",
+      "original_script": "жены Хавы",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "Bursztyn",
+      "original_script": "урожденной Бурштынъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "mother.age": {
+      "value": 42,
+      "original_script": "сорока двухъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "child.given_name": {
+      "value": "[unclear: Jankiel/Ankiel]",
+      "original_script": "[unclear: Янкель/Анкель]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Jankiel",
+          "original_script": "Янкель"
+        },
+        {
+          "value": "Ankiel",
+          "original_script": "Анкель"
+        }
+      ],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Initial capital inspected at 7x-8x (source x2150-2700, y875-975): loop-initial letter reads as Я or А; both full readings retained. Jankiel is the commoner name but the ink was not allowed to be completed from priors."
+      ]
+    },
+    "signatures.note": {
+      "value": "Declarant signed in Latin script; both witnesses signed in Cyrillic (one probable).",
+      "original_script": "dawid soliarz. Мордка Фришбинъ.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": [
+        "Third signature read as [unclear: Файвелъ Розенбергъ?]."
+      ]
+    },
+    "officiant.title": {
+      "value": "Maintainer of Civil Status Acts (registrar)",
+      "original_script": "Содержащій Акты Гражданскаго Состоянія",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.signature": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": [
+        "Inspected at 3.5x and 5x crops of closing-signatures region (source x1500-3044, y1020-1190); ornate flourish does not resolve into letters."
+      ]
+    }
   },
   "compliance": {
     "restricted_sources_used": false,

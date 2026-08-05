@@ -1,8 +1,8 @@
 {
-  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "$schema": "schemas/reader-label-1.0.0-v1.4.schema.json",
   "schema_version": "1.0.0",
-  "label_id": "readerb-w006-serock-1877-b-03",
-  "record_id": "serock-1877-b-03",
+  "label_id": "readerb-w006-serock-1877-birth-3",
+  "record_id": "serock-1877-birth-3",
   "created_at": "2026-08-04T12:10:00Z",
   "reader": {
     "reader_id": "readerB-w006-20260804",
@@ -17,62 +17,466 @@
     "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
     "path": "prompts/reader_prompt.md"
   },
-  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "clerk_year": {
+    "id": "serock-1877",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
   "artifact": {
     "path": "D:\\E-Drive-Preserve\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_03-06.jpg",
     "sha256": "d0e3d5e8acee6b3e314ca18909b25a3b3518112454e69f1b1362755ad056b514",
-    "width_px": 3044, "height_px": 2412, "page_index": 0,
-    "act_region": {"x": 430, "y": 210, "width": 1140, "height": 1000, "coordinate_space": "source_pixels"}
+    "width_px": 3044,
+    "height_px": 2412,
+    "page_index": 0,
+    "act_region": {
+      "x": 430,
+      "y": 210,
+      "width": 1140,
+      "height": 1000,
+      "coordinate_space": "source_pixels"
+    }
   },
-  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 3, "language": "ru"},
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1877,
+    "act_type": "birth",
+    "act_no": 3,
+    "language": "ru"
+  },
   "source_spans": {
-    "act-region": {"bbox": {"x": 430, "y": 210, "width": 1140, "height": 1000, "coordinate_space": "source_pixels"}, "description": "entire act no. 3, left page top, including margin annotation"},
-    "opening": {"bbox": {"x": 430, "y": 210, "width": 1140, "height": 160, "coordinate_space": "source_pixels"}, "description": "venue and registration date/hour lines"},
-    "declarant-witnesses": {"bbox": {"x": 430, "y": 370, "width": 1140, "height": 280, "coordinate_space": "source_pixels"}, "description": "declarant and witnesses slot"},
-    "presentation-birth": {"bbox": {"x": 430, "y": 650, "width": 1140, "height": 230, "coordinate_space": "source_pixels"}, "description": "presentation slot: sex, birth place, dual birth date"},
-    "mother-naming": {"bbox": {"x": 430, "y": 880, "width": 1140, "height": 170, "coordinate_space": "source_pixels"}, "description": "mother slot and naming slot"},
-    "closing-signatures": {"bbox": {"x": 430, "y": 1050, "width": 1140, "height": 160, "coordinate_space": "source_pixels"}, "description": "closing formula, illiteracy note, and signature block"}
+    "act-region": {
+      "bbox": {
+        "x": 430,
+        "y": 210,
+        "width": 1140,
+        "height": 1000,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "entire act no. 3, left page top, including margin annotation"
+    },
+    "opening": {
+      "bbox": {
+        "x": 430,
+        "y": 210,
+        "width": 1140,
+        "height": 160,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "venue and registration date/hour lines"
+    },
+    "declarant-witnesses": {
+      "bbox": {
+        "x": 430,
+        "y": 370,
+        "width": 1140,
+        "height": 280,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "declarant and witnesses slot"
+    },
+    "presentation-birth": {
+      "bbox": {
+        "x": 430,
+        "y": 650,
+        "width": 1140,
+        "height": 230,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "presentation slot: sex, birth place, dual birth date"
+    },
+    "mother-naming": {
+      "bbox": {
+        "x": 430,
+        "y": 880,
+        "width": 1140,
+        "height": 170,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "mother slot and naming slot"
+    },
+    "closing-signatures": {
+      "bbox": {
+        "x": 430,
+        "y": 1050,
+        "width": 1140,
+        "height": 160,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "closing formula, illiteracy note, and signature block"
+    }
   },
   "mentions": [
-    {"mention_id": "serock-1877-b-03#child", "role": "principal"},
-    {"mention_id": "serock-1877-b-03#father", "role": "father"},
-    {"mention_id": "serock-1877-b-03#father", "role": "declarant"},
-    {"mention_id": "serock-1877-b-03#mother", "role": "mother"},
-    {"mention_id": "serock-1877-b-03#witness1", "role": "witness"},
-    {"mention_id": "serock-1877-b-03#witness2", "role": "witness"},
-    {"mention_id": "serock-1877-b-03#officiant", "role": "officiant"}
+    {
+      "mention_id": "serock-1877-birth-3#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1877-birth-3#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1877-birth-3#declarant",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1877-birth-3#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1877-birth-3#witness-1",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-3#witness-2",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-3#officiant",
+      "role": "officiant"
+    }
   ],
   "transcription": {
     "original_script": "№ 3. Сероцкъ. Состоялось въ Посадѣ Сероцкѣ девятаго / двадцать перваго Января тысяча восемьсотъ семьдесятъ седьмаго года, въ десять часовъ утра. Явился лично Мойсеева Закона Гаскель Нейманъ, торговщикъ, [unclear: тридцати семи?] лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Абрама Вайнгрода, школьника, сорока четырехъ лѣтъ отъ роду, и Мортки [unclear: Фишбина/Фришбина], мясника, сорока четырехъ лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца мужескаго пола, объявляя: что онъ родился здѣсь въ Сероцкѣ перваго / тринадцатаго Января текущаго года, въ одиннадцать часовъ ночью, отъ законной его жены Суры Итты, урожденной [unclear: Мошковна/Московна], двадцати четырехъ лѣтъ отъ роду. Младенцу этому при обрѣзаніи даны имена Абрамъ Шія. Актъ сей объявляющему и свидѣтелямъ прочитанъ, а затѣмъ свидѣтелями, а также нами подписанъ; объявляющій отецъ Гаскель Нейманъ писать не умѣетъ. [unclear: Абрамъ Вайнгродъ?]. Мортка Фришбинъ. Содержащій Акты Гражданскаго Состоянія",
     "translation": "No. 3. Serock. It took place in the posad of Serock on the 9th / 21st of January 1877, at ten o'clock in the morning. There appeared in person Haskel Nejman, of the Mosaic faith, petty trader, aged [unclear: 37?], residing here in Serock, in the presence of witnesses of the Mosaic faith Abram Wajngrod, synagogue beadle (szkolnik), aged forty-four, and Mortka [unclear: Fiszbin/Friszbin], butcher, aged forty-four, residing here in Serock, and presented to us an infant of the male sex, declaring that he was born here in Serock on the 1st / 13th of January of the current year, at eleven o'clock at night, of his lawful wife Sura Itta nee [unclear: Moszkowna/Moskowna], aged twenty-four. At his circumcision this infant was given the names Abram Szyja. This act was read to the declarant and witnesses and then signed by the witnesses and by us; the declaring father Haskel Nejman does not know how to write. Signatures: probably Abram Wajngrod; Mortka Friszbin; the maintainer of civil status acts."
   },
   "observations": {
-    "margin.note": {"value": "No. 3, Serock", "original_script": "№ 3. Сероцкъ.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["act-region"], "notes": []},
-    "act_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Wave brief stated pl; the ink is Russian Cyrillic."]},
-    "registration.date": {"value": "1877-01-21", "original_script": "девятаго / двадцать перваго Января тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Dual date physically present: 9/21 January 1877; 12-day gap consistent."]},
-    "registration.hour": {"value": "10:00 (morning)", "original_script": "въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": []},
-    "declarant.name": {"value": "Haskel Nejman", "original_script": "Гаскель Нейманъ, торговщикъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Given name is line-broken at first occurrence; the closing illiteracy clause repeats the full name 'Гаскель Нейманъ' in clear hand, which anchors the joined reading (line-break rule applied, joined token retested in the same slot)."]},
-    "declarant.occupation": {"value": "petty trader", "original_script": "торговщикъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "declarant.age": {"value": "[unclear: 37?]", "original_script": "[unclear: тридцати семи?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": 37, "original_script": "тридцати семи"}], "source_span_ids": ["declarant-witnesses"], "notes": ["Second digit-word shaky at 2.4x; single candidate retained."]},
-    "declarant.residence": {"value": "Serock", "original_script": "здѣсь въ Сероцкѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "father.same_as_declarant": {"value": true, "original_script": "отъ законной его жены", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": ["Closing clause explicitly calls the declarant 'объявляющій отецъ' (the declaring father)."]},
-    "witness1.name": {"value": "Abram Wajngrod", "original_script": "Абрама Вайнгрода", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": []},
-    "witness1.occupation": {"value": "synagogue beadle (szkolnik)", "original_script": "школьника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness1.age": {"value": 44, "original_script": "школьника, сорока четырехъ лѣтъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.name": {"value": "[unclear: Mortka Fiszbin/Mortka Friszbin]", "original_script": "[unclear: Фишбина/Фришбина]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Mortka Fiszbin", "original_script": "Фишбина"}, {"value": "Mortka Friszbin", "original_script": "Фришбина"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Own Cyrillic signature reads 'Мортка Фришбинъ'; same ambiguity as act 1."]},
-    "witness2.occupation": {"value": "butcher", "original_script": "мясника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.age": {"value": 44, "original_script": "мясника, сорока четырехъ лѣтъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": ["Both witnesses written aged 44 in this act."]},
-    "child.sex": {"value": "male", "original_script": "мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Consistent with circumcision naming clause."]},
-    "child.birth_date": {"value": "1877-01-13", "original_script": "перваго / тринадцатаго Января текущаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Dual date physically present: 1/13 January 1877 ('current year'); 12-day gap consistent."]},
-    "child.birth_hour": {"value": "23:00 (night)", "original_script": "въ одиннадцать часовъ ночью", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
-    "child.birth_place": {"value": "Serock", "original_script": "родился здѣсь въ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
-    "mother.given_name": {"value": "Sura Itta", "original_script": "жены Суры Итты", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "mother.maiden_name": {"value": "[unclear: Moszkowna/Moskowna]", "original_script": "[unclear: Мошковна/Московна]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Moszkowna", "original_script": "Мошковна"}, {"value": "Moskowna", "original_script": "Московна"}], "source_span_ids": ["mother-naming"], "notes": ["ш/с confusable mid-word; patronymic-style surname (daughter of Moszek) is plausible — captured as candidates, not decided."]},
-    "mother.age": {"value": 24, "original_script": "двадцати четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "child.given_name": {"value": "Abram Szyja", "original_script": "даны имена Абрамъ Шія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": ["Two given names, one male child; the names are written large and underlined by the clerk."]},
-    "signatures.note": {"value": "Declaring father illiterate; only witnesses signed.", "original_script": "объявляющій отецъ Гаскель Нейманъ писать не умѣетъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.title": {"value": "Maintainer of Civil Status Acts (registrar)", "original_script": "Содержащій Акты Гражданскаго Состоянія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.signature": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Inspected at 2.4x act crop (source x430-1570, y1050-1210); flourish does not resolve into letters."]}
+    "margin.note": {
+      "value": "No. 3, Serock",
+      "original_script": "№ 3. Сероцкъ.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "act-region"
+      ],
+      "notes": []
+    },
+    "act_language": {
+      "value": "ru",
+      "original_script": "Состоялось въ Посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Wave brief stated pl; the ink is Russian Cyrillic."
+      ]
+    },
+    "registration.date": {
+      "value": "1877-01-21",
+      "original_script": "девятаго / двадцать перваго Января тысяча восемьсотъ семьдесятъ седьмаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Dual date physically present: 9/21 January 1877; 12-day gap consistent."
+      ]
+    },
+    "registration.hour": {
+      "value": "10:00 (morning)",
+      "original_script": "въ десять часовъ утра",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": []
+    },
+    "declarant.name": {
+      "value": "Haskel Nejman",
+      "original_script": "Гаскель Нейманъ, торговщикъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Given name is line-broken at first occurrence; the closing illiteracy clause repeats the full name 'Гаскель Нейманъ' in clear hand, which anchors the joined reading (line-break rule applied, joined token retested in the same slot)."
+      ]
+    },
+    "declarant.occupation": {
+      "value": "petty trader",
+      "original_script": "торговщикъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "declarant.age": {
+      "value": "[unclear: 37?]",
+      "original_script": "[unclear: тридцати семи?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": 37,
+          "original_script": "тридцати семи"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": [
+        "Second digit-word shaky at 2.4x; single candidate retained."
+      ]
+    },
+    "declarant.residence": {
+      "value": "Serock",
+      "original_script": "здѣсь въ Сероцкѣ жительствующій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "father.same_as_declarant": {
+      "value": true,
+      "original_script": "отъ законной его жены",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Closing clause explicitly calls the declarant 'объявляющій отецъ' (the declaring father)."
+      ]
+    },
+    "witness1.name": {
+      "value": "Abram Wajngrod",
+      "original_script": "Абрама Вайнгрода",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "witness1.occupation": {
+      "value": "synagogue beadle (szkolnik)",
+      "original_script": "школьника",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness1.age": {
+      "value": 44,
+      "original_script": "школьника, сорока четырехъ лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.name": {
+      "value": "[unclear: Mortka Fiszbin/Mortka Friszbin]",
+      "original_script": "[unclear: Фишбина/Фришбина]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Mortka Fiszbin",
+          "original_script": "Фишбина"
+        },
+        {
+          "value": "Mortka Friszbin",
+          "original_script": "Фришбина"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Own Cyrillic signature reads 'Мортка Фришбинъ'; same ambiguity as act 1."
+      ]
+    },
+    "witness2.occupation": {
+      "value": "butcher",
+      "original_script": "мясника",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.age": {
+      "value": 44,
+      "original_script": "мясника, сорока четырехъ лѣтъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": [
+        "Both witnesses written aged 44 in this act."
+      ]
+    },
+    "child.sex": {
+      "value": "male",
+      "original_script": "мужескаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Consistent with circumcision naming clause."
+      ]
+    },
+    "child.birth_date": {
+      "value": "1877-01-13",
+      "original_script": "перваго / тринадцатаго Января текущаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Dual date physically present: 1/13 January 1877 ('current year'); 12-day gap consistent."
+      ]
+    },
+    "child.birth_hour": {
+      "value": "23:00 (night)",
+      "original_script": "въ одиннадцать часовъ ночью",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": []
+    },
+    "child.birth_place": {
+      "value": "Serock",
+      "original_script": "родился здѣсь въ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": []
+    },
+    "mother.given_name": {
+      "value": "Sura Itta",
+      "original_script": "жены Суры Итты",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "[unclear: Moszkowna/Moskowna]",
+      "original_script": "[unclear: Мошковна/Московна]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Moszkowna",
+          "original_script": "Мошковна"
+        },
+        {
+          "value": "Moskowna",
+          "original_script": "Московна"
+        }
+      ],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "ш/с confusable mid-word; patronymic-style surname (daughter of Moszek) is plausible — captured as candidates, not decided."
+      ]
+    },
+    "mother.age": {
+      "value": 24,
+      "original_script": "двадцати четырехъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "child.given_name": {
+      "value": "Abram Szyja",
+      "original_script": "даны имена Абрамъ Шія",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Two given names, one male child; the names are written large and underlined by the clerk."
+      ]
+    },
+    "signatures.note": {
+      "value": "Declaring father illiterate; only witnesses signed.",
+      "original_script": "объявляющій отецъ Гаскель Нейманъ писать не умѣетъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.title": {
+      "value": "Maintainer of Civil Status Acts (registrar)",
+      "original_script": "Содержащій Акты Гражданскаго Состоянія",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.signature": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": [
+        "Inspected at 2.4x act crop (source x430-1570, y1050-1210); flourish does not resolve into letters."
+      ]
+    }
   },
   "compliance": {
     "restricted_sources_used": false,

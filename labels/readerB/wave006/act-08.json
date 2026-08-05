@@ -1,8 +1,8 @@
 {
-  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "$schema": "schemas/reader-label-1.0.0-v1.4.schema.json",
   "schema_version": "1.0.0",
-  "label_id": "readerb-w006-serock-1877-b-08",
-  "record_id": "serock-1877-b-08",
+  "label_id": "readerb-w006-serock-1877-birth-8",
+  "record_id": "serock-1877-birth-8",
   "created_at": "2026-08-04T12:35:00Z",
   "reader": {
     "reader_id": "readerB-w006-20260804",
@@ -17,62 +17,456 @@
     "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
     "path": "prompts/reader_prompt.md"
   },
-  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "clerk_year": {
+    "id": "serock-1877",
+    "basis": "REGISTER_YEAR_PROXY",
+    "clerk_id": null
+  },
   "artifact": {
     "path": "D:\\E-Drive-Preserve\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_07-10.jpg",
     "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
-    "width_px": 3044, "height_px": 2412, "page_index": 0,
-    "act_region": {"x": 420, "y": 1200, "width": 1130, "height": 1110, "coordinate_space": "source_pixels"}
+    "width_px": 3044,
+    "height_px": 2412,
+    "page_index": 0,
+    "act_region": {
+      "x": 420,
+      "y": 1200,
+      "width": 1130,
+      "height": 1110,
+      "coordinate_space": "source_pixels"
+    }
   },
-  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 8, "language": "ru"},
+  "target": {
+    "town": "Serock",
+    "fond": "73/826/0",
+    "year": 1877,
+    "act_type": "birth",
+    "act_no": 8,
+    "language": "ru"
+  },
   "source_spans": {
-    "act-region": {"bbox": {"x": 420, "y": 1200, "width": 1130, "height": 1110, "coordinate_space": "source_pixels"}, "description": "entire act no. 8, left page bottom, including margin annotation"},
-    "opening": {"bbox": {"x": 420, "y": 1200, "width": 1130, "height": 170, "coordinate_space": "source_pixels"}, "description": "venue and registration date/hour lines"},
-    "declarant-witnesses": {"bbox": {"x": 420, "y": 1370, "width": 1130, "height": 270, "coordinate_space": "source_pixels"}, "description": "declarant and witnesses slot"},
-    "presentation-birth": {"bbox": {"x": 420, "y": 1640, "width": 1130, "height": 230, "coordinate_space": "source_pixels"}, "description": "presentation slot: sex, birth place, dual birth date"},
-    "mother-naming": {"bbox": {"x": 420, "y": 1870, "width": 1130, "height": 140, "coordinate_space": "source_pixels"}, "description": "mother slot and naming slot"},
-    "closing-signatures": {"bbox": {"x": 420, "y": 2010, "width": 1130, "height": 300, "coordinate_space": "source_pixels"}, "description": "closing formula and signature block"}
+    "act-region": {
+      "bbox": {
+        "x": 420,
+        "y": 1200,
+        "width": 1130,
+        "height": 1110,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "entire act no. 8, left page bottom, including margin annotation"
+    },
+    "opening": {
+      "bbox": {
+        "x": 420,
+        "y": 1200,
+        "width": 1130,
+        "height": 170,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "venue and registration date/hour lines"
+    },
+    "declarant-witnesses": {
+      "bbox": {
+        "x": 420,
+        "y": 1370,
+        "width": 1130,
+        "height": 270,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "declarant and witnesses slot"
+    },
+    "presentation-birth": {
+      "bbox": {
+        "x": 420,
+        "y": 1640,
+        "width": 1130,
+        "height": 230,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "presentation slot: sex, birth place, dual birth date"
+    },
+    "mother-naming": {
+      "bbox": {
+        "x": 420,
+        "y": 1870,
+        "width": 1130,
+        "height": 140,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "mother slot and naming slot"
+    },
+    "closing-signatures": {
+      "bbox": {
+        "x": 420,
+        "y": 2010,
+        "width": 1130,
+        "height": 300,
+        "coordinate_space": "source_pixels"
+      },
+      "description": "closing formula and signature block"
+    }
   },
   "mentions": [
-    {"mention_id": "serock-1877-b-08#child", "role": "principal"},
-    {"mention_id": "serock-1877-b-08#father", "role": "father"},
-    {"mention_id": "serock-1877-b-08#father", "role": "declarant"},
-    {"mention_id": "serock-1877-b-08#mother", "role": "mother"},
-    {"mention_id": "serock-1877-b-08#witness1", "role": "witness"},
-    {"mention_id": "serock-1877-b-08#witness2", "role": "witness"},
-    {"mention_id": "serock-1877-b-08#officiant", "role": "officiant"}
+    {
+      "mention_id": "serock-1877-birth-8#principal",
+      "role": "principal"
+    },
+    {
+      "mention_id": "serock-1877-birth-8#father",
+      "role": "father"
+    },
+    {
+      "mention_id": "serock-1877-birth-8#declarant",
+      "role": "declarant"
+    },
+    {
+      "mention_id": "serock-1877-birth-8#mother",
+      "role": "mother"
+    },
+    {
+      "mention_id": "serock-1877-birth-8#witness-1",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-8#witness-2",
+      "role": "witness"
+    },
+    {
+      "mention_id": "serock-1877-birth-8#officiant",
+      "role": "officiant"
+    }
   ],
   "transcription": {
     "original_script": "№ 8. Сероцкъ. Состоялось въ Посадѣ Сероцкѣ десятаго / двадцать втораго Марта тысяча восемьсотъ семьдесятъ седьмаго года, въ десять часовъ утра. Явился лично Мойсеева Закона Файвель Розенбергъ, лавочникъ, тридцати одного лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Мортки Фришбина, мясника, сорока четырехъ лѣтъ отъ роду, и Маера [unclear: Перельмана?], лавочника, сорока пяти лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца женскаго пола, объявляя, что онъ родился здѣсь въ Сероцкѣ втораго / четырнадцатаго Марта текущаго года, въ три часа ночью, отъ законной его жены Суры, урожденной [unclear: Мельника?], двадцати пяти лѣтъ отъ роду. Младенцу этому дано имя Бруха. Актъ сей объявляющему и свидѣтелямъ прочитанъ, и затѣмъ объявляющимъ, свидѣтелями, а также нами подписанъ. Файвелъ Розенбергъ. Мортка Фришбинъ. [unclear: Meies Perltman?]. Содержащій Акты Гражданскаго Состоянія",
     "translation": "No. 8. Serock. It took place in the posad of Serock on the 10th / 22nd of March 1877, at ten o'clock in the morning. There appeared in person Fajwel Rozenberg, of the Mosaic faith, shopkeeper, aged thirty-one, residing here in Serock, in the presence of witnesses of the Mosaic faith Mortka Friszbin, butcher, aged forty-four, and Majer [unclear: Perelman?], shopkeeper, aged forty-five, residing here in Serock, and presented to us an infant of the female sex, declaring that she was born here in Serock on the 2nd / 14th of March of the current year, at three o'clock at night, of his lawful wife Sura nee [unclear: Mielnik?], aged twenty-five. This infant was given the name Brucha. This act was read to the declarant and witnesses and then signed by the declarant, the witnesses, and by us. Signatures: Fajwel Rozenberg; Mortka Friszbin; a Latin-script signature read shakily as Meies Perltman; the maintainer of civil status acts."
   },
   "observations": {
-    "margin.note": {"value": "No. 8, Serock", "original_script": "№ 8. Сероцкъ.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["act-region"], "notes": []},
-    "act_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Wave brief stated pl; the ink is Russian Cyrillic."]},
-    "registration.date": {"value": "1877-03-22", "original_script": "десятаго / двадцать втораго Марта тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Dual date physically present: 10/22 March 1877; 12-day gap consistent."]},
-    "registration.hour": {"value": "10:00 (morning)", "original_script": "въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": []},
-    "declarant.name": {"value": "Fajwel Rozenberg", "original_script": "Файвель Розенбергъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["The recurring shopkeeper-witness of acts 1, 4, 5, 6, 10 here appears as declarant/father; his Cyrillic signature 'Файвелъ Розенбергъ' matches. Age 31 consistent with his witness appearances."]},
-    "declarant.occupation": {"value": "shopkeeper", "original_script": "лавочникъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "declarant.age": {"value": 31, "original_script": "тридцати одного лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "declarant.residence": {"value": "Serock", "original_script": "здѣсь въ Сероцкѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "father.same_as_declarant": {"value": true, "original_script": "отъ законной его жены", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "witness1.name": {"value": "Mortka Friszbin", "original_script": "Мортки Фришбина", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [{"value": "Mortka Fiszbin", "original_script": "Фишбина"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["In this act the body word carries the р-stroke more clearly; the Fiszbin alternative from other acts of this year is retained as an alternative."]},
-    "witness1.occupation": {"value": "butcher", "original_script": "мясника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness1.age": {"value": 44, "original_script": "сорока четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.name": {"value": "[unclear: Majer Perelman?]", "original_script": "Маера [unclear: Перельмана?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Majer Perelman", "original_script": "Перельмана"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Surname mid-word strokes crowded; Latin closing signature also shaky ('Meies Perltman'-like). Single candidate retained, not asserted."]},
-    "witness2.occupation": {"value": "shopkeeper", "original_script": "лавочника, сорока пяти", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "witness2.age": {"value": 45, "original_script": "сорока пяти лѣтъ отъ ро", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
-    "child.sex": {"value": "female", "original_script": "женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Female name given; no circumcision wording."]},
-    "child.birth_date": {"value": "1877-03-14", "original_script": "втораго / четырнадцатаго Марта текущаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Dual date physically present: 2/14 March 1877; 12-day gap consistent."]},
-    "child.birth_hour": {"value": "03:00 (night)", "original_script": "въ три часа ночью", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
-    "child.birth_place": {"value": "Serock", "original_script": "родился здѣсь въ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Clerk used masculine родился despite female child; transcribed as inked."]},
-    "mother.given_name": {"value": "Sura", "original_script": "жены Суры", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "mother.maiden_name": {"value": "[unclear: Mielnik?]", "original_script": "[unclear: Мельника?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Mielnik", "original_script": "Мельника"}], "source_span_ids": ["mother-naming"], "notes": ["Word line-broken at right edge; inspected at 5x (source x420-1550, y1710-1810); only the candidate Мельника (Mielnik) supported, retained as shaky."]},
-    "mother.age": {"value": 25, "original_script": "двадцати пяти лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
-    "child.given_name": {"value": "Brucha", "original_script": "дано имя Бруха", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": ["Name written large by the clerk."]},
-    "signatures.note": {"value": "Declarant and first witness signed in Cyrillic; second witness in Latin script (shaky).", "original_script": "Файвелъ Розенбергъ. Мортка Фришбинъ.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.title": {"value": "Maintainer of Civil Status Acts (registrar)", "original_script": "Содержащій Акты Гражданскаго Состоянія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
-    "officiant.signature": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Inspected at 2.4x act crop (source x420-1550, y2200-2310); flourish does not resolve into letters."]}
+    "margin.note": {
+      "value": "No. 8, Serock",
+      "original_script": "№ 8. Сероцкъ.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "act-region"
+      ],
+      "notes": []
+    },
+    "act_language": {
+      "value": "ru",
+      "original_script": "Состоялось въ Посадѣ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Wave brief stated pl; the ink is Russian Cyrillic."
+      ]
+    },
+    "registration.date": {
+      "value": "1877-03-22",
+      "original_script": "десятаго / двадцать втораго Марта тысяча восемьсотъ семьдесятъ седьмаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": [
+        "Dual date physically present: 10/22 March 1877; 12-day gap consistent."
+      ]
+    },
+    "registration.hour": {
+      "value": "10:00 (morning)",
+      "original_script": "въ десять часовъ утра",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "opening"
+      ],
+      "notes": []
+    },
+    "declarant.name": {
+      "value": "Fajwel Rozenberg",
+      "original_script": "Файвель Розенбергъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "The recurring shopkeeper-witness of acts 1, 4, 5, 6, 10 here appears as declarant/father; his Cyrillic signature 'Файвелъ Розенбергъ' matches. Age 31 consistent with his witness appearances."
+      ]
+    },
+    "declarant.occupation": {
+      "value": "shopkeeper",
+      "original_script": "лавочникъ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "declarant.age": {
+      "value": 31,
+      "original_script": "тридцати одного лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "declarant.residence": {
+      "value": "Serock",
+      "original_script": "здѣсь въ Сероцкѣ жительствующій",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "father.same_as_declarant": {
+      "value": true,
+      "original_script": "отъ законной его жены",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "witness1.name": {
+      "value": "Mortka Friszbin",
+      "original_script": "Мортки Фришбина",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Mortka Fiszbin",
+          "original_script": "Фишбина"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "In this act the body word carries the р-stroke more clearly; the Fiszbin alternative from other acts of this year is retained as an alternative."
+      ]
+    },
+    "witness1.occupation": {
+      "value": "butcher",
+      "original_script": "мясника",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness1.age": {
+      "value": 44,
+      "original_script": "сорока четырехъ лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.name": {
+      "value": "[unclear: Majer Perelman?]",
+      "original_script": "Маера [unclear: Перельмана?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Majer Perelman",
+          "original_script": "Перельмана"
+        }
+      ],
+      "source_span_ids": [
+        "declarant-witnesses",
+        "closing-signatures"
+      ],
+      "notes": [
+        "Surname mid-word strokes crowded; Latin closing signature also shaky ('Meies Perltman'-like). Single candidate retained, not asserted."
+      ]
+    },
+    "witness2.occupation": {
+      "value": "shopkeeper",
+      "original_script": "лавочника, сорока пяти",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "witness2.age": {
+      "value": 45,
+      "original_script": "сорока пяти лѣтъ отъ ро",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "declarant-witnesses"
+      ],
+      "notes": []
+    },
+    "child.sex": {
+      "value": "female",
+      "original_script": "женскаго пола",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Female name given; no circumcision wording."
+      ]
+    },
+    "child.birth_date": {
+      "value": "1877-03-14",
+      "original_script": "втораго / четырнадцатаго Марта текущаго года",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Dual date physically present: 2/14 March 1877; 12-day gap consistent."
+      ]
+    },
+    "child.birth_hour": {
+      "value": "03:00 (night)",
+      "original_script": "въ три часа ночью",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": []
+    },
+    "child.birth_place": {
+      "value": "Serock",
+      "original_script": "родился здѣсь въ Сероцкѣ",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "presentation-birth"
+      ],
+      "notes": [
+        "Clerk used masculine родился despite female child; transcribed as inked."
+      ]
+    },
+    "mother.given_name": {
+      "value": "Sura",
+      "original_script": "жены Суры",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "mother.maiden_name": {
+      "value": "[unclear: Mielnik?]",
+      "original_script": "[unclear: Мельника?]",
+      "confidence": "UNCLEAR",
+      "observation_state": "PRESENT",
+      "alternatives": [
+        {
+          "value": "Mielnik",
+          "original_script": "Мельника"
+        }
+      ],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Word line-broken at right edge; inspected at 5x (source x420-1550, y1710-1810); only the candidate Мельника (Mielnik) supported, retained as shaky."
+      ]
+    },
+    "mother.age": {
+      "value": 25,
+      "original_script": "двадцати пяти лѣтъ отъ роду",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": []
+    },
+    "child.given_name": {
+      "value": "Brucha",
+      "original_script": "дано имя Бруха",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "mother-naming"
+      ],
+      "notes": [
+        "Name written large by the clerk."
+      ]
+    },
+    "signatures.note": {
+      "value": "Declarant and first witness signed in Cyrillic; second witness in Latin script (shaky).",
+      "original_script": "Файвелъ Розенбергъ. Мортка Фришбинъ.",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.title": {
+      "value": "Maintainer of Civil Status Acts (registrar)",
+      "original_script": "Содержащій Акты Гражданскаго Состоянія",
+      "confidence": "PROBABLE",
+      "observation_state": "PRESENT",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": []
+    },
+    "officiant.signature": {
+      "value": null,
+      "original_script": null,
+      "confidence": null,
+      "observation_state": "ILLEGIBLE",
+      "alternatives": [],
+      "source_span_ids": [
+        "closing-signatures"
+      ],
+      "notes": [
+        "Inspected at 2.4x act crop (source x420-1550, y2200-2310); flourish does not resolve into letters."
+      ]
+    }
   },
   "compliance": {
     "restricted_sources_used": false,
