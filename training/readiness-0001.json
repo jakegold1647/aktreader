@@ -33,24 +33,24 @@
   ],
   "input_pins": {
     "evaluation_holdout": {
-      "path": "E:\\DNA\\Project_RegisterReader\\gold\\clerk_year_holdout.json",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\gold\\clerk_year_holdout.json",
       "sha256": "8425c621a8b0f1104ba2bbff9acadc190fb0ff68371f76b0800d56521a9558c5"
     },
     "gold_attestation_audit": {
-      "path": "E:\\DNA\\Project_RegisterReader\\docs\\audits\\gold-attestation-audit-2026-07-29.json",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\docs\\audits\\gold-attestation-audit-2026-07-29.json",
       "sha256": "64be4f1f968326f712b4d23922d0eb260aff7405c2d5be4316a48bad17e93128"
     },
     "lora_recipe": {
-      "path": "E:\\DNA\\Project_RegisterReader\\examples\\lora-recipe.example.json",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\examples\\lora-recipe.example.json",
       "sha256": "20fb1261c7672cead4e7ad534c79ca7fbc04b23233d4d2cdec91707aced227b3"
     },
     "plan": {
-      "path": "E:\\DNA\\Project_RegisterReader\\training\\plan-0001.json",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\training\\plan-0001.json",
       "sha256": "10abf4b39effb1755aa56c37e7356993abea9d902f7eb5c50dc945594dba9b03"
     },
     "silver_manifest": {
-      "path": "E:\\DNA\\Project_RegisterReader\\labels\\silver\\manifest.json",
-      "sha256": "4bbfe0823485844cb976172d6adf59db94cae29188be32eb523d762d50a58df7"
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\labels\\silver\\manifest.json",
+      "sha256": "a3c42f6de625bcbf757c8a2eaf1377fa682725bbe39eb59ed84706f1798c8e39"
     }
   },
   "measured_on": "2026-07-29",
