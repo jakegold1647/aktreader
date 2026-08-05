@@ -1,0 +1,369 @@
+{
+    "$schema": "../../schemas/adjudication-wave-1.0.0.schema.json",
+    "schema_version": "1.0.0",
+    "wave_id": "serock-1877-initials-01",
+    "title": "Serock 1877 — wave-006 identity-critical initials (2 questions)",
+    "questions": [
+        {
+            "question_id": "q-serock-1877-birth-01-child-initial",
+            "record_id": "serock-1877-birth-1",
+            "record_sha256": "c9273b680ddd7f5a8f4f6d6e570a764227ba361ba0c4f0994d32cfe058cd5253",
+            "field_path": "child.given_name",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "review_mode": "LETTERFORM_CHOICE",
+            "selection_reason": "IDENTITY_FORK",
+            "claim": "Both blind readers and the merge left the child's given-name opening letterform unresolved as a three-way question (А-form, Я-form, or Х followed by а); the machine pool intersection was recorded but not promoted because the initial letter is the identity. Only the first two forms have uncontested same-hand exemplars, so the third is answered through 'Neither'.",
+            "question": "Which letterform opens the child's name in the naming clause shown?",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                "bbox": {
+                    "x": 2285,
+                    "y": 862,
+                    "width": 185,
+                    "height": 62,
+                    "coordinate_space": "source_pixels"
+                },
+                "glyph_bbox": {
+                    "x": 2292,
+                    "y": 868,
+                    "width": 70,
+                    "height": 55,
+                    "coordinate_space": "source_pixels"
+                }
+            },
+            "magnification": 6,
+            "candidates": [
+                {
+                    "candidate_id": "opens-a",
+                    "label": "Opens with А",
+                    "value": {
+                        "outcome": "LETTERFORM_CHOICE",
+                        "letterform": "А",
+                        "name_pool": "Ankiel/Ancel/Anszel"
+                    },
+                    "glyph": "А",
+                    "consequence": "record the letterform as human gold-sample evidence for the wave-006 child-identity pool; do not promote to benchmark gold or training data",
+                    "effect": "ATTEST_FIELD",
+                    "benchmark_eligible": false,
+                    "correction_eligible": false
+                },
+                {
+                    "candidate_id": "opens-ya",
+                    "label": "Opens with Я",
+                    "value": {
+                        "outcome": "LETTERFORM_CHOICE",
+                        "letterform": "Я",
+                        "name_pool": "Jankiel"
+                    },
+                    "glyph": "Я",
+                    "consequence": "record the letterform as human gold-sample evidence for the wave-006 child-identity pool; do not promote to benchmark gold or training data",
+                    "effect": "ATTEST_FIELD",
+                    "benchmark_eligible": false,
+                    "correction_eligible": false
+                }
+            ],
+            "comparison_evidence": [
+                {
+                    "evidence_id": "naming-clause-row",
+                    "label": "Full naming clause",
+                    "plain_text": "The clause reads 'at the circumcision was given the name ...'; the disputed word is the name at its end.",
+                    "artifact": {
+                        "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                        "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                        "bbox": {
+                            "x": 1440,
+                            "y": 855,
+                            "width": 1600,
+                            "height": 115,
+                            "coordinate_space": "source_pixels"
+                        }
+                    }
+                },
+                {
+                    "evidence_id": "month-word-capital",
+                    "label": "Same clerk's month word",
+                    "plain_text": "The registration date line opens with the month word; its first capital is uncontested in this hand and belongs to one of the candidate letterforms.",
+                    "artifact": {
+                        "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                        "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                        "bbox": {
+                            "x": 1655,
+                            "y": 292,
+                            "width": 180,
+                            "height": 60,
+                            "coordinate_space": "source_pixels"
+                        }
+                    }
+                },
+                {
+                    "evidence_id": "margin-header",
+                    "label": "Margin header",
+                    "plain_text": "Act number and locality in the margin; the child's name does not repeat there.",
+                    "artifact": {
+                        "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                        "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                        "bbox": {
+                            "x": 1520,
+                            "y": 235,
+                            "width": 140,
+                            "height": 110,
+                            "coordinate_space": "source_pixels"
+                        }
+                    }
+                }
+            ],
+            "bilingual_anchors": [],
+            "structural_checks": [
+                {
+                    "label": "Comparison rule",
+                    "result": "NEUTRAL",
+                    "interpretation": "Judge the opening letterform on its visible strokes. Grammatical endings and later letters of the name are not part of this question."
+                },
+                {
+                    "label": "Exemplar coverage",
+                    "result": "NEUTRAL",
+                    "interpretation": "The lineup shows how this clerk writes А (in 'Актъ') and Я (in 'Января'). No uncontested Х-opening word exists in this hand, so the Х-followed-by-а reading is not modeled; choose 'Neither' if the opening reads as Х plus а."
+                },
+                {
+                    "label": "Known machine state",
+                    "result": "NEUTRAL",
+                    "interpretation": "The recorded pool intersection was not promoted; this question exists because the opening letter decides the identity."
+                }
+            ],
+            "neither_consequence": "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+            "cant_tell_consequence": "preserve uncertainty and route to a Cyrillic reader with no penalty"
+        },
+        {
+            "question_id": "q-serock-1877-birth-09-nee-initial",
+            "record_id": "serock-1877-birth-9",
+            "record_sha256": "c9273b680ddd7f5a8f4f6d6e570a764227ba361ba0c4f0994d32cfe058cd5253",
+            "field_path": "mother.maiden_name",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "review_mode": "VISUAL_CORROBORATION",
+            "selection_reason": "MACHINE_DEADLOCK",
+            "claim": "Both fresh blind passes pooled the mother's maiden-name opening letterform without resolving it; the merge recorded the K-form and V-form surname readings as a standing deadlock. No uncontested К or В exemplar exists in this hand, so this asks only which reading the visible strokes are consistent with.",
+            "question": "Are the visible opening strokes consistent with one of the recorded readings, or do you see a concrete conflict with both?",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_07-10.jpg",
+                "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+                "bbox": {
+                    "x": 2592,
+                    "y": 744,
+                    "width": 195,
+                    "height": 55,
+                    "coordinate_space": "source_pixels"
+                },
+                "glyph_bbox": {
+                    "x": 2594,
+                    "y": 746,
+                    "width": 66,
+                    "height": 52,
+                    "coordinate_space": "source_pixels"
+                }
+            },
+            "magnification": 6,
+            "candidates": [
+                {
+                    "candidate_id": "consistent-k",
+                    "label": "Consistent with the К-form reading",
+                    "value": {
+                        "outcome": "HUMAN_VISUAL_CORROBORATION",
+                        "letterform": "К",
+                        "name_pool": "Kacnerowska-form"
+                    },
+                    "glyph": "К",
+                    "consequence": "record image-attestation evidence for the wave-006 maiden-name pool only; do not promote to benchmark gold or training data",
+                    "effect": "ATTEST_FIELD",
+                    "benchmark_eligible": false,
+                    "correction_eligible": false
+                },
+                {
+                    "candidate_id": "consistent-v",
+                    "label": "Consistent with the В-form reading",
+                    "value": {
+                        "outcome": "HUMAN_VISUAL_CORROBORATION",
+                        "letterform": "В",
+                        "name_pool": "Waznerowska-form"
+                    },
+                    "glyph": "В",
+                    "consequence": "record image-attestation evidence for the wave-006 maiden-name pool only; do not promote to benchmark gold or training data",
+                    "effect": "ATTEST_FIELD",
+                    "benchmark_eligible": false,
+                    "correction_eligible": false
+                }
+            ],
+            "comparison_evidence": [
+                {
+                    "evidence_id": "mother-line-row",
+                    "label": "Mother line",
+                    "plain_text": "The row naming the lawful wife, her maiden name, and her age; the disputed word is the maiden name before the line break.",
+                    "artifact": {
+                        "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_07-10.jpg",
+                        "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+                        "bbox": {
+                            "x": 1530,
+                            "y": 740,
+                            "width": 1350,
+                            "height": 70,
+                            "coordinate_space": "source_pixels"
+                        }
+                    }
+                },
+                {
+                    "evidence_id": "next-line-continuation",
+                    "label": "Next-line continuation",
+                    "plain_text": "The surname continues at the start of the next line with its case ending; the ending is not part of this question.",
+                    "artifact": {
+                        "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_07-10.jpg",
+                        "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+                        "bbox": {
+                            "x": 1530,
+                            "y": 795,
+                            "width": 1350,
+                            "height": 75,
+                            "coordinate_space": "source_pixels"
+                        }
+                    }
+                }
+            ],
+            "bilingual_anchors": [],
+            "structural_checks": [
+                {
+                    "label": "Comparison rule",
+                    "result": "NEUTRAL",
+                    "interpretation": "Judge the opening letterform on its visible strokes. The word splits across a line; only the capital at its start is in question."
+                },
+                {
+                    "label": "Known machine state",
+                    "result": "NEUTRAL",
+                    "interpretation": "Both blind passes agreed on every other field of this act and pooled only this initial; no independent index row is localized for this register year."
+                }
+            ],
+            "neither_consequence": "preserve uncertainty and route an unmodeled reading to a Cyrillic reader",
+            "cant_tell_consequence": "preserve uncertainty and route to a Cyrillic reader with no penalty"
+        }
+    ],
+    "exemplar_catalog": [
+        {
+            "exemplar_id": "ex-a-akt-act1",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "glyph": "А",
+            "label": "Formula word, act 1 closing",
+            "text": "Актъ",
+            "confidence": "UNCONTESTED",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                "bbox": {
+                    "x": 2488,
+                    "y": 862,
+                    "width": 135,
+                    "height": 58,
+                    "coordinate_space": "source_pixels"
+                },
+                "character_index": 0
+            }
+        },
+        {
+            "exemplar_id": "ex-a-akt-act2",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "glyph": "А",
+            "label": "Formula word, act 2 closing",
+            "text": "Актъ",
+            "confidence": "UNCONTESTED",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                "bbox": {
+                    "x": 1688,
+                    "y": 1850,
+                    "width": 120,
+                    "height": 55,
+                    "coordinate_space": "source_pixels"
+                },
+                "character_index": 0
+            }
+        },
+        {
+            "exemplar_id": "ex-a-akt-act9",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "glyph": "А",
+            "label": "Formula word, act 9 closing",
+            "text": "Актъ",
+            "confidence": "UNCONTESTED",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_07-10.jpg",
+                "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+                "bbox": {
+                    "x": 2228,
+                    "y": 850,
+                    "width": 110,
+                    "height": 45,
+                    "coordinate_space": "source_pixels"
+                },
+                "character_index": 0
+            }
+        },
+        {
+            "exemplar_id": "ex-ya-yanvarya-act1-reg",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "glyph": "Я",
+            "label": "Month word, act 1 registration date",
+            "text": "Января",
+            "confidence": "UNCONTESTED",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                "bbox": {
+                    "x": 1655,
+                    "y": 292,
+                    "width": 180,
+                    "height": 60,
+                    "coordinate_space": "source_pixels"
+                },
+                "character_index": 0
+            }
+        },
+        {
+            "exemplar_id": "ex-ya-yanvarya-act1-birth",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "glyph": "Я",
+            "label": "Month word, act 1 birth date",
+            "text": "Января",
+            "confidence": "UNCONTESTED",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                "bbox": {
+                    "x": 1672,
+                    "y": 743,
+                    "width": 170,
+                    "height": 58,
+                    "coordinate_space": "source_pixels"
+                },
+                "character_index": 0
+            }
+        },
+        {
+            "exemplar_id": "ex-ya-yanvarya-act2",
+            "clerk_year_id": "73-826-0|serock|1877|register-year",
+            "glyph": "Я",
+            "label": "Month word, act 2 date line",
+            "text": "Января",
+            "confidence": "UNCONTESTED",
+            "artifact": {
+                "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_01-02.jpg",
+                "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+                "bbox": {
+                    "x": 1750,
+                    "y": 1646,
+                    "width": 200,
+                    "height": 60,
+                    "coordinate_space": "source_pixels"
+                },
+                "character_index": 0
+            }
+        }
+    ]
+}
