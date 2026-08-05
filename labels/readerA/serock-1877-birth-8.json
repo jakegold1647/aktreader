@@ -1,13 +1,13 @@
 {
-  "$schema": "schemas/reader-label-1.0.0-v1.4.schema.json",
+  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
   "schema_version": "1.0.0",
-  "label_id": "serock-1877-birth-8.reader-a-claude-reader-a-wave006",
-  "record_id": "serock-1877-birth-8",
-  "created_at": "2026-07-29T12:58:16-04:00",
+  "label_id": "serock-1877-b-008.readera-w006",
+  "record_id": "serock-1877-b-008",
+  "created_at": "2026-08-04T00:00:00Z",
   "reader": {
-    "reader_id": "claude-reader-a-wave006",
+    "reader_id": "readerA-w006-20260804",
     "reader_family": "claude",
-    "reader_version": "subscription-session-2026-07-29",
+    "reader_version": "claude-fable-5",
     "mode": "subscription_session",
     "blind_group_id": "serock-1877-births-01-10-wave-006",
     "other_reader_output_seen": false
@@ -17,552 +17,68 @@
     "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
     "path": "prompts/reader_prompt.md"
   },
-  "clerk_year": {
-    "id": "serock-1877",
-    "basis": "REGISTER_YEAR_PROXY",
-    "clerk_id": null
-  },
+  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
   "artifact": {
-    "path": "E:\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_07-10.jpg",
+    "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_07-10.jpg",
     "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
     "width_px": 3044,
     "height_px": 2412,
     "page_index": 0,
-    "act_region": {
-      "x": 300,
-      "y": 1180,
-      "width": 1240,
-      "height": 960,
-      "coordinate_space": "source_pixels"
-    }
+    "act_region": {"x": 300, "y": 1190, "width": 1300, "height": 1180, "coordinate_space": "source_pixels"}
   },
-  "target": {
-    "town": "Serock",
-    "fond": "73/826/0",
-    "year": 1877,
-    "act_type": "birth",
-    "act_no": 8,
-    "language": "ru"
-  },
+  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 8, "language": "ru"},
   "source_spans": {
-    "act-region": {
-      "bbox": {"x": 300, "y": 1180, "width": 1240, "height": 960, "coordinate_space": "source_pixels"},
-      "description": "Whole of act no. 8, lower half of the left-hand page of the 07-10 spread."
-    },
-    "margin": {
-      "bbox": {"x": 300, "y": 1195, "width": 190, "height": 120, "coordinate_space": "source_pixels"},
-      "description": "Left margin column: act number and place annotation."
-    },
-    "venue": {
-      "bbox": {"x": 476, "y": 1205, "width": 1054, "height": 105, "coordinate_space": "source_pixels"},
-      "description": "Lines 1-2: venue, dual registration date, year, hour."
-    },
-    "declarant": {
-      "bbox": {"x": 476, "y": 1300, "width": 1054, "height": 150, "coordinate_space": "source_pixels"},
-      "description": "Lines 3-5: declarant name, trade, age, residence."
-    },
-    "witnesses": {
-      "bbox": {"x": 476, "y": 1443, "width": 1054, "height": 150, "coordinate_space": "source_pixels"},
-      "description": "Lines 6-8: two witnesses with trades, ages, residence."
-    },
-    "presentation": {
-      "bbox": {"x": 476, "y": 1585, "width": 1054, "height": 105, "coordinate_space": "source_pixels"},
-      "description": "Presentation of the infant, female sex, birthplace, dual birth date."
-    },
-    "mother": {
-      "bbox": {"x": 476, "y": 1678, "width": 1054, "height": 105, "coordinate_space": "source_pixels"},
-      "description": "Birth hour, mother's given name, maiden name, age."
-    },
-    "naming": {
-      "bbox": {"x": 476, "y": 1772, "width": 1054, "height": 105, "coordinate_space": "source_pixels"},
-      "description": "Naming slot and the name given."
-    },
-    "closing": {
-      "bbox": {"x": 476, "y": 1865, "width": 1054, "height": 105, "coordinate_space": "source_pixels"},
-      "description": "Reading and signing formula."
-    },
-    "signatures": {
-      "bbox": {"x": 476, "y": 1955, "width": 1054, "height": 105, "coordinate_space": "source_pixels"},
-      "description": "Signature block: two Cyrillic and one Latin-script autograph."
-    },
-    "officiant": {
-      "bbox": {"x": 400, "y": 2055, "width": 1140, "height": 80, "coordinate_space": "source_pixels"},
-      "description": "Officiant line: registrar formula followed by an ornate paraph."
-    }
+    "act-region": {"bbox": {"x": 300, "y": 1190, "width": 1300, "height": 1180, "coordinate_space": "source_pixels"}, "description": "full act 8 region, left page bottom, margin No 8 Serock"},
+    "opening-lines": {"bbox": {"x": 310, "y": 1210, "width": 1290, "height": 140, "coordinate_space": "source_pixels"}, "description": "venue, registration dual date, hour"},
+    "declarant-lines": {"bbox": {"x": 310, "y": 1310, "width": 1290, "height": 130, "coordinate_space": "source_pixels"}, "description": "declarant name, occupation, age, residence"},
+    "witness-lines": {"bbox": {"x": 310, "y": 1410, "width": 1290, "height": 180, "coordinate_space": "source_pixels"}, "description": "witnesses with occupations and ages"},
+    "birth-lines": {"bbox": {"x": 310, "y": 1590, "width": 1290, "height": 190, "coordinate_space": "source_pixels"}, "description": "child sex, birth place, dual date, hour"},
+    "mother-line": {"bbox": {"x": 310, "y": 1740, "width": 1290, "height": 110, "coordinate_space": "source_pixels"}, "description": "mother, maiden name, age"},
+    "naming-line": {"bbox": {"x": 310, "y": 1830, "width": 1290, "height": 100, "coordinate_space": "source_pixels"}, "description": "naming (girl), name written large"},
+    "signatures": {"bbox": {"x": 310, "y": 2030, "width": 1290, "height": 300, "coordinate_space": "source_pixels"}, "description": "signatures and registrar flourish"}
   },
   "mentions": [
-    {"mention_id": "serock-1877-birth-8#child", "role": "principal"},
-    {"mention_id": "serock-1877-birth-8#father", "role": "father"},
-    {"mention_id": "serock-1877-birth-8#mother", "role": "mother"},
-    {"mention_id": "serock-1877-birth-8#declarant", "role": "declarant"},
-    {"mention_id": "serock-1877-birth-8#witness-1", "role": "witness"},
-    {"mention_id": "serock-1877-birth-8#witness-2", "role": "witness"},
-    {"mention_id": "serock-1877-birth-8#officiant", "role": "officiant"}
+    {"mention_id": "serock-1877-b-008#principal", "role": "principal"},
+    {"mention_id": "serock-1877-b-008#father", "role": "father"},
+    {"mention_id": "serock-1877-b-008#mother", "role": "mother"},
+    {"mention_id": "serock-1877-b-008#witness1", "role": "witness"},
+    {"mention_id": "serock-1877-b-008#witness2", "role": "witness"},
+    {"mention_id": "serock-1877-b-008#officiant", "role": "officiant"}
   ],
   "transcription": {
-    "original_script": "№ 8\nСероцкѣ\nСостоялось въ Посадѣ Сероцкѣ Десятаго (Двадцать втораго\nМарта, тысяча восемьсотъ семьдесятъ седьмаго года въ десять\nчасовъ утра. — Явился лично Моисеева Закона Файбишъ Розен-\nбергъ работникъ тридцати одинъ лѣтъ отъ роду, здѣсь въ Сероцкѣ жи-\nтельствующій, въ присутствіи свидѣтелей Моисеева Закона Мор-\nтка Фишмана мясника, сорока четырехъ лѣтъ отъ роду и\nМеера Перельмана работника, сорока лѣтъ отъ роду,\nздѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ\nмладенца женскаго пола, объявляя, что она родилась здѣсь въ\nСероцкѣ втораго (четырнадцатаго) Марта текущаго года,\nвъ три часа ночью отъ законной его жены Сурой, урожденной Ва-\nнанки Двадцати пяти лѣтъ отъ роду. — Младенцу\nэтому дано имя Бруха. — Актъ сей объявляющему и свидѣ-\nтельствующимъ прочитанъ и затѣмъ объявляющимъ, свидѣ-\nтельствующимъ, а также нами подписанъ.\nФаибишъ Розенбергъ    Meier Perelman\nМортка Фишманъ\nСодержащій Акты Гражданскаго Состоянія",
-    "translation": "No. 8. Serock. It took place in the Posad of Serock on the tenth (twenty-second) of March, one thousand eight hundred seventy-seven, at ten o'clock in the morning. There appeared in person Fajbisz Rozenberg, of the Mosaic faith, laborer, thirty-one years of age, residing here in Serock, in the presence of the witnesses, of the Mosaic faith, Mortka Fiszman, butcher, forty-four years of age, and Mejer Perelman, laborer, forty years of age, both residing here in Serock, and he presented to us an infant of female sex, declaring that she was born here in Serock on the second (fourteenth) of March of the current year, at three o'clock at night, of his lawful wife Sura, née Wa[...]nka, twenty-five years of age. This infant was given the name Brucha. This act was read to the declarant and the witnesses, and was thereupon signed by the declarant, by the witnesses, and also by us. Fajbisz Rozenberg. Meier Perelman. Mortka Fiszman. Keeper of the Registers of Civil Status."
+    "original_script": "№ 8. Сероцкъ. Состоялось въ Посадѣ Сероцкѣ десятаго / двадцать втораго Марта, тысяча восемьсотъ семьдесятъ седьмаго года въ десять часовъ утра. Явился лично Мойсеева Закона Файвель Розенбергъ, лавочникъ, тридцати одного лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Мортки Фишбина, мясника, сорока четырехъ лѣтъ отъ роду и Маера Перельмана, лавочника, сорока пяти лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца женскаго пола, объявляя, что онъ родился здѣсь въ Сероцкѣ втораго / четырнадцатаго / Марта текущаго года въ три часа ночью отъ законной его жены Суры, урожденной [unclear: Мясникъ/Медникъ], двадцати пяти лѣтъ отъ роду. — Младенцу этому дано имя Бруха. — Актъ сей объявляющему и свидѣтелямъ прочитанъ и затѣмъ объявляющимся, свидѣтелями, а также нами подписанъ. [unclear: Файвель Розенбергъ?]. Meier Perelman. Мортки Фишбинъ. Содержащій Акты Гражданскаго Состоянія.",
+    "translation": "No. 8. Serock. It took place in the posad of Serock on the tenth / twenty-second of March, one thousand eight hundred seventy-seven, at ten o'clock in the morning. Appeared in person Fajwel Rozenberg of the Mosaic faith, shopkeeper, thirty-one years old, residing here in Serock, in the presence of witnesses of the Mosaic faith Mortka Fiszbin, butcher, forty-four years old, and Majer Perelman, shopkeeper, forty-five years old, residing here in Serock, and presented to us an infant of female sex, declaring that she was born here in Serock on the second / fourteenth of March of the current year at three o'clock at night, of his lawful wife Sura nee [unclear: Miasnik/Mednik], twenty-five years old. To this infant was given the name Brucha. This act was read to the declarant and witnesses and then signed by the declarant, the witnesses and by us. [signatures] [unclear: Fajwel Rozenberg?]; Meier Perelman; Mortka Fiszbin. Keeper of Civil Status Acts [flourish signature]."
   },
   "observations": {
-    "act_language": {
-      "value": "ru",
-      "original_script": "Состоялось въ Посадѣ Сероцкѣ Десятаго",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["venue"],
-      "notes": [
-        "CONTRADICTS THE BATCH BRIEF, which pins target.language = \"pl\". Russian in pre-reform orthography throughout the clerk's text.",
-        "Two of the three autographs are Cyrillic and one is Latin script."
-      ]
-    },
-    "registration_place": {
-      "value": "Posad Serock",
-      "original_script": "въ Посадѣ Сероцкѣ Десятаго",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["venue"],
-      "notes": []
-    },
-    "registration_date.julian": {
-      "value": "[unclear: 1877-03-10/1877-03-08]",
-      "original_script": "Десятаго",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": "1877-03-10", "original_script": "Десятаго"},
-        {"value": "1877-03-08", "original_script": "Осьмаго"}
-      ],
-      "source_span_ids": ["venue"],
-      "notes": [
-        "Read at 6x over source (900,1212,630,58). A coarser band pass suggested Осьмаго; at 6x the opening shows a д-loop then е then с, which gives Десятаго.",
-        "The gap check decides in favour of Десятаго: the Gregorian side reads Двадцать втораго, i.e. 22, and 22 minus 12 is 10. Осьмаго would require Двадцатаго.",
-        "Sequence check: act 7 registers on 11 February and this act on 10 March, so the register runs in order."
-      ]
-    },
-    "registration_date.gregorian": {
-      "value": "1877-03-22",
-      "original_script": "(Двадцать втораго\nМарта",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["venue"],
-      "notes": ["Month name split across the line 1/2 break; quoted across the break as inked. Gap of 12 days is correct."]
-    },
-    "registration_date.dual_present": {
-      "value": true,
-      "original_script": "Десятаго (Двадцать втораго",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["venue"],
-      "notes": ["Both day-words physically inked."]
-    },
-    "registration_year": {
-      "value": 1877,
-      "original_script": "тысяча восемьсотъ семьдесятъ седьмаго года въ десять",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["venue"],
-      "notes": []
-    },
-    "registration_hour": {
-      "value": "10:00 morning",
-      "original_script": "въ десять\nчасовъ утра",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["venue"],
-      "notes": ["Split across the line 2/3 break; quoted across the break as inked."]
-    },
-    "declarant.name": {
-      "value": "Fajbisz Rozenberg",
-      "original_script": "Моисеева Закона Файбишъ Розен-\nбергъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["declarant", "signatures"],
-      "notes": [
-        "Surname split across the line 3/4 break; quoted across the break as inked. Read at 6.5x over source (1000,1306,530,58) and 6x over (476,1353,620,58).",
-        "Corroborated by the first autograph in the signature block, Фаибишъ Розенбергъ in Cyrillic, read at 3.9x over source (476,1960,1054,145).",
-        "NOTABLE: a man of this exact name serves as witness 1 on acts 1, 4, 5 and 6 of this same register year. Here he is the declarant and father, registering his own child, and his usual fellow witness Mortka Fiszman witnesses for him. That is a coherent picture, but see declarant.occupation and declarant.age, where the details do NOT match the witness appearances. Whether this is one man or two of the same name is left for adjudication."
-      ]
-    },
-    "declarant.relationship_to_child": {
-      "value": "father",
-      "original_script": "отъ законной его жены Сурой",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["mother"],
-      "notes": ["Standard declarant-is-father construction. The word отецъ is not used."]
-    },
-    "declarant.occupation": {
-      "value": "[unclear: laborer (robotnik)/shoemaker (sapożnik)]",
-      "original_script": "бергъ работникъ тридцати",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": "laborer (robotnik)", "original_script": "бергъ работникъ тридцати"},
-        {"value": "shoemaker (sapożnik)", "original_script": "бергъ сапожникъ тридцати"}
-      ],
-      "source_span_ids": ["declarant"],
-      "notes": [
-        "Read at 6x over source (476,1353,620,58) as работникъ. The two candidate words are close in this hand: работникъ and сапожникъ share the -никъ tail and both have a descender in the middle.",
-        "The fork matters because acts 1, 4, 5 and 6 all give a Fajbisz Rozenberg as сапожникъ. If this act says работникъ, then either there are two men of the name or the clerk changed the trade word; if it says сапожникъ, it is the same man throughout.",
-        "Recorded as the fork rather than harmonised to the register's expectation, since letting the expectation choose is how the act 7 witness misreading happened."
-      ]
-    },
-    "declarant.age": {
-      "value": "[unclear: 31/39]",
-      "original_script": "тридцати одинъ лѣтъ отъ роду",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": 31, "original_script": "тридцати одинъ лѣтъ отъ роду"},
-        {"value": 39, "original_script": "тридцати девяти лѣтъ отъ роду"}
-      ],
-      "source_span_ids": ["declarant"],
-      "notes": [
-        "тридцати is firm; the unit word reads одинъ, which is also grammatically irregular after тридцати and so is a little suspect.",
-        "Age-continuity tension: the Fajbisz Rozenberg who witnesses acts 1, 4, 5 and 6 is given as 39 or 40. Thirty-one on this act is an eight or nine year gap, which the guidance says is a misread or a different person, not a fact to be smoothed over. Thirty-nine is retained as the alternative precisely because it would reconcile them.",
-        "Flagged rather than decided."
-      ]
-    },
-    "declarant.residence": {
-      "value": "Serock",
-      "original_script": "здѣсь въ Сероцкѣ жи-\nтельствующій",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["declarant"],
-      "notes": ["Split across the line 4/5 break. Agrees with the margin annotation and the birthplace."]
-    },
-    "declarant.faith_formula": {
-      "value": "Mosaic faith",
-      "original_script": "Явился лично Моисеева Закона Файбишъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["declarant"],
-      "notes": []
-    },
-    "father.name": {
-      "value": "Fajbisz Rozenberg",
-      "original_script": "Моисеева Закона Файбишъ Розен-\nбергъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["declarant", "signatures"],
-      "notes": ["Same person as the declarant."]
-    },
-    "father.age": {
-      "value": "[unclear: 31/39]",
-      "original_script": "тридцати одинъ лѣтъ отъ роду",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": 31, "original_script": "тридцати одинъ лѣтъ отъ роду"},
-        {"value": 39, "original_script": "тридцати девяти лѣтъ отъ роду"}
-      ],
-      "source_span_ids": ["declarant"],
-      "notes": ["Either reading sits comfortably with the mother's stated 25."]
-    },
-    "witness_1.name": {
-      "value": "Mortka Fiszman",
-      "original_script": "Мор-\nтка Фишмана мясника",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses", "signatures"],
-      "notes": [
-        "Split across the line 5/6 break; quoted across the break as inked. Read at 5.5x over source (476,1494,700,58).",
-        "Sixth appearance of this witness in the group, after acts 1, 3, 4, 5 and 6, with the same trade every time. Corroborated by the Cyrillic autograph Мортка Фишманъ.",
-        "The surname carries the clerk's underline diacritic under the ш."
-      ]
-    },
-    "witness_1.occupation": {
-      "value": "butcher",
-      "original_script": "Фишмана мясника, сорока четырехъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses"],
-      "notes": []
-    },
-    "witness_1.age": {
-      "value": 44,
-      "original_script": "мясника, сорока четырехъ лѣтъ отъ роду и",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses"],
-      "notes": [
-        "Excerpt anchored on the trade word and carried through и because the act states two ages beginning сорока.",
-        "Witness-age continuity: 44 here as on acts 1, 3, 4 and 5, in a March act as in the January ones. Clean."
-      ]
-    },
-    "witness_1.residence": {
-      "value": "Serock",
-      "original_script": "здѣсь въ Сероцкѣ жительствующихъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses"],
-      "notes": ["Plural phrase covering both witnesses."]
-    },
-    "witness_2.name": {
-      "value": "[unclear: Mejer Perelman/Maska Perelman]",
-      "original_script": "Меера Перельмана работника",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": "Mejer Perelman", "original_script": "Меера Перельмана работника"},
-        {"value": "Maska Perelman", "original_script": "Маска Перельмана работника"}
-      ],
-      "source_span_ids": ["witnesses", "signatures"],
-      "notes": [
-        "The surname Перельмана is firm, read at 5.5x over source (476,1494,700,58). The given name is not: the body form reads about as well as Маска as Меера.",
-        "The Latin autograph reads Meier Perelman, which is what puts Mejer first. A new witness, not appearing elsewhere in acts 1 to 8.",
-        "Body form is genitive after въ присутствіи свидѣтелей; the autograph is nominative."
-      ]
-    },
-    "witness_2.occupation": {
-      "value": "laborer",
-      "original_script": "Перельмана работника, сорока лѣтъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses"],
-      "notes": ["Same trade word as read for the declarant on this act, which is one reason the declarant's работникъ reading is not simply discarded."]
-    },
-    "witness_2.age": {
-      "value": 40,
-      "original_script": "работника, сорока лѣтъ отъ роду,",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses"],
-      "notes": ["A bare decade word with no unit word."]
-    },
-    "witness_2.residence": {
-      "value": "Serock",
-      "original_script": "здѣсь въ Сероцкѣ жительствующихъ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["witnesses"],
-      "notes": []
-    },
-    "child.name": {
-      "value": "[unclear: Brucha/Pruch]",
-      "original_script": "дано имя Бруха",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": "Brucha", "original_script": "дано имя Бруха"},
-        {"value": "Grucha", "original_script": "дано имя Груха"}
-      ],
-      "source_span_ids": ["naming"],
-      "notes": [
-        "Written large by the clerk and straddling the middle of the line, so it was read from both band halves and confirmed at that scale. The -руха tail is firm; the opening capital is the loop group that serves Б, В and Г in this hand.",
-        "A female name, consistent with the stated female sex.",
-        "Worth noting beside act 7, whose mother's maiden name I read as Прухъ: the two tokens are similar and an adjudicator should check them against each other, but they sit in different slots on different acts and I have not merged them."
-      ]
-    },
-    "child.sex": {
-      "value": "female",
-      "original_script": "младенца женскаго пола",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["presentation"],
-      "notes": [
-        "Stated explicitly, and corroborated by the feminine что она родилась, by the female name Brucha, and by the absence of circumcision wording in the naming slot."
-      ]
-    },
-    "child.birth_date_julian": {
-      "value": "1877-03-02",
-      "original_script": "втораго (четырнадцатаго) Марта",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["presentation"],
-      "notes": []
-    },
-    "child.birth_date_gregorian": {
-      "value": "1877-03-14",
-      "original_script": "(четырнадцатаго) Марта текущаго года,",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["presentation"],
-      "notes": [
-        "Gap check: 2 to 14 March is 12 days, correct.",
-        "Date arithmetic against the registration: born 2 March Julian, registered 10 March Julian, so registration follows the event by eight days. Consistent, and no delay clause appears."
-      ]
-    },
-    "child.birth_date_dual_present": {
-      "value": true,
-      "original_script": "втораго (четырнадцатаго) Марта",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["presentation"],
-      "notes": ["Both day-words inked, parenthesis closed."]
-    },
-    "child.birth_year": {
-      "value": 1877,
-      "original_script": "Марта текущаго года,",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["presentation"],
-      "notes": ["текущаго года, marking an in-time registration."]
-    },
-    "child.birth_hour": {
-      "value": "03:00 night",
-      "original_script": "въ три часа ночью",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["mother"],
-      "notes": ["ночью rather than ночи; recorded as inked."]
-    },
-    "child.birthplace": {
-      "value": "Serock",
-      "original_script": "она родилась здѣсь въ\nСероцкѣ втораго",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["presentation"],
-      "notes": ["Split across a line break; quoted through the following day-word to keep it unique. Agrees with the margin annotation."]
-    },
-    "mother.given_name": {
-      "value": "Sura",
-      "original_script": "отъ законной его жены Сурой",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["mother"],
-      "notes": [
-        "Read at 7.5x over source (1130,1682,400,58). The clerk inflects it as Сурой here rather than leaving it uninflected as he does on most other acts; the nominative is Сура.",
-        "Not the same woman as act 3's Сура Итта or act 5's mother: different maiden name and different age."
-      ]
-    },
-    "mother.maiden_name": {
-      "value": "[unclear: Wananka/Chananka]",
-      "original_script": "урожденной Ва-\nнанки",
-      "confidence": "UNCLEAR",
-      "observation_state": "PRESENT",
-      "alternatives": [
-        {"value": "Wananka", "original_script": "урожденной Ва-\nнанки"},
-        {"value": "Chananka", "original_script": "урожденной Ха-\nнанки"},
-        {"value": "Bananka", "original_script": "урожденной Ба-\nнанки"}
-      ],
-      "source_span_ids": ["mother"],
-      "notes": [
-        "Highest-value field on the act and poorly served. The surname breaks across the line 11/12 boundary, which on this page is also the page edge, so the join falls into the gutter shadow.",
-        "Crops at 6.5x over source (1000,1682,530,58), 7.5x over (1130,1682,400,58), 6x over (476,1729,620,58) and 8x over (476,1729,340,58).",
-        "What is firm: the née marker урожденной, then a В/Б/Х-group capital plus a, then at the start of the next line a token ending -нки. What is lost is whatever stands between.",
-        "None of the three candidates is a surname I can vouch for, which is itself a signal that the join is wrong rather than that the surname is unusual. Recorded as read rather than replaced by a plausible-sounding name.",
-        "Note the -нки ending is a genitive of -нка, so this is a plain feminine surname form rather than one of the -овны patronymics seen on acts 3, 5 and 6."
-      ]
-    },
-    "mother.age": {
-      "value": 25,
-      "original_script": "нанки Двадцати пяти лѣтъ отъ роду",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["mother"],
-      "notes": ["Read at 6x over source (476,1729,620,58)."]
-    },
-    "naming_rite": {
-      "value": null,
-      "original_script": null,
-      "confidence": null,
-      "observation_state": "BLANK",
-      "alternatives": [],
-      "source_span_ids": ["naming"],
-      "notes": [
-        "The naming slot runs from Младенцу этому straight to дано имя Бруха, with no rite phrase: neither при обрѣзаніи, which would be wrong for a girl, nor при религіозномъ обрядѣ, which would be right.",
-        "BLANK rather than ABSENT_ON_FORM: the formula has the slot and this clerk fills it on acts 1, 2, 3 and 6, all male births.",
-        "Verified by reading both halves of the line band across the junction with the preceding line, to be sure the phrase had not been carried over the break.",
-        "This is now the fourth female birth in the group, on acts 4, 5, 7 and 8, and the rite phrase is missing on every one of them, while every male birth carries при обрѣзаніи. The omission is systematic and therefore informative rather than accidental."
-      ]
-    },
-    "father_mother_marital_status": {
-      "value": "lawful marriage stated",
-      "original_script": "отъ законной его жены",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["mother"],
-      "notes": []
-    },
-    "signatures_note": {
-      "value": "Read to the declarant and witnesses and signed by the declarant, the witnesses and the registrar; two Cyrillic and one Latin-script autograph inked",
-      "original_script": "Актъ сей объявляющему и свидѣ-\nтельствующимъ прочитанъ и затѣмъ объявляющимъ, свидѣ-\nтельствующимъ, а также нами подписанъ.",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["closing", "signatures"],
-      "notes": [
-        "The clause includes объявляющимъ and there is no illiteracy note; all three parties signed.",
-        "This act uses свидѣтельствующимъ where the other acts in the group use свидѣтелями. A within-register wording variant, recorded as inked and not normalised.",
-        "Autographs: Фаибишъ Розенбергъ and Мортка Фишманъ in Cyrillic, Meier Perelman in Latin script, read at 3.9x over source (476,1960,1054,145)."
-      ]
-    },
-    "officiant.formula": {
-      "value": "Keeper of the Registers of Civil Status",
-      "original_script": "Содержащій Акты Гражданскаго Состоянія",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["officiant"],
-      "notes": ["Same subscription and hand as acts 1 to 7."]
-    },
-    "officiant.name": {
-      "value": null,
-      "original_script": null,
-      "confidence": null,
-      "observation_state": "ILLEGIBLE",
-      "alternatives": [],
-      "source_span_ids": ["officiant"],
-      "notes": [
-        "Zoom inspection performed before emitting ILLEGIBLE: 3.9x over source (476,1960,1054,145) covering the signature and subscription block, plus the clearer act 1 instance of the same paraph at 6x over (2350,1090,440,70).",
-        "Decorative loops rather than a resolvable name.",
-        "Deliberately not filled from the officiant named in the domain skill."
-      ]
-    },
-    "margin_note": {
-      "value": "Serock",
-      "original_script": "№ 8\nСероцкѣ",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["margin"],
-      "notes": ["Read at 8x over source (300,1200,190,120); crisply written. Agrees with the birthplace and the declarant's residence."]
-    },
-    "act_number_on_page": {
-      "value": 8,
-      "original_script": "№ 8",
-      "confidence": "PROBABLE",
-      "observation_state": "PRESENT",
-      "alternatives": [],
-      "source_span_ids": ["margin"],
-      "notes": ["Agrees with the brief's act_no pin."]
-    }
+    "registration_place": {"value": "Serock (posad)", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening-lines"], "notes": []},
+    "registration_date": {"value": "1877-03-22", "original_script": "десятаго / двадцать втораго Марта, тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [{"value": "1877-03-10 (Julian)", "original_script": "десятаго"}], "source_span_ids": ["opening-lines"], "notes": ["dual date physically present; 12-day gap checks out"]},
+    "registration_hour": {"value": "10:00 morning", "original_script": "въ десять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening-lines"], "notes": []},
+    "father.name": {"value": "Fajwel Rozenberg", "original_script": "Файвель Розенбергъ, лавочникъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines", "signatures"], "notes": ["same man who witnesses acts 1, 4, 5, 6, 10 of this register year"]},
+    "father.occupation": {"value": "shopkeeper", "original_script": "лавочникъ, тридцати", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines"], "notes": []},
+    "father.age": {"value": 31, "original_script": "тридцати одного лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines"], "notes": ["consistent with his witness age 31 across this register year"]},
+    "father.residence": {"value": "Serock", "original_script": "здѣсь въ Сероцкѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines"], "notes": []},
+    "witness1.name": {"value": "Mortka Fiszbin", "original_script": "Мортки Фишбина, мясника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines", "signatures"], "notes": []},
+    "witness1.age": {"value": 44, "original_script": "сорока четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines"], "notes": []},
+    "witness2.name": {"value": "Majer Perelman", "original_script": "Маера Перельмана", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines", "signatures"], "notes": ["Latin signature Meier Perelman supports the reading"]},
+    "witness2.occupation": {"value": "shopkeeper", "original_script": "лавочника, сорока пяти", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines"], "notes": []},
+    "witness2.age": {"value": 45, "original_script": "сорока пяти лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines"], "notes": []},
+    "principal.sex": {"value": "female", "original_script": "младенца женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["birth-lines"], "notes": ["girl's name given, no circumcision clause"]},
+    "principal.birth_place": {"value": "Serock", "original_script": "родился здѣсь въ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["birth-lines"], "notes": []},
+    "principal.birth_date": {"value": "1877-03-14", "original_script": "втораго / четырнадцатаго / Марта текущаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [{"value": "1877-03-02 (Julian)", "original_script": "втораго"}], "source_span_ids": ["birth-lines"], "notes": ["dual date physically present; 12-day gap checks out"]},
+    "principal.birth_hour": {"value": "3:00 at night", "original_script": "въ три часа ночью", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["birth-lines"], "notes": []},
+    "mother.name": {"value": "Sura", "original_script": "жены Суры", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-line"], "notes": []},
+    "mother.maiden_name": {"value": "[unclear: Miasnik/Mednik]", "original_script": "урожденной [unclear: Мясникъ/Медникъ]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Miasnik", "original_script": "Мясникъ"}, {"value": "Mednik", "original_script": "Медникъ"}], "source_span_ids": ["mother-line"], "notes": ["word split across a line break (Мя-/Ме- then никъ); both are attested surnames; not resolved at 2.1x zoom"]},
+    "mother.age": {"value": 25, "original_script": "двадцати пяти лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-line"], "notes": []},
+    "principal.name": {"value": "Brucha", "original_script": "дано имя Бруха", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["naming-line"], "notes": ["written large by the clerk; clearly legible"]},
+    "officiant.name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["signatures"], "notes": ["title line legible; registrar name is a flourish; inspected at 2.1x zoom, x 1200-1600, y 2230-2360; not resolved"]},
+    "register_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ десятаго", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening-lines"], "notes": ["brief said pl; ink is Russian Cyrillic"]}
   },
   "compliance": {
     "restricted_sources_used": false,
     "privacy_decision": "ALLOW",
-    "privacy_basis": "coordinator-approved historical register wave",
+    "privacy_basis": "1877 civil-registration act, about 149 years old; all persons deceased; public archival scan",
     "training_eligible": true,
-    "training_basis": "blind factory output; tier assigned only after resolution"
+    "training_basis": "public-domain 19th-century civil registration record"
   },
   "authority_warning": "extraction is not authority — verify against the scan"
 }
