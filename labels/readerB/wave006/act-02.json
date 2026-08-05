@@ -1,0 +1,85 @@
+{
+  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "schema_version": "1.0.0",
+  "label_id": "readerb-w006-serock-1877-b-02",
+  "record_id": "serock-1877-b-02",
+  "created_at": "2026-08-04T12:05:00Z",
+  "reader": {
+    "reader_id": "readerB-w006-20260804",
+    "reader_family": "claude",
+    "reader_version": "claude-fable-5",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1877-births-01-10-wave-006",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.4.0",
+    "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "artifact": {
+    "path": "D:\\E-Drive-Preserve\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_01-02.jpg",
+    "sha256": "7b279f1f117edbd52657ddf71a4abb0c50562e0bca677a31567581a1aac9e454",
+    "width_px": 3044, "height_px": 2412, "page_index": 1,
+    "act_region": {"x": 1440, "y": 1200, "width": 1604, "height": 1150, "coordinate_space": "source_pixels"}
+  },
+  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 2, "language": "ru"},
+  "source_spans": {
+    "act-region": {"bbox": {"x": 1440, "y": 1200, "width": 1604, "height": 1150, "coordinate_space": "source_pixels"}, "description": "entire act no. 2, right page bottom, including margin annotation"},
+    "opening": {"bbox": {"x": 1440, "y": 1200, "width": 1604, "height": 170, "coordinate_space": "source_pixels"}, "description": "venue and registration date/hour lines"},
+    "declarant-witnesses": {"bbox": {"x": 1440, "y": 1370, "width": 1604, "height": 260, "coordinate_space": "source_pixels"}, "description": "declarant and witnesses slot"},
+    "presentation-birth": {"bbox": {"x": 1440, "y": 1630, "width": 1604, "height": 230, "coordinate_space": "source_pixels"}, "description": "presentation slot: sex, birth place, dual birth date"},
+    "mother-naming": {"bbox": {"x": 1440, "y": 1860, "width": 1604, "height": 160, "coordinate_space": "source_pixels"}, "description": "mother slot and naming slot"},
+    "closing-signatures": {"bbox": {"x": 1440, "y": 2020, "width": 1604, "height": 330, "coordinate_space": "source_pixels"}, "description": "closing formula and signature block"}
+  },
+  "mentions": [
+    {"mention_id": "serock-1877-b-02#child", "role": "principal"},
+    {"mention_id": "serock-1877-b-02#father", "role": "father"},
+    {"mention_id": "serock-1877-b-02#father", "role": "declarant"},
+    {"mention_id": "serock-1877-b-02#mother", "role": "mother"},
+    {"mention_id": "serock-1877-b-02#witness1", "role": "witness"},
+    {"mention_id": "serock-1877-b-02#witness2", "role": "witness"},
+    {"mention_id": "serock-1877-b-02#officiant", "role": "officiant"}
+  ],
+  "transcription": {
+    "original_script": "№ 2. Сероцкъ. Состоялось въ Посадѣ Сероцкѣ третьяго / пятнадцатаго Января тысяча восемьсотъ семьдесятъ седьмаго года, въ [unclear: двѣнадцать?] часовъ утра. Явился лично Мойсеева Закона [unclear: Шмуль/Шендль] Маеръ Цитриновичъ, торговецъ, двадцати пяти лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Абрама Боренштейна, лавочника, [unclear: сорока восьми?] лѣтъ отъ роду, и Ицка Розенберга, работника, тридцати шести лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца мужескаго пола, объявляя, что онъ родился здѣсь въ Сероцкѣ двадцать шестаго Декабря / седьмаго Января тысяча восемьсотъ семьдесятъ шестаго / седьмаго года, въ шесть часовъ по полудни, отъ законной его жены Малки Рухли, урожденной Боренштейнъ, двадцати двухъ лѣтъ отъ роду. Младенцу этому при обрѣзаніи дано имя Берекъ. Актъ сей объявляющему и свидѣтелямъ прочитанъ, и затѣмъ объявляющимъ, свидѣтелями, а также нами подписанъ. [unclear: Cytrenowicz?]. ABorensztein. Icek Rozenberg. Содержащій Акты Гражданскаго Состоянія",
+    "translation": "No. 2. Serock. It took place in the posad of Serock on the 3rd / 15th of January 1877, at [unclear: twelve?] o'clock in the morning. There appeared in person [unclear: Szmul/Szendel] Majer Cytrynowicz, of the Mosaic faith, trader, aged twenty-five, residing here in Serock, in the presence of witnesses of the Mosaic faith Abram Borensztejn, shopkeeper, aged [unclear: 48?], and Icek Rozenberg, laborer, aged thirty-six, residing here in Serock, and presented to us an infant of the male sex, declaring that he was born here in Serock on the 26th of December / 7th of January 1876/1877, at six o'clock in the afternoon, of his lawful wife Malka Ruchla nee Borensztejn, aged twenty-two. At his circumcision this infant was given the name Berek. This act was read to the declarant and witnesses and then signed by the declarant, the witnesses, and by us. Signatures: Cytrynowicz-like Latin signature; ABorensztein; Icek Rozenberg; the maintainer of civil status acts."
+  },
+  "observations": {
+    "margin.note": {"value": "No. 2, Serock", "original_script": "№ 2. Сероцкъ.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["act-region"], "notes": []},
+    "act_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Wave brief stated pl; the ink is Russian Cyrillic."]},
+    "registration.date": {"value": "1877-01-15", "original_script": "третьяго / пятнадцатаго Января тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Dual date physically present: 3/15 January 1877; 12-day gap consistent."]},
+    "registration.hour": {"value": "[unclear: 12:00 morning?]", "original_script": "[unclear: двѣнадцать?] часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "12:00 (noon)", "original_script": "двѣнадцать"}], "source_span_ids": ["opening"], "notes": ["Hour word crowded at line end; single shaky candidate retained."]},
+    "declarant.name": {"value": "[unclear: Szmul Majer Cytrynowicz/Szendel Majer Cytrynowicz]", "original_script": "[unclear: Шмуль/Шендль] Маеръ Цитриновичъ", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Szmul Majer Cytrynowicz", "original_script": "Шмуль"}, {"value": "Szendel Majer Cytrynowicz", "original_script": "Шендль"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["First given name ambiguous at 5x; second name Маеръ and surname Цитриновичъ read adequately; Latin closing signature (surname only) reads Cytrenowicz/Cytrynowicz."]},
+    "declarant.occupation": {"value": "trader", "original_script": "торговецъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "declarant.age": {"value": 25, "original_script": "двадцати пяти лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "declarant.residence": {"value": "Serock", "original_script": "здѣсь въ Сероцкѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "father.same_as_declarant": {"value": true, "original_script": "отъ законной его жены", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "witness1.name": {"value": "Abram Borensztejn", "original_script": "Абрама Боренштейна", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Latin signature 'ABorensztein' supports.", "Same surname as the mother's maiden name — possible kinsman; kinship not stated on page."]},
+    "witness1.occupation": {"value": "shopkeeper", "original_script": "лавочника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "witness1.age": {"value": "[unclear: 48?]", "original_script": "[unclear: сорока восьми?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": 48, "original_script": "сорока восьми"}], "source_span_ids": ["declarant-witnesses"], "notes": ["Digit-word broken across a line; single shaky candidate."]},
+    "witness2.name": {"value": "Icek Rozenberg", "original_script": "Ицка Розенберга", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Latin signature 'Icek Rozenberg' matches."]},
+    "witness2.occupation": {"value": "laborer", "original_script": "работника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "witness2.age": {"value": 36, "original_script": "тридцати шести лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "child.sex": {"value": "male", "original_script": "мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Consistent with circumcision naming clause."]},
+    "child.birth_date": {"value": "1877-01-07", "original_script": "двадцать шестаго Декабря / седьмаго Января тысяча восемьсотъ семьдесятъ шестаго / седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Dual date physically present: 26 December 1876 Julian / 7 January 1877 Gregorian; 12-day gap consistent."]},
+    "child.birth_hour": {"value": "18:00 (afternoon)", "original_script": "въ шесть часовъ по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
+    "child.birth_place": {"value": "Serock", "original_script": "родился здѣсь въ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
+    "mother.given_name": {"value": "Malka Ruchla", "original_script": "жены Малки Рухли", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "mother.maiden_name": {"value": "Borensztejn", "original_script": "урожденной Боренштейнъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "mother.age": {"value": 22, "original_script": "двадцати двухъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "child.given_name": {"value": "Berek", "original_script": "дано имя Берекъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "signatures.note": {"value": "Declarant signed in Latin script (surname reading shaky); witnesses signed in Latin script.", "original_script": "ABorensztein. Icek Rozenberg.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
+    "officiant.title": {"value": "Maintainer of Civil Status Acts (registrar)", "original_script": "Содержащій Акты Гражданскаго Состоянія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
+    "officiant.signature": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Inspected at 1.9x full-act crop and full-resolution view (source x1500-3044, y2200-2350); flourish does not resolve into letters."]}
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "1877 public civil-registration record; all persons named are long deceased; archival scan published by a state archive.",
+    "training_eligible": true,
+    "training_basis": "Public-domain 19th-century archival record; no living-person data."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}

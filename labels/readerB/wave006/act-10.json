@@ -1,0 +1,85 @@
+{
+  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "schema_version": "1.0.0",
+  "label_id": "readerb-w006-serock-1877-b-10",
+  "record_id": "serock-1877-b-10",
+  "created_at": "2026-08-04T12:45:00Z",
+  "reader": {
+    "reader_id": "readerB-w006-20260804",
+    "reader_family": "claude",
+    "reader_version": "claude-fable-5",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1877-births-01-10-wave-006",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.4.0",
+    "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "artifact": {
+    "path": "D:\\E-Drive-Preserve\\DNA\\BulkData\\Serock_0826d\\1877\\births\\Serock_1877_births_07-10.jpg",
+    "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+    "width_px": 3044, "height_px": 2412, "page_index": 1,
+    "act_region": {"x": 1630, "y": 1180, "width": 1414, "height": 1140, "coordinate_space": "source_pixels"}
+  },
+  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 10, "language": "ru"},
+  "source_spans": {
+    "act-region": {"bbox": {"x": 1630, "y": 1180, "width": 1414, "height": 1140, "coordinate_space": "source_pixels"}, "description": "entire act no. 10, right page bottom, including margin annotation"},
+    "opening": {"bbox": {"x": 1630, "y": 1180, "width": 1414, "height": 170, "coordinate_space": "source_pixels"}, "description": "venue and registration date/hour lines"},
+    "declarant-witnesses": {"bbox": {"x": 1630, "y": 1350, "width": 1414, "height": 280, "coordinate_space": "source_pixels"}, "description": "declarant and witnesses slot"},
+    "presentation-birth": {"bbox": {"x": 1630, "y": 1630, "width": 1414, "height": 240, "coordinate_space": "source_pixels"}, "description": "presentation slot: sex, birth place, dual birth date"},
+    "mother-naming": {"bbox": {"x": 1630, "y": 1870, "width": 1414, "height": 140, "coordinate_space": "source_pixels"}, "description": "mother slot and naming slot"},
+    "closing-signatures": {"bbox": {"x": 1630, "y": 2010, "width": 1414, "height": 310, "coordinate_space": "source_pixels"}, "description": "closing formula, illiteracy note, signature block"}
+  },
+  "mentions": [
+    {"mention_id": "serock-1877-b-10#child", "role": "principal"},
+    {"mention_id": "serock-1877-b-10#father", "role": "father"},
+    {"mention_id": "serock-1877-b-10#father", "role": "declarant"},
+    {"mention_id": "serock-1877-b-10#mother", "role": "mother"},
+    {"mention_id": "serock-1877-b-10#witness1", "role": "witness"},
+    {"mention_id": "serock-1877-b-10#witness2", "role": "witness"},
+    {"mention_id": "serock-1877-b-10#officiant", "role": "officiant"}
+  ],
+  "transcription": {
+    "original_script": "№ 10. Попово. Состоялось въ Посадѣ Сероцкѣ восьмаго / двадцатаго Апрѣля тысяча восемьсотъ семьдесятъ седьмаго года, въ три часа по полудни. Явился лично Мойсеева Закона Пинкусъ [unclear: Рокита/Рокина], работникъ, двадцати двухъ лѣтъ отъ роду, въ деревнѣ Поповѣ жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Файвеся Розенберга, лавочника, тридцати одного лѣтъ отъ роду, и Абрама Вайнгрода, школьника, сорока четырехъ лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца мужескаго пола, объявляя, что онъ родился въ деревнѣ Поповѣ перваго / тринадцатаго Апрѣля текущаго года, въ [unclear: шесть?] часовъ утра, отъ законной его жены Фрайды, урожденной [unclear: Кани?], двадцати шести лѣтъ отъ роду. Младенцу этому при обрѣзаніи дано имя Пейсахъ. Актъ сей объявляющему и свидѣтелямъ прочитанъ, и затѣмъ свидѣтелями, а также нами подписанъ; объявляющій отецъ Пинкусъ [unclear: Рокита/Рокина] писать не умѣетъ. Абрамъ Вайнгродъ. Файвелъ Розенбергъ. Содержащій Акты Гражданскаго Состоянія",
+    "translation": "No. 10. Popowo. It took place in the posad of Serock on the 8th / 20th of April 1877, at three o'clock in the afternoon. There appeared in person Pinkus [unclear: Rokita/Rokina], of the Mosaic faith, laborer, aged twenty-two, residing in the village of Popowo, in the presence of witnesses of the Mosaic faith Fajwes Rozenberg, shopkeeper, aged thirty-one, and Abram Wajngrod, synagogue beadle, aged forty-four, residing here in Serock, and presented to us an infant of the male sex, declaring that he was born in the village of Popowo on the 1st / 13th of April of the current year, at [unclear: six?] o'clock in the morning, of his lawful wife Frajda nee [unclear: Kania?], aged twenty-six. At his circumcision this infant was given the name Pejsach. This act was read to the declarant and witnesses and then signed by the witnesses and by us; the declaring father Pinkus [unclear: Rokita/Rokina] does not know how to write. Signatures: Abram Wajngrod; Fajwel Rozenberg; the maintainer of civil status acts."
+  },
+  "observations": {
+    "margin.note": {"value": "No. 10, Popowo", "original_script": "№ 10. Попово.", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["act-region"], "notes": []},
+    "act_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Wave brief stated pl; the ink is Russian Cyrillic."]},
+    "registration.date": {"value": "1877-04-20", "original_script": "восьмаго / двадцатаго Апрѣля тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": ["Dual date physically present: 8/20 April 1877; 12-day gap consistent."]},
+    "registration.hour": {"value": "15:00 (afternoon)", "original_script": "въ три часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening"], "notes": []},
+    "declarant.name": {"value": "[unclear: Pinkus Rokita/Pinkus Rokina]", "original_script": "Пинкусъ [unclear: Рокита/Рокина]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Pinkus Rokita", "original_script": "Рокита"}, {"value": "Pinkus Rokina", "original_script": "Рокина"}], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Surname appears twice (declarant slot, line-broken, and the closing illiteracy clause); the т/н stroke is ambiguous in both; inspected closing occurrence at 2.5x (source x1630-2630, y1890-2000). Declarant illiterate, so no signature to cross-check. Rokita is a known Polish surname; both readings retained."]},
+    "declarant.occupation": {"value": "laborer", "original_script": "работникъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "declarant.age": {"value": 22, "original_script": "двадцати двухъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "declarant.residence": {"value": "village Popowo", "original_script": "въ деревнѣ Поповѣ жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "father.same_as_declarant": {"value": true, "original_script": "объявляющій отецъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Closing clause explicitly calls the declarant the declaring father."]},
+    "witness1.name": {"value": "Fajwes Rozenberg", "original_script": "Файвеся Розенберга", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": ["Cyrillic signature 'Файвелъ Розенбергъ'; age 31 consistent across the year."]},
+    "witness1.occupation": {"value": "shopkeeper", "original_script": "лавочника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "witness1.age": {"value": 31, "original_script": "тридцати одного лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "witness2.name": {"value": "Abram Wajngrod", "original_script": "Абрама Вайнгрода", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses", "closing-signatures"], "notes": []},
+    "witness2.occupation": {"value": "synagogue beadle (szkolnik)", "original_script": "школьника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": []},
+    "witness2.age": {"value": 44, "original_script": "сорока четырехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-witnesses"], "notes": ["Consistent with his age 44 in acts 3 and 7."]},
+    "child.sex": {"value": "male", "original_script": "мужескаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Consistent with circumcision naming clause."]},
+    "child.birth_date": {"value": "1877-04-13", "original_script": "перваго / тринадцатаго Апрѣля текущаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": ["Dual date physically present: 1/13 April 1877; 12-day gap consistent."]},
+    "child.birth_hour": {"value": "[unclear: 06:00 morning?]", "original_script": "въ [unclear: шесть?] часовъ утра", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "06:00 (morning)", "original_script": "шесть"}], "source_span_ids": ["presentation-birth"], "notes": ["Hour word crowded at line break; single shaky candidate."]},
+    "child.birth_place": {"value": "village Popowo", "original_script": "родился въ деревнѣ Поповѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["presentation-birth"], "notes": []},
+    "mother.given_name": {"value": "Frajda", "original_script": "жены Фрайды", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "mother.maiden_name": {"value": "[unclear: Kania?]", "original_script": "[unclear: Кани?]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Kania", "original_script": "Кани"}], "source_span_ids": ["mother-naming"], "notes": ["Short word line-broken at right edge (Ка-/ни); inspected at 5x (source x1630-3044, y1680-1790); single shaky candidate retained."]},
+    "mother.age": {"value": 26, "original_script": "двадцати шести лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": []},
+    "child.given_name": {"value": "Pejsach", "original_script": "дано имя Пейсахъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-naming"], "notes": ["Name written large by the clerk."]},
+    "signatures.note": {"value": "Declaring father illiterate; only the witnesses signed.", "original_script": "писать не умѣетъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
+    "officiant.title": {"value": "Maintainer of Civil Status Acts (registrar)", "original_script": "Содержащій Акты Гражданскаго Состоянія", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": []},
+    "officiant.signature": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["closing-signatures"], "notes": ["Inspected at 2.4x act crop (source x1630-3044, y2150-2320); flourish does not resolve into letters."]}
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "1877 public civil-registration record; all persons named are long deceased; archival scan published by a state archive.",
+    "training_eligible": true,
+    "training_basis": "Public-domain 19th-century archival record; no living-person data."
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
