@@ -1,0 +1,84 @@
+{
+  "$schema": "https://aktreader.org/schema/reader-label-1.0.0-v1.4.json",
+  "schema_version": "1.0.0",
+  "label_id": "serock-1877-b-009.readera-w006",
+  "record_id": "serock-1877-b-009",
+  "created_at": "2026-08-04T00:00:00Z",
+  "reader": {
+    "reader_id": "readerA-w006-20260804",
+    "reader_family": "claude",
+    "reader_version": "claude-fable-5",
+    "mode": "subscription_session",
+    "blind_group_id": "serock-1877-births-01-10-wave-006",
+    "other_reader_output_seen": false
+  },
+  "prompt": {
+    "version": "1.4.0",
+    "sha256": "5d14dcb892bd1ca2f236e472adf04656a98cdad51acb40fea8797265b09fca7a",
+    "path": "prompts/reader_prompt.md"
+  },
+  "clerk_year": {"id": "serock-1877", "basis": "REGISTER_YEAR_PROXY", "clerk_id": null},
+  "artifact": {
+    "path": "D:/E-Drive-Preserve/DNA/BulkData/Serock_0826d/1877/births/Serock_1877_births_07-10.jpg",
+    "sha256": "7711a80b0359efdfee45eed0a25097edc07c3374d78c329e0da4c753a809741f",
+    "width_px": 3044,
+    "height_px": 2412,
+    "page_index": 0,
+    "act_region": {"x": 1520, "y": 210, "width": 1500, "height": 1030, "coordinate_space": "source_pixels"}
+  },
+  "target": {"town": "Serock", "fond": "73/826/0", "year": 1877, "act_type": "birth", "act_no": 9, "language": "ru"},
+  "source_spans": {
+    "act-region": {"bbox": {"x": 1520, "y": 210, "width": 1500, "height": 1030, "coordinate_space": "source_pixels"}, "description": "full act 9 region, right page top, margin No 9 Dembe"},
+    "opening-lines": {"bbox": {"x": 1530, "y": 230, "width": 1490, "height": 140, "coordinate_space": "source_pixels"}, "description": "venue, registration dual date, hour"},
+    "declarant-lines": {"bbox": {"x": 1530, "y": 330, "width": 1490, "height": 140, "coordinate_space": "source_pixels"}, "description": "declarant name, occupation (private scribe), age, residence Dembe"},
+    "witness-lines": {"bbox": {"x": 1530, "y": 440, "width": 1490, "height": 180, "coordinate_space": "source_pixels"}, "description": "witnesses with occupations and ages"},
+    "birth-lines": {"bbox": {"x": 1530, "y": 620, "width": 1490, "height": 200, "coordinate_space": "source_pixels"}, "description": "child sex, birth place Dembe, dual date, hour"},
+    "mother-line": {"bbox": {"x": 1530, "y": 770, "width": 1490, "height": 110, "coordinate_space": "source_pixels"}, "description": "mother, maiden name, age"},
+    "naming-line": {"bbox": {"x": 1530, "y": 860, "width": 1490, "height": 90, "coordinate_space": "source_pixels"}, "description": "naming, two names (girl)"},
+    "signatures": {"bbox": {"x": 1530, "y": 990, "width": 1490, "height": 230, "coordinate_space": "source_pixels"}, "description": "clear Cyrillic declarant signature, Latin witness signatures, registrar flourish"}
+  },
+  "mentions": [
+    {"mention_id": "serock-1877-b-009#principal", "role": "principal"},
+    {"mention_id": "serock-1877-b-009#father", "role": "father"},
+    {"mention_id": "serock-1877-b-009#mother", "role": "mother"},
+    {"mention_id": "serock-1877-b-009#witness1", "role": "witness"},
+    {"mention_id": "serock-1877-b-009#witness2", "role": "witness"},
+    {"mention_id": "serock-1877-b-009#officiant", "role": "officiant"}
+  ],
+  "transcription": {
+    "original_script": "№ 9. Дембе. Состоялось въ Посадѣ Сероцкѣ тринадцатаго / двадцать пятаго Марта, тысяча восемьсотъ семьдесятъ седьмаго года въ два часа по полудни. — Явился лично Мойсеева Закона Абрамъ Давидъ Розенфельдъ, частный писарь, двадцати восьми лѣтъ отъ роду, въ деревнѣ Дембе жительствующій, въ присутствіи свидѣтелей Мойсеева Закона Шулима Ниренберга, торговца, двадцати девяти лѣтъ отъ роду и Ицка Розенберга, работника, тридцати шести лѣтъ отъ роду, здѣсь въ Сероцкѣ жительствующихъ, и предъявилъ намъ младенца женскаго пола, объявляя, что онъ родился въ деревнѣ Дембе четвертаго / шестнадцатаго / Марта текущаго года, въ пять часовъ утра, отъ законной его жены Рухли, урожденной [unclear: Кацнеровской/Важнеровской], двадцати трехъ лѣтъ отъ роду. Младенцу этому даны имена Елька Файга. Актъ сей объявляющему и свидѣтелямъ прочитанъ, и затѣмъ объявляющимся, свидѣтелями, а также нами подписанъ. — Абрамъ Давидъ Розенфельдъ. Szulim Nirenberg. Jcik Rosenberg. Содержащій Акты Гражданскаго Состоянія.",
+    "translation": "No. 9. Dembe. It took place in the posad of Serock on the thirteenth / twenty-fifth of March, one thousand eight hundred seventy-seven, at two o'clock in the afternoon. Appeared in person Abram Dawid Rozenfeld of the Mosaic faith, private scribe, twenty-eight years old, residing in the village of Dembe, in the presence of witnesses of the Mosaic faith Szulim Nirenberg, trader, twenty-nine years old, and Icek Rozenberg, laborer, thirty-six years old, residing here in Serock, and presented to us an infant of female sex, declaring that she was born in the village of Dembe on the fourth / sixteenth of March of the current year, at five o'clock in the morning, of his lawful wife Ruchla nee [unclear: Kacnerowska/Waznerowska], twenty-three years old. To this infant were given the names Elka Fajga. This act was read to the declarant and witnesses and then signed by the declarant, the witnesses and by us. [signatures] Abram Dawid Rozenfeld; Szulim Nirenberg; Jcik Rosenberg. Keeper of Civil Status Acts [flourish signature]."
+  },
+  "observations": {
+    "registration_place": {"value": "Serock (posad)", "original_script": "Состоялось въ Посадѣ Сероцкѣ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening-lines"], "notes": []},
+    "registration_date": {"value": "1877-03-25", "original_script": "тринадцатаго / двадцать пятаго Марта, тысяча восемьсотъ семьдесятъ седьмаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [{"value": "1877-03-13 (Julian)", "original_script": "тринадцатаго"}], "source_span_ids": ["opening-lines"], "notes": ["dual date physically present; 12-day gap checks out"]},
+    "registration_hour": {"value": "2:00 afternoon", "original_script": "въ два часа по полудни", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening-lines"], "notes": []},
+    "father.name": {"value": "Abram Dawid Rozenfeld", "original_script": "Абрамъ Давидъ Розенфельдъ", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines", "signatures"], "notes": ["declarant's own Cyrillic signature Абрамъ Давидъ Розенфельдъ is clearly legible; -фельдъ written with ф here, not the в variant"]},
+    "father.occupation": {"value": "private scribe", "original_script": "частный писарь", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines"], "notes": []},
+    "father.age": {"value": 28, "original_script": "двадцати восьми лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines"], "notes": []},
+    "father.residence": {"value": "village Dembe", "original_script": "въ деревнѣ Дембе жительствующій", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["declarant-lines"], "notes": ["margin annotation also reads Дембе"]},
+    "witness1.name": {"value": "Szulim Nirenberg", "original_script": "Шулима Ниренберга", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines", "signatures"], "notes": ["body strokes could also fit Наренберга; Latin signature Szulim Nirenberg decides the vowel"]},
+    "witness1.occupation": {"value": "trader", "original_script": "торговца", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines"], "notes": []},
+    "witness1.age": {"value": 29, "original_script": "двадцати девяти лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines"], "notes": []},
+    "witness2.name": {"value": "Icek Rozenberg", "original_script": "Ицка Розенберга, работника", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines", "signatures"], "notes": ["same laborer witness as act 2, same age 36 - within-register consistency holds"]},
+    "witness2.age": {"value": 36, "original_script": "тридцати шести лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["witness-lines"], "notes": []},
+    "principal.sex": {"value": "female", "original_script": "младенца женскаго пола", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["birth-lines"], "notes": []},
+    "principal.birth_place": {"value": "village Dembe", "original_script": "родился въ деревнѣ Дембе", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["birth-lines"], "notes": []},
+    "principal.birth_date": {"value": "1877-03-16", "original_script": "четвертаго / шестнадцатаго / Марта текущаго года", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [{"value": "1877-03-04 (Julian)", "original_script": "четвертаго"}], "source_span_ids": ["birth-lines"], "notes": ["dual date physically present; 12-day gap checks out"]},
+    "principal.birth_hour": {"value": "5:00 morning", "original_script": "въ пять часовъ утра", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["birth-lines"], "notes": []},
+    "mother.name": {"value": "Ruchla", "original_script": "жены Рухли", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-line"], "notes": []},
+    "mother.maiden_name": {"value": "[unclear: Kacnerowska/Waznerowska]", "original_script": "урожденной [unclear: Кацнеровской/Важнеровской]", "confidence": "UNCLEAR", "observation_state": "PRESENT", "alternatives": [{"value": "Kacnerowska", "original_script": "Кацнеровской"}, {"value": "Waznerowska", "original_script": "Важнеровской"}], "source_span_ids": ["mother-line"], "notes": ["initial capital and third letter ambiguous at 5x zoom, x 2300-3024, y 760-850; -ской ending clear"]},
+    "mother.age": {"value": 23, "original_script": "двадцати трехъ лѣтъ отъ роду", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["mother-line"], "notes": ["verified at 3.3x zoom"]},
+    "principal.name": {"value": "Elka Fajga", "original_script": "даны имена Елька Файга", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["naming-line"], "notes": ["verified at 3.3x zoom; both names legible"]},
+    "officiant.name": {"value": null, "original_script": null, "confidence": null, "observation_state": "ILLEGIBLE", "alternatives": [], "source_span_ids": ["signatures"], "notes": ["title line legible; registrar name is a flourish; inspected at 2.4x zoom, x 2700-3044, y 1150-1250; not resolved"]},
+    "register_language": {"value": "ru", "original_script": "Состоялось въ Посадѣ Сероцкѣ тринадцатаго", "confidence": "PROBABLE", "observation_state": "PRESENT", "alternatives": [], "source_span_ids": ["opening-lines"], "notes": ["brief said pl; ink is Russian Cyrillic"]}
+  },
+  "compliance": {
+    "restricted_sources_used": false,
+    "privacy_decision": "ALLOW",
+    "privacy_basis": "1877 civil-registration act, about 149 years old; all persons deceased; public archival scan",
+    "training_eligible": true,
+    "training_basis": "public-domain 19th-century civil registration record"
+  },
+  "authority_warning": "extraction is not authority — verify against the scan"
+}
