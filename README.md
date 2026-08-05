@@ -117,6 +117,17 @@ The generic [Reader configuration](examples/local-reader.config.example.json) in
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
 real pins for a separately provisioned executable, model, projector, prompt, and output schema.
 
+## Related repositories
+
+- [`aktreader-research`](https://github.com/jakegold1647/aktreader-research) — the research
+  harness this reader is evaluated with: blind-reader waves, consensus labels, gold records,
+  and the training-readiness gates. The two repositories have separate histories on purpose;
+  this one ships the tool, that one holds the evidence about how well it reads.
+- [`congress-poland-registers`](https://github.com/jakegold1647/congress-poland-registers) —
+  an independent open benchmark for handwritten Congress Poland vital records, under
+  construction. Its evaluation tooling (per-page CER/WER distributions with name-level error
+  accounting) is runnable today.
+
 ## Repository map
 
 - `src/aktreader/`: package and CLI implementation.
