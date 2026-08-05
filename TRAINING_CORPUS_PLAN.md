@@ -58,6 +58,75 @@ data, 100% of high-disagreement acts. **Eval holdouts are human-verified only an
 sequestered by CLERK-YEAR (no clerk appears in both train and eval) — otherwise the
 benchmark measures handwriting memorization, not reading.**
 
+## Clerk-year reservation (check this before assigning a wave)
+
+**Before assigning a wave, check this table.** Reading a SEQUESTERED clerk-year produces
+evaluation material and exactly zero training-eligible records. Waves 001–006 consumed only
+sequestered years (Serock 1890 and 1877) and so produced no training pool at all — that was
+the holdout working as designed, not a defect in the waves, but it is not repeatable if the
+adapter is ever to have inputs.
+
+The reservation runs in one direction only. A SEQUESTERED year can never become training
+material. An OPEN year, **once read for training, can never afterwards become holdout
+material** — not because the training data spoils, but because a holdout the model has
+already trained on measures handwriting memorization instead of reading, which is the exact
+failure the clerk-year rule exists to prevent. Practically: do not mint gold records in a
+year that has already been read into the training pool.
+
+That asymmetry is why this table is written down. `validate_training_split` in
+`src/aktreader/training.py` already fails closed on the first direction — an export whose
+clerk-years touch the holdout raises `training/evaluation clerk-year leakage`. Nothing
+re-validates *past* exports against a holdout that grew later, so the second direction has
+no automated guard and is enforced here by reading the table first.
+
+| Clerk-year | Status | Local acts |
+| --- | --- | --- |
+| 1876 | SEQUESTERED | ~123 |
+| 1877 | SEQUESTERED | ~80 |
+| 1878 | OPEN | ~83 |
+| 1879 | OPEN | ~87 |
+| 1880 | OPEN | ~44 |
+| 1881 | OPEN | ~157 |
+| 1882 | SEQUESTERED | ~270 |
+| 1883 | SEQUESTERED | ~91 |
+| 1884 | SEQUESTERED | ~99 |
+| 1885 | SEQUESTERED | ~129 |
+| 1888 | SEQUESTERED | ~138 |
+| 1889 | OPEN | ~119 |
+| 1890 | SEQUESTERED | ~65 |
+| 1891 | SEQUESTERED | ~93 |
+| 1892 | SEQUESTERED | ~141 |
+| 1893 | SEQUESTERED | ~126 |
+| 1894 | SEQUESTERED | ~110 |
+| 1895 | OPEN | ~67 |
+| 1896 | SEQUESTERED | ~109 |
+| 1898 | OPEN | ~95 |
+| 1899 | SEQUESTERED | ~96 |
+| 1900 | OPEN | ~101 |
+| 1902 | SEQUESTERED | not harvested |
+| 1903 | SEQUESTERED | ~98 |
+| 1904 | OPEN | ~190 |
+
+Nine OPEN clerk-years carrying roughly **943 acts** are already harvested locally, against a
+launch-gate minimum of 100 grounded training records. The training bottleneck is reading
+throughput on these years, not acquisition. The densest are 1904 and 1881.
+
+Pułtusk is reserved differently and more tightly: `84|putusk|` **1877, 1878, 1885, 1886, and
+1890** are all sequestered. SPEC §12 names Pułtusk as training slice #1, so when that corpus
+is acquired those five years must be routed to evaluation and the training slice drawn from
+the others.
+
+**How this table was derived** (re-derive it rather than trusting the prose):
+
+- Status comes from `holdout_clerk_year_ids` in `gold/clerk_year_holdout.json` — any Serock
+  year listed there is SEQUESTERED, any harvested year absent from it is OPEN.
+- Act counts are approximations from `BulkData/Serock_0826d/HARVEST_STATE.txt`, summing the
+  highest act number reached per act-type across completed (`OK`) ranges in each year. They
+  are page-range derived, so treat them as ±a few acts, not as a census.
+- "not harvested" means the year is sequestered by the holdout but has no local scans.
+- `tests/test_clerk_year_reservation.py` asserts the SEQUESTERED column still matches the
+  holdout file, so this table cannot silently drift out of date.
+
 ## Volume targets (realistic for a strong LoRA)
 - Floor to train something useful: ~3–5k verified acts (T0 + Pułtusk first slice).
 - Target: **20–40k acts across 100+ clerk-years** (T0–T3) — ample for LoRA on an 8–30B VLM.
