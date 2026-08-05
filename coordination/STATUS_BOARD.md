@@ -9,9 +9,11 @@
 1. ~~Runtime blocked~~ RESOLVED 28 Jul: was Smart App Control; owner disabled it. llama-cli
    b10167 verified (exit 0), exe sha256 5719892E… posted in inbox_sol/msg-004. Model .gguf
    still absent — Sol to specify exact files+hashes, owner fetches.
-2. Human gold-sample check pending: act 6 (quarantined) + sampled acts from waves 001–002 —
-   promotes silver→gold. Claude will prepare the crop package.
-Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its ACK lines.
+2. Human gold-sample check pending: act 6 (quarantined) + sampled acts from waves 001–002,
+   plus 1890 acts 34/39 and the wave-006 field gates (1877 act-1 child initial А/Я/Ха,
+   act-9 née initial К/В). Answering these promotes silver→gold. Packets are prepared by the
+   coordinator; the answers are the owner's alone and are never machine-filled.
+Last updated: 5 Aug 2026 (coordinator). Sol side frozen; the coordinator now edits the whole board.
 
 ## Wave state
 | Wave | Acts | Reader A | Reader B | Consensus | Reader C | Resolved |
@@ -45,7 +47,19 @@ Last updated: 28 Jul 2026 (Claude). Each side edits only its own section + its A
 - [x] Reader A blind pass, acts 30–40, prompt v1.2 — FROZEN at 02725c6 (11 labels)
 - [ ] Human gold-sample package: **acts 6, 34, 39 pending Jake** (crops + both readings + C reports; act 40 rides along for its surname deadlock)
 - [x] Model fetched+verified by owner; reader-inspect READY (fingerprint 04adc59f…)
-- [!] Baseline BLOCKED (supersedes parser issue): b10167 grammar engine crashes on Qwen3.5 template (sampler init, <|im_start|>); probe matrix in msg-010/011. Parser itself now correct (attempts 1–3 fixed it). AWAITING: Sol pins a newer llama.cpp release (tag+URL+sha256) → owner fetch → grammar probe → rerun with --max-retries 3. Checkpoint rows at retry_count=2, untouched.
+- [x] Baseline UNBLOCKED and RUN 2026-08-04 on llama.cpp **b10274** (runtime fingerprint
+  75d6bd23…). The b10167 grammar-engine crash is resolved by the newer build; no Sol pin was
+  needed after the retirement. Outcome: **3 of 24 jobs completed**, 21 rejected by the
+  pipeline's own integrity gates (9 groundedness, 8 pinned-schema, 3 malformed JSON), zero
+  infrastructure errors. Canonical report `runs/p2-local-baseline/serockbench-b10274-only.json`:
+  coverage 3/36, filiation act exact 0/3, field exact 0/11, wrong-but-CONFIDENT N/A (the model
+  never asserts CONFIDENT — reported N/A, never a passing zero), observation-state 19/19.
+  BUILD-SENSITIVITY FINDING: 17 jobs that passed the gates on the July build fail them on
+  b10274 at identical weights, seed 0, temperature 0 — SerockBench numbers are not comparable
+  across llama.cpp builds, and runtime-fingerprint pinning is load-bearing, not ceremonial.
+  Full write-up `runs/p2-local-baseline/RUN_NOTES.md`; published to the public repo (7e89c70).
+  P2 targets (≥90% filiation, <2% wrong-but-CONFIDENT) remain far out of reach for this
+  local configuration — this is the honest floor, and the gates doing their job is the result.
 - ACK: msg-001_ack-and-p2-boundaries.md (reply: inbox_sol/msg-003_silver-tier-and-v12.md)
 - ACK: msg-002_p2-gate.md (reply: inbox_sol/msg-005_p2-accepted.md)
 

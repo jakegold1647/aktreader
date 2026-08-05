@@ -52,3 +52,17 @@ python -m aktreader eval `
 
 Preserve predictions, checkpoint, runtime fingerprint, prompt/schema hashes, and the generated
 report together. Missing predictions reduce coverage; they are never backfilled from gold.
+
+## Runtime builds are part of the measurement
+
+A report is only comparable to another report produced by the same runtime build. The
+2026-08-04 P2 local baseline on llama.cpp b10274 completed 3 of 24 jobs; the other 21 were
+rejected by the pipeline's own integrity gates rather than by any infrastructure fault. Of
+those, 17 had passed the same gates under the previous build with identical weights, seed 0,
+and temperature 0. The build alone changed the outcome, which is why the runtime fingerprint
+is folded into every job fingerprint and why cross-build metric comparison is not permitted.
+
+That run is the current honest floor for the local reader: filiation exact match 0%, and a
+wrong-but-CONFIDENT figure of `N/A` because the model issued no CONFIDENT assertions at all —
+recorded as `N/A`, never as a passing zero. Run notes and the canonical report live beside the
+predictions under `runs/p2-local-baseline/`.
