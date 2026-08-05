@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from aktreader.checkpoint import CheckpointStore, JobSnapshot, JobStatus, Progress
+from aktreader.gold import resolve_recorded_path
 from aktreader.privacy import (
     DEFAULT_PRIVACY_POLICY,
     PrivacyOutcome,
@@ -22,6 +23,11 @@ from aktreader.privacy import (
 SUPPORTED_SCAN_SUFFIXES = frozenset({".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"})
 _ALLOWED_TARGET_KINDS = frozenset({"act", "crop", "region", "whole_scan"})
 _REVIEW_TARGET_KINDS = frozenset({"multi_act", "multiple_acts", "page", "unknown"})
+
+
+def _repo_root() -> Path:
+    """Repository root under the src layout, for legacy provenance resolution."""
+    return Path(__file__).resolve().parents[2]
 
 
 class BatchReader(Protocol):
@@ -326,7 +332,12 @@ def load_manifest_jobs(
         if not isinstance(raw_item, dict):
             raise ValueError(f"manifest jobs[{index}] must be an object")
 
-        scan_path = _manifest_path(raw_item.get("scan"), base=source.parent, label="scan").resolve()
+        raw_scan = raw_item.get("scan")
+        scan_path = _manifest_path(raw_scan, base=source.parent, label="scan").resolve()
+        if not scan_path.is_file() and isinstance(raw_scan, str):
+            # Manifest scan strings are frozen provenance, like gold; resolution
+            # (not the record) remaps a legacy DNA drive root onto the current tree.
+            scan_path = resolve_recorded_path(raw_scan, _repo_root()).resolve()
         if not scan_path.is_file():
             raise FileNotFoundError(f"manifest scan does not exist: {scan_path}")
         target = _manifest_target(raw_item)

@@ -2,27 +2,27 @@
   "schema_version": "1.0.0",
   "artifacts": {
     "executable": {
-      "path": "E:\\DNA\\Project_RegisterReader\runtime\\llama.cpp-b10274\\llama-mtmd-cli.exe",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\runtime\\llama.cpp-b10274\\llama-mtmd-cli.exe",
       "sha256": "f447adf75f4134a1fdc9b14c61bfdc93a3c8ba6bbe19b9cf5b85a9de7482fd33"
     },
     "model": {
-      "path": "E:\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\Qwen3.5-9B-Q5_K_M.gguf",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\Qwen3.5-9B-Q5_K_M.gguf",
       "sha256": "dc2a39aef291f91a9116ad214058da0d86eb648743a124bd8c333787c4b9c91c"
     },
     "mmproj": {
-      "path": "E:\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\mmproj-F16.gguf",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\models\\qwen3.5-9b-q5_k_m\\mmproj-F16.gguf",
       "sha256": "f70dc3509053962b0d0d3ee8a7eacebf5d60aa560cad78254ae8698516ae029f"
     },
     "prompt": {
-      "path": "E:\\DNA\\Project_RegisterReader\\prompts\\reader_prompt-v1.2.0.md",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\prompts\\reader_prompt-v1.2.0.md",
       "sha256": "ea0e83756698496414ba654de70805179829848f31acc644112b1e51f48e955f"
     },
     "schema": {
-      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0-v1.2.schema.json",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\schemas\\reader-label-1.0.0-v1.2.schema.json",
       "sha256": "cb91cad50b3f6d7f9dfc6a81277bc47b69280747b58cd05545ec4ac87d8355ad"
     },
     "model_schema": {
-      "path": "E:\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
+      "path": "D:\\E-Drive-Preserve\\DNA\\Project_RegisterReader\\schemas\\model-output-1.0.0.schema.json",
       "sha256": "a0c3f12b330cb8f4dbbf474defb9a634003c3aa1b2572cf36fa0b1f32c158996"
     }
   },
