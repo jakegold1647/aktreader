@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RELAY = ROOT / "coordination" / "wave006_artifacts.json"
-SPEC = ROOT / "coordination" / "wave006_brief_spec.json"
-BRIEFS = ROOT / "coordination" / "wave006_briefs.json"
+RELAY = ROOT / "evidence" / "wave006" / "wave006_artifacts.json"
+SPEC = ROOT / "evidence" / "wave006" / "wave006_brief_spec.json"
+BRIEFS = ROOT / "evidence" / "wave006" / "wave006_briefs.json"
 
 
 def _load(path: Path) -> dict[str, object]:
