@@ -144,7 +144,7 @@ with the first pass's thinness quantified against Reader A's much larger field c
 coverage target without an equal groundedness constraint. This is therefore a supervisory-protocol
 failure, not merely a reader failure: **pressure to increase coverage without a groundedness check
 can convert an abstaining reader into a fabricating one.** The ruling and quarantine are frozen in
-[coordination msg-032](../coordination/inbox_sol/msg-032_wave005-fabrication-ruling.md).
+the wave-005 fabrication ruling recorded in the project's internal coordination log, which is not published in this repository.
 
 Four mechanical gates now prevent recurrence:
 
@@ -220,4 +220,4 @@ disagreed with the first reader on **2/3** acts and caught two material errors--
 misread as nine months, and act 12's surname Goldberg misread as Hozenberg. Those observations
 justify the verification pass; they do not establish an overall error rate or eliminate the need
 for adjudication and human decision. The governing ruling is
-[coordination msg-038](../coordination/inbox_sol/msg-038_ack-and-wave006-v14.md).
+recorded in the project's internal coordination log, which is not published in this repository.

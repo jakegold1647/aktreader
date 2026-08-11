@@ -1,8 +1,8 @@
 # CONSENSUS MERGE — wave 004: Serock 1890 deaths, acts 41–49 (+ SkZ index, merged separately in the CLOSURE AUDIT)
 Merged 28 Jul 2026 by the coordinating session (consensus stage — blindness no longer applies).
 Reader A = claude subscription session, prompt v1.3.0 (97dfa6a7…), frozen 0eddf76.
-Reader B = gpt-5.6 sol-ultra, prompt v1.3.0 (same hash), frozen d3c94a2-line hashes posted in
-coordination\inbox_claude\msg-014 (label sha256s recorded there).
+Reader B = gpt-5.6 sol-ultra, prompt v1.3.0 (same hash), frozen d3c94a2. Per-line label sha256s are
+recorded in the project's internal coordination log, which is not published in this repository.
 Artifacts: wave003\Serock_1890_deaths_39-42.jpg (acts 41–42) + wave004\43-46 / 47-49 spreads.
 
 **Prompt-bias check:** zero manufactured dual dates by either reader (fourth consecutive clean wave).
@@ -189,7 +189,7 @@ quality. Reader B's misses concentrate in two classes: two wholesale identity fo
 
 ### Disposition
 - All promotions above are consensus-PROBABLE (2-of-3). Silver ingest opens when the
-  coordinator posts the green-light to inbox_sol.
+  coordinator posts the green-light.
 - Human/expert sample additions: **acts 45, 46 (resolved identity forks, standing rule) and 49
   (rectification act)** — joining acts 6, 34, 39, 40-surname, and the item-20 witness.
 - Wave 005 (acts 7–29) is GO — artifacts staged and hashed; closes the book.

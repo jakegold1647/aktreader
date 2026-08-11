@@ -46,3 +46,7 @@ human_check/*.html
 # local virtualenvs
 .venv/
 .cvenv/
+
+# Build-coordination scratch; not part of the published record.
+coordination/
+AGENTS.md

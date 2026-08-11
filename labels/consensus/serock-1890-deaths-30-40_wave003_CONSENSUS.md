@@ -261,7 +261,7 @@ gold.
 
 ### Disposition of the resolved wave
 - Acts 30–40 promotions above → **silver** (2-of-3 machine consensus, training-eligible, never
-  eval) — ingest green-lights on the coordinator's inbox_sol post, not before.
+  eval) — ingest green-lights on the coordinator's post, not before.
 - **Human gold sample nominations: acts 34 and 39** (identity-significant: act 34 is an
   externally corroborated lineage record; act 39 was a sex/name identity fork), joining act 6
   from wave 002. Act 40 additionally rides along wherever the sample is checked — its surname
