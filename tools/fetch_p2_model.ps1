@@ -1,4 +1,4 @@
-# Owner-only fetch of the P2 baseline model pair (coordination/inbox_claude/msg-003).
+# Owner-only fetch of the P2 baseline model pair.
 # This is provisioning, not an AKTREADER inference path. Run from an ordinary PowerShell
 # session only after reviewing the revision-pinned URLs and hashes below.
 

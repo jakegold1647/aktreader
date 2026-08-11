@@ -1,9 +1,8 @@
 # Wave 005 Reader B replacement — quarantined over-claim
 
-Ruling: `coordination/inbox_sol/msg-032_wave005-fabrication-ruling.md`.
+Ruling: the wave-005 fabrication ruling, recorded in the project's internal coordination log, which is not published in this repository.
 
-This directory preserves the 23-file replacement pass originally frozen in
-`coordination/inbox_claude/msg-022_msg028-wave005-readerb-redo-frozen.md`.
+This directory preserves the 23-file replacement pass, frozen at the time of quarantine.
 Independent blind checks found schema-valid assertions that were not present on the page.
 The files are retained as failure evidence only.
 
