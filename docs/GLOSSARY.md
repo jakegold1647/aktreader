@@ -1,40 +1,44 @@
-# AKT Reader Evidence Terms Glossary
+# AKT Reader Glossary
 
-This glossary explains specialized terms used in AKT Reader for evidence-aware handwritten text recognition (HTR). If you're a genealogist or Python contributor new to the project, this will help you understand the terminology without reverse-engineering it from the codebase.
+A plain-language guide to evidence-aware HTR terms used in this project.
 
-## Core Evidence Concepts
+## Core Concepts
 
-### Blind Pass
-A transcription pass performed without looking at the original image. This helps establish what can be read from context alone, making later corrections more traceable and reducing confirmation bias.
+**HTR (Handwritten Text Recognition)**  
+Machine learning systems that convert images of handwritten documents into digital text.
 
-### Clerk-Year Sequestration
-A validation technique where transcriptions from the same clerk and year are kept together during quality checks. This helps catch systematic errors in handwriting interpretation that are specific to that clerk's style.
-
-### Filiation
-The chain of evidence showing how a transcription was derived—which passes, corrections, and validation steps led to the final text. This makes the transcription process auditable.
-
-### Typed Absence State
-A structured way to record why text is missing or unreadable. Instead of just marking something as unclear, this categorizes the reason (damage, ink fade, abbreviation, etc.).
+**Evidence-aware HTR**  
+HTR that preserves uncertainty and alternative readings rather than forcing a single "best guess." Critical for genealogical and archival work where accuracy matters more than confidence.
 
 ## Quality Tiers
 
-### Silver
-A transcription quality level indicating the text has been checked but may still contain minor uncertainties or require additional validation.
+**Gold**  
+Human-verified transcriptions. The highest quality ground truth, used for training and evaluation.
 
-### Gold
-The highest transcription quality level, indicating the text has been thoroughly validated and cross-checked. Gold-standard transcriptions are suitable for training machine learning models.
+**Silver**  
+Machine-generated transcriptions that pass quality thresholds but haven't been manually verified. Useful for scaling, but may contain errors.
 
-## Markup Conventions
+## Reading Strategies
 
-### `[unclear: X/Y]`
-A notation indicating uncertain text where:
-- `X` is the transcriber's best guess
-- `Y` is an alternative reading
+**Blind pass**  
+Transcribing without looking at existing transcriptions or predictions. Reduces bias and anchoring effects. Multiple independent blind passes can be compared to identify difficult passages.
 
-Example: `[unclear: Müller/Miller]` means the transcriber reads it as "Müller" but "Miller" is also possible.
+**Filiation**  
+The relationship between different versions of a text. In AKT Reader, tracking whether a transcription was derived from another transcription, from a model prediction, or created independently.
 
-This preserves both the interpretation and the uncertainty, which is crucial for historical research where a single letter can change genealogical connections.
+## Uncertainty Markup
 
-## Why These Terms Matter
+**`[unclear: X/Y]`**  
+Marks text where the transcriber sees two (or more) plausible readings. `X` is the preferred interpretation, `Y` is the alternative. Example: `[unclear: März/Mai]` means "probably März, possibly Mai."
 
-Evidence-aware HTR treats transcription as a scientific process where uncertainty is documented, not hidden. These terms help contributors communicate precisely about transcription quality and trace how readings were established.
+**Typed absence state**  
+Explicit markers for *why* text is missing or unreadable: damage, illegible handwriting, missing pages, etc. Better than silently omitting unclear text.
+
+## Workflow Concepts
+
+**Clerk-year sequestration**  
+Isolating training data by clerk and year to prevent the model from memorizing individual handwriting styles instead of learning general patterns. Ensures the model generalizes to unseen clerks and time periods.
+
+## Why These Matter
+
+Genealogical research requires knowing *what we don't know*. A silently wrong date can break a family tree. Evidence-aware transcription preserves doubt, alternatives, and the human decision-making process—making errors visible and fixable rather than hidden in a black box.
