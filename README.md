@@ -3,6 +3,9 @@
 > **Repository role:** `aktreader` is the runnable local reader application. It is not the
 > evidence/methodology lab and it is not the independent benchmark dataset.
 
+The Python distribution is named `aktreader-app`. It keeps the shorter `aktreader` command and
+`aktreader` import namespace for compatibility.
+
 AKTREADER is a local, uncertainty-honest reader for handwritten civil-register acts from
 partitioned Poland. It turns a user-supplied scan into a structured evidence object with
 original-script transcription, translation, filiation, dates, witnesses, provenance, and
@@ -135,8 +138,14 @@ reader; the evidence lab holds the evidence about how well it reads. The benchma
 of both and is still under construction.
 
 The Application and Evidence Lab currently share the `aktreader` Python package namespace and
-command name. Use a separate virtual environment for each repository; installing both into one
-environment is not supported.
+command name. Their distribution identities are different: this repository installs as
+`aktreader-app`, while the Evidence Lab is a separate project. Use a separate virtual environment
+for each repository; installing both into one environment is not supported because their import
+paths and console scripts would still collide.
+
+`aktreader doctor --json` reports `project_role`, `distribution_name`, `package_namespace`,
+`command_name`, and `repository_url`, so automation can verify that it launched the Application
+rather than another repository in the project family.
 
 ## Repository map
 

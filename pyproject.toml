@@ -1,5 +1,5 @@
 [project]
-name = "aktreader"
+name = "aktreader-app"
 version = "0.0.1"
 description = "A register-reading machine: scan in, graded genealogical evidence out. Structured, uncertainty-honest extraction of 19th-century civil register acts from partitioned Poland (Russian Cyrillic 1868-1915, Polish before/after)."
 readme = "README.md"
@@ -9,6 +9,11 @@ dependencies = [
     "jsonschema>=4.23,<5",
     "pillow>=11,<13",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jakegold1647/aktreader"
+Repository = "https://github.com/jakegold1647/aktreader"
+Issues = "https://github.com/jakegold1647/aktreader/issues"
 
 [project.scripts]
 aktreader = "aktreader.cli:main"
