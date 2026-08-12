@@ -143,9 +143,21 @@ def test_eval_runs_with_sockets_disabled(
         encoding="utf-8",
     )
     output = tmp_path / "eval.json"
+    table = tmp_path / "eval-strata.md"
 
-    exit_code = main(["eval", "--predictions", str(prediction), "--output", str(output)])
+    exit_code = main(
+        [
+            "eval",
+            "--predictions",
+            str(prediction),
+            "--output",
+            str(output),
+            "--strata-table",
+            str(table),
+        ]
+    )
 
     capsys.readouterr()
     assert exit_code == 0
     assert output.exists()
+    assert table.exists()

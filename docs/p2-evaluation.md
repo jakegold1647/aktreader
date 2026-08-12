@@ -298,17 +298,19 @@ Set-Location E:\DNA\Project_RegisterReader
 $runRoot = 'E:\DNA\Project_RegisterReader\runs\p2-local-baseline'
 $outputDir = Join-Path $runRoot 'predictions'
 $evaluation = Join-Path $runRoot 'serockbench.json'
+$strataTable = Join-Path $runRoot 'serockbench-strata.md'
 .\.venv\Scripts\python.exe -m aktreader eval `
   --predictions $outputDir `
   --gold-dir .\gold\acts `
   --holdout .\gold\clerk_year_holdout.json `
-  --output $evaluation
+  --output $evaluation `
+  --strata-table $strataTable
 ```
 
 The evaluation command accepts either one prediction JSON file or a directory of prediction
 JSON files. The first complete run should report 24/36 coverage, not 36/36. Preserve the
-predictions, batch checkpoint, runtime fingerprint, content pins, and generated report as
-immutable run evidence.
+predictions, batch checkpoint, runtime fingerprint, content pins, generated JSON report, and
+count-backed Markdown table as immutable run evidence.
 
 See [Local model runtime](local-model.md), [Label factory](label-factory.md), and
 [Architecture](architecture.md) for the runtime, consensus, and data-flow contracts.

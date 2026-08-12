@@ -47,11 +47,31 @@ python -m aktreader eval `
   --predictions .\runs\p2-local-baseline\predictions `
   --gold-dir .\gold\acts `
   --holdout .\gold\clerk_year_holdout.json `
-  --output .\runs\p2-local-baseline\serockbench.json
+  --output .\runs\p2-local-baseline\serockbench.json `
+  --strata-table .\runs\p2-local-baseline\serockbench-strata.md
 ```
 
 Preserve predictions, checkpoint, runtime fingerprint, prompt/schema hashes, and the generated
-report together. Missing predictions reduce coverage; they are never backfilled from gold.
+JSON report and table together. Missing predictions reduce coverage; they are never backfilled
+from gold.
+
+## Reading the stratified table
+
+The Markdown table is a count-backed view of the JSON report's `stratified` section, not a new
+scoring path. Each row is one recorded register language × field family. Wrong-but-CONFIDENT is
+shown before exact accuracy because a confidently wrong genealogical assertion is the primary
+risk. Every rate carries its numerator and denominator; a zero denominator is `N/A (0/0)`, never
+0%.
+
+Coverage divides predicted fields by gold-scorable fields. Wrong-but-CONFIDENT divides wrong
+CONFIDENT fields by all evaluated CONFIDENT fields. Exact accuracy and abstention use predicted
+fields as their denominator. Register language is copied from gold and never inferred from year,
+so a missing language remains `unknown` and no Polish row appears until Polish gold exists.
+
+The current gold vocabulary supports the broader families `names`, `dates`, `ages`,
+`person_attributes`, and `register_other`. It cannot honestly split names into given names,
+surnames, and patronymics yet; that remains a gold-vocabulary limitation rather than a missing
+display feature.
 
 ## Runtime builds are part of the measurement
 

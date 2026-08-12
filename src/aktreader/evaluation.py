@@ -8,7 +8,7 @@ import math
 import re
 import unicodedata
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -48,10 +48,141 @@ FIELD_FAMILY_LEAVES = {
     "marital_status": "person_attributes",
     "relationship": "person_attributes",
 }
+STRATIFIED_FAMILY_ORDER = (
+    "names",
+    "dates",
+    "ages",
+    "person_attributes",
+    "register_other",
+)
 
 
 class EvaluationIntegrityError(ValueError):
     """Raised when a benchmark or training split violates evaluation integrity."""
+
+
+def _report_count(value: Any, location: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise EvaluationIntegrityError(f"{location} must be a non-negative integer")
+    return value
+
+
+def _ratio_display(numerator: int, denominator: int, location: str) -> str:
+    if numerator > denominator:
+        raise EvaluationIntegrityError(f"{location} numerator exceeds denominator")
+    if denominator == 0:
+        return "N/A (0/0)"
+    return f"{numerator / denominator:.2%} ({numerator}/{denominator})"
+
+
+def _markdown_cell(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("|", "\\|").replace("\r", " ").replace("\n", " ")
+
+
+def render_stratified_markdown(report: Mapping[str, Any]) -> str:
+    """Render one count-backed Markdown table from a SerockBench report."""
+    benchmark = report.get("benchmark")
+    if benchmark != "SerockBench-v1":
+        raise EvaluationIntegrityError("stratified table requires a SerockBench-v1 report")
+    holdout = report.get("holdout_integrity")
+    if not isinstance(holdout, Mapping) or holdout.get("status") != "PASS":
+        raise EvaluationIntegrityError("stratified table requires passing holdout integrity")
+    records = report.get("records")
+    if not isinstance(records, Mapping):
+        raise EvaluationIntegrityError("stratified table requires record counts")
+    gold_records = _report_count(records.get("gold"), "records.gold")
+    predicted_records = _report_count(records.get("predicted"), "records.predicted")
+    record_coverage = _ratio_display(
+        predicted_records,
+        gold_records,
+        "records.coverage",
+    )
+    stratified = report.get("stratified")
+    if not isinstance(stratified, Mapping):
+        raise EvaluationIntegrityError("stratified table requires a stratified report section")
+
+    family_rank = {family: index for index, family in enumerate(STRATIFIED_FAMILY_ORDER)}
+    rows: list[tuple[str, str, Mapping[str, Any]]] = []
+    for language, families in stratified.items():
+        if not isinstance(language, str) or not language:
+            raise EvaluationIntegrityError("stratified language keys must be non-empty strings")
+        if not isinstance(families, Mapping):
+            raise EvaluationIntegrityError(f"stratified.{language} must be an object")
+        for family, metrics in families.items():
+            if not isinstance(family, str) or not family:
+                raise EvaluationIntegrityError("stratified family keys must be non-empty strings")
+            if not isinstance(metrics, Mapping):
+                raise EvaluationIntegrityError(
+                    f"stratified.{language}.{family} must be an object"
+                )
+            rows.append((language, family, metrics))
+    rows.sort(
+        key=lambda row: (
+            row[0] == "unknown",
+            row[0],
+            family_rank.get(row[1], len(family_rank)),
+            row[1],
+        )
+    )
+
+    lines = [
+        f"# {benchmark} stratified field results",
+        "",
+        f"Matched prediction records: {record_coverage}.",
+        "Holdout integrity: PASS.",
+        "",
+        "| Register language | Field family | Gold scorable | Predicted | Coverage | "
+        "Wrong but CONFIDENT | Exact accuracy | Abstention |",
+        "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for language, family, metrics in rows:
+        location = f"stratified.{language}.{family}"
+        gold_scorable = _report_count(metrics.get("gold_scorable"), f"{location}.gold_scorable")
+        predicted = _report_count(metrics.get("predicted"), f"{location}.predicted")
+        exact = _report_count(metrics.get("exact"), f"{location}.exact")
+        wrong_confident = metrics.get("wrong_but_confident")
+        abstention = metrics.get("abstention")
+        if not isinstance(wrong_confident, Mapping):
+            raise EvaluationIntegrityError(f"{location}.wrong_but_confident must be an object")
+        if not isinstance(abstention, Mapping):
+            raise EvaluationIntegrityError(f"{location}.abstention must be an object")
+        wrong = _report_count(wrong_confident.get("wrong"), f"{location}.wrong")
+        confident = _report_count(
+            wrong_confident.get("confident"),
+            f"{location}.confident",
+        )
+        abstained = _report_count(abstention.get("abstained"), f"{location}.abstained")
+        lines.append(
+            "| "
+            + " | ".join(
+                (
+                    _markdown_cell(language),
+                    _markdown_cell(family),
+                    str(gold_scorable),
+                    str(predicted),
+                    _ratio_display(predicted, gold_scorable, f"{location}.coverage"),
+                    _ratio_display(wrong, confident, f"{location}.wrong_but_confident"),
+                    _ratio_display(exact, predicted, f"{location}.exact_accuracy"),
+                    _ratio_display(abstained, predicted, f"{location}.abstention"),
+                )
+            )
+            + " |"
+        )
+    lines.extend(
+        [
+            "",
+            "Wrong but CONFIDENT is the headline risk metric. Coverage uses gold-scorable "
+            "fields; wrong-but-CONFIDENT uses CONFIDENT predictions; exact accuracy and "
+            "abstention use predicted fields.",
+            "Register language is copied from the gold record and is never inferred from its "
+            "year. `unknown` remains explicit.",
+        ]
+    )
+    if not rows:
+        lines.append(
+            "No stratum rows are available because no gold record had a matching prediction."
+        )
+    return "\n".join(lines) + "\n"
 
 
 def field_family(path: str) -> str:

@@ -37,7 +37,11 @@ from aktreader.cli_support import (
 from aktreader.comparison import compare_reader_labels, render_disagreements_csv
 from aktreader.consensus import merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
-from aktreader.evaluation import evaluate_predictions, load_prediction_records
+from aktreader.evaluation import (
+    evaluate_predictions,
+    load_prediction_records,
+    render_stratified_markdown,
+)
 from aktreader.grounding import (
     load_grounded_reader_label,
     paired_quality_metrics,
@@ -173,6 +177,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     evaluate.add_argument("--training-clerk-years", type=Path)
     evaluate.add_argument("--output", type=Path)
+    evaluate.add_argument(
+        "--strata-table",
+        type=Path,
+        help="optional Markdown table of count-backed field-family and language strata",
+    )
 
     compare = subparsers.add_parser(
         "compare",
@@ -541,18 +550,33 @@ def _command_eval(args: argparse.Namespace) -> int:
         holdout,
         training_clerk_year_ids=_training_clerk_year_ids(args.training_clerk_years),
     )
-    if args.output is not None:
-        output = local_output_path(args.output, role="evaluation output")
-        protected_inputs = {prediction_path, holdout_path, *gold_paths}
-        if args.training_clerk_years is not None:
-            protected_inputs.add(
-                local_input_path(
-                    args.training_clerk_years,
-                    role="training clerk-year manifest",
-                )
+    output = local_output_path(args.output, role="evaluation output") if args.output else None
+    table_output = (
+        local_output_path(args.strata_table, role="stratified table output")
+        if args.strata_table
+        else None
+    )
+    destinations = [path for path in (output, table_output) if path is not None]
+    protected_inputs = {holdout_path, *gold_paths}
+    if args.training_clerk_years is not None:
+        protected_inputs.add(
+            local_input_path(
+                args.training_clerk_years,
+                role="training clerk-year manifest",
             )
-        if output in protected_inputs:
-            raise CliConfigurationError("evaluation output must not overwrite any input file")
+        )
+    for destination in destinations:
+        if destination in protected_inputs or _path_is_within(
+            destination, prediction_path
+        ) or _path_is_within(destination, gold_dir):
+            raise CliConfigurationError("evaluation outputs must not overwrite any input file")
+    if output is not None and output == table_output:
+        raise CliConfigurationError(
+            "evaluation JSON and stratified table outputs must be distinct paths"
+        )
+    if table_output is not None:
+        atomic_write_text(table_output, render_stratified_markdown(report))
+    if output is not None:
         atomic_write_json(output, report)
     _emit_json(report)
     return 0

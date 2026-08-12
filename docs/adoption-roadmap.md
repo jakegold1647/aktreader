@@ -22,11 +22,15 @@ the wrong-but-confident column is the headline number, not overall accuracy.
 Builds on `src/aktreader/evaluation.py`; the reduced-schema field map already encodes the
 field vocabulary. No new gold required.
 
-**Shipped 2026-08-04 (first slice):** the evaluation report now carries a `stratified` section
-- field family (names / dates / ages / person_attributes / register_other) x register language
-(`ru` today, `pl` slots in when Polish gold lands, `unknown` never guessed) with coverage,
-exact accuracy, wrong-but-confident, and abstention per stratum. The given/surname/patronymic
-split awaits a finer gold vocabulary; the publishable one-table rendering is still open.
+**Shipped 2026-08-04 (scoring slice):** the evaluation report carries a `stratified` section —
+field family (names / dates / ages / person_attributes / register_other) × recorded register
+language (`ru` today, `unknown` never guessed) with coverage, exact accuracy,
+wrong-but-confident, and abstention per stratum.
+
+**Shipped 2026-08-12 (publication slice):** `eval --strata-table` renders those exact counts as
+one deterministic Markdown table, puts wrong-but-CONFIDENT before exact accuracy, and prints
+every numerator/denominator. The given-name/surname/patronymic split still awaits a finer gold
+vocabulary; no display layer can recover distinctions the gold contract does not encode.
 
 ## 2. Ground truth in an open interchange format
 

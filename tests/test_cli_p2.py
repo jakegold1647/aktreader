@@ -506,9 +506,58 @@ def test_eval_writes_real_holdout_guarded_report(
         encoding="utf-8",
     )
     output = tmp_path / "eval.json"
+    table = tmp_path / "eval-strata.md"
 
-    assert main(["eval", "--predictions", str(prediction), "--output", str(output)]) == 0
+    assert (
+        main(
+            [
+                "eval",
+                "--predictions",
+                str(prediction),
+                "--output",
+                str(output),
+                "--strata-table",
+                str(table),
+            ]
+        )
+        == 0
+    )
     report = json.loads(capsys.readouterr().out)
     assert report["benchmark"] == "SerockBench-v1"
     assert report["holdout_integrity"]["status"] == "PASS"
     assert json.loads(output.read_text(encoding="utf-8")) == report
+    rendered = table.read_text(encoding="utf-8")
+    assert "| Register language | Field family |" in rendered
+    assert "Wrong but CONFIDENT" in rendered
+    assert "N/A (0/0)" in rendered
+
+
+def test_eval_rejects_one_path_for_json_and_table(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = Path(__file__).resolve().parents[1]
+    first_path = sorted((root / "gold" / "acts").glob("*.json"))[0]
+    first_gold = json.loads(first_path.read_text(encoding="utf-8"))
+    prediction = tmp_path / "prediction.json"
+    prediction.write_text(
+        json.dumps({"record_id": first_gold["record_id"], "observations": {}}),
+        encoding="utf-8",
+    )
+    destination = tmp_path / "evaluation.out"
+
+    exit_code = main(
+        [
+            "eval",
+            "--predictions",
+            str(prediction),
+            "--output",
+            str(destination),
+            "--strata-table",
+            str(destination),
+        ]
+    )
+
+    assert exit_code == 2
+    assert "must be distinct paths" in capsys.readouterr().err
+    assert not destination.exists()

@@ -5,7 +5,16 @@ coverage, exact accuracy, and abstention are reported alongside so abstention
 is never mistaken for success.
 """
 
-from aktreader.evaluation import evaluate_predictions, field_family
+from copy import deepcopy
+
+import pytest
+
+from aktreader.evaluation import (
+    EvaluationIntegrityError,
+    evaluate_predictions,
+    field_family,
+    render_stratified_markdown,
+)
 
 
 def evidence(value: object, confidence: str = "PROBABLE") -> dict[str, object]:
@@ -116,6 +125,72 @@ def test_stratified_report_counts_by_family_and_era() -> None:
         "wrong_but_confident": {"wrong": 0, "confident": 0, "rate": None},
         "abstention": {"abstained": 0, "rate": None},
     }
+
+
+def test_stratified_markdown_is_one_count_backed_table() -> None:
+    gold = gold_record()
+    prediction = {
+        "record_id": gold["record_id"],
+        "observations": {
+            "father.name": evidence("Abram Goldsztejn", "CONFIDENT"),
+            "mother.name": evidence("Wrong Name", "CONFIDENT"),
+            "mother.maiden_name": evidence("Kana?", "UNCLEAR"),
+        },
+    }
+    report = evaluate_predictions([gold], [prediction], holdout_for(gold))
+
+    rendered = render_stratified_markdown(report)
+
+    assert rendered == "\n".join(
+        [
+            "# SerockBench-v1 stratified field results",
+            "",
+            "Matched prediction records: 100.00% (1/1).",
+            "Holdout integrity: PASS.",
+            "",
+            "| Register language | Field family | Gold scorable | Predicted | Coverage | "
+            "Wrong but CONFIDENT | Exact accuracy | Abstention |",
+            "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+            "| ru | names | 3 | 3 | 100.00% (3/3) | 50.00% (1/2) | 33.33% (1/3) | 33.33% (1/3) |",
+            "| ru | ages | 1 | 0 | 0.00% (0/1) | N/A (0/0) | N/A (0/0) | N/A (0/0) |",
+            "",
+            "Wrong but CONFIDENT is the headline risk metric. Coverage uses gold-scorable "
+            "fields; wrong-but-CONFIDENT uses CONFIDENT predictions; exact accuracy and "
+            "abstention use predicted fields.",
+            "Register language is copied from the gold record and is never inferred from its "
+            "year. `unknown` remains explicit.",
+            "",
+        ]
+    )
+
+
+def test_stratified_markdown_keeps_an_empty_result_explicit() -> None:
+    gold = gold_record()
+    report = evaluate_predictions([gold], [], holdout_for(gold))
+
+    rendered = render_stratified_markdown(report)
+
+    assert "Matched prediction records: 0.00% (0/1)." in rendered
+    assert "No stratum rows are available" in rendered
+    assert rendered.count("| ru |") == 0
+
+
+def test_stratified_markdown_fails_closed_on_bad_integrity_or_counts() -> None:
+    gold = gold_record()
+    prediction = {
+        "record_id": gold["record_id"],
+        "observations": {"father.name": evidence("Abram Goldsztejn", "CONFIDENT")},
+    }
+    report = evaluate_predictions([gold], [prediction], holdout_for(gold))
+    failed_holdout = deepcopy(report)
+    failed_holdout["holdout_integrity"]["status"] = "FAIL"
+    impossible_counts = deepcopy(report)
+    impossible_counts["stratified"]["ru"]["names"]["predicted"] = 4
+
+    with pytest.raises(EvaluationIntegrityError, match="passing holdout integrity"):
+        render_stratified_markdown(failed_holdout)
+    with pytest.raises(EvaluationIntegrityError, match="numerator exceeds denominator"):
+        render_stratified_markdown(impossible_counts)
 
 
 def test_unpredicted_scorable_fields_lower_coverage_not_accuracy() -> None:
