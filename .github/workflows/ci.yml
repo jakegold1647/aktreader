@@ -28,7 +28,9 @@ jobs:
           python -m aktreader --version
           python -m aktreader doctor --json
           python -m aktreader prompt-verify --root .
-          python -m aktreader compare labels/readerA labels/readerB --output "$RUNNER_TEMP/reader-comparison.json"
+          python -m aktreader compare labels/readerA labels/readerB \
+            --output "$RUNNER_TEMP/reader-comparison.json" \
+            --csv "$RUNNER_TEMP/reader-disagreements.csv"
       - name: Lint
         run: python -m ruff check .
       - name: Test

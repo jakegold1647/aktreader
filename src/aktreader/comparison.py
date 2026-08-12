@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import json
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -28,6 +30,81 @@ from aktreader.labels import (
 
 class ComparisonError(ValueError):
     """Raised when a comparison input cannot be interpreted safely."""
+
+
+CSV_FIELDNAMES = (
+    "record_id",
+    "field_path",
+    "disagreement_kind",
+    "left_observation_state",
+    "right_observation_state",
+    "left_value",
+    "right_value",
+    "left_confidence",
+    "right_confidence",
+    "left_original_script",
+    "right_original_script",
+)
+
+
+def _spreadsheet_cell(value: Any) -> str:
+    """Render one human-facing cell without allowing formula execution."""
+    if value is None:
+        rendered = ""
+    elif isinstance(value, str):
+        rendered = value
+    else:
+        rendered = json.dumps(
+            _json_value(value),
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
+        )
+    candidate = rendered.lstrip(" \t\r\n")
+    if candidate.startswith(("=", "+", "-", "@")):
+        return f"'{rendered}"
+    return rendered
+
+
+def render_disagreements_csv(disagreements: Iterable[Mapping[str, Any]]) -> str:
+    """Render every supplied disagreement as an Excel-friendly UTF-8 CSV."""
+    stream = io.StringIO(newline="")
+    writer = csv.DictWriter(
+        stream,
+        fieldnames=CSV_FIELDNAMES,
+        lineterminator="\r\n",
+    )
+    writer.writeheader()
+    for item in disagreements:
+        left = item.get("left")
+        right = item.get("right")
+        left_snapshot = left if isinstance(left, Mapping) else {}
+        right_snapshot = right if isinstance(right, Mapping) else {}
+        writer.writerow(
+            {
+                "record_id": _spreadsheet_cell(item.get("record_id")),
+                "field_path": _spreadsheet_cell(item.get("field_path")),
+                "disagreement_kind": _spreadsheet_cell(item.get("kind")),
+                "left_observation_state": _spreadsheet_cell(
+                    left_snapshot.get("observation_state")
+                ),
+                "right_observation_state": _spreadsheet_cell(
+                    right_snapshot.get("observation_state")
+                ),
+                "left_value": _spreadsheet_cell(left_snapshot.get("value")),
+                "right_value": _spreadsheet_cell(right_snapshot.get("value")),
+                "left_confidence": _spreadsheet_cell(left_snapshot.get("confidence")),
+                "right_confidence": _spreadsheet_cell(right_snapshot.get("confidence")),
+                "left_original_script": _spreadsheet_cell(
+                    left_snapshot.get("original_script")
+                ),
+                "right_original_script": _spreadsheet_cell(
+                    right_snapshot.get("original_script")
+                ),
+            }
+        )
+    return "\ufeff" + stream.getvalue()
 
 
 def _finding_report(finding: Any) -> dict[str, Any]:
@@ -224,7 +301,7 @@ def compare_reader_labels(
     left_path: Path,
     right_path: Path,
     *,
-    max_disagreements: int = 100,
+    max_disagreements: int | None = 100,
     require_grounded: bool = False,
 ) -> dict[str, Any]:
     """Compare two local label collections without inference or network access.
@@ -233,7 +310,7 @@ def compare_reader_labels(
     compared immediately.  Their unverified provenance remains visible in the report;
     ``require_grounded=True`` is the fail-closed mode for publication-grade inputs.
     """
-    if max_disagreements < 0:
+    if max_disagreements is not None and max_disagreements < 0:
         raise ComparisonError("max_disagreements must be zero or greater")
     left_labels, left_files, left_warnings = _load_labels(
         left_path, require_grounded=require_grounded
@@ -270,7 +347,7 @@ def compare_reader_labels(
                 continue
             record_disagreement_count += 1
             disagreement_total += 1
-            if len(disagreements) < max_disagreements:
+            if max_disagreements is None or len(disagreements) < max_disagreements:
                 disagreements.append(
                     {
                         "record_id": record_id,

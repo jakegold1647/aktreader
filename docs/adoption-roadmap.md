@@ -39,9 +39,11 @@ before anything ships.
 
 Reviewers live in Excel. Extend the compare/adjudication path so a disagreement table exports
 to CSV/XLSX and the adjudicated answers re-import losslessly (BOM, encoding, and formula-
-injection safety included). The contributor-scoped `compare --csv` task (#2 in
-CONTRIBUTOR_TASKS) is the first slice; the re-import half is owner-gated because it feeds
-frozen evidence.
+injection safety included).
+
+**Shipped 2026-08-12 (export slice):** `compare --csv` writes every disagreement as a
+UTF-8-BOM, formula-safe table while the JSON report retains the safety and provenance metadata.
+The re-import half remains owner-gated because it would feed frozen adjudication evidence.
 
 ## 4. Testable no-egress statement
 

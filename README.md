@@ -110,7 +110,9 @@ The CLI also provides `label-validate`, `consensus-merge`, `reader-inspect`, `re
 comparison without supplying scans or model files:
 
 ```powershell
-python -m aktreader compare labels/readerA labels/readerB --output comparison-report.json
+python -m aktreader compare labels/readerA labels/readerB `
+  --output comparison-report.json `
+  --csv comparison-disagreements.csv
 ```
 
 See [local comparisons](docs/comparisons.md). `reader-infer` and `batch-run` execute local

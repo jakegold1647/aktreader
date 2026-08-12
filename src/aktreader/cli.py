@@ -34,7 +34,7 @@ from aktreader.cli_support import (
     require_keys,
     require_local_only_data,
 )
-from aktreader.comparison import compare_reader_labels
+from aktreader.comparison import compare_reader_labels, render_disagreements_csv
 from aktreader.consensus import merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
 from aktreader.evaluation import evaluate_predictions, load_prediction_records
@@ -181,6 +181,11 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("left", type=Path, help="left label file or directory")
     compare.add_argument("right", type=Path, help="right label file or directory")
     compare.add_argument("--output", type=Path, help="optional JSON report path")
+    compare.add_argument(
+        "--csv",
+        type=Path,
+        help="optional spreadsheet-safe CSV containing every field disagreement",
+    )
     compare.add_argument(
         "--max-disagreements",
         type=int,
@@ -563,20 +568,42 @@ def _command_compare(args: argparse.Namespace) -> int:
     if left_path == right_path:
         raise CliConfigurationError("comparison requires two distinct input paths")
 
+    if args.max_disagreements < 0:
+        raise CliConfigurationError("max_disagreements must be zero or greater")
+
     output = local_output_path(args.output, role="comparison output") if args.output else None
-    if output is not None and (
-        _path_is_within(output, left_path) or _path_is_within(output, right_path)
-    ):
-        raise CliConfigurationError(
-            "comparison output must not be inside either input file or directory"
-        )
+    csv_output = local_output_path(args.csv, role="comparison CSV output") if args.csv else None
+    destinations = [path for path in (output, csv_output) if path is not None]
+    for destination in destinations:
+        if _path_is_within(destination, left_path) or _path_is_within(
+            destination, right_path
+        ):
+            raise CliConfigurationError(
+                "comparison outputs must not be inside either input file or directory"
+            )
+    if output is not None and output == csv_output:
+        raise CliConfigurationError("comparison JSON and CSV outputs must be distinct paths")
 
     report = compare_reader_labels(
         left_path,
         right_path,
-        max_disagreements=args.max_disagreements,
+        max_disagreements=None if csv_output is not None else args.max_disagreements,
         require_grounded=args.require_grounded,
     )
+    if csv_output is not None:
+        all_disagreements = report["disagreements"]["items"]
+        atomic_write_text(csv_output, render_disagreements_csv(all_disagreements))
+        returned = all_disagreements[: args.max_disagreements]
+        report = {
+            **report,
+            "csv_output": str(csv_output),
+            "disagreements": {
+                **report["disagreements"],
+                "returned": len(returned),
+                "truncated": report["disagreements"]["total"] > len(returned),
+                "items": returned,
+            },
+        }
     if output is not None:
         report = {**report, "output": str(output)}
         atomic_write_json(output, report)

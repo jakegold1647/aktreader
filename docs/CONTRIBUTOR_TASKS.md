@@ -22,22 +22,7 @@ are the likely culprits).
 **Acceptance:** CI is green on all matrix cells; no test is skipped to get there other than the
 documented owner-local checksum skip.
 
-## 2. Machine-readable and CSV output for `aktreader compare` — *good first issue*
-
-**Why:** the `compare` command emits a JSON report; reviewers doing human adjudication often
-want a flat table they can sort in a spreadsheet.
-
-**Scope:** add a `--csv PATH` option to the `compare` subcommand that writes one row per
-disagreement (record id, field path, left value, right value, disagreement kind). No new
-dependencies — the standard library `csv` module is enough.
-
-**Where to look:** `src/aktreader/comparison.py`, `src/aktreader/cli.py`,
-`tests/test_comparison.py`, `docs/comparisons.md`.
-
-**Acceptance:** round-trips correctly on the tracked `labels/` fixtures; UTF-8 output opens
-cleanly in spreadsheet software (mind the BOM); tests cover an empty-disagreement report.
-
-## 3. A glossary for outsiders — *good first issue, documentation only*
+## 2. A glossary for outsiders — *good first issue, documentation only*
 
 **Why:** the docs use project jargon — silver/gold tiers, clerk-year sequestration, blind pass,
 filiation, `[unclear: X/Y]`, typed absence states — that newcomers currently have to
@@ -51,7 +36,7 @@ is authoritative for each term. Sources: `README.md`, `SPEC.md`, `skills/uncerta
 software vocabulary appears in the glossary; definitions do not contradict the grading contract
 in `skills/uncertainty-grading.md`.
 
-## 4. Property-based tests for the label validators
+## 3. Property-based tests for the label validators
 
 **Why:** the validators in `src/aktreader/labels.py` and `src/aktreader/gold.py` are the
 project's safety floor; today they are covered by example-based tests only.
@@ -64,7 +49,7 @@ valid label/evidence structures (drop keys, corrupt observation states, break th
 contract (`EVIDENCE_KEYS`, observation states, UNCLEAR conventions) is generatively covered;
 `python -m tools.check_dependency_licenses` still passes after the dependency addition.
 
-## 5. Auto-generated field reference from the schemas
+## 4. Auto-generated field reference from the schemas
 
 **Why:** the versioned JSON Schemas under `schemas/` are the real contract, but there is no
 human-readable field reference; people read the prompt text instead.
@@ -76,7 +61,7 @@ output is current (regenerate-and-diff).
 **Acceptance:** running the tool twice is idempotent; CI fails if the committed reference drifts
 from the schemas.
 
-## 6. Actionable validator error messages
+## 5. Actionable validator error messages
 
 **Why:** validator errors are precise but terse (e.g. `PRESENT requires a value`); a contributor
 who triggers one gets no pointer to the rule it enforces.
@@ -87,6 +72,13 @@ not change what is accepted or rejected — messages only.
 
 **Acceptance:** the test suite still passes with assertions updated for new wording; no
 behavioral change to validation outcomes.
+
+## Recently shipped (not available to claim)
+
+- **Spreadsheet-safe `compare --csv` export — 2026-08-12.** The export includes every
+  disagreement regardless of the JSON detail cap, writes UTF-8 with a BOM, preserves explicit
+  observation states, neutralizes formula-like cells, and covers the header-only agreement case.
+  CSV re-import remains owner-gated because it would modify adjudication inputs.
 
 ## Explicitly not up for grabs
 
