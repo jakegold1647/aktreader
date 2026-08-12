@@ -55,6 +55,7 @@ from aktreader.grounding import (
     paired_quality_metrics,
     validate_cross_reader_grounding,
 )
+from aktreader.installation import inspect_application_checkout
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
@@ -94,6 +95,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     doctor = subparsers.add_parser("doctor", help="report the local pipeline environment")
     doctor.add_argument("--json", action="store_true", help="emit machine-readable JSON")
+    doctor.add_argument(
+        "--inspect-root",
+        type=Path,
+        help=(
+            "diagnose contracts in another local checkout without reconfiguring "
+            "the running Application"
+        ),
+    )
 
     prompt = subparsers.add_parser(
         "prompt-verify", help="verify the frozen Reader prompt and source-skill bindings"
@@ -224,10 +233,18 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def environment_report() -> dict[str, object]:
-    """Return deterministic facts useful at the P2 gate."""
+def environment_report(inspect_root: Path | str | None = None) -> dict[str, object]:
+    """Return deterministic identity and checkout-readiness facts."""
     supported = sys.version_info >= (3, 11)
+    runtime_root = PROJECT_ROOT.resolve()
+    inspected_root = runtime_root if inspect_root is None else Path(inspect_root).resolve()
+    checkout = inspect_application_checkout(inspected_root)
+    inspected_root_is_runtime_root = inspected_root == runtime_root
+    pipeline_available = bool(
+        supported and inspected_root_is_runtime_root and checkout["ready"]
+    )
     return {
+        "doctor_report_version": "1.0.0",
         "aktreader_version": __version__,
         "project_name": PROJECT_NAME,
         "project_role": PROJECT_ROLE,
@@ -239,14 +256,33 @@ def environment_report() -> dict[str, object]:
         "python_version": platform.python_version(),
         "python_supported": supported,
         "phase": "P2",
-        "pipeline_available": True,
+        "cli_available": True,
+        "runtime_root": str(runtime_root),
+        "inspected_root": checkout["root"],
+        "inspected_root_is_runtime_root": inspected_root_is_runtime_root,
+        "checkout_identity_status": checkout["identity_status"],
+        "observed_distribution_name": checkout["observed_distribution_name"],
+        "contract_asset_count": checkout["contract_asset_count"],
+        "available_contract_asset_count": checkout["available_contract_asset_count"],
+        "contract_assets_available": checkout["contract_assets_available"],
+        "missing_contract_assets": checkout["missing_contract_assets"],
+        "contract_assets": checkout["contract_assets"],
+        "inspected_checkout_ready": checkout["ready"],
+        "pipeline_available": pipeline_available,
+        "source_checkout_required": True,
+        "standalone_distribution_ready": False,
         "reader_backend": "local-open-weights-only",
         "network_required": False,
     }
 
 
 def _command_doctor(args: argparse.Namespace) -> int:
-    report = environment_report()
+    inspect_root = (
+        None
+        if args.inspect_root is None
+        else local_output_path(args.inspect_root, role="inspected application root")
+    )
+    report = environment_report(inspect_root)
     if args.json:
         _emit_json(report)
     else:
@@ -258,12 +294,29 @@ def _command_doctor(args: argparse.Namespace) -> int:
             f"package {report['package_namespace']} | command {report['command_name']}"
         )
         print(f"Repository: {report['repository_url']}")
+        print(f"Runtime root: {report['runtime_root']}")
+        if not report["inspected_root_is_runtime_root"]:
+            print(f"Inspected root: {report['inspected_root']} (diagnostic only)")
+        print(
+            "Checkout identity: "
+            f"{report['checkout_identity_status']} "
+            f"(observed: {report['observed_distribution_name'] or 'none'})"
+        )
+        print(
+            "Contract assets: "
+            f"{report['available_contract_asset_count']}/"
+            f"{report['contract_asset_count']} available"
+        )
+        for path in report["missing_contract_assets"]:
+            print(f"  missing: {path}")
+        print(f"Pipeline available: {'yes' if report['pipeline_available'] else 'no'}")
+        print("Standalone wheel ready: no (source checkout contracts are required)")
         print(f"Pipeline phase: {report['phase']}")
         print(f"Python {report['python_version']} ({report['implementation']})")
         print(f"Python >= 3.11: {'yes' if report['python_supported'] else 'no'}")
         print("Reader backend: local open weights only")
         print("Network required: no")
-    return 0 if report["python_supported"] else 1
+    return 0 if report["pipeline_available"] else 1
 
 
 def _command_prompt_verify(args: argparse.Namespace) -> int:

@@ -108,6 +108,17 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m aktreader prompt-verify --root .
 ```
 
+This is currently a source-checkout install. The wheel can contain the Python package, but the
+repository-root schemas, frozen prompt and source skills, and evaluation defaults are not packaged
+inside it. `aktreader doctor` exits successfully only when the running Application resolves the
+correct `aktreader-app` checkout and all 25 required contract assets are present. It does not
+claim that model weights or `llama-mtmd-cli` are installed; use `reader-inspect` with a pinned
+configuration for that separate check.
+
+`doctor --inspect-root PATH` can diagnose another local checkout, including distinguishing the
+Evidence Lab's `aktreader-research` metadata from this Application. It does not reconfigure the
+running command, so an alternate root never makes `pipeline_available` true.
+
 The CLI also provides `label-validate`, `consensus-merge`, `reader-inspect`, `reader-infer`,
 `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in reader
 comparison without supplying scans or model files:
@@ -146,9 +157,10 @@ alias for v0.2.0 workflows.
 If this checkout was installed before the distribution rename, recreate its virtual environment;
 package installers may otherwise leave stale `aktreader` distribution metadata behind.
 
-`aktreader doctor --json` reports `project_role`, `distribution_name`, `package_namespace`,
-`command_name`, and `repository_url`, so automation can verify that it launched the Application
-rather than another repository in the project family.
+`aktreader doctor --json` reports project identity, runtime and inspected roots, per-asset
+availability, missing contract paths, and whether the source-checkout pipeline is actually
+available. This lets automation verify that it launched the Application rather than another
+repository in the project family.
 
 ## Repository map
 

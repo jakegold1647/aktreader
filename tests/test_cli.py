@@ -18,6 +18,7 @@ from aktreader.cli import PROJECT_ROOT, build_parser, environment_report, main
 def test_environment_report_is_honest_about_phase() -> None:
     report = environment_report()
 
+    assert report["doctor_report_version"] == "1.0.0"
     assert report["aktreader_version"] == __version__
     assert report["project_name"] == PROJECT_NAME == "AKT Reader - Application"
     assert report["project_role"] == PROJECT_ROLE == "application"
@@ -26,7 +27,17 @@ def test_environment_report_is_honest_about_phase() -> None:
     assert report["command_name"] == COMMAND_NAME == "aktreader"
     assert report["repository_url"] == REPOSITORY_URL
     assert report["phase"] == "P2"
+    assert report["cli_available"] is True
+    assert report["checkout_identity_status"] == "MATCH"
+    assert report["observed_distribution_name"] == "aktreader-app"
+    assert report["contract_assets_available"] is True
+    assert report["available_contract_asset_count"] == report["contract_asset_count"] == 25
+    assert report["missing_contract_assets"] == []
+    assert report["inspected_checkout_ready"] is True
+    assert report["inspected_root_is_runtime_root"] is True
     assert report["pipeline_available"] is True
+    assert report["source_checkout_required"] is True
+    assert report["standalone_distribution_ready"] is False
     assert report["python_supported"] is True
     assert report["reader_backend"] == "local-open-weights-only"
     assert report["network_required"] is False
@@ -40,6 +51,9 @@ def test_doctor_json_is_machine_readable(capsys) -> None:
     assert payload["phase"] == "P2"
     assert payload["project_role"] == "application"
     assert payload["distribution_name"] == "aktreader-app"
+    assert payload["checkout_identity_status"] == "MATCH"
+    assert payload["contract_assets_available"] is True
+    assert payload["inspected_checkout_ready"] is True
     assert payload["pipeline_available"] is True
     assert payload["network_required"] is False
 
@@ -53,6 +67,24 @@ def test_doctor_human_output_names_the_application(capsys) -> None:
     assert "Repository role: application\n" in output
     assert "distribution aktreader-app | package aktreader | command aktreader" in output
     assert f"Repository: {REPOSITORY_URL}\n" in output
+    assert "Checkout identity: MATCH (observed: aktreader-app)\n" in output
+    assert "Contract assets: 25/25 available\n" in output
+    assert "Pipeline available: yes\n" in output
+    assert "Standalone wheel ready: no" in output
+
+
+def test_doctor_fails_closed_for_an_alternate_incomplete_root(tmp_path, capsys) -> None:
+    exit_code = main(["doctor", "--json", "--inspect-root", str(tmp_path)])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 1
+    assert payload["inspected_root"] == str(tmp_path.resolve())
+    assert payload["inspected_root_is_runtime_root"] is False
+    assert payload["checkout_identity_status"] == "MISSING"
+    assert payload["available_contract_asset_count"] == 0
+    assert payload["contract_assets_available"] is False
+    assert payload["inspected_checkout_ready"] is False
+    assert payload["pipeline_available"] is False
 
 
 def test_version_names_the_application_distribution(capsys) -> None:
