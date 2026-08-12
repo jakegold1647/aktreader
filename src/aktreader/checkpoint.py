@@ -39,6 +39,7 @@ class JobSnapshot:
     fingerprint: str
     scan_path: str
     output_path: str
+    output_sha256: str | None
     job_json: str
     status: JobStatus
     retry_count: int
@@ -108,7 +109,7 @@ class CheckpointStore:
     processes concurrently.
     """
 
-    SCHEMA_VERSION = "1"
+    SCHEMA_VERSION = "2"
 
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
@@ -151,6 +152,7 @@ class CheckpointStore:
                     fingerprint TEXT NOT NULL,
                     scan_path TEXT NOT NULL,
                     output_path TEXT NOT NULL,
+                    output_sha256 TEXT,
                     job_json TEXT NOT NULL,
                     status TEXT NOT NULL CHECK (status IN ({statuses})),
                     retry_count INTEGER NOT NULL DEFAULT 0 CHECK (retry_count >= 0),
@@ -183,6 +185,12 @@ class CheckpointStore:
                     "INSERT INTO checkpoint_meta(key, value) VALUES ('schema_version', ?)",
                     (self.SCHEMA_VERSION,),
                 )
+            elif row["value"] == "1":
+                connection.execute("ALTER TABLE jobs ADD COLUMN output_sha256 TEXT")
+                connection.execute(
+                    "UPDATE checkpoint_meta SET value = ? WHERE key = 'schema_version'",
+                    (self.SCHEMA_VERSION,),
+                )
             elif row["value"] != self.SCHEMA_VERSION:
                 raise RuntimeError(
                     f"checkpoint schema {row['value']!r} is not supported "
@@ -196,6 +204,7 @@ class CheckpointStore:
             fingerprint=row["fingerprint"],
             scan_path=row["scan_path"],
             output_path=row["output_path"],
+            output_sha256=row["output_sha256"],
             job_json=row["job_json"],
             status=JobStatus(row["status"]),
             retry_count=row["retry_count"],
@@ -233,9 +242,10 @@ class CheckpointStore:
                 connection.execute(
                     """
                     INSERT INTO jobs(
-                        job_id, fingerprint, scan_path, output_path, job_json, status,
+                        job_id, fingerprint, scan_path, output_path, output_sha256,
+                        job_json, status,
                         retry_count, error, created_at, updated_at, started_at, finished_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?, ?, NULL, NULL)
+                    ) VALUES (?, ?, ?, ?, NULL, ?, ?, 0, NULL, ?, ?, NULL, NULL)
                     """,
                     (
                         job_id,
@@ -259,7 +269,7 @@ class CheckpointStore:
                         """
                         UPDATE jobs
                         SET fingerprint = ?, scan_path = ?, output_path = ?, job_json = ?,
-                            updated_at = ?
+                            output_sha256 = NULL, updated_at = ?
                         WHERE job_id = ? AND status = ?
                         """,
                         (
@@ -286,7 +296,7 @@ class CheckpointStore:
                         UPDATE jobs
                         SET fingerprint = ?, scan_path = ?, output_path = ?, job_json = ?,
                             status = ?, retry_count = 0, error = NULL, updated_at = ?,
-                            started_at = NULL, finished_at = NULL
+                            started_at = NULL, finished_at = NULL, output_sha256 = NULL
                         WHERE job_id = ?
                         """,
                         (
@@ -358,7 +368,8 @@ class CheckpointStore:
             cursor = connection.execute(
                 """
                 UPDATE jobs
-                SET status = ?, error = ?, updated_at = ?, finished_at = ?
+                SET status = ?, error = ?, updated_at = ?, finished_at = ?,
+                    output_sha256 = NULL
                 WHERE status = ?
                 """,
                 (
@@ -404,7 +415,7 @@ class CheckpointStore:
                 """
                 UPDATE jobs
                 SET status = ?, retry_count = ?, error = NULL, updated_at = ?,
-                    started_at = ?, finished_at = NULL
+                    started_at = ?, finished_at = NULL, output_sha256 = NULL
                 WHERE job_id = ? AND fingerprint = ? AND status = ?
                 """,
                 (
@@ -425,6 +436,7 @@ class CheckpointStore:
         status: JobStatus,
         *,
         error: str | None = None,
+        output_sha256: str | None = None,
     ) -> None:
         """Finish a RUNNING job in a durable terminal or resumable state."""
         if status not in {
@@ -437,18 +449,26 @@ class CheckpointStore:
             raise ValueError(f"cannot finish a RUNNING job as {status.value}")
         if status is JobStatus.SUCCEEDED and error is not None:
             raise ValueError("a SUCCEEDED job cannot carry an error")
+        if status is JobStatus.SUCCEEDED:
+            if output_sha256 is None or len(output_sha256) != 64 or any(
+                character not in "0123456789abcdef" for character in output_sha256
+            ):
+                raise ValueError("a SUCCEEDED job requires a lowercase SHA-256 output digest")
+        elif output_sha256 is not None:
+            raise ValueError("only a SUCCEEDED job can carry an output digest")
 
         now = _utc_now()
         with self._transaction() as connection:
             cursor = connection.execute(
                 """
                 UPDATE jobs
-                SET status = ?, error = ?, updated_at = ?, finished_at = ?
+                SET status = ?, error = ?, output_sha256 = ?, updated_at = ?, finished_at = ?
                 WHERE job_id = ? AND status = ?
                 """,
                 (
                     status.value,
                     error,
+                    output_sha256,
                     now,
                     now,
                     job_id,
@@ -475,7 +495,8 @@ class CheckpointStore:
             connection.execute(
                 """
                 UPDATE jobs
-                SET status = ?, error = ?, updated_at = ?, finished_at = ?
+                SET status = ?, error = ?, updated_at = ?, finished_at = ?,
+                    output_sha256 = NULL
                 WHERE job_id = ?
                 """,
                 (status.value, reason, now, now, job_id),
@@ -489,7 +510,8 @@ class CheckpointStore:
             cursor = connection.execute(
                 """
                 UPDATE jobs
-                SET status = ?, error = NULL, updated_at = ?, finished_at = NULL
+                SET status = ?, error = NULL, updated_at = ?, finished_at = NULL,
+                    output_sha256 = NULL
                 WHERE job_id IN (
                     SELECT job_id FROM jobs
                     WHERE job_id = ? AND status IN (?, ?)
@@ -506,14 +528,14 @@ class CheckpointStore:
             return cursor.rowcount == 1
 
     def requeue_invalid_success(self, job_id: str, *, reason: str) -> bool:
-        """Requeue a success whose promised output is missing or no longer valid JSON."""
+        """Requeue a success whose promised output is missing, invalid, or changed."""
         now = _utc_now()
         with self._transaction() as connection:
             cursor = connection.execute(
                 """
                 UPDATE jobs
                 SET status = ?, error = ?, updated_at = ?, started_at = NULL,
-                    finished_at = NULL
+                    finished_at = NULL, output_sha256 = NULL
                 WHERE job_id = ? AND status = ?
                 """,
                 (

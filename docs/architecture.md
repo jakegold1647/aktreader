@@ -105,11 +105,13 @@ durability. Each job is in exactly one state:
 
 The job fingerprint covers scan bytes, crop/target, act metadata, model, prompt, schema,
 decoding configuration, privacy policy, and output path. A matching successful job is skipped on
-resume only while its promised output remains a readable JSON object; missing or corrupt output
-is requeued. A changed material input invalidates that success. Stale running work becomes
-interruptible/retryable, bounded failures retain diagnostics, and JSON output is flushed then
-atomically replaced. Unknown or multi-act targets go to review; the batch layer never infers a
-crop or act number from a filename.
+resume only while its promised output remains a readable JSON object with the SHA-256 recorded
+when that job succeeded. Missing, corrupt, or changed output is requeued. Checkpoints created
+before output digests were recorded migrate in place and rerun each old success once instead of
+trusting bytes they cannot verify. A changed material input invalidates that success. Stale
+running work becomes interruptible/retryable, bounded failures retain diagnostics, and JSON
+output is flushed then atomically replaced. Unknown or multi-act targets go to review; the batch
+layer never infers a crop or act number from a filename.
 
 Privacy preflight is fail-closed: births require 100 years; marriages and deaths require 80 by
 default. Unknown years are refused, and unknown/unsupported act types require human review.

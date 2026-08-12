@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 from aktreader.batch import BatchJob, InferenceIdentity, build_job_fingerprint
@@ -35,10 +36,11 @@ def test_matching_success_is_never_claimed_and_changed_fingerprint_resets(tmp_pa
 
     _register(store, job, first.value)
     assert store.claim_job("one", first.value, max_retries=2)
-    store.finish_running("one", JobStatus.SUCCEEDED)
+    store.finish_running("one", JobStatus.SUCCEEDED, output_sha256="a" * 64)
     _register(store, job, first.value)
     assert not store.claim_job("one", first.value, max_retries=2)
     assert store.get_job("one").status is JobStatus.SUCCEEDED
+    assert store.get_job("one").output_sha256 == "a" * 64
 
     changed = build_job_fingerprint(
         job,
@@ -48,7 +50,55 @@ def test_matching_success_is_never_claimed_and_changed_fingerprint_resets(tmp_pa
     reset = store.get_job("one")
     assert reset.status is JobStatus.PENDING
     assert reset.retry_count == 0
+    assert reset.output_sha256 is None
     assert store.claim_job("one", changed.value, max_retries=2)
+
+
+def test_schema_one_checkpoint_is_migrated_without_inventing_output_digest(
+    tmp_path: Path,
+) -> None:
+    checkpoint = tmp_path / "legacy.sqlite3"
+    with sqlite3.connect(checkpoint) as connection:
+        connection.executescript(
+            """
+            CREATE TABLE checkpoint_meta (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
+            INSERT INTO checkpoint_meta(key, value) VALUES ('schema_version', '1');
+            CREATE TABLE jobs (
+                job_id TEXT PRIMARY KEY,
+                fingerprint TEXT NOT NULL,
+                scan_path TEXT NOT NULL,
+                output_path TEXT NOT NULL,
+                job_json TEXT NOT NULL,
+                status TEXT NOT NULL,
+                retry_count INTEGER NOT NULL DEFAULT 0,
+                error TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                started_at TEXT,
+                finished_at TEXT
+            );
+            INSERT INTO jobs VALUES (
+                'one', 'fingerprint', 'scan.jpg', 'one.json', '{}', 'SUCCEEDED',
+                0, NULL, 'created', 'updated', 'started', 'finished'
+            );
+            """
+        )
+
+    store = CheckpointStore(checkpoint)
+
+    assert store.get_job("one").output_sha256 is None
+    with sqlite3.connect(checkpoint) as connection:
+        version = connection.execute(
+            "SELECT value FROM checkpoint_meta WHERE key = 'schema_version'"
+        ).fetchone()
+        columns = {
+            row[1] for row in connection.execute("PRAGMA table_info(jobs)").fetchall()
+        }
+    assert version == ("2",)
+    assert "output_sha256" in columns
 
 
 def test_scan_crop_target_and_decoding_changes_affect_fingerprint(tmp_path: Path) -> None:

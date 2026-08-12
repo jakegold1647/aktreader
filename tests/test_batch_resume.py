@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -159,6 +160,72 @@ def test_matching_success_reruns_when_output_is_not_valid_json_object(
     assert calls == ["a", "a"]
     assert progress.succeeded == 1
     assert json.loads(jobs[0].output_path.read_text(encoding="utf-8"))["pass"] == 2
+
+
+def test_matching_success_reruns_when_valid_json_output_changed(tmp_path: Path) -> None:
+    jobs = _jobs(tmp_path)[:1]
+    checkpoint = tmp_path / "run.sqlite3"
+    identity = InferenceIdentity("model", "prompt", "schema", {})
+    calls: list[str] = []
+
+    def reader(job: BatchJob) -> dict[str, int | str]:
+        calls.append(job.job_id)
+        return {"job_id": job.job_id, "pass": len(calls)}
+
+    BatchRunner(
+        jobs=jobs,
+        reader=reader,
+        identity=identity,
+        checkpoint_path=checkpoint,
+        as_of_year=2026,
+    ).run()
+    jobs[0].output_path.write_text('{"job_id":"a","pass":99}\n', encoding="utf-8")
+
+    progress = BatchRunner(
+        jobs=jobs,
+        reader=reader,
+        identity=identity,
+        checkpoint_path=checkpoint,
+        as_of_year=2026,
+    ).run()
+
+    assert calls == ["a", "a"]
+    assert progress.succeeded == 1
+    assert json.loads(jobs[0].output_path.read_text(encoding="utf-8"))["pass"] == 2
+
+
+def test_matching_success_without_recorded_output_digest_reruns(tmp_path: Path) -> None:
+    jobs = _jobs(tmp_path)[:1]
+    checkpoint = tmp_path / "run.sqlite3"
+    identity = InferenceIdentity("model", "prompt", "schema", {})
+    calls: list[str] = []
+
+    def reader(job: BatchJob) -> dict[str, int | str]:
+        calls.append(job.job_id)
+        return {"job_id": job.job_id, "pass": len(calls)}
+
+    BatchRunner(
+        jobs=jobs,
+        reader=reader,
+        identity=identity,
+        checkpoint_path=checkpoint,
+        as_of_year=2026,
+    ).run()
+    with sqlite3.connect(checkpoint) as connection:
+        connection.execute("UPDATE jobs SET output_sha256 = NULL WHERE job_id = 'a'")
+
+    resumed = BatchRunner(
+        jobs=jobs,
+        reader=reader,
+        identity=identity,
+        checkpoint_path=checkpoint,
+        as_of_year=2026,
+    )
+    progress = resumed.run()
+
+    assert calls == ["a", "a"]
+    assert progress.succeeded == 1
+    assert resumed.store.get_job("a").output_sha256 is not None
 
 
 def test_discovery_and_manifest_fail_closed_on_unknown_or_multi_act_targets(

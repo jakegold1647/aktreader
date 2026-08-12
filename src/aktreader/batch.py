@@ -234,13 +234,20 @@ def atomic_write_text(path: Path, text: str) -> None:
             temporary_path.unlink(missing_ok=True)
 
 
-def _valid_completed_output(path: Path) -> bool:
-    """Accept a checkpointed success only while its output is one readable JSON object."""
+def _completed_output_problem(path: Path, expected_sha256: str | None) -> str | None:
+    """Explain why a checkpointed success cannot reuse its promised output."""
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        output_bytes = path.read_bytes()
+        payload = json.loads(output_bytes.decode("utf-8"))
     except (OSError, UnicodeError, json.JSONDecodeError):
-        return False
-    return isinstance(payload, dict)
+        return "checkpointed success has no readable JSON-object output; rerun"
+    if not isinstance(payload, dict):
+        return "checkpointed success has no readable JSON-object output; rerun"
+    if expected_sha256 is None:
+        return "checkpointed success has no recorded output SHA-256; rerun"
+    if hashlib.sha256(output_bytes).hexdigest() != expected_sha256:
+        return "checkpointed success output SHA-256 changed; rerun"
+    return None
 
 
 def discover_folder_jobs(
@@ -477,11 +484,15 @@ class BatchRunner:
                 snapshot.status is JobStatus.SUCCEEDED
                 and snapshot.fingerprint == fingerprint.value
             ):
-                if _valid_completed_output(job.output_path):
+                output_problem = _completed_output_problem(
+                    job.output_path,
+                    snapshot.output_sha256,
+                )
+                if output_problem is None:
                     continue
                 self.store.requeue_invalid_success(
                     job.job_id,
-                    reason="checkpointed success has no readable JSON-object output; rerun",
+                    reason=output_problem,
                 )
                 self._report(job.job_id)
 
@@ -525,6 +536,7 @@ class BatchRunner:
                 if not isinstance(result, Mapping):
                     raise TypeError("local reader must return a JSON object")
                 atomic_write_json(job.output_path, result)
+                output_sha256 = _sha256_file(job.output_path)
             except (KeyboardInterrupt, SystemExit) as error:
                 self.store.finish_running(
                     job.job_id,
@@ -542,7 +554,11 @@ class BatchRunner:
                 self._report(job.job_id)
                 continue
 
-            self.store.finish_running(job.job_id, JobStatus.SUCCEEDED)
+            self.store.finish_running(
+                job.job_id,
+                JobStatus.SUCCEEDED,
+                output_sha256=output_sha256,
+            )
             self._report(job.job_id)
 
         return self._report()
