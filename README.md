@@ -1,4 +1,7 @@
-# AKTREADER
+# AKT Reader — Application
+
+> **Repository role:** `aktreader` is the runnable local reader application. It is not the
+> evidence/methodology lab and it is not the independent benchmark dataset.
 
 AKTREADER is a local, uncertainty-honest reader for handwritten civil-register acts from
 partitioned Poland. It turns a user-supplied scan into a structured evidence object with
@@ -117,16 +120,17 @@ The generic [Reader configuration](examples/local-reader.config.example.json) in
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
 real pins for a separately provisioned executable, model, projector, prompt, and output schema.
 
-## Related repositories
+## Which repository do I need?
 
-- [`aktreader-research`](https://github.com/jakegold1647/aktreader-research) — the research
-  harness this reader is evaluated with: blind-reader waves, consensus labels, gold records,
-  and the training-readiness gates. The two repositories have separate histories on purpose;
-  this one ships the tool, that one holds the evidence about how well it reads.
-- [`congress-poland-registers`](https://github.com/jakegold1647/congress-poland-registers) —
-  an independent open benchmark for handwritten Congress Poland vital records, under
-  construction. Its evaluation tooling (per-page CER/WER distributions with name-level error
-  accounting) is runnable today.
+| Repository | Role | Use it when you want to... |
+| --- | --- | --- |
+| **`aktreader` (you are here)** | **AKT Reader — Application** | Run or improve the local scan-to-evidence reader. |
+| [`aktreader-research`](https://github.com/jakegold1647/aktreader-research) | **AKT Reader — Evidence Lab** | Audit its claims, reproduce evaluations, inspect labels, or develop evidence-aware research utilities. |
+| [`congress-poland-registers`](https://github.com/jakegold1647/congress-poland-registers) | **Congress Poland Registers — Benchmark Dataset** | Build or evaluate against an independent, rights-cleared HTR corpus. |
+
+The application and evidence lab have separate histories on purpose. This repository ships the
+reader; the evidence lab holds the evidence about how well it reads. The benchmark is independent
+of both and is still under construction.
 
 ## Repository map
 
