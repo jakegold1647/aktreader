@@ -131,7 +131,8 @@ stay untiered and quarantined until the sampled human check.
 
 Evaluation splits are by clerk-year, not random act. `gold/clerk_year_holdout.json` sequesters all
 36 current gold records across 21 clerk-years and explicitly forbids training overlap. The eval
-harness rejects a mismatched holdout manifest or any training clerk-year leakage before scoring.
+harness rejects duplicate gold or holdout identities, a mismatched holdout manifest, or any
+training clerk-year leakage before scoring.
 Only 17 records currently bind to checksum-verified local scans; the other 19 remain explicit
 `NOT_LOCALIZED` coverage gaps. The first runnable manifest therefore contains 17 jobs and cannot
 claim 36/36 input coverage. This prevents missing artifacts—or a model that memorized one

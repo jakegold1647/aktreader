@@ -323,6 +323,17 @@ def _alternative_contains(prediction: dict[str, Any], gold_value: Any) -> bool:
     return False
 
 
+def _unique_id_set(value: Any, *, label: str) -> set[str]:
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and item for item in value
+    ):
+        raise EvaluationIntegrityError(f"{label} must be a list of non-empty strings")
+    duplicates = sorted(key for key, count in Counter(value).items() if count > 1)
+    if duplicates:
+        raise EvaluationIntegrityError(f"duplicate {label}: {duplicates}")
+    return set(value)
+
+
 def validate_holdout_integrity(
     gold_records: Iterable[dict[str, Any]],
     holdout: dict[str, Any],
@@ -331,10 +342,21 @@ def validate_holdout_integrity(
 ) -> dict[str, Any]:
     """Verify permanent clerk-year sequestering and reject any training leakage."""
     records = list(gold_records)
-    gold_ids = {record["record_id"] for record in records}
-    gold_clerk_years = {record["register"]["clerk_year"]["id"] for record in records}
-    holdout_ids = set(holdout.get("record_ids", []))
-    holdout_clerk_years = set(holdout.get("holdout_clerk_year_ids", []))
+    gold_ids = _unique_id_set(
+        [record["record_id"] for record in records],
+        label="gold record IDs",
+    )
+    gold_clerk_years = {
+        record["register"]["clerk_year"]["id"] for record in records
+    }
+    holdout_ids = _unique_id_set(
+        holdout.get("record_ids"),
+        label="holdout record IDs",
+    )
+    holdout_clerk_years = _unique_id_set(
+        holdout.get("holdout_clerk_year_ids"),
+        label="holdout clerk-year IDs",
+    )
     training = set(training_clerk_year_ids)
 
     if holdout.get("training_overlap_allowed") is not False:

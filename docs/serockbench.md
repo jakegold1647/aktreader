@@ -11,6 +11,10 @@ extraction. It is not a leaderboard built from vendor OCR claims.
 - Every gold record is evaluation-only.
 - `gold/clerk_year_holdout.json` forbids training overlap by clerk-year, not merely by act ID.
 
+Before scoring, the harness rejects duplicate gold record IDs and duplicate record or clerk-year
+IDs in the holdout manifest. Equality checks use sets only after uniqueness is established, so a
+repeated gold row cannot receive extra metric weight while appearing to match the holdout.
+
 Twenty-four gold records currently have localized scan artifacts. Twelve remain acquisition
 targets; `examples/p2-baseline.want-list.json` maps five Serock gaps to exact zespół 318/0826d
 units and ranges with `SOURCE_OBJECT_415`, while seven Pułtusk records fail closed pending their

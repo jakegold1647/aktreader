@@ -146,3 +146,20 @@ def test_holdout_drift_fails_without_hiding_manifest_result(tmp_path: Path) -> N
     assert report["checks"]["gold_manifest"]["status"] == "PASS"
     assert report["checks"]["holdout"]["status"] == "FAIL"
     assert "holdout record mismatch" in report["checks"]["holdout"]["error"]
+
+
+def test_duplicate_holdout_record_id_fails_the_public_gate(tmp_path: Path) -> None:
+    _copy_public_contracts(tmp_path)
+    holdout_path = tmp_path / "gold" / "clerk_year_holdout.json"
+    holdout = json.loads(holdout_path.read_text(encoding="utf-8"))
+    holdout["record_ids"].append(holdout["record_ids"][0])
+    holdout_path.write_text(json.dumps(holdout, ensure_ascii=False), encoding="utf-8")
+
+    report = verify_application_checkout(tmp_path)
+
+    assert report["status"] == "FAIL"
+    assert report["checks"]["gold_manifest"]["status"] == "PASS"
+    assert report["checks"]["holdout"] == {
+        "status": "FAIL",
+        "error": "duplicate holdout record IDs: ['pultusk-1877-death-13']",
+    }

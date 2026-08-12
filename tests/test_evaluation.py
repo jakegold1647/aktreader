@@ -150,6 +150,31 @@ def test_clerk_year_training_leakage_fails_closed() -> None:
         )
 
 
+def test_duplicate_gold_record_ids_fail_closed() -> None:
+    gold = gold_record()
+
+    with pytest.raises(EvaluationIntegrityError, match="duplicate gold record IDs"):
+        validate_holdout_integrity([gold, gold], holdout_for(gold))
+
+
+@pytest.mark.parametrize(
+    ("field", "message"),
+    [
+        ("record_ids", "duplicate holdout record IDs"),
+        ("holdout_clerk_year_ids", "duplicate holdout clerk-year IDs"),
+    ],
+)
+def test_duplicate_holdout_entries_fail_closed(field: str, message: str) -> None:
+    gold = gold_record()
+    holdout = holdout_for(gold)
+    values = holdout[field]
+    assert isinstance(values, list)
+    values.append(values[0])
+
+    with pytest.raises(EvaluationIntegrityError, match=message):
+        validate_holdout_integrity([gold], holdout)
+
+
 def test_repository_holdout_matches_every_gold_record() -> None:
     records = [
         json.loads(path.read_text(encoding="utf-8"))
