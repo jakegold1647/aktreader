@@ -132,6 +132,10 @@ The application and evidence lab have separate histories on purpose. This reposi
 reader; the evidence lab holds the evidence about how well it reads. The benchmark is independent
 of both and is still under construction.
 
+The Application and Evidence Lab currently share the `aktreader` Python package namespace and
+command name. Use a separate virtual environment for each repository; installing both into one
+environment is not supported.
+
 ## Repository map
 
 - `src/aktreader/`: package and CLI implementation.
