@@ -9,7 +9,11 @@ Claim a task by opening an issue (or commenting on an existing one) so work is n
 If a task turns out to be bigger than its scope says, stop and say so in the issue — shrinking
 scope is always acceptable here, silently expanding it is not.
 
-## 1. Test Windows in CI — *good first issue*
+## 1. Test Windows in CI — shipped
+
+**Status:** completed on 2026-08-12. CI retains the Ubuntu Python 3.11–3.13 jobs and adds one
+Windows/Python 3.11 job running the same install, CLI smoke, lint, test, and license gates. The
+comparison smoke also verifies that its JSON and CSV files were created.
 
 **Why:** the project is developed on Windows, but every CI job runs on Ubuntu. Platform-specific
 breakage is invisible. (The Python-version half of this task is done: CI now tests 3.11–3.13,

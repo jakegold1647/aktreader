@@ -10,10 +10,19 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.11"
 
     steps:
       - uses: actions/checkout@v4
@@ -22,16 +31,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - name: Install package and development tools
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
       - name: Smoke check the local CLI
         run: |
           python -m aktreader --version
           python -m aktreader doctor --json
           python -m aktreader checkout-verify --json
           python -m aktreader prompt-verify --root .
-          python -m aktreader compare labels/readerA labels/readerB \
-            --output "$RUNNER_TEMP/reader-comparison.json" \
-            --csv "$RUNNER_TEMP/reader-disagreements.csv"
+      - name: Smoke check comparison exports
+        env:
+          COMPARISON_JSON: ${{ runner.temp }}/reader-comparison.json
+          DISAGREEMENTS_CSV: ${{ runner.temp }}/reader-disagreements.csv
+        run: |
+          python -m aktreader compare labels/readerA labels/readerB --output "${{ runner.temp }}/reader-comparison.json" --csv "${{ runner.temp }}/reader-disagreements.csv"
+          python -c "import os; from pathlib import Path; assert Path(os.environ['COMPARISON_JSON']).is_file(); assert Path(os.environ['DISAGREEMENTS_CSV']).is_file()"
       - name: Lint
         run: python -m ruff check .
       - name: Test
