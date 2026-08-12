@@ -1,0 +1,354 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aktreader.org/schema/model-output-1.0.0.json",
+  "title": "AKTREADER bounded model-facing output",
+  "type": "object",
+  "required": [
+    "target_check",
+    "transcription",
+    "observations"
+  ],
+  "properties": {
+    "target_check": {
+      "type": "object",
+      "required": [
+        "year",
+        "act_type",
+        "act_no",
+        "language"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 1800,
+          "maximum": 2100
+        },
+        "act_type": {
+          "enum": [
+            "birth",
+            "marriage",
+            "death",
+            "annex",
+            "index_page"
+          ]
+        },
+        "act_no": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "language": {
+          "enum": [
+            "ru",
+            "pl",
+            "mixed",
+            "unknown"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "transcription": {
+      "type": "object",
+      "required": [
+        "original_script",
+        "translation"
+      ],
+      "properties": {
+        "original_script": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 120,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        },
+        "translation": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 120,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "observations": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 128,
+      "propertyNames": {
+        "type": "string",
+        "maxLength": 128,
+        "pattern": "^[a-z][a-z0-9_]*(?:\\.[a-z0-9_-]+)*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/evidence"
+      }
+    }
+  },
+  "$defs": {
+    "nonPlaceholderString": {
+      "type": "string",
+      "maxLength": 512,
+      "not": {
+        "pattern": "^(?:[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Uu][Nn][Cc][Ll][Ee][Aa][Rr]|[Nn]/[Aa]|[Nn][Oo][Nn][Ee])$"
+      }
+    },
+    "scalarValue": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/nonPlaceholderString"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "alternative": {
+      "type": "object",
+      "required": [
+        "value",
+        "original_script"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/scalarValue"
+        },
+        "original_script": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "value",
+            "original_script",
+            "confidence",
+            "observation_state",
+            "alternatives",
+            "notes"
+          ],
+          "properties": {
+            "value": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/nonPlaceholderString"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "original_script": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "confidence": {
+              "const": "PROBABLE"
+            },
+            "observation_state": {
+              "const": "PRESENT"
+            },
+            "alternatives": {
+              "type": "array",
+              "maxItems": 0,
+              "items": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "original_script"
+                ],
+                "properties": {
+                  "value": {
+                    "$ref": "#/$defs/scalarValue"
+                  },
+                  "original_script": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "notes": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "maxLength": 512
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "value",
+            "original_script",
+            "confidence",
+            "observation_state",
+            "alternatives",
+            "notes"
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "maxLength": 512,
+              "pattern": "^\\[unclear: .+\\]$"
+            },
+            "original_script": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "confidence": {
+              "const": "UNCLEAR"
+            },
+            "observation_state": {
+              "const": "PRESENT"
+            },
+            "alternatives": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "original_script"
+                ],
+                "properties": {
+                  "value": {
+                    "$ref": "#/$defs/scalarValue"
+                  },
+                  "original_script": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              },
+              "minItems": 1
+            },
+            "notes": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "maxLength": 512
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "value",
+            "original_script",
+            "confidence",
+            "observation_state",
+            "alternatives",
+            "notes"
+          ],
+          "properties": {
+            "value": {
+              "type": "null"
+            },
+            "original_script": {
+              "type": "null"
+            },
+            "confidence": {
+              "type": "null"
+            },
+            "observation_state": {
+              "enum": [
+                "ABSENT_ON_FORM",
+                "BLANK",
+                "STATED_UNKNOWN",
+                "ILLEGIBLE"
+              ]
+            },
+            "alternatives": {
+              "type": "array",
+              "maxItems": 0,
+              "items": {
+                "type": "object",
+                "required": [
+                  "value",
+                  "original_script"
+                ],
+                "properties": {
+                  "value": {
+                    "$ref": "#/$defs/scalarValue"
+                  },
+                  "original_script": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 512
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "notes": {
+              "type": "array",
+              "maxItems": 8,
+              "items": {
+                "type": "string",
+                "maxLength": 512
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

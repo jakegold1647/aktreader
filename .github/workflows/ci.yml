@@ -53,3 +53,17 @@ jobs:
         run: python -m pytest -q
       - name: Check dependency license inventory
         run: python -m tools.check_dependency_licenses
+
+  installed-wheel:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build and smoke-test an isolated wheel install
+        run: python tools/smoke_installed_wheel.py

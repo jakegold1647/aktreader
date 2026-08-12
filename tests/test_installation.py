@@ -1,8 +1,28 @@
 from pathlib import Path
 
 from aktreader import DISTRIBUTION_NAME
+from aktreader.assets import (
+    RUNTIME_ASSETS,
+    inspect_packaged_runtime_assets,
+    runtime_asset_path,
+)
 from aktreader.cli import PROJECT_ROOT
 from aktreader.installation import CONTRACT_ASSETS, inspect_application_checkout
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_packaged_runtime_assets_match_the_checkout_sources() -> None:
+    report = inspect_packaged_runtime_assets()
+
+    assert report["runtime_asset_count"] == len(RUNTIME_ASSETS) == 3
+    assert report["available_runtime_asset_count"] == 3
+    assert report["runtime_assets_available"] is True
+    assert report["missing_runtime_assets"] == []
+    for asset in RUNTIME_ASSETS:
+        assert runtime_asset_path(asset.package_path).read_bytes() == (
+            ROOT / asset.package_path
+        ).read_bytes()
 
 
 def test_real_application_checkout_has_every_declared_contract() -> None:

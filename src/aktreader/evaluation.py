@@ -12,8 +12,9 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-FIELD_MAP_PATH = PROJECT_ROOT / "schemas" / "model-output-to-gold-map-1.0.0.json"
+from aktreader.assets import runtime_asset_path
+
+FIELD_MAP_PATH = runtime_asset_path("schemas/model-output-to-gold-map-1.0.0.json")
 FIELD_MAP_STATUSES = {
     "MAP",
     "UNSCORABLE_AGGREGATE",
@@ -285,7 +286,10 @@ def load_model_output_field_map(path: Path = FIELD_MAP_PATH) -> dict[str, Any]:
     binding = mapping.get("model_output_schema")
     if not isinstance(binding, dict):
         raise EvaluationIntegrityError("field vocabulary map lacks model-output schema binding")
-    schema_path = PROJECT_ROOT / str(binding.get("path", ""))
+    try:
+        schema_path = runtime_asset_path(str(binding.get("path", "")))
+    except ValueError as exc:
+        raise EvaluationIntegrityError("mapped model-output schema is unavailable") from exc
     try:
         observed_hash = hashlib.sha256(schema_path.read_bytes()).hexdigest()
     except OSError as exc:

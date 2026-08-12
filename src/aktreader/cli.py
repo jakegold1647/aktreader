@@ -20,6 +20,7 @@ from aktreader import (
     __version__,
 )
 from aktreader.adjudication import generate_packet, ingest_answers
+from aktreader.assets import inspect_packaged_runtime_assets, runtime_asset_path
 from aktreader.batch import (
     BatchJob,
     BatchRunner,
@@ -63,6 +64,12 @@ from aktreader.validators.formula import validate_formula_positions
 from aktreader.verification import CHECK_NAMES, verify_application_checkout
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+ACT_RECORD_SCHEMA_PATH = runtime_asset_path("schemas/act-record-2.0.0.schema.json")
+
+
+def _source_checkout_default(relative_path: str) -> Path | None:
+    candidate = PROJECT_ROOT / relative_path
+    return candidate if candidate.exists() else None
 
 
 def _emit_json(payload: Mapping[str, Any], *, stream: Any = None) -> None:
@@ -134,7 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     consensus.add_argument(
         "--schema",
         type=Path,
-        default=PROJECT_ROOT / "schemas" / "act-record-2.0.0.schema.json",
+        default=ACT_RECORD_SCHEMA_PATH,
     )
     consensus.add_argument(
         "--replace-existing",
@@ -203,11 +210,17 @@ def build_parser() -> argparse.ArgumentParser:
         "eval", help="generate the clerk-year-sequestered SerockBench report"
     )
     evaluate.add_argument("--predictions", required=True, type=Path)
-    evaluate.add_argument("--gold-dir", type=Path, default=PROJECT_ROOT / "gold" / "acts")
+    evaluate.add_argument(
+        "--gold-dir",
+        type=Path,
+        default=_source_checkout_default("gold/acts"),
+        help="gold records directory; required outside an Application source checkout",
+    )
     evaluate.add_argument(
         "--holdout",
         type=Path,
-        default=PROJECT_ROOT / "gold" / "clerk_year_holdout.json",
+        default=_source_checkout_default("gold/clerk_year_holdout.json"),
+        help="clerk-year holdout manifest; required outside a source checkout",
     )
     evaluate.add_argument("--training-clerk-years", type=Path)
     evaluate.add_argument("--output", type=Path)
@@ -244,17 +257,39 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def environment_report(inspect_root: Path | str | None = None) -> dict[str, object]:
-    """Return deterministic identity and checkout-readiness facts."""
+    """Return deterministic installed-runtime and checkout-readiness facts."""
     supported = sys.version_info >= (3, 11)
     runtime_root = PROJECT_ROOT.resolve()
     inspected_root = runtime_root if inspect_root is None else Path(inspect_root).resolve()
     checkout = inspect_application_checkout(inspected_root)
+    runtime_checkout = (
+        checkout
+        if inspected_root == runtime_root
+        else inspect_application_checkout(runtime_root)
+    )
+    runtime_assets = inspect_packaged_runtime_assets()
     inspected_root_is_runtime_root = inspected_root == runtime_root
-    pipeline_available = bool(
+    runtime_mode = (
+        "source-checkout"
+        if runtime_checkout["identity_status"] == "MATCH"
+        else "installed-distribution"
+    )
+    source_checkout_verification_available = bool(
         supported and inspected_root_is_runtime_root and checkout["ready"]
     )
+    standalone_distribution_ready = bool(
+        supported and runtime_assets["runtime_assets_available"]
+    )
+    if inspect_root is not None:
+        pipeline_available = source_checkout_verification_available
+    elif runtime_mode == "source-checkout":
+        pipeline_available = bool(
+            source_checkout_verification_available and standalone_distribution_ready
+        )
+    else:
+        pipeline_available = standalone_distribution_ready
     return {
-        "doctor_report_version": "1.0.0",
+        "doctor_report_version": "1.1.0",
         "aktreader_version": __version__,
         "project_name": PROJECT_NAME,
         "project_role": PROJECT_ROLE,
@@ -267,6 +302,7 @@ def environment_report(inspect_root: Path | str | None = None) -> dict[str, obje
         "python_supported": supported,
         "phase": "P2",
         "cli_available": True,
+        "runtime_mode": runtime_mode,
         "runtime_root": str(runtime_root),
         "inspected_root": checkout["root"],
         "inspected_root_is_runtime_root": inspected_root_is_runtime_root,
@@ -278,9 +314,13 @@ def environment_report(inspect_root: Path | str | None = None) -> dict[str, obje
         "missing_contract_assets": checkout["missing_contract_assets"],
         "contract_assets": checkout["contract_assets"],
         "inspected_checkout_ready": checkout["ready"],
+        **runtime_assets,
+        "source_checkout_verification_available": (
+            source_checkout_verification_available
+        ),
         "pipeline_available": pipeline_available,
-        "source_checkout_required": True,
-        "standalone_distribution_ready": False,
+        "source_checkout_required": False,
+        "standalone_distribution_ready": standalone_distribution_ready,
         "reader_backend": "local-open-weights-only",
         "network_required": False,
     }
@@ -304,6 +344,7 @@ def _command_doctor(args: argparse.Namespace) -> int:
             f"package {report['package_namespace']} | command {report['command_name']}"
         )
         print(f"Repository: {report['repository_url']}")
+        print(f"Runtime mode: {report['runtime_mode']}")
         print(f"Runtime root: {report['runtime_root']}")
         if not report["inspected_root_is_runtime_root"]:
             print(f"Inspected root: {report['inspected_root']} (diagnostic only)")
@@ -313,14 +354,32 @@ def _command_doctor(args: argparse.Namespace) -> int:
             f"(observed: {report['observed_distribution_name'] or 'none'})"
         )
         print(
-            "Contract assets: "
+            "Checkout assets: "
             f"{report['available_contract_asset_count']}/"
             f"{report['contract_asset_count']} available"
         )
         for path in report["missing_contract_assets"]:
             print(f"  missing: {path}")
+        print(
+            "Packaged runtime assets: "
+            f"{report['available_runtime_asset_count']}/"
+            f"{report['runtime_asset_count']} available"
+        )
+        for path in report["missing_runtime_assets"]:
+            print(f"  missing from package: {path}")
+        print(
+            "Full checkout verification available: "
+            f"{'yes' if report['source_checkout_verification_available'] else 'no'}"
+        )
         print(f"Pipeline available: {'yes' if report['pipeline_available'] else 'no'}")
-        print("Standalone wheel ready: no (source checkout contracts are required)")
+        print(
+            "Standalone wheel ready: "
+            + (
+                "yes (explicit external reader artifacts required)"
+                if report["standalone_distribution_ready"]
+                else "no (packaged runtime contracts are incomplete)"
+            )
+        )
         print(f"Pipeline phase: {report['phase']}")
         print(f"Python {report['python_version']} ({report['implementation']})")
         print(f"Python >= 3.11: {'yes' if report['python_supported'] else 'no'}")
@@ -647,6 +706,10 @@ def _training_clerk_year_ids(path: Path | None) -> list[str]:
 
 
 def _command_eval(args: argparse.Namespace) -> int:
+    if args.gold_dir is None or args.holdout is None:
+        raise CliConfigurationError(
+            "eval requires --gold-dir and --holdout outside an Application source checkout"
+        )
     gold_dir = local_input_path(args.gold_dir, role="gold directory")
     if not gold_dir.is_dir():
         raise CliConfigurationError(f"gold directory is not a directory: {gold_dir}")

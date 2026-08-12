@@ -33,6 +33,8 @@ the `skills/` directory teaches the domain, and plenty of pending work is pure P
 - Install the development group and run `python -m pytest`.
 - Run `python -m ruff check .` when Ruff is installed.
 - Run `python -m tools.check_dependency_licenses` after any dependency edit.
+- For packaging changes, run `python tools/smoke_installed_wheel.py`; CI repeats that isolated
+  install on Linux and Windows.
 - Do not add model downloads, hosted-model APIs, archive scraping, login automation, or secrets.
 - Do not include restricted memorial-institution material in labels or training data.
 

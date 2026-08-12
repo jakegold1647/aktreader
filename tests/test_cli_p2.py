@@ -587,3 +587,16 @@ def test_eval_reports_invalid_prediction_shape_without_traceback(
     assert "one JSON object" in captured.err
     assert "Traceback" not in captured.err
     assert not output.exists()
+
+
+def test_eval_requires_explicit_corpus_paths_outside_a_source_checkout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr("aktreader.cli.PROJECT_ROOT", tmp_path)
+
+    exit_code = main(["eval", "--predictions", str(tmp_path / "predictions")])
+
+    assert exit_code == 2
+    assert "requires --gold-dir and --holdout" in capsys.readouterr().err

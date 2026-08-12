@@ -110,21 +110,28 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m aktreader prompt-verify --root .
 ```
 
-This is currently a source-checkout install. The wheel can contain the Python package, but the
-repository-root schemas, frozen prompt and source skills, and evaluation defaults are not packaged
-inside it. `aktreader doctor` exits successfully only when the running Application resolves the
-correct `aktreader-app` checkout and all 25 required contract assets are present. It does not
-claim that model weights or `llama-mtmd-cli` are installed; use `reader-inspect` with a pinned
-configuration for that separate check.
+Clone the repository for the complete public-checkout verification path. The Application also
+builds a self-contained wheel for explicitly configured reader and evaluation workflows. That
+wheel bundles only the three small contracts read implicitly by portable commands: the canonical
+act schema, the evaluation field map, and its bound model-output schema. It does not bundle the
+gold corpus, labels, prompt, source skills, examples, model weights, runtime binary, scans, or
+owner-local configuration, and no package has been published to PyPI.
+
+`aktreader doctor` reports those two boundaries separately. A source checkout must match the
+`aktreader-app` identity and provide all 25 public checkout contracts. An installed distribution
+must provide all three packaged runtime contracts. Neither result claims that model weights or
+`llama-mtmd-cli` are installed; use `reader-inspect` with a checksum-pinned configuration for that
+separate check. Installed reader commands continue to require explicit external artifact paths.
 
 `doctor --inspect-root PATH` can diagnose another local checkout, including distinguishing the
 Evidence Lab's `aktreader-research` metadata from this Application. It does not reconfigure the
 running command, so an alternate root never makes `pipeline_available` true.
 
-`checkout-verify` is the scan-free public integrity gate. It verifies that the checkout is the
-Application, checks all 25 required contract assets, verifies the frozen prompt against its three
-source skills and digest, schema-validates and semantically validates every gold record, compares
-the corpus coverage to `gold/manifest.json`, and checks permanent clerk-year holdout separation.
+`checkout-verify` remains the scan-free full-checkout integrity gate. It verifies that the
+checkout is the Application, checks all 25 required contract assets, verifies the frozen prompt
+against its three source skills and digest, schema-validates and semantically validates every gold
+record, compares the corpus coverage to `gold/manifest.json`, and checks permanent clerk-year
+holdout separation.
 It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
@@ -144,6 +151,13 @@ inference; the other commands validate or process existing artifacts.
 The generic [Reader configuration](examples/local-reader.config.example.json) intentionally
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
 real pins for a separately provisioned executable, model, projector, prompt, and output schema.
+
+Outside a source checkout, `eval` requires explicit `--gold-dir` and `--holdout` paths rather than
+guessing under `site-packages`. Source checkouts retain the tracked defaults. The isolated wheel
+gate is reproducible with `python tools/smoke_installed_wheel.py`; it builds and installs a fresh
+wheel outside the checkout, inspects explicit checksum-pinned reader artifacts, merges synthetic
+labels with the packaged act schema, and evaluates copied explicit corpus inputs. CI runs this
+gate on Linux and Windows.
 
 ## Which repository do I need?
 
@@ -166,10 +180,10 @@ alias for v0.2.0 workflows.
 If this checkout was installed before the distribution rename, recreate its virtual environment;
 package installers may otherwise leave stale `aktreader` distribution metadata behind.
 
-`aktreader doctor --json` reports project identity, runtime and inspected roots, per-asset
-availability, missing contract paths, and whether the source-checkout pipeline is actually
-available. This lets automation verify that it launched the Application rather than another
-repository in the project family.
+`aktreader doctor --json` reports project identity, source-checkout readiness, packaged-runtime
+readiness, runtime mode, and whether the Application command surface is available. This lets
+automation distinguish a complete Application checkout, an installed Application wheel, and the
+Evidence Lab rather than treating their shared import namespace as identity.
 
 ## Repository map
 
