@@ -8,6 +8,7 @@ from aktreader.evaluation import (
     evaluate_predictions,
     flatten_gold_fields,
     load_model_output_field_map,
+    load_prediction_records,
     validate_holdout_integrity,
 )
 
@@ -229,3 +230,28 @@ def test_field_map_is_bound_to_the_current_reduced_schema() -> None:
     assert len(mapping["entries"]) == 81
     assert mapping["entries"]["principal_name"]["gold_path"] == "principal.name"
     assert mapping["entries"]["deceased_filiation"]["status"].startswith("UNSCORABLE_")
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (
+            '{"record_id":"first","record_id":"second","observations":{}}',
+            "duplicate JSON key",
+        ),
+        ('{"record_id":"first","score":NaN}', "non-standard JSON number"),
+        ("[]", "one JSON object"),
+        ('{"observations":{}}', "record_id must be a non-empty string"),
+        ('{"record_id":"   ","observations":{}}', "record_id must be a non-empty string"),
+    ],
+)
+def test_prediction_loader_rejects_ambiguous_records(
+    tmp_path: Path,
+    payload: str,
+    message: str,
+) -> None:
+    prediction = tmp_path / "prediction.json"
+    prediction.write_text(payload, encoding="utf-8")
+
+    with pytest.raises(EvaluationIntegrityError, match=message):
+        load_prediction_records(prediction)

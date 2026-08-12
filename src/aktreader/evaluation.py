@@ -61,6 +61,46 @@ class EvaluationIntegrityError(ValueError):
     """Raised when a benchmark or training split violates evaluation integrity."""
 
 
+def _prediction_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, child in pairs:
+        if key in value:
+            raise EvaluationIntegrityError(f"duplicate JSON key is forbidden: {key!r}")
+        value[key] = child
+    return value
+
+
+def _reject_prediction_json_constant(value: str) -> None:
+    raise EvaluationIntegrityError(f"non-standard JSON number is forbidden: {value}")
+
+
+def _load_prediction_record(path: Path) -> dict[str, Any]:
+    try:
+        source = path.read_text(encoding="utf-8")
+    except UnicodeError as error:
+        raise EvaluationIntegrityError(f"prediction is not UTF-8: {path}") from error
+    except OSError as error:
+        raise EvaluationIntegrityError(f"prediction is unreadable: {path}: {error}") from error
+
+    try:
+        record = json.loads(
+            source,
+            object_pairs_hook=_prediction_json_object,
+            parse_constant=_reject_prediction_json_constant,
+        )
+    except json.JSONDecodeError as error:
+        raise EvaluationIntegrityError(f"prediction is not valid JSON: {path}: {error}") from error
+    except EvaluationIntegrityError as error:
+        raise EvaluationIntegrityError(f"invalid prediction JSON: {path}: {error}") from error
+
+    if not isinstance(record, dict):
+        raise EvaluationIntegrityError(f"prediction must contain one JSON object: {path}")
+    record_id = record.get("record_id")
+    if not isinstance(record_id, str) or not record_id.strip():
+        raise EvaluationIntegrityError(f"prediction record_id must be a non-empty string: {path}")
+    return record
+
+
 def _report_count(value: Any, location: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
         raise EvaluationIntegrityError(f"{location} must be a non-negative integer")
@@ -573,10 +613,10 @@ def evaluate_predictions(
 
 
 def load_prediction_records(path: Path) -> list[dict[str, Any]]:
-    """Load either one prediction JSON or every JSON in a directory."""
+    """Strictly load one prediction JSON or every JSON in a directory."""
     paths = sorted(path.glob("*.json")) if path.is_dir() else [path]
-    records = [json.loads(item.read_text(encoding="utf-8")) for item in paths]
-    ids = [record.get("record_id") for record in records]
+    records = [_load_prediction_record(item) for item in paths]
+    ids = [record["record_id"] for record in records]
     if len(ids) != len(set(ids)):
         raise EvaluationIntegrityError("duplicate prediction record IDs")
     return records
