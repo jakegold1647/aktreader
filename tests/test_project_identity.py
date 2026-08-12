@@ -39,3 +39,11 @@ def test_lockfile_uses_the_application_distribution_name() -> None:
     assert len(editable_packages) == 1
     assert editable_packages[0]["name"] == DISTRIBUTION_NAME
     assert editable_packages[0]["version"] == __version__
+
+
+def test_readme_distinguishes_application_and_evidence_lab_commands() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "`aktreader-app` / `aktreader` for this Application" in readme
+    assert "`aktreader-research` / `aktreader-lab` for the Evidence Lab" in readme
+    assert "the Lab retains a legacy `aktreader`" in readme

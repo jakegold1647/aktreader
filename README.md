@@ -137,11 +137,14 @@ The application and evidence lab have separate histories on purpose. This reposi
 reader; the evidence lab holds the evidence about how well it reads. The benchmark is independent
 of both and is still under construction.
 
-The Application and Evidence Lab currently share the `aktreader` Python package namespace and
-command name. Their distribution identities are different: this repository installs as
-`aktreader-app`, while the Evidence Lab is a separate project. Use a separate virtual environment
-for each repository; installing both into one environment is not supported because their import
-paths and console scripts would still collide.
+The Application and Evidence Lab share the `aktreader` Python package namespace but have distinct
+distribution and preferred command identities: `aktreader-app` / `aktreader` for this Application,
+and `aktreader-research` / `aktreader-lab` for the Evidence Lab. Use a separate virtual environment
+for each repository. Their import paths still collide, and the Lab retains a legacy `aktreader`
+alias for v0.2.0 workflows.
+
+If this checkout was installed before the distribution rename, recreate its virtual environment;
+package installers may otherwise leave stale `aktreader` distribution metadata behind.
 
 `aktreader doctor --json` reports `project_role`, `distribution_name`, `package_namespace`,
 `command_name`, and `repository_url`, so automation can verify that it launched the Application
