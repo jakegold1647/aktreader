@@ -27,6 +27,7 @@ jobs:
         run: |
           python -m aktreader --version
           python -m aktreader doctor --json
+          python -m aktreader checkout-verify --json
           python -m aktreader prompt-verify --root .
           python -m aktreader compare labels/readerA labels/readerB \
             --output "$RUNNER_TEMP/reader-comparison.json" \

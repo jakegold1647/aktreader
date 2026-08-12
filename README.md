@@ -95,6 +95,7 @@ date-time forms the label files use). With `uv`:
 uv sync --group dev
 uv run aktreader --version
 uv run aktreader doctor --json
+uv run aktreader checkout-verify
 uv run aktreader prompt-verify --root .
 ```
 
@@ -105,6 +106,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\.venv\Scripts\python.exe -m aktreader --version
 .\.venv\Scripts\python.exe -m aktreader doctor --json
+.\.venv\Scripts\python.exe -m aktreader checkout-verify
 .\.venv\Scripts\python.exe -m aktreader prompt-verify --root .
 ```
 
@@ -118,6 +120,13 @@ configuration for that separate check.
 `doctor --inspect-root PATH` can diagnose another local checkout, including distinguishing the
 Evidence Lab's `aktreader-research` metadata from this Application. It does not reconfigure the
 running command, so an alternate root never makes `pipeline_available` true.
+
+`checkout-verify` is the scan-free public integrity gate. It verifies that the checkout is the
+Application, checks all 25 required contract assets, verifies the frozen prompt against its three
+source skills and digest, schema-validates and semantically validates every gold record, compares
+the corpus coverage to `gold/manifest.json`, and checks permanent clerk-year holdout separation.
+It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
+stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `consensus-merge`, `reader-inspect`, `reader-infer`,
 `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in reader

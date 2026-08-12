@@ -60,6 +60,7 @@ from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
+from aktreader.verification import CHECK_NAMES, verify_application_checkout
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -102,6 +103,15 @@ def build_parser() -> argparse.ArgumentParser:
             "diagnose contracts in another local checkout without reconfiguring "
             "the running Application"
         ),
+    )
+
+    checkout_verify = subparsers.add_parser(
+        "checkout-verify",
+        help="verify the public Application checkout without scans or model weights",
+    )
+    checkout_verify.add_argument("--root", type=Path, default=PROJECT_ROOT)
+    checkout_verify.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON"
     )
 
     prompt = subparsers.add_parser(
@@ -333,6 +343,30 @@ def _command_prompt_verify(args: argparse.Namespace) -> int:
         }
     )
     return 0
+
+
+def _command_checkout_verify(args: argparse.Namespace) -> int:
+    root = local_input_path(args.root, role="application checkout")
+    if not root.is_dir():
+        raise CliConfigurationError(f"application checkout is not a directory: {root}")
+    report = verify_application_checkout(root)
+    if args.json:
+        _emit_json(report)
+    else:
+        print(f"{PROJECT_NAME} public checkout verification")
+        print(f"Root: {report['root']}")
+        for name in CHECK_NAMES:
+            check = report["checks"][name]
+            detail = check.get("summary") or check.get("error") or check.get("reason")
+            print(f"{check['status']:>7}  {name}: {detail}")
+        print(
+            f"Result: {report['status']} "
+            f"({report['passed_check_count']}/{report['check_count']})"
+        )
+        print("Requires source scans: no")
+        print("Requires model/runtime files: no")
+        print("Requires network access: no")
+    return 0 if report["status"] == "PASS" else 1
 
 
 def _command_label_validate(args: argparse.Namespace) -> int:
@@ -723,6 +757,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     handlers = {
         "doctor": _command_doctor,
+        "checkout-verify": _command_checkout_verify,
         "prompt-verify": _command_prompt_verify,
         "label-validate": _command_label_validate,
         "consensus-merge": _command_consensus_merge,

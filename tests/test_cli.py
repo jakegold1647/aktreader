@@ -87,6 +87,45 @@ def test_doctor_fails_closed_for_an_alternate_incomplete_root(tmp_path, capsys) 
     assert payload["pipeline_available"] is False
 
 
+def test_checkout_verify_reports_the_scan_free_application_gate(capsys) -> None:
+    exit_code = main(["checkout-verify", "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "PASS"
+    assert payload["project_name"] == "AKT Reader - Application"
+    assert payload["project_role"] == "application"
+    assert payload["distribution_name"] == "aktreader-app"
+    assert payload["repository_url"] == REPOSITORY_URL
+    assert payload["passed_check_count"] == payload["check_count"] == 5
+    assert payload["checks"]["application_checkout"]["status"] == "PASS"
+    assert payload["checks"]["gold_corpus"]["coverage"]["total"] == 36
+    assert payload["checks"]["holdout"]["training_overlap"] == 0
+    assert payload["source_scans_required"] is False
+    assert payload["model_runtime_required"] is False
+    assert payload["network_required"] is False
+
+
+def test_checkout_verify_human_output_names_each_check(capsys) -> None:
+    exit_code = main(["checkout-verify"])
+
+    output = capsys.readouterr().out
+    assert exit_code == 0
+    assert output.startswith("AKT Reader - Application public checkout verification\n")
+    for name in (
+        "application_checkout",
+        "prompt_bundle",
+        "gold_corpus",
+        "gold_manifest",
+        "holdout",
+    ):
+        assert f"PASS  {name}:" in output
+    assert "Result: PASS (5/5)\n" in output
+    assert "Requires source scans: no\n" in output
+    assert "Requires model/runtime files: no\n" in output
+    assert "Requires network access: no\n" in output
+
+
 def test_version_names_the_application_distribution(capsys) -> None:
     with pytest.raises(SystemExit) as raised:
         main(["--version"])

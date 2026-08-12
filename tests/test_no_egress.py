@@ -131,6 +131,15 @@ def test_prompt_verify_runs_with_sockets_disabled(sockets_disabled: None, capsys
     assert payload["status"] == "PASS"
 
 
+def test_checkout_verify_runs_with_sockets_disabled(sockets_disabled: None, capsys) -> None:
+    exit_code = main(["checkout-verify", "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "PASS"
+    assert payload["network_required"] is False
+
+
 def test_eval_runs_with_sockets_disabled(
     sockets_disabled: None, tmp_path: Path, capsys
 ) -> None:
