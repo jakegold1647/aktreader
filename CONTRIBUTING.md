@@ -27,6 +27,8 @@ acceptance criteria, or open an issue describing what you want to improve. Domai
 (Cyrillic paleography, Jewish onomastics, Napoleonic act structure) is valuable but optional:
 the `skills/` directory teaches the domain, and plenty of pending work is pure Python.
 
+For a quick orientation, see the [AKT Reader glossary](docs/GLOSSARY.md) before changing evidence, labels, or evaluation documentation.
+
 ## Before opening a change
 
 - Use Python 3.11 or newer in an isolated environment.
