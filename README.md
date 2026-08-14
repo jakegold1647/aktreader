@@ -15,6 +15,8 @@ The product claim is deliberately narrow: the machine reads what it can support,
 cannot, and routes ambiguous fields to a human. It does not make genealogy or identity
 conclusions.
 
+New to the project? Start with the [AKT Reader glossary](docs/GLOSSARY.md) for the project’s terms around filiation, provenance, observation states, uncertainty, and evaluation.
+
 > **Release status: public-release candidate, not a production-grade reader yet.** The local
 > pipeline and review tooling are implemented. The first local baseline evaluated 20/36 records,
 > with 1/77 exact filiation fields and 0/20 exact filiation acts. That is a real, weak baseline,
