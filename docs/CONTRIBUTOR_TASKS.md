@@ -26,15 +26,22 @@ are the likely culprits).
 **Acceptance:** CI is green on all matrix cells; no test is skipped to get there other than the
 documented owner-local checksum skip.
 
-## 2. A glossary for outsiders — *good first issue, documentation only*
+## 2. A glossary for outsiders — shipped
+
+**Status:** completed in merged PR #5. The glossary now lives at
+[`docs/glossary.md`](glossary.md) and links the project's terms back to their authoritative
+specification, architecture, and uncertainty-grading sources.
+
+This task is no longer available to claim. The scope and acceptance notes below are kept as a
+record of what the contribution covered.
 
 **Why:** the docs use project jargon — silver/gold tiers, clerk-year sequestration, blind pass,
-filiation, `[unclear: X/Y]`, typed absence states — that newcomers currently have to
+filiation, `[unclear: X/Y]`, typed absence states — that newcomers previously had to
 reverse-engineer from scattered files.
 
 **Scope:** write `docs/glossary.md` with short, accurate definitions and links to the file that
-is authoritative for each term. Sources: `README.md`, `SPEC.md`, `skills/uncertainty-grading.md`,
-`docs/architecture.md`, `schemas/`.
+is authoritative for each term. Sources: `README.md`, `SPEC.md`,
+`skills/uncertainty-grading.md`, `docs/architecture.md`, `schemas/`.
 
 **Acceptance:** every term used in `README.md` and `CONTRIBUTING.md` that is not ordinary
 software vocabulary appears in the glossary; definitions do not contradict the grading contract
@@ -71,8 +78,8 @@ from the schemas.
 who triggers one gets no pointer to the rule it enforces.
 
 **Scope:** audit error messages raised in `src/aktreader/labels.py` and `src/aktreader/gold.py`;
-extend each to name the violated rule and, where one exists, the document that defines it. Do
-not change what is accepted or rejected — messages only.
+extend each to name the violated rule and, where one exists, the document that defines it. Do not
+change what is accepted or rejected — messages only.
 
 **Acceptance:** the test suite still passes with assertions updated for new wording; no
 behavioral change to validation outcomes.
@@ -83,6 +90,8 @@ behavioral change to validation outcomes.
   disagreement regardless of the JSON detail cap, writes UTF-8 with a BOM, preserves explicit
   observation states, neutralizes formula-like cells, and covers the header-only agreement case.
   CSV re-import remains owner-gated because it would modify adjudication inputs.
+- **Glossary for outsiders — merged PR #5.** The definitions and source links are in
+  [`docs/glossary.md`](glossary.md).
 
 ## Explicitly not up for grabs
 
