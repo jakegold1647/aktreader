@@ -121,7 +121,10 @@ def test_evaluation_uses_receipted_model_and_writes_receipt(
     assert captured["command"][0] == str(executable)
     assert captured["command"][1:5] == ["test", "-f", "xml", "-e"]
     assert captured["command"][5] == str(corpus / "test.lst")
-    assert captured["command"][6:8] == ["-m", str(training_run / "checkpoints" / "model.safetensors")]
+    assert captured["command"][6:8] == [
+        "-m",
+        str(training_run / "checkpoints" / "model.safetensors"),
+    ]
     assert captured["kwargs"]["cwd"] == corpus
     assert captured["kwargs"]["shell"] is False
     assert captured["kwargs"]["stdin"] is subprocess.DEVNULL
