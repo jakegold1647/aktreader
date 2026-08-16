@@ -15,12 +15,15 @@ from aktreader.project import (
     evaluate_htr_suggestions,
     export_consented_training_pagexml,
     export_human_pagexml,
+    export_review_package,
     grant_training_consent,
     import_htr_suggestions,
     import_pagexml_into_project,
+    import_review_package,
     inspect_project,
     list_project_pages,
     load_project_page,
+    resolve_review_proposal,
     revise_line_transcription,
     revoke_training_consent,
     training_readiness,
@@ -648,3 +651,149 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
         assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
     finally:
         connection.close()
+
+
+def test_offline_review_package_queues_and_requires_explicit_acceptance(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+
+    reviewer = tmp_path / "reviewer.aktproj"
+    owner = tmp_path / "owner.aktproj"
+    create_project(reviewer, name="Reviewer copy")
+    create_project(owner, name="Owner copy")
+    reviewer_import = import_pagexml_into_project(reviewer, source)
+    owner_import = import_pagexml_into_project(owner, source)
+    reviewer_line = load_project_page(
+        reviewer,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        reviewer,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        source_span_id=reviewer_line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+    )
+    package = tmp_path / "reviewer.aktreview.json"
+
+    exported = export_review_package(
+        reviewer,
+        package,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        contributor="reviewer-1",
+    )
+    queued = import_review_package(owner, package)
+
+    assert exported["status"] == "EXPORTED"
+    assert queued["status"] == "QUEUED"
+    assert queued["pending_count"] == 1
+    assert queued["conflict_count"] == 0
+    assert len(queued["proposal_sha256s"]) == 1
+    owner_line = load_project_page(
+        owner,
+        manifest_sha256=owner_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    assert owner_line["text"] == "Александр"
+    assert owner_line["review_proposals"] == [
+        {
+            "proposal_sha256": queued["proposal_sha256s"][0],
+            "contributor": "reviewer-1",
+            "text": "Александръ",
+            "state": "PENDING",
+            "revised_at": owner_line["review_proposals"][0]["revised_at"],
+        }
+    ]
+
+    resolved = resolve_review_proposal(
+        owner,
+        proposal_sha256=queued["proposal_sha256s"][0],
+        decision="accept",
+        editor="owner-1",
+    )
+
+    accepted = load_project_page(
+        owner,
+        manifest_sha256=owner_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    assert resolved["status"] == "ACCEPTED"
+    assert resolved["editor"] == "owner-1"
+    assert accepted["text"] == "Александръ"
+    assert accepted["revision"] == 1
+    assert accepted["review_proposals"] == []
+    assert inspect_project(owner)["review_proposal_count"] == 1
+    assert inspect_project(owner)["training_consent_grant_count"] == 0
+
+
+def test_offline_review_package_detects_a_stale_base_without_applying_text(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+
+    reviewer = tmp_path / "reviewer.aktproj"
+    owner = tmp_path / "owner.aktproj"
+    create_project(reviewer, name="Reviewer copy")
+    create_project(owner, name="Owner copy")
+    reviewer_import = import_pagexml_into_project(reviewer, source)
+    owner_import = import_pagexml_into_project(owner, source)
+    reviewer_line = load_project_page(
+        reviewer,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    owner_line = load_project_page(
+        owner,
+        manifest_sha256=owner_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        reviewer,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        source_span_id=reviewer_line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+    )
+    revise_line_transcription(
+        owner,
+        manifest_sha256=owner_import["manifest_sha256"],
+        source_span_id=owner_line["source_span_id"],
+        text="Owner correction",
+        editor="owner-1",
+    )
+    package = tmp_path / "reviewer.aktreview.json"
+    export_review_package(
+        reviewer,
+        package,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        contributor="reviewer-1",
+    )
+
+    queued = import_review_package(owner, package)
+    resolved = resolve_review_proposal(
+        owner,
+        proposal_sha256=queued["proposal_sha256s"][0],
+        decision="accept",
+        editor="owner-1",
+    )
+
+    assert queued["pending_count"] == 0
+    assert queued["conflict_count"] == 1
+    assert resolved["status"] == "CONFLICT"
+    current = load_project_page(
+        owner,
+        manifest_sha256=owner_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    assert current["text"] == "Owner correction"
+    assert current["revision"] == 1
