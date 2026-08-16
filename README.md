@@ -199,6 +199,7 @@ python -m aktreader project-export-pagexml serock.aktproj `
 
 Exports must live outside the project and will not replace an existing file unless
 `--replace-existing` is explicit.
+
 Evaluate a specific imported HTR result only against saved human revisions. The report is pinned
 to the project import and recognition PAGE XML hashes; it uses Unicode NFC with exact whitespace,
 and reports CER, WER, exact-line match, and the coverage counts needed to judge whether the sample
@@ -211,6 +212,7 @@ python -m aktreader project-evaluate-htr serock.aktproj `
   --result-pagexml-sha256 <imported-result-pagexml-sha256> `
   --output serock-kraken-evaluation.json
 ```
+
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
 
