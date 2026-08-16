@@ -178,9 +178,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     collection_add.add_argument("collection", type=Path)
     collection_add.add_argument("project", type=Path)
-    collection_inspect = subparsers.add_parser(\n        "collection-inspect",\n        help="inspect a local collection",\n    )
+    collection_inspect = subparsers.add_parser(
+        "collection-inspect",
+        help="inspect a local collection",
+    )
     collection_inspect.add_argument("collection", type=Path)
-    collection_search = subparsers.add_parser(\n        "collection-search",\n        help="search a local collection",\n    )
+    collection_search = subparsers.add_parser(
+        "collection-search",
+        help="search a local collection",
+    )
     collection_search.add_argument("collection", type=Path)
     collection_search.add_argument("query")
     collection_search.add_argument("--limit", type=int, default=100)
