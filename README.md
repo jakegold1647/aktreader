@@ -147,7 +147,7 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`, `htr-build-corpus`,
-`pagexml-import`,
+`htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
 `eval`. To run the repository's built-in
