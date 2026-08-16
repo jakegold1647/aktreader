@@ -675,3 +675,18 @@ def test_htr_corpus_assembly_runs_with_sockets_disabled(
     assert payload["network_required"] is False
     assert (corpus / "train.lst").is_file()
     assert (corpus / "validation.lst").is_file()
+
+    inspect_exit_code = main(
+        [
+            "htr-inspect-corpus",
+            "--plan",
+            str(plan),
+            "--corpus-directory",
+            str(corpus),
+        ]
+    )
+
+    inspected = json.loads(capsys.readouterr().out)
+    assert inspect_exit_code == 0
+    assert inspected["status"] == "READY_FOR_LOCAL_KRAKEN_TRAINING"
+    assert inspected["network_required"] is False
