@@ -89,12 +89,14 @@ from aktreader.project import (
     import_pagexml_into_project,
     import_review_package,
     inspect_project,
+    list_project_documents,
     resolve_review_proposal,
     revise_line_geometry,
     revise_page_reading_order,
     revise_region_geometry,
     revoke_training_consent,
     training_readiness,
+    update_project_document,
 )
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
@@ -203,6 +205,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="inspect one local AKT Reader workbench project",
     )
     project_inspect.add_argument("project", type=Path, help="local .aktproj directory")
+
+    project_documents = subparsers.add_parser(
+        "project-list-documents",
+        help="list local PAGE XML document records",
+    )
+    project_documents.add_argument("project", type=Path, help="local .aktproj directory")
+
+    project_document_update = subparsers.add_parser(
+        "project-update-document",
+        help="update title, tags, or notes for one local document",
+    )
+    project_document_update.add_argument("project", type=Path, help="local .aktproj directory")
+    project_document_update.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_document_update.add_argument(
+        "--metadata",
+        required=True,
+        type=Path,
+        help="strict local JSON object with title, tags, and/or notes",
+    )
 
     project_import = subparsers.add_parser(
         "project-import-pagexml",
@@ -1017,6 +1042,45 @@ def _command_project_inspect(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     report = inspect_project(project)
     _emit_json(report)
+    return 0
+
+
+def _command_project_list_documents(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    _emit_json(
+        {
+            "status": "READY",
+            "project": str(project),
+            "documents": list_project_documents(project),
+            "network_required": False,
+        }
+    )
+    return 0
+
+
+def _command_project_update_document(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    metadata_path = local_input_path(args.metadata, role="document metadata")
+    if not metadata_path.is_file():
+        raise CliConfigurationError("document metadata must be a JSON file")
+    metadata = load_strict_json(metadata_path, role="document metadata")
+    if (
+        not isinstance(metadata, dict)
+        or not metadata
+        or not set(metadata).issubset({"title", "tags", "notes"})
+    ):
+        raise CliConfigurationError(
+            "document metadata must contain only title, tags, and/or notes"
+        )
+    _emit_json(
+        update_project_document(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            title=metadata.get("title"),
+            tags=metadata.get("tags"),
+            notes=metadata.get("notes"),
+        )
+    )
     return 0
 
 
@@ -1857,6 +1921,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "collection-search": _command_collection_search,
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
+        "project-list-documents": _command_project_list_documents,
+        "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,

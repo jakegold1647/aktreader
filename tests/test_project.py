@@ -21,6 +21,7 @@ from aktreader.project import (
     import_pagexml_into_project,
     import_review_package,
     inspect_project,
+    list_project_documents,
     list_project_pages,
     load_project_page,
     resolve_review_proposal,
@@ -30,6 +31,7 @@ from aktreader.project import (
     revise_region_geometry,
     revoke_training_consent,
     training_readiness,
+    update_project_document,
 )
 
 
@@ -288,6 +290,75 @@ def test_project_keeps_htr_suggestions_separate_from_human_revisions(tmp_path: P
     assert report["htr_suggestion_count"] == 1
 
 
+
+def test_project_documents_keep_metadata_separate_from_imported_pagexml(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "register.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+
+    documents = list_project_documents(project)
+    updated = update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        title="Serock civil register, 1890",
+        tags=["Serock", "births"],
+        notes="Reviewed from the bound volume.",
+    )
+    repeated = import_pagexml_into_project(project, source)
+    pages = list_project_pages(project)
+
+    assert len(documents) == 1
+    assert documents[0]["document_id"] == imported["document_id"]
+    assert documents[0]["title"] == "register"
+    assert updated["document_id"] == imported["document_id"]
+    assert updated["tags"] == ["Serock", "births"]
+    assert repeated["already_imported"] is True
+    assert list_project_documents(project)[0]["notes"] == "Reviewed from the bound volume."
+    assert pages[0]["document_id"] == imported["document_id"]
+    assert inspect_project(project)["document_count"] == 1
+
+
+def test_project_document_cli_updates_strict_metadata(tmp_path: Path, capsys) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "register.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    metadata = tmp_path / "document.json"
+    metadata.write_text(
+        json.dumps({"title": "Serock register", "tags": ["1890"], "notes": ""}),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "project-update-document",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--metadata",
+            str(metadata),
+        ]
+    )
+    updated = json.loads(capsys.readouterr().out)
+    list_exit = main(["project-list-documents", str(project)])
+    listed = json.loads(capsys.readouterr().out)
+
+    assert exit_code == list_exit == 0
+    assert updated["title"] == "Serock register"
+    assert listed["documents"][0]["tags"] == ["1890"]
+
+
 def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     project = tmp_path / "register.aktproj"
     create_project(project, name="Serock births")
@@ -295,6 +366,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("DROP TABLE line_geometry_revisions")
@@ -314,7 +386,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
     finally:
         connection.close()
 
@@ -581,6 +653,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("DROP TABLE line_geometry_revisions")
@@ -598,7 +671,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     assert report["training_consent_revocation_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
     finally:
         connection.close()
 
@@ -680,6 +753,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("DROP TABLE line_geometry_revisions")
@@ -694,7 +768,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     assert report["training_split_assignment_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
     finally:
         connection.close()
 
@@ -709,6 +783,7 @@ def test_project_migrates_v7_store_for_page_reading_order_revisions(
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("PRAGMA user_version = 7")
@@ -720,7 +795,7 @@ def test_project_migrates_v7_store_for_page_reading_order_revisions(
     assert report["page_reading_order_revision_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
     finally:
         connection.close()
 
@@ -735,6 +810,7 @@ def test_project_migrates_v8_store_for_region_geometry_revisions(
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("PRAGMA user_version = 8")
     finally:
@@ -745,7 +821,30 @@ def test_project_migrates_v8_store_for_region_geometry_revisions(
     assert report["region_geometry_revision_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+    finally:
+        connection.close()
+
+
+
+def test_project_migrates_v9_store_for_documents(tmp_path: Path) -> None:
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        with connection:
+            connection.execute("DROP TABLE documents")
+            connection.execute("PRAGMA user_version = 9")
+    finally:
+        connection.close()
+
+    report = inspect_project(project)
+
+    assert report["document_count"] == 0
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
     finally:
         connection.close()
 
