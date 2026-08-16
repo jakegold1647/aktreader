@@ -188,7 +188,7 @@ python -m aktreader workbench serock.aktproj
 ```
 
 After a reviewer has explicitly saved corrections, export a separate, standards-compatible PAGE XML
-derivative for interchange or local HTR training. The command applies only the latest human revision
+derivative for interchange or future consent-gated local HTR training. The command applies only the latest human revision
 for each line; it never promotes an engine proposal by itself and it never changes the project source
 object or revision history.
 
@@ -231,6 +231,7 @@ python -m aktreader project-training-readiness serock.aktproj `
 
 A report is `READY_FOR_PAGEXML_TRAINING_EXPORT` only when every source line has both a current
 human revision and an active consent bound to that exact revision.
+
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
 
