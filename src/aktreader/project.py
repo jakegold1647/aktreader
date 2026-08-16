@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 3
+PROJECT_DATABASE_VERSION = 4
 
 
 class ProjectStoreError(ValueError):
@@ -45,6 +45,11 @@ def _sha256_file(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+
+def _revision_text_sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def _local_path(path: Path | str, *, role: str, must_exist: bool) -> Path:
@@ -99,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 3;
+                PRAGMA user_version = 4;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -171,6 +176,32 @@ def _initialize_database(path: Path) -> None:
                     FOREIGN KEY (manifest_sha256, source_span_id)
                         REFERENCES lines(manifest_sha256, source_span_id)
                 );
+
+                CREATE TABLE training_consent_grants (
+                    consent_id TEXT PRIMARY KEY,
+                    manifest_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    revised_text_sha256 TEXT NOT NULL,
+                    contributor TEXT NOT NULL,
+                    granted_at TEXT NOT NULL,
+                    UNIQUE (
+                        manifest_sha256,
+                        source_span_id,
+                        revision,
+                        revised_text_sha256,
+                        contributor
+                    ),
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
+                );
+                CREATE TABLE training_consent_revocations (
+                    grant_consent_id TEXT PRIMARY KEY
+                        REFERENCES training_consent_grants(consent_id),
+                    revoked_by TEXT NOT NULL,
+                    reason TEXT NOT NULL,
+                    revoked_at TEXT NOT NULL
+                );
                 """
             )
     finally:
@@ -232,6 +263,41 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 3
+
+        if version == 3:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE training_consent_grants (
+                        consent_id TEXT PRIMARY KEY,
+                        manifest_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        revised_text_sha256 TEXT NOT NULL,
+                        contributor TEXT NOT NULL,
+                        granted_at TEXT NOT NULL,
+                        UNIQUE (
+                            manifest_sha256,
+                            source_span_id,
+                            revision,
+                            revised_text_sha256,
+                            contributor
+                        ),
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    CREATE TABLE training_consent_revocations (
+                        grant_consent_id TEXT PRIMARY KEY
+                            REFERENCES training_consent_grants(consent_id),
+                        revoked_by TEXT NOT NULL,
+                        reason TEXT NOT NULL,
+                        revoked_at TEXT NOT NULL
+                    );
+                    PRAGMA user_version = 4;
+                    """
+                )
+            version = 4
+
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
     except sqlite3.Error as error:
@@ -1319,6 +1385,335 @@ def revise_line_transcription(
         "network_required": False,
     }
 
+
+def _latest_human_revisions(
+    connection: sqlite3.Connection,
+    *,
+    manifest_sha256: str,
+) -> dict[str, tuple[int, str, str]]:
+    rows = connection.execute(
+        """
+        SELECT
+            lines.source_span_id,
+            transcription_revisions.revision,
+            transcription_revisions.revised_text,
+            transcription_revisions.editor
+        FROM lines
+        JOIN transcription_revisions
+            ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+           AND transcription_revisions.source_span_id = lines.source_span_id
+           AND transcription_revisions.revision = (
+                SELECT MAX(latest.revision)
+                FROM transcription_revisions AS latest
+                WHERE latest.manifest_sha256 = lines.manifest_sha256
+                  AND latest.source_span_id = lines.source_span_id
+           )
+        WHERE lines.manifest_sha256 = ?
+        """,
+        (manifest_sha256,),
+    ).fetchall()
+    return {row[0]: (row[1], row[2], row[3]) for row in rows}
+
+
+def grant_training_consent(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    contributor: str,
+    source_span_ids: Sequence[str] | None = None,
+    all_human_revised: bool = False,
+) -> dict[str, object]:
+    """Append consent for the contributor's current human revisions only."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(contributor, str) or not contributor.strip():
+        raise ProjectStoreError("contributor must be a nonblank string")
+    if source_span_ids is None:
+        requested_spans: list[str] = []
+    elif isinstance(source_span_ids, str):
+        raise ProjectStoreError("source_span_ids must be a sequence of nonblank strings")
+    else:
+        requested_spans = list(source_span_ids)
+    if all_human_revised == bool(requested_spans):
+        raise ProjectStoreError(
+            "select one or more source_span_ids or set all_human_revised=True, but not both"
+        )
+    if any(not isinstance(span, str) or not span.strip() for span in requested_spans):
+        raise ProjectStoreError("source_span_ids must contain only nonblank strings")
+    requested_spans = [span.strip() for span in requested_spans]
+    if len(requested_spans) != len(set(requested_spans)):
+        raise ProjectStoreError("source_span_ids must not contain duplicates")
+
+    root = _required_project_root(project)
+    database = root / PROJECT_DATABASE_NAME
+    contributor = contributor.strip()
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            imported = connection.execute(
+                "SELECT 1 FROM pagexml_imports WHERE manifest_sha256 = ?",
+                (manifest_sha256,),
+            ).fetchone()
+            if imported is None:
+                raise ProjectStoreError("project PAGE XML import was not found")
+            revisions = _latest_human_revisions(
+                connection,
+                manifest_sha256=manifest_sha256,
+            )
+            spans = sorted(revisions) if all_human_revised else requested_spans
+            if not spans:
+                raise ProjectStoreError(
+                    "there are no human revisions available for training consent"
+                )
+            grants: list[dict[str, str | int | bool]] = []
+            for source_span_id in spans:
+                revision = revisions.get(source_span_id)
+                if revision is None:
+                    raise ProjectStoreError(
+                        "training consent requires a current human revision for every selected line"
+                    )
+                revision_number, revised_text, revision_editor = revision
+                if revision_editor != contributor:
+                    raise ProjectStoreError(
+                        "training consent contributor must match the editor of the current revision"
+                    )
+                revised_text_sha256 = _revision_text_sha256(revised_text)
+                existing = connection.execute(
+                    """
+                    SELECT consent_id
+                    FROM training_consent_grants
+                    WHERE manifest_sha256 = ?
+                      AND source_span_id = ?
+                      AND revision = ?
+                      AND revised_text_sha256 = ?
+                      AND contributor = ?
+                    """,
+                    (
+                        manifest_sha256,
+                        source_span_id,
+                        revision_number,
+                        revised_text_sha256,
+                        contributor,
+                    ),
+                ).fetchone()
+                if existing is None:
+                    consent_id = str(uuid.uuid4())
+                    connection.execute(
+                        """
+                        INSERT INTO training_consent_grants
+                            (
+                                consent_id,
+                                manifest_sha256,
+                                source_span_id,
+                                revision,
+                                revised_text_sha256,
+                                contributor,
+                                granted_at
+                            )
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            consent_id,
+                            manifest_sha256,
+                            source_span_id,
+                            revision_number,
+                            revised_text_sha256,
+                            contributor,
+                            _timestamp(),
+                        ),
+                    )
+                    already_granted = False
+                else:
+                    consent_id = existing[0]
+                    already_granted = True
+                grants.append(
+                    {
+                        "consent_id": consent_id,
+                        "source_span_id": source_span_id,
+                        "revision": revision_number,
+                        "already_granted": already_granted,
+                    }
+                )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot record training consent: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "GRANTED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "contributor": contributor,
+        "grants": grants,
+        "network_required": False,
+    }
+
+
+def revoke_training_consent(
+    project: Path | str,
+    *,
+    grant_consent_id: str,
+    contributor: str,
+    reason: str,
+) -> dict[str, object]:
+    """Append one irrevocable withdrawal for a training-consent grant."""
+
+    if not isinstance(grant_consent_id, str) or not grant_consent_id.strip():
+        raise ProjectStoreError("grant_consent_id must be a nonblank string")
+    if not isinstance(contributor, str) or not contributor.strip():
+        raise ProjectStoreError("contributor must be a nonblank string")
+    if not isinstance(reason, str) or not reason.strip():
+        raise ProjectStoreError("reason must be a nonblank string")
+    root = _required_project_root(project)
+    database = root / PROJECT_DATABASE_NAME
+    contributor = contributor.strip()
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            grant = connection.execute(
+                """
+                SELECT contributor
+                FROM training_consent_grants
+                WHERE consent_id = ?
+                """,
+                (grant_consent_id.strip(),),
+            ).fetchone()
+            if grant is None:
+                raise ProjectStoreError("training-consent grant was not found")
+            if grant[0] != contributor:
+                raise ProjectStoreError(
+                    "only the contributor who granted training consent may revoke it"
+                )
+            existing = connection.execute(
+                """
+                SELECT 1
+                FROM training_consent_revocations
+                WHERE grant_consent_id = ?
+                """,
+                (grant_consent_id.strip(),),
+            ).fetchone()
+            if existing is None:
+                connection.execute(
+                    """
+                    INSERT INTO training_consent_revocations
+                        (grant_consent_id, revoked_by, reason, revoked_at)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (
+                        grant_consent_id.strip(),
+                        contributor,
+                        reason.strip(),
+                        _timestamp(),
+                    ),
+                )
+                already_revoked = False
+            else:
+                already_revoked = True
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot revoke training consent: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "REVOKED",
+        "project": str(root),
+        "grant_consent_id": grant_consent_id.strip(),
+        "contributor": contributor,
+        "already_revoked": already_revoked,
+        "network_required": False,
+    }
+
+
+def training_readiness(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+) -> dict[str, object]:
+    """Report whether every imported line has an eligible consented human revision."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    root = _required_project_root(project)
+    database = root / PROJECT_DATABASE_NAME
+    connection = sqlite3.connect(database)
+    try:
+        imported = connection.execute(
+            "SELECT 1 FROM pagexml_imports WHERE manifest_sha256 = ?",
+            (manifest_sha256,),
+        ).fetchone()
+        if imported is None:
+            raise ProjectStoreError("project PAGE XML import was not found")
+        line_rows = connection.execute(
+            "SELECT source_span_id FROM lines WHERE manifest_sha256 = ? ORDER BY rowid",
+            (manifest_sha256,),
+        ).fetchall()
+        revisions = _latest_human_revisions(
+            connection,
+            manifest_sha256=manifest_sha256,
+        )
+        active_grants = connection.execute(
+            """
+            SELECT
+                training_consent_grants.source_span_id,
+                training_consent_grants.revision,
+                training_consent_grants.revised_text_sha256,
+                training_consent_grants.consent_id
+            FROM training_consent_grants
+            LEFT JOIN training_consent_revocations
+                ON training_consent_revocations.grant_consent_id
+                 = training_consent_grants.consent_id
+            WHERE training_consent_grants.manifest_sha256 = ?
+              AND training_consent_revocations.grant_consent_id IS NULL
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot inspect training readiness: {error}") from error
+    finally:
+        connection.close()
+
+    active_by_revision = {
+        (row[0], row[1], row[2]): row[3]
+        for row in active_grants
+    }
+    unrevised: list[str] = []
+    unconsented: list[str] = []
+    eligible: list[str] = []
+    for (source_span_id,) in line_rows:
+        revision = revisions.get(source_span_id)
+        if revision is None:
+            unrevised.append(source_span_id)
+            continue
+        revision_number, revised_text, _editor = revision
+        key = (source_span_id, revision_number, _revision_text_sha256(revised_text))
+        if key in active_by_revision:
+            eligible.append(source_span_id)
+        else:
+            unconsented.append(source_span_id)
+
+    source_line_count = len(line_rows)
+    if source_line_count == 0:
+        status = "NO_SOURCE_LINES"
+    elif unrevised:
+        status = "BLOCKED_HUMAN_REVISIONS"
+    elif unconsented:
+        status = "BLOCKED_TRAINING_CONSENT"
+    else:
+        status = "READY_FOR_PAGEXML_TRAINING_EXPORT"
+    return {
+        "status": status,
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_line_count": source_line_count,
+        "human_revision_count": len(revisions),
+        "active_consent_grant_count": len(active_grants),
+        "eligible_training_line_count": len(eligible),
+        "unrevised_line_count": len(unrevised),
+        "unconsented_human_revision_line_count": len(unconsented),
+        "unrevised_source_span_ids": unrevised,
+        "unconsented_source_span_ids": unconsented,
+        "network_required": False,
+    }
+
 def inspect_project(path: Path | str) -> dict[str, object]:
     """Return the local project identity and durable-content counts."""
 
@@ -1337,6 +1732,12 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         htr_suggestion_count = connection.execute(
             "SELECT COUNT(*) FROM htr_suggestions"
         ).fetchone()[0]
+        training_consent_grant_count = connection.execute(
+            "SELECT COUNT(*) FROM training_consent_grants"
+        ).fetchone()[0]
+        training_consent_revocation_count = connection.execute(
+            "SELECT COUNT(*) FROM training_consent_revocations"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -1352,5 +1753,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "transcription_revision_count": revision_count,
         "htr_run_count": htr_run_count,
         "htr_suggestion_count": htr_suggestion_count,
+        "training_consent_grant_count": training_consent_grant_count,
+        "training_consent_revocation_count": training_consent_revocation_count,
         "network_required": False,
     }

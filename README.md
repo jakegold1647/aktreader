@@ -145,7 +145,8 @@ stable machine-readable report; a failed or skipped check makes the command exit
 
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
-`project-evaluate-htr`, `workbench`,
+`project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
+`project-training-readiness`, `workbench`,
 `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
@@ -187,7 +188,7 @@ python -m aktreader workbench serock.aktproj
 ```
 
 After a reviewer has explicitly saved corrections, export a separate, standards-compatible PAGE XML
-derivative for interchange or local HTR training. The command applies only the latest human revision
+derivative for interchange or future consent-gated local HTR training. The command applies only the latest human revision
 for each line; it never promotes an engine proposal by itself and it never changes the project source
 object or revision history.
 
@@ -212,6 +213,24 @@ python -m aktreader project-evaluate-htr serock.aktproj `
   --result-pagexml-sha256 <imported-result-pagexml-sha256> `
   --output serock-kraken-evaluation.json
 ```
+
+Training permission is also explicit and line-level. A contributor can consent only to their
+current saved revision; a later revision becomes unconsented, and withdrawal prevents any future
+export that relies on that grant. This records readiness only—it neither exports material nor
+starts a training job.
+
+```powershell
+python -m aktreader project-grant-training-consent serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --contributor local-user `
+  --all-human-revised
+python -m aktreader project-training-readiness serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --output serock-training-readiness.json
+```
+
+A report is `READY_FOR_PAGEXML_TRAINING_EXPORT` only when every source line has both a current
+human revision and an active consent bound to that exact revision.
 
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.

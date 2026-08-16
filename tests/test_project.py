@@ -13,12 +13,15 @@ from aktreader.project import (
     create_project,
     evaluate_htr_suggestions,
     export_human_pagexml,
+    grant_training_consent,
     import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
     list_project_pages,
     load_project_page,
     revise_line_transcription,
+    revoke_training_consent,
+    training_readiness,
 )
 
 
@@ -253,6 +256,8 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE training_consent_revocations")
+            connection.execute("DROP TABLE training_consent_grants")
             connection.execute("DROP TABLE htr_suggestions")
             connection.execute("DROP TABLE htr_runs")
             connection.execute("PRAGMA user_version = 2")
@@ -265,7 +270,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
     finally:
         connection.close()
 
@@ -441,3 +446,109 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     assert report["exact_line_match_count"] == 0
     assert report["exact_line_match_rate"] == 0
     assert report["network_required"] is False
+
+
+def test_project_training_consent_tracks_the_current_human_revision(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source, text="Александр")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+    )
+
+    before = training_readiness(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+    granted = grant_training_consent(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        contributor="reviewer-1",
+        source_span_ids=[line["source_span_id"]],
+    )
+    ready = training_readiness(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert before["status"] == "BLOCKED_TRAINING_CONSENT"
+    assert before["human_revision_count"] == 1
+    assert before["eligible_training_line_count"] == 0
+    assert granted["status"] == "GRANTED"
+    assert granted["grants"][0]["already_granted"] is False
+    assert ready["status"] == "READY_FOR_PAGEXML_TRAINING_EXPORT"
+    assert ready["eligible_training_line_count"] == 1
+
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ?",
+        editor="reviewer-1",
+    )
+    stale = training_readiness(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+    refreshed = grant_training_consent(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        contributor="reviewer-1",
+        source_span_ids=[line["source_span_id"]],
+    )
+    revoked = revoke_training_consent(
+        project,
+        grant_consent_id=refreshed["grants"][0]["consent_id"],
+        contributor="reviewer-1",
+        reason="withdrew local training permission",
+    )
+    after_revocation = training_readiness(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert stale["status"] == "BLOCKED_TRAINING_CONSENT"
+    assert refreshed["grants"][0]["already_granted"] is False
+    assert revoked["status"] == "REVOKED"
+    assert after_revocation["status"] == "BLOCKED_TRAINING_CONSENT"
+    report = inspect_project(project)
+    assert report["training_consent_grant_count"] == 2
+    assert report["training_consent_revocation_count"] == 1
+
+
+def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        with connection:
+            connection.execute("DROP TABLE training_consent_revocations")
+            connection.execute("DROP TABLE training_consent_grants")
+            connection.execute("PRAGMA user_version = 3")
+    finally:
+        connection.close()
+
+    report = inspect_project(project)
+
+    assert report["training_consent_grant_count"] == 0
+    assert report["training_consent_revocation_count"] == 0
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+    finally:
+        connection.close()

@@ -79,3 +79,19 @@ an imported engine suggestion and a later human revision. With none, the command
 `NO_EVALUABLE_HUMAN_REVISIONS` report rather than using source PAGE XML text as ground truth.
 The report must live outside the project and will not replace an existing file unless
 `--replace-existing` is explicit.
+
+## Training-data readiness
+
+Do not turn a reviewed project into HTR training data merely because it has correct text. Before
+any PAGE XML training export, each line must have a current human revision and a matching active
+training-consent grant from the same editor. A grant binds the exact revision text; saving a later
+revision makes the earlier grant ineligible. The granting contributor can append a withdrawal,
+which prevents later exports from using that grant.
+
+    aktreader project-grant-training-consent E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --contributor local-user --all-human-revised
+    aktreader project-training-readiness E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --output E:\reports\serock-training-readiness.json
+
+The readiness report names only opaque source-span IDs and records no source text. It is ready
+only when every imported line is both human-revised and actively consented. This gate currently
+does not export, publish, or train data; the following corpus-export step will consume its
+content-addressed readiness evidence.

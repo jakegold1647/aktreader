@@ -457,3 +457,51 @@ def test_project_htr_evaluation_runs_with_sockets_disabled(
     assert payload["status"] == "NO_EVALUABLE_HUMAN_REVISIONS"
     assert payload["network_required"] is False
     assert report_path.is_file()
+
+
+def test_project_training_readiness_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    image = tmp_path / "page.png"
+    Image.new("L", (20, 20), color=255).save(image)
+    source = tmp_path / "page.xml"
+    source.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>source text</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    project = tmp_path / "register.aktproj"
+    report_path = tmp_path / "training-readiness.json"
+
+    assert main(["project-create", str(project), "--name", "Serock births"]) == 0
+    capsys.readouterr()
+    assert main(["project-import-pagexml", str(project), str(source)]) == 0
+    imported = json.loads(capsys.readouterr().out)
+    exit_code = main(
+        [
+            "project-training-readiness",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--output",
+            str(report_path),
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "BLOCKED_HUMAN_REVISIONS"
+    assert payload["network_required"] is False
+    assert report_path.is_file()

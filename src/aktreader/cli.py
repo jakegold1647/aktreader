@@ -66,9 +66,12 @@ from aktreader.project import (
     create_project,
     evaluate_htr_suggestions,
     export_human_pagexml,
+    grant_training_consent,
     import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
+    revoke_training_consent,
+    training_readiness,
 )
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
@@ -245,6 +248,89 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing local evaluation report",
+    )
+
+
+    project_grant_training_consent = subparsers.add_parser(
+        "project-grant-training-consent",
+        help="append contributor consent for current human line revisions",
+    )
+    project_grant_training_consent.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_grant_training_consent.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_grant_training_consent.add_argument(
+        "--contributor",
+        required=True,
+        help="must exactly match the editor of each current human revision",
+    )
+    project_grant_training_consent.add_argument(
+        "--source-span",
+        action="append",
+        dest="source_spans",
+        help="one source span to consent (repeatable)",
+    )
+    project_grant_training_consent.add_argument(
+        "--all-human-revised",
+        action="store_true",
+        help="consent every current human revision authored by this contributor",
+    )
+
+    project_revoke_training_consent = subparsers.add_parser(
+        "project-revoke-training-consent",
+        help="append withdrawal of one contributor's training-consent grant",
+    )
+    project_revoke_training_consent.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_revoke_training_consent.add_argument(
+        "--grant-consent-id",
+        required=True,
+        help="consent ID emitted by project-grant-training-consent",
+    )
+    project_revoke_training_consent.add_argument(
+        "--contributor",
+        required=True,
+        help="must exactly match the contributor who granted consent",
+    )
+    project_revoke_training_consent.add_argument(
+        "--reason",
+        required=True,
+        help="short local record of the withdrawal reason",
+    )
+
+    project_training_readiness = subparsers.add_parser(
+        "project-training-readiness",
+        help="report consent and human-revision readiness for one PAGE XML import",
+    )
+    project_training_readiness.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_training_readiness.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_training_readiness.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new local readiness report path outside the project",
+    )
+    project_training_readiness.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing local readiness report",
     )
 
     workbench = subparsers.add_parser(
@@ -710,6 +796,62 @@ def _command_project_evaluate_htr(args: argparse.Namespace) -> int:
     _emit_json(report)
     return 0
 
+
+def _command_project_grant_training_consent(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    report = grant_training_consent(
+        project,
+        manifest_sha256=args.manifest_sha256,
+        contributor=args.contributor,
+        source_span_ids=args.source_spans,
+        all_human_revised=args.all_human_revised,
+    )
+    _emit_json(report)
+    return 0
+
+
+def _command_project_revoke_training_consent(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    report = revoke_training_consent(
+        project,
+        grant_consent_id=args.grant_consent_id,
+        contributor=args.contributor,
+        reason=args.reason,
+    )
+    _emit_json(report)
+    return 0
+
+
+def _command_project_training_readiness(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="training readiness report")
+    if output.is_dir():
+        raise CliConfigurationError(f"training readiness report is a directory: {output}")
+    if output == project or project in output.parents:
+        raise CliConfigurationError(
+            "training readiness report must be outside the project so project storage stays "
+            "immutable"
+        )
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "training readiness report already exists; pass --replace-existing to replace "
+            "it atomically"
+        )
+    report = training_readiness(
+        project,
+        manifest_sha256=args.manifest_sha256,
+    )
+    report = {**report, "output": str(output)}
+    atomic_write_json(output, report)
+    _emit_json(report)
+    return 0
+
 def _command_workbench(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1168,6 +1310,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
         "project-evaluate-htr": _command_project_evaluate_htr,
+        "project-grant-training-consent": _command_project_grant_training_consent,
+        "project-revoke-training-consent": _command_project_revoke_training_consent,
+        "project-training-readiness": _command_project_training_readiness,
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
