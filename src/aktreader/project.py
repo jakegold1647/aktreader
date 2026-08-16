@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 5
+PROJECT_DATABASE_VERSION = 6
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 5;
+                PRAGMA user_version = 6;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -209,6 +209,27 @@ def _initialize_database(path: Path) -> None:
                     split TEXT NOT NULL CHECK (split IN ('train', 'validation', 'test')),
                     bundle_manifest_sha256 TEXT NOT NULL,
                     exported_at TEXT NOT NULL
+                );
+                CREATE TABLE review_proposals (
+                    proposal_sha256 TEXT PRIMARY KEY,
+                    package_sha256 TEXT NOT NULL,
+                    manifest_sha256 TEXT NOT NULL
+                        REFERENCES pagexml_imports(manifest_sha256),
+                    source_pagexml_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    contributor TEXT NOT NULL,
+                    base_text_sha256 TEXT,
+                    proposed_text TEXT NOT NULL,
+                    proposed_text_sha256 TEXT NOT NULL,
+                    revised_at TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK (
+                        state IN ('PENDING', 'CONFLICT', 'ACCEPTED', 'REJECTED')
+                    ),
+                    imported_at TEXT NOT NULL,
+                    decided_by TEXT,
+                    decided_at TEXT,
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
                 );
                 """
             )
@@ -322,6 +343,36 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 5
+
+        if version == 5:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE review_proposals (
+                        proposal_sha256 TEXT PRIMARY KEY,
+                        package_sha256 TEXT NOT NULL,
+                        manifest_sha256 TEXT NOT NULL
+                            REFERENCES pagexml_imports(manifest_sha256),
+                        source_pagexml_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        contributor TEXT NOT NULL,
+                        base_text_sha256 TEXT,
+                        proposed_text TEXT NOT NULL,
+                        proposed_text_sha256 TEXT NOT NULL,
+                        revised_at TEXT NOT NULL,
+                        state TEXT NOT NULL CHECK (
+                            state IN ('PENDING', 'CONFLICT', 'ACCEPTED', 'REJECTED')
+                        ),
+                        imported_at TEXT NOT NULL,
+                        decided_by TEXT,
+                        decided_at TEXT,
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    PRAGMA user_version = 6;
+                    """
+                )
+            version = 6
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
@@ -1280,6 +1331,22 @@ def load_project_page(
             """,
             (manifest_sha256,),
         ).fetchall()
+        review_rows = connection.execute(
+            """
+            SELECT
+                source_span_id,
+                proposal_sha256,
+                contributor,
+                proposed_text,
+                state,
+                revised_at
+            FROM review_proposals
+            WHERE manifest_sha256 = ?
+              AND state IN ('PENDING', 'CONFLICT')
+            ORDER BY imported_at, proposal_sha256
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project page: {error}") from error
     finally:
@@ -1293,6 +1360,17 @@ def load_project_page(
                 "result_pagexml_sha256": suggestion[3],
                 "text": suggestion[4],
                 "imported_at": suggestion[5],
+            }
+        )
+    reviews_by_span: dict[str, list[dict[str, object]]] = {}
+    for review in review_rows:
+        reviews_by_span.setdefault(review[0], []).append(
+            {
+                "proposal_sha256": review[1],
+                "contributor": review[2],
+                "text": review[3],
+                "state": review[4],
+                "revised_at": review[5],
             }
         )
     return {
@@ -1314,6 +1392,7 @@ def load_project_page(
                 "bbox": json.loads(row[4]),
                 "locator": json.loads(row[5]),
                 "suggestions": suggestions_by_span.get(row[0], []),
+                "review_proposals": reviews_by_span.get(row[0], []),
             }
             for row in lines
         ],
@@ -2002,6 +2081,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         training_split_assignment_count = connection.execute(
             "SELECT COUNT(*) FROM training_split_assignments"
         ).fetchone()[0]
+        review_proposal_count = connection.execute(
+            "SELECT COUNT(*) FROM review_proposals"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2020,5 +2102,496 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "training_consent_grant_count": training_consent_grant_count,
         "training_consent_revocation_count": training_consent_revocation_count,
         "training_split_assignment_count": training_split_assignment_count,
+        "review_proposal_count": review_proposal_count,
+        "network_required": False,
+    }
+
+
+_REVIEW_PACKAGE_CONTRACT = {
+    "name": "aktreader-offline-review-package",
+    "version": "1.0.0",
+}
+
+
+def _text_sha256_or_none(value: str | None) -> str | None:
+    return None if value is None else _revision_text_sha256(value)
+
+
+def _read_strict_json_object(path: Path, *, role: str) -> dict[str, object]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ProjectStoreError(f"{role} is not readable strict JSON: {path}") from error
+    if not isinstance(payload, dict):
+        raise ProjectStoreError(f"{role} must be a JSON object")
+    return payload
+
+
+def _require_exact_keys(
+    payload: dict[str, object],
+    *,
+    required: set[str],
+    role: str,
+) -> None:
+    keys = set(payload)
+    if keys == required:
+        return
+    details: list[str] = []
+    missing = sorted(required - keys)
+    extra = sorted(keys - required)
+    if missing:
+        details.append(f"missing {', '.join(missing)}")
+    if extra:
+        details.append(f"unexpected {', '.join(extra)}")
+    raise ProjectStoreError(f"{role} has invalid keys: {'; '.join(details)}")
+
+
+def _current_line_text(
+    connection: sqlite3.Connection,
+    *,
+    manifest_sha256: str,
+    source_span_id: str,
+) -> tuple[int, str | None]:
+    row = connection.execute(
+        """
+        SELECT
+            lines.text_equiv,
+            COALESCE(MAX(transcription_revisions.revision), 0),
+            (
+                SELECT revised_text
+                FROM transcription_revisions AS latest
+                WHERE latest.manifest_sha256 = lines.manifest_sha256
+                  AND latest.source_span_id = lines.source_span_id
+                ORDER BY latest.revision DESC
+                LIMIT 1
+            )
+        FROM lines
+        LEFT JOIN transcription_revisions
+            ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+           AND transcription_revisions.source_span_id = lines.source_span_id
+        WHERE lines.manifest_sha256 = ? AND lines.source_span_id = ?
+        GROUP BY lines.manifest_sha256, lines.source_span_id, lines.text_equiv
+        """,
+        (manifest_sha256, source_span_id),
+    ).fetchone()
+    if row is None:
+        raise ProjectStoreError("project line was not found")
+    return int(row[1]), row[2] if row[2] is not None else row[0]
+
+
+def export_review_package(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    contributor: str,
+    replace_existing: bool = False,
+) -> dict[str, object]:
+    """Export one reviewer's current revisions as a deterministic local package."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(contributor, str) or not contributor.strip():
+        raise ProjectStoreError("review contributor must be a nonblank string")
+    if not isinstance(replace_existing, bool):
+        raise ProjectStoreError("replace_existing must be a boolean")
+    root = _required_project_root(project)
+    output_path = _local_path(output, role="review package output", must_exist=False)
+    if not output_path.parent.is_dir():
+        raise ProjectStoreError(
+            f"review package output parent does not exist: {output_path.parent}"
+        )
+    if output_path == root or root in output_path.parents:
+        raise ProjectStoreError("review package output must be outside the project")
+    if output_path.exists() and not replace_existing:
+        raise ProjectStoreError(
+            "review package output already exists; pass replace_existing=True"
+        )
+
+    contributor = contributor.strip()
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        source = connection.execute(
+            "SELECT pagexml_sha256 FROM pagexml_imports WHERE manifest_sha256 = ?",
+            (manifest_sha256,),
+        ).fetchone()
+        if source is None:
+            raise ProjectStoreError("project PAGE XML import was not found")
+        rows = connection.execute(
+            """
+            SELECT
+                revisions.source_span_id,
+                revisions.prior_text,
+                revisions.revised_text,
+                revisions.created_at
+            FROM transcription_revisions AS revisions
+            WHERE revisions.manifest_sha256 = ?
+              AND revisions.editor = ?
+              AND revisions.revision = (
+                  SELECT MAX(latest.revision)
+                  FROM transcription_revisions AS latest
+                  WHERE latest.manifest_sha256 = revisions.manifest_sha256
+                    AND latest.source_span_id = revisions.source_span_id
+              )
+            ORDER BY revisions.source_span_id
+            """,
+            (manifest_sha256, contributor),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot export review package: {error}") from error
+    finally:
+        connection.close()
+    if not rows:
+        raise ProjectStoreError(
+            "review package has no current human revisions from this contributor"
+        )
+    proposals = [
+        {
+            "source_span_id": row[0],
+            "base_text_sha256": _text_sha256_or_none(row[1]),
+            "proposed_text": row[2],
+            "proposed_text_sha256": _revision_text_sha256(row[2]),
+            "revised_at": row[3],
+        }
+        for row in rows
+    ]
+    package = {
+        "contract": _REVIEW_PACKAGE_CONTRACT,
+        "source": {"pagexml_sha256": source[0]},
+        "contributor": contributor,
+        "proposals": proposals,
+        "network_required": False,
+    }
+    _atomic_write_json(output_path, package)
+    return {
+        "status": "EXPORTED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "contributor": contributor,
+        "output": str(output_path),
+        "package_sha256": _sha256_file(output_path),
+        "proposal_count": len(proposals),
+        "network_required": False,
+    }
+
+
+def _validated_review_package(
+    package_path: Path,
+) -> tuple[dict[str, object], str, list[dict[str, object]]]:
+    package = _read_strict_json_object(package_path, role="review package")
+    _require_exact_keys(
+        package,
+        required={"contract", "source", "contributor", "proposals", "network_required"},
+        role="review package",
+    )
+    if package["contract"] != _REVIEW_PACKAGE_CONTRACT:
+        raise ProjectStoreError("review package has an unsupported contract")
+    if package["network_required"] is not False:
+        raise ProjectStoreError("review package must explicitly require no network")
+    source = package["source"]
+    if not isinstance(source, dict):
+        raise ProjectStoreError("review package source must be an object")
+    _require_exact_keys(
+        source,
+        required={"pagexml_sha256"},
+        role="review package source",
+    )
+    _require_sha256(source["pagexml_sha256"], role="review package source PAGE XML SHA-256")
+    contributor = package["contributor"]
+    if not isinstance(contributor, str) or not contributor.strip():
+        raise ProjectStoreError("review package contributor must be a nonblank string")
+    raw_proposals = package["proposals"]
+    if not isinstance(raw_proposals, list) or not raw_proposals:
+        raise ProjectStoreError("review package proposals must be a non-empty array")
+
+    proposals: list[dict[str, object]] = []
+    seen_spans: set[str] = set()
+    for position, proposal in enumerate(raw_proposals, start=1):
+        if not isinstance(proposal, dict):
+            raise ProjectStoreError(f"review package proposal {position} must be an object")
+        _require_exact_keys(
+            proposal,
+            required={
+                "source_span_id",
+                "base_text_sha256",
+                "proposed_text",
+                "proposed_text_sha256",
+                "revised_at",
+            },
+            role=f"review package proposal {position}",
+        )
+        source_span_id = proposal["source_span_id"]
+        if not isinstance(source_span_id, str) or not source_span_id.strip():
+            raise ProjectStoreError(
+                f"review package proposal {position} source_span_id must be nonblank"
+            )
+        if source_span_id in seen_spans:
+            raise ProjectStoreError("review package must not repeat a source span")
+        seen_spans.add(source_span_id)
+        base_text_sha256 = proposal["base_text_sha256"]
+        if base_text_sha256 is not None:
+            _require_sha256(
+                base_text_sha256,
+                role=f"review package proposal {position} base_text_sha256",
+            )
+        proposed_text = proposal["proposed_text"]
+        if not isinstance(proposed_text, str):
+            raise ProjectStoreError(
+                f"review package proposal {position} proposed_text must be a string"
+            )
+        proposed_text_sha256 = _require_sha256(
+            proposal["proposed_text_sha256"],
+            role=f"review package proposal {position} proposed_text_sha256",
+        )
+        if _revision_text_sha256(proposed_text) != proposed_text_sha256:
+            raise ProjectStoreError(
+                f"review package proposal {position} proposed_text checksum mismatch"
+            )
+        revised_at = proposal["revised_at"]
+        if not isinstance(revised_at, str) or not revised_at.strip():
+            raise ProjectStoreError(
+                f"review package proposal {position} revised_at must be nonblank"
+            )
+        proposals.append(
+            {
+                "source_span_id": source_span_id,
+                "base_text_sha256": base_text_sha256,
+                "proposed_text": proposed_text,
+                "proposed_text_sha256": proposed_text_sha256,
+                "revised_at": revised_at,
+            }
+        )
+    if proposals != sorted(proposals, key=lambda item: str(item["source_span_id"])):
+        raise ProjectStoreError("review package proposals must be ordered by source_span_id")
+    return package, _sha256_file(package_path), proposals
+
+
+def import_review_package(
+    project: Path | str,
+    package_path: Path | str,
+) -> dict[str, object]:
+    """Queue valid offline review proposals without applying their text."""
+
+    root = _required_project_root(project)
+    package_file = _local_path(package_path, role="review package", must_exist=True)
+    if not package_file.is_file():
+        raise ProjectStoreError(f"review package is not a file: {package_file}")
+    package, package_sha256, proposals = _validated_review_package(package_file)
+    source = package["source"]
+    assert isinstance(source, dict)
+    source_pagexml_sha256 = _require_sha256(
+        source["pagexml_sha256"],
+        role="review package source PAGE XML SHA-256",
+    )
+    contributor = str(package["contributor"]).strip()
+    proposal_sha256s: list[str] = []
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            imports = connection.execute(
+                """
+                SELECT manifest_sha256
+                FROM pagexml_imports
+                WHERE pagexml_sha256 = ?
+                ORDER BY manifest_sha256
+                """,
+                (source_pagexml_sha256,),
+            ).fetchall()
+            if len(imports) != 1:
+                raise ProjectStoreError(
+                    "review package source PAGE XML must match exactly one project import"
+                )
+            manifest_sha256 = imports[0][0]
+            pending_count = 0
+            conflict_count = 0
+            already_imported_count = 0
+            for proposal in proposals:
+                source_span_id = str(proposal["source_span_id"])
+                _, current_text = _current_line_text(
+                    connection,
+                    manifest_sha256=manifest_sha256,
+                    source_span_id=source_span_id,
+                )
+                base_text_sha256 = proposal["base_text_sha256"]
+                state = (
+                    "PENDING"
+                    if _text_sha256_or_none(current_text) == base_text_sha256
+                    else "CONFLICT"
+                )
+                proposal_sha256 = hashlib.sha256(
+                    _canonical_json(
+                        {
+                            "package_sha256": package_sha256,
+                            "source_span_id": source_span_id,
+                            "base_text_sha256": base_text_sha256,
+                            "proposed_text_sha256": proposal["proposed_text_sha256"],
+                        }
+                    ).encode("utf-8")
+                ).hexdigest()
+                proposal_sha256s.append(proposal_sha256)
+                cursor = connection.execute(
+                    """
+                    INSERT OR IGNORE INTO review_proposals (
+                        proposal_sha256, package_sha256, manifest_sha256,
+                        source_pagexml_sha256, source_span_id, contributor,
+                        base_text_sha256, proposed_text, proposed_text_sha256,
+                        revised_at, state, imported_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        proposal_sha256,
+                        package_sha256,
+                        manifest_sha256,
+                        source_pagexml_sha256,
+                        source_span_id,
+                        contributor,
+                        base_text_sha256,
+                        proposal["proposed_text"],
+                        proposal["proposed_text_sha256"],
+                        proposal["revised_at"],
+                        state,
+                        _timestamp(),
+                    ),
+                )
+                if cursor.rowcount == 0:
+                    already_imported_count += 1
+                elif state == "PENDING":
+                    pending_count += 1
+                else:
+                    conflict_count += 1
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot import review package: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "QUEUED",
+        "project": str(root),
+        "package": str(package_file),
+        "package_sha256": package_sha256,
+        "manifest_sha256": manifest_sha256,
+        "contributor": contributor,
+        "pending_count": pending_count,
+        "conflict_count": conflict_count,
+        "already_imported_count": already_imported_count,
+        "proposal_sha256s": proposal_sha256s,
+        "network_required": False,
+    }
+
+
+def resolve_review_proposal(
+    project: Path | str,
+    *,
+    proposal_sha256: str,
+    decision: str,
+    editor: str,
+) -> dict[str, object]:
+    """Accept or reject one queued review proposal explicitly."""
+
+    proposal_sha256 = _require_sha256(proposal_sha256, role="proposal_sha256")
+    if decision not in {"accept", "reject"}:
+        raise ProjectStoreError("review proposal decision must be accept or reject")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("review decision editor must be a nonblank string")
+    root = _required_project_root(project)
+    editor = editor.strip()
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            proposal = connection.execute(
+                """
+                SELECT
+                    manifest_sha256,
+                    source_span_id,
+                    contributor,
+                    base_text_sha256,
+                    proposed_text,
+                    state
+                FROM review_proposals
+                WHERE proposal_sha256 = ?
+                """,
+                (proposal_sha256,),
+            ).fetchone()
+            if proposal is None:
+                raise ProjectStoreError("review proposal was not found")
+            manifest_sha256, source_span_id, contributor, base_sha, proposed_text, state = proposal
+            if state in {"ACCEPTED", "REJECTED"}:
+                raise ProjectStoreError(
+                    f"review proposal was already resolved as {state.lower()}"
+                )
+            if decision == "reject":
+                connection.execute(
+                    """
+                    UPDATE review_proposals
+                    SET state = 'REJECTED', decided_by = ?, decided_at = ?
+                    WHERE proposal_sha256 = ?
+                    """,
+                    (editor, _timestamp(), proposal_sha256),
+                )
+                return {
+                    "status": "REJECTED",
+                    "project": str(root),
+                    "proposal_sha256": proposal_sha256,
+                    "contributor": contributor,
+                    "editor": editor,
+                    "network_required": False,
+                }
+            current_revision, current_text = _current_line_text(
+                connection,
+                manifest_sha256=manifest_sha256,
+                source_span_id=source_span_id,
+            )
+            if _text_sha256_or_none(current_text) != base_sha:
+                connection.execute(
+                    "UPDATE review_proposals SET state = 'CONFLICT' WHERE proposal_sha256 = ?",
+                    (proposal_sha256,),
+                )
+                return {
+                    "status": "CONFLICT",
+                    "project": str(root),
+                    "proposal_sha256": proposal_sha256,
+                    "contributor": contributor,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
+            connection.execute(
+                """
+                INSERT INTO transcription_revisions
+                    (manifest_sha256, source_span_id, revision, prior_text, revised_text, editor,
+                     created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    source_span_id,
+                    revision,
+                    current_text,
+                    proposed_text,
+                    editor,
+                    _timestamp(),
+                ),
+            )
+            connection.execute(
+                """
+                UPDATE review_proposals
+                SET state = 'ACCEPTED', decided_by = ?, decided_at = ?
+                WHERE proposal_sha256 = ?
+                """,
+                (editor, _timestamp(), proposal_sha256),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot resolve review proposal: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "ACCEPTED",
+        "project": str(root),
+        "proposal_sha256": proposal_sha256,
+        "contributor": contributor,
+        "editor": editor,
+        "manifest_sha256": manifest_sha256,
+        "source_span_id": source_span_id,
+        "revision": revision,
         "network_required": False,
     }

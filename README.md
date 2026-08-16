@@ -146,7 +146,9 @@ stable machine-readable report; a failed or skipped check makes the command exit
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
-`project-training-readiness`, `project-export-consented-training-pagexml`, `htr-build-corpus`,
+`project-training-readiness`, `project-export-consented-training-pagexml`,
+`project-export-review-package`, `project-import-review-package`,
+`project-resolve-review-proposal`, `htr-build-corpus`,
 `htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `kraken-evaluate`,
@@ -200,6 +202,30 @@ python -m aktreader project-export-pagexml serock.aktproj `
 
 Exports must live outside the project and will not replace an existing file unless
 `--replace-existing` is explicit.
+
+### Offline review exchange
+
+A reviewer can send current human transcription proposals to an owner as a local checksummed JSON
+package. Importing the package never overwrites text: matching bases become queued proposals,
+stale bases become conflicts, and each proposal must be explicitly accepted or rejected. Packages
+do not carry source scans, model outputs, or training consent.
+
+```powershell
+python -m aktreader project-export-review-package reviewer-copy.aktproj `
+  --manifest-sha256 <reviewer-import-manifest-sha256> `
+  --contributor reviewer-1 `
+  --output register-review.aktreview.json
+
+python -m aktreader project-import-review-package owner.aktproj register-review.aktreview.json
+python -m aktreader project-resolve-review-proposal owner.aktproj `
+  --proposal-sha256 <proposal-sha256> `
+  --decision accept `
+  --editor owner-1
+```
+
+See [offline review exchange](docs/offline-review-exchange.md) for the integrity and conflict
+rules. Contributor names are local claims, not authentication, and training consent is always a
+separate explicit step.
 
 Evaluate a specific imported HTR result only against saved human revisions. The report is pinned
 to the project import and recognition PAGE XML hashes; it uses Unicode NFC with exact whitespace,
