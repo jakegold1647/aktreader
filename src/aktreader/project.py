@@ -348,7 +348,14 @@ def import_pagexml_into_project(
                     connection.execute(
                         """
                         INSERT INTO pages
-                            (manifest_sha256, page_index, page_id, image_sha256, width_px, height_px)
+                            (
+                                manifest_sha256,
+                                page_index,
+                                page_id,
+                                image_sha256,
+                                width_px,
+                                height_px,
+                            )
                         VALUES (?, ?, ?, ?, ?, ?)
                         """,
                         (
