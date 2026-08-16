@@ -47,7 +47,7 @@ def test_document_page_groups_keep_page_navigation_within_each_document() -> Non
 
 
 def test_document_page_groups_reject_pages_without_a_document() -> None:
-    with pytest.raises(WorkbenchError, match="missing document metadata"):
+    with pytest.raises(WorkbenchError, match="page count is inconsistent"):
         _document_page_groups(
             [_document("a" * 64, "Serock births, 1831", 1)],
             [_page("b" * 64, 0, "unknown-page")],
