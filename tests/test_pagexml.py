@@ -22,11 +22,11 @@ def _write_pagexml(
     image_height: int = 80,
     include_text: bool = True,
 ) -> None:
-    text_equiv = "<TextEquiv index=\"0\"><Unicode>Александр</Unicode></TextEquiv>" if include_text else ""
+    text_equiv = (\n        "<TextEquiv index=\"0\"><Unicode>Александр</Unicode></TextEquiv>"\n        if include_text\n        else ""\n    )
     path.write_text(
         f"""<?xml version="1.0" encoding="UTF-8"?>
 <PcGts xmlns="http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15">
-  <Page id="page-1" imageFilename="{image_filename}" imageWidth="{image_width}" imageHeight="{image_height}">
+  <Page id="page-1" imageFilename="{image_filename}"\n        imageWidth="{image_width}" imageHeight="{image_height}">
     <ReadingOrder>
       <OrderedGroup id="ro">
         <RegionRefIndexed index="0" regionRef="region-2"/>
