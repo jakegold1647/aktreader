@@ -24,6 +24,7 @@ from typing import Any
 from aktreader.project import (
     PROJECT_DATABASE_NAME,
     export_consented_training_pagexml,
+    export_human_pagexml,
     training_readiness,
 )
 
@@ -64,6 +65,7 @@ class VerifiedBundle:
     bundle_manifest_sha256: str
     source_pagexml_sha256: str
     source_manifest_sha256: str
+    pagexml_sha256: str
     split: str
     project_id: str
     project_name: str
@@ -458,6 +460,7 @@ def _verify_bundle(
         bundle_manifest_sha256=_sha256_file(manifest_path),
         source_pagexml_sha256=source_pagexml_sha256,
         source_manifest_sha256=source_manifest_sha256,
+        pagexml_sha256=_sha256_file(pagexml_path),
         split=source.split,
         project_id=project_id,
         project_name=project_name,
@@ -688,8 +691,12 @@ def inspect_consented_training_corpus(
     receipts = payload["inputs"]
     if not isinstance(receipts, list) or len(receipts) != len(inputs):
         raise HtrCorpusError("HTR corpus receipt count does not match the corpus plan")
+    current_directory = Path(
+        tempfile.mkdtemp(prefix=".aktreader-htr-current.", dir=corpus.parent)
+    )
     split_pagexml: dict[str, list[str]] = {split: [] for split in _SPLITS}
-    for source, receipt in zip(inputs, receipts, strict=True):
+    try:
+        for source, receipt in zip(inputs, receipts, strict=True):
         if not isinstance(receipt, dict):
             raise HtrCorpusError("HTR corpus input receipt must be an object")
         _required_keys(
@@ -740,9 +747,29 @@ def inspect_consented_training_corpus(
         }
         if receipt != expected_receipt:
             raise HtrCorpusError("HTR corpus input receipt does not match its checked bundle")
+        readiness = training_readiness(
+            source.project,
+            manifest_sha256=source.manifest_sha256,
+        )
+        if readiness["status"] != "READY_FOR_PAGEXML_TRAINING_EXPORT":
+            raise HtrCorpusError(
+                "HTR corpus source lost current training eligibility during inspection"
+            )
+        current_pagexml = current_directory / f"{source.manifest_sha256}.page.xml"
+        current = export_human_pagexml(
+            source.project,
+            current_pagexml,
+            manifest_sha256=source.manifest_sha256,
+        )
+        if current["pagexml_sha256"] != verified.pagexml_sha256:
+            raise HtrCorpusError(
+                "HTR corpus PAGE XML does not match current consented project content"
+            )
         split_pagexml[source.split].append(
             (Path("data") / source.manifest_sha256 / "document.page.xml").as_posix()
         )
+    finally:
+        shutil.rmtree(current_directory, ignore_errors=True)
 
     expected_splits = {
         split: {
