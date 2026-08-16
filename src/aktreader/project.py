@@ -51,6 +51,7 @@ def _sha256_file(path: Path) -> str:
 def _revision_text_sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
+
 def _local_path(path: Path | str, *, role: str, must_exist: bool) -> Path:
     raw = os.fspath(path)
     if "://" in raw or raw.startswith(("\\\\", "//")):
@@ -1462,7 +1463,9 @@ def grant_training_consent(
             )
             spans = sorted(revisions) if all_human_revised else requested_spans
             if not spans:
-                raise ProjectStoreError("there are no human revisions available for training consent")
+                raise ProjectStoreError(
+                    "there are no human revisions available for training consent"
+                )
             grants: list[dict[str, str | int | bool]] = []
             for source_span_id in spans:
                 revision = revisions.get(source_span_id)
