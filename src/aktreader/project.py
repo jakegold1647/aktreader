@@ -234,6 +234,8 @@ def _migrate_database(path: Path) -> None:
         raise ProjectStoreError(f"project database migration failed: {error}") from error
     finally:
         connection.close()
+
+
 def _object_relative_path(digest: str) -> Path:
     return Path("objects") / "sha256" / digest[:2] / digest
 
