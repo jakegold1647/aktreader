@@ -143,7 +143,7 @@ holdout separation.
 It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
-The CLI also provides `label-validate`, `project-create`, `project-inspect`,
+The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-search`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
@@ -165,6 +165,19 @@ python -m aktreader compare labels/readerA labels/readerB `
 
 See [local comparisons](docs/comparisons.md). `reader-infer` and `batch-run` execute local
 inference; the other commands validate or process existing artifacts.
+
+### Local collections
+
+A collection is a local, refreshable index across multiple projects. It stores effective line text and
+provenance pointers, never source scans, and never requires a server.
+
+```powershell
+python -m aktreader collection-create registers.aktcollection --name "Serock registers"
+python -m aktreader collection-add-project registers.aktcollection serock.aktproj
+python -m aktreader collection-search registers.aktcollection "Aleksander"
+```
+
+Run `collection-add-project` again after editing a project to refresh its index.
 
 ### Local projects
 

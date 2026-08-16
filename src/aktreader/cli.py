@@ -45,6 +45,12 @@ from aktreader.cli_support import (
     require_keys,
     require_local_only_data,
 )
+from aktreader.collection import (
+    add_project_to_collection,
+    create_collection,
+    inspect_collection,
+    search_collection,
+)
 from aktreader.comparison import compare_reader_labels, render_disagreements_csv
 from aktreader.consensus import merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
@@ -163,6 +169,27 @@ def build_parser() -> argparse.ArgumentParser:
         "label-validate", help="validate external blind-reader label JSON files"
     )
     labels.add_argument("labels", nargs="+", type=Path)
+
+    collection_create = subparsers.add_parser("collection-create", help="create a local collection")
+    collection_create.add_argument("collection", type=Path)
+    collection_create.add_argument("--name", required=True)
+    collection_add = subparsers.add_parser(
+        "collection-add-project", help="add or refresh a local project in a collection"
+    )
+    collection_add.add_argument("collection", type=Path)
+    collection_add.add_argument("project", type=Path)
+    collection_inspect = subparsers.add_parser(
+        "collection-inspect",
+        help="inspect a local collection",
+    )
+    collection_inspect.add_argument("collection", type=Path)
+    collection_search = subparsers.add_parser(
+        "collection-search",
+        help="search a local collection",
+    )
+    collection_search.add_argument("collection", type=Path)
+    collection_search.add_argument("query")
+    collection_search.add_argument("--limit", type=int, default=100)
 
     project_create = subparsers.add_parser(
         "project-create",
@@ -957,6 +984,26 @@ def _command_label_validate(args: argparse.Namespace) -> int:
     _emit_json({"status": "PASS", "labels": results, "count": len(results)})
     return 0
 
+
+
+def _command_collection_create(args: argparse.Namespace) -> int:
+    _emit_json(create_collection(args.collection, name=args.name))
+    return 0
+
+
+def _command_collection_add_project(args: argparse.Namespace) -> int:
+    _emit_json(add_project_to_collection(args.collection, args.project))
+    return 0
+
+
+def _command_collection_inspect(args: argparse.Namespace) -> int:
+    _emit_json(inspect_collection(args.collection))
+    return 0
+
+
+def _command_collection_search(args: argparse.Namespace) -> int:
+    _emit_json(search_collection(args.collection, args.query, limit=args.limit))
+    return 0
 
 
 def _command_project_create(args: argparse.Namespace) -> int:
@@ -1804,6 +1851,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         "checkout-verify": _command_checkout_verify,
         "prompt-verify": _command_prompt_verify,
         "label-validate": _command_label_validate,
+        "collection-create": _command_collection_create,
+        "collection-add-project": _command_collection_add_project,
+        "collection-inspect": _command_collection_inspect,
+        "collection-search": _command_collection_search,
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
         "project-import-pagexml": _command_project_import_pagexml,
