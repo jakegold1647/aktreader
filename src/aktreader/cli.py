@@ -62,7 +62,12 @@ from aktreader.installation import inspect_application_checkout
 from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
-from aktreader.project import create_project, import_pagexml_into_project, inspect_project
+from aktreader.project import (
+    create_project,
+    import_htr_suggestions,
+    import_pagexml_into_project,
+    inspect_project,
+)
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
@@ -160,6 +165,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--image-root",
         type=Path,
         help="local directory containing imageFilename paths (defaults to the XML directory)",
+    )
+
+
+    project_htr_suggestions = subparsers.add_parser(
+        "project-import-htr-suggestions",
+        help="store one aligned local PAGE XML recognition result as project suggestions",
+    )
+    project_htr_suggestions.add_argument("project", type=Path, help="local .aktproj directory")
+    project_htr_suggestions.add_argument("source", type=Path, help="local recognition PAGE XML")
+    project_htr_suggestions.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="target PAGE XML project-import manifest SHA-256",
+    )
+    project_htr_suggestions.add_argument(
+        "--engine",
+        default="kraken",
+        help="local recognition engine identifier (default: kraken)",
+    )
+    project_htr_suggestions.add_argument(
+        "--runtime-fingerprint",
+        required=True,
+        help="SHA-256 fingerprint reported by the local recognition run",
+    )
+    project_htr_suggestions.add_argument(
+        "--image-root",
+        type=Path,
+        help="local directory containing the recognition XML imageFilename paths",
     )
 
     workbench = subparsers.add_parser(
@@ -552,6 +585,32 @@ def _command_project_import_pagexml(args: argparse.Namespace) -> int:
     _emit_json(report)
     return 0
 
+
+
+def _command_project_import_htr_suggestions(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    source = local_input_path(args.source, role="recognition PAGE XML")
+    if not source.is_file():
+        raise CliConfigurationError(f"recognition PAGE XML is not a file: {source}")
+    image_root = None
+    if args.image_root is not None:
+        image_root = local_input_path(args.image_root, role="recognition PAGE XML image root")
+        if not image_root.is_dir():
+            raise CliConfigurationError(
+                f"recognition PAGE XML image root is not a directory: {image_root}"
+            )
+    report = import_htr_suggestions(
+        project,
+        source,
+        manifest_sha256=args.manifest_sha256,
+        engine=args.engine,
+        runtime_fingerprint=args.runtime_fingerprint,
+        image_root=image_root,
+    )
+    _emit_json(report)
+    return 0
 
 def _command_workbench(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
@@ -1008,6 +1067,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
         "project-import-pagexml": _command_project_import_pagexml,
+        "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
