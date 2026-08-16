@@ -2632,3 +2632,180 @@ def resolve_review_proposal(
         "revision": revision,
         "network_required": False,
     }
+
+
+def _validated_points(
+    value: object,
+    *,
+    role: str,
+    width: int,
+    height: int,
+    allow_none: bool,
+) -> list[list[int]] | None:
+    if value is None and allow_none:
+        return None
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        raise ProjectStoreError(f"{role} must be an array of [x, y] source-pixel points")
+    points: list[list[int]] = []
+    for position, point in enumerate(value, start=1):
+        if (
+            isinstance(point, (str, bytes))
+            or not isinstance(point, Sequence)
+            or len(point) != 2
+            or isinstance(point[0], bool)
+            or isinstance(point[1], bool)
+            or not isinstance(point[0], int)
+            or not isinstance(point[1], int)
+        ):
+            raise ProjectStoreError(f"{role} point {position} must be two integer pixels")
+        x, y = point
+        if not 0 <= x <= width or not 0 <= y <= height:
+            raise ProjectStoreError(
+                f"{role} point {position} is outside source image {width}x{height}"
+            )
+        points.append([x, y])
+    if len(points) < 2 or len({tuple(point) for point in points}) < 2:
+        raise ProjectStoreError(f"{role} must contain at least two distinct points")
+    return points
+
+
+def _geometry_bbox(points: list[list[int]]) -> dict[str, int | str]:
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    return {
+        "x": min(xs),
+        "y": min(ys),
+        "width": max(1, max(xs) - min(xs)),
+        "height": max(1, max(ys) - min(ys)),
+        "coordinate_space": "source_pixels",
+    }
+
+
+def revise_line_geometry(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    source_span_id: str,
+    polygon: Sequence[Sequence[int]],
+    baseline: Sequence[Sequence[int]] | None,
+    editor: str,
+) -> dict[str, object]:
+    """Append an audited local line geometry revision without altering source XML."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(source_span_id, str) or not source_span_id.strip():
+        raise ProjectStoreError("source_span_id must be a nonblank string")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("geometry editor must be a nonblank string")
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            row = connection.execute(
+                """
+                SELECT lines.locator_json, pages.width_px, pages.height_px
+                FROM lines
+                JOIN pages
+                    ON pages.manifest_sha256 = lines.manifest_sha256
+                   AND pages.page_index = lines.page_index
+                WHERE lines.manifest_sha256 = ? AND lines.source_span_id = ?
+                """,
+                (manifest_sha256, source_span_id),
+            ).fetchone()
+            if row is None:
+                raise ProjectStoreError("project line was not found")
+            try:
+                locator = json.loads(row[0])
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored line locator is unreadable") from error
+            if not isinstance(locator, dict):
+                raise ProjectStoreError("stored line locator is invalid")
+            source_polygon = locator.get("polygon")
+            source_baseline = locator.get("baseline")
+            if not isinstance(source_polygon, list):
+                raise ProjectStoreError("stored line polygon is invalid")
+            width, height = int(row[1]), int(row[2])
+            revised_polygon = _validated_points(
+                polygon,
+                role="line polygon",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            revised_baseline = _validated_points(
+                baseline,
+                role="line baseline",
+                width=width,
+                height=height,
+                allow_none=True,
+            )
+            latest = connection.execute(
+                """
+                SELECT revision, polygon_json, baseline_json
+                FROM line_geometry_revisions
+                WHERE manifest_sha256 = ? AND source_span_id = ?
+                ORDER BY revision DESC
+                LIMIT 1
+                """,
+                (manifest_sha256, source_span_id),
+            ).fetchone()
+            if latest is None:
+                current_revision = 0
+                prior_polygon = source_polygon
+                prior_baseline = source_baseline
+            else:
+                current_revision = int(latest[0])
+                prior_polygon = json.loads(latest[1])
+                prior_baseline = json.loads(latest[2]) if latest[2] is not None else None
+            if (
+                _canonical_json(prior_polygon) == _canonical_json(revised_polygon)
+                and _canonical_json(prior_baseline) == _canonical_json(revised_baseline)
+            ):
+                return {
+                    "status": "UNCHANGED",
+                    "project": str(root),
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "revision": current_revision,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
+            connection.execute(
+                """
+                INSERT INTO line_geometry_revisions (
+                    manifest_sha256, source_span_id, revision,
+                    prior_polygon_json, prior_baseline_json,
+                    polygon_json, baseline_json, editor, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    source_span_id,
+                    revision,
+                    _canonical_json(prior_polygon),
+                    _canonical_json(prior_baseline) if prior_baseline is not None else None,
+                    _canonical_json(revised_polygon),
+                    _canonical_json(revised_baseline)
+                    if revised_baseline is not None
+                    else None,
+                    editor.strip(),
+                    _timestamp(),
+                ),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot save line geometry revision: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "SAVED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_span_id": source_span_id,
+        "revision": revision,
+        "editor": editor.strip(),
+        "polygon": revised_polygon,
+        "baseline": revised_baseline,
+        "network_required": False,
+    }
