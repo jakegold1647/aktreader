@@ -34,8 +34,16 @@ FORBIDDEN_GOLD_SOURCES = ("yad vashem", "ushmm", "arolsen")
 LEGACY_DNA_ROOTS = ("E:\\DNA\\", "E:/DNA/")
 
 
+GOLD_CONTRACT_GUIDANCE = (
+    " [Rule: gold evidence contract; see docs/architecture.md and docs/serockbench.md.]"
+)
+
+
 class GoldValidationError(ValueError):
     """Raised when a gold record violates the evidence contract."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"{detail}{GOLD_CONTRACT_GUIDANCE}")
 
 
 def sha256_file(path: Path) -> str:
