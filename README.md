@@ -247,6 +247,11 @@ GPU hardware. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) for the evidence a
 rules, then pick something from [`docs/CONTRIBUTOR_TASKS.md`](docs/CONTRIBUTOR_TASKS.md) — a
 list of scoped starter tasks with acceptance criteria, several tagged *good first issue*.
 
+If you used the application and want to report a helpful result, a miss, or a confusing local
+failure, use the [sanitized usage-feedback form](https://github.com/jakegold1647/aktreader/issues/new?template=usage-feedback.yml).
+Please do not attach scans, record text, names, addresses, private source paths, credentials, or
+tokens; the form asks only for the local behavior a maintainer can act on.
+
 ## License and dependency inventory
 
 See [`LICENSE`](LICENSE) for the MIT code license and CC BY 4.0 data note. The declared runtime,
