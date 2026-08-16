@@ -2178,6 +2178,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         review_proposal_count = connection.execute(
             "SELECT COUNT(*) FROM review_proposals"
         ).fetchone()[0]
+        line_geometry_revision_count = connection.execute(
+            "SELECT COUNT(*) FROM line_geometry_revisions"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2197,6 +2200,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "training_consent_revocation_count": training_consent_revocation_count,
         "training_split_assignment_count": training_split_assignment_count,
         "review_proposal_count": review_proposal_count,
+        "line_geometry_revision_count": line_geometry_revision_count,
         "network_required": False,
     }
 
