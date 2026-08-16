@@ -23,9 +23,8 @@ Stop it with Ctrl+C.
 - source-page image display with PAGE XML line bounds;
 - effective transcription, local HTR suggestions, and pending review-proposal
   context for each line;
-- an editor that appends the same human transcription revisions as
-  `project-revise-line-geometry` and the desktop workbench's transcription save
-  flow; and
+- an editor that appends the same human transcription revisions as the
+  desktop workbench; and
 - project state that remains content-addressed and local.
 
 The API never sends image filesystem paths to the browser. Source images are
