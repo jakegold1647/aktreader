@@ -244,8 +244,10 @@ for the longer-term plan.
 
 Contributions are welcome, and most of the codebase is workable without scans, model weights, or
 GPU hardware. Start with [`CONTRIBUTING.md`](CONTRIBUTING.md) for the evidence and privacy
-rules, then pick something from [`docs/CONTRIBUTOR_TASKS.md`](docs/CONTRIBUTOR_TASKS.md) — a
-list of scoped starter tasks with acceptance criteria, several tagged *good first issue*.
+rules, then check the current GitHub issue queue. [`docs/CONTRIBUTOR_TASKS.md`](docs/CONTRIBUTOR_TASKS.md)
+keeps the completed starter tasks and their acceptance notes as useful examples; it is not a
+live queue. If there is no open scoped task, describe a small docs or test idea in an issue before
+starting so the scope and privacy boundary are clear.
 
 If you used the application and want to report a helpful result, a miss, or a confusing local
 failure, use the [sanitized usage-feedback form](https://github.com/jakegold1647/aktreader/issues/new?template=usage-feedback.yml).
