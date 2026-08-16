@@ -119,28 +119,28 @@ recipe are separate auditable decisions.
 ## Multi-project corpus assembly
 
 A bundle is the consented output of one project import. Build a trainer-ready corpus from a local
-plan when there are at least two independently assigned imports: one or more \`train\` inputs and
-one or more \`validation\` inputs. The plan uses the
-\`aktreader-local-htr-corpus-plan\` 1.0.0 contract and contains only \`project\`,
-\`manifest_sha256\`, and \`split\` for each input.
+plan when there are at least two independently assigned imports: one or more `train` inputs and
+one or more `validation` inputs. The plan uses the
+`aktreader-local-htr-corpus-plan` 1.0.0 contract and contains only `project`,
+`manifest_sha256`, and `split` for each input.
 
     aktreader htr-build-corpus --plan E:\training\corpus-plan.json --output-directory E:\training\serock-htr-corpus
 
 Before copying any PAGE XML, the command rereads each source project's current revision and consent
 state. A later revision without new consent, a revoked grant, duplicate source PAGE XML, a missing
 validation split, or a split mismatch stops the build. The completed corpus contains isolated
-per-import bundles under \`data/\`, ordered \`train.lst\` and \`validation.lst\` manifests, and
-\`corpus.aktreader.json\`; the receipt intentionally excludes the source-project paths from the plan.
+per-import bundles under `data/`, ordered `train.lst` and `validation.lst` manifests, and
+`corpus.aktreader.json`; the receipt intentionally excludes the source-project paths from the plan.
 
 From the corpus directory, the recorded train command is:
 
     ketos train -f xml -t train.lst -e validation.lst
 
-It deliberately supplies both manifests and never asks Kraken to choose its random \`--partition\`
-split. If the plan also contains a \`test\` input, run the recorded evaluation form after training:
+It deliberately supplies both manifests and never asks Kraken to choose its random `--partition`
+split. If the plan also contains a `test` input, run the recorded evaluation form after training:
 
     ketos test -f xml -e test.lst -m <local-model-weights>
 
-Corpus assembly checks and writes only local files. It does not install Kraken, invoke \`ketos\`, or
+Corpus assembly checks and writes only local files. It does not install Kraken, invoke `ketos`, or
 allow a network setting. A later, separately pinned runner records the executable, model, options,
 outputs, and evaluation receipt.
