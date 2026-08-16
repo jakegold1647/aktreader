@@ -1024,6 +1024,30 @@ def export_human_pagexml(
             """,
             (manifest_sha256,),
         ).fetchall()
+        geometry_rows = connection.execute(
+            """
+            SELECT
+                lines.source_span_id,
+                lines.page_index,
+                lines.page_id,
+                lines.line_id,
+                line_geometry_revisions.polygon_json,
+                line_geometry_revisions.baseline_json
+            FROM lines
+            JOIN line_geometry_revisions
+                ON line_geometry_revisions.manifest_sha256 = lines.manifest_sha256
+               AND line_geometry_revisions.source_span_id = lines.source_span_id
+               AND line_geometry_revisions.revision = (
+                    SELECT MAX(latest.revision)
+                    FROM line_geometry_revisions AS latest
+                    WHERE latest.manifest_sha256 = lines.manifest_sha256
+                      AND latest.source_span_id = lines.source_span_id
+               )
+            WHERE lines.manifest_sha256 = ?
+            ORDER BY lines.page_index, lines.rowid
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project revisions for export: {error}") from error
     finally:
@@ -1058,6 +1082,24 @@ def export_human_pagexml(
             raise ProjectStoreError(f"project contains duplicate export locator {key!r}")
         revisions[key] = revised_text
 
+    geometries: dict[tuple[int, str, str], tuple[list[list[int]], list[list[int]] | None]] = {}
+    for source_span_id, page_index, page_id, line_id, polygon_json, baseline_json in geometry_rows:
+        try:
+            polygon = json.loads(polygon_json)
+            baseline = json.loads(baseline_json) if baseline_json is not None else None
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError(
+                f"stored geometry is unreadable for project line {source_span_id}"
+            ) from error
+        if not isinstance(polygon, list) or (
+            baseline is not None and not isinstance(baseline, list)
+        ):
+            raise ProjectStoreError(f"stored geometry is invalid for project line {source_span_id}")
+        key = (page_index, page_id, line_id)
+        if key in geometries:
+            raise ProjectStoreError(f"project contains duplicate geometry locator {key!r}")
+        geometries[key] = polygon, baseline
+
     source_bytes = source_path.read_bytes()
     if _FORBIDDEN_PAGE_XML_DECLARATION.search(source_bytes):
         raise ProjectStoreError("stored PAGE XML contains a forbidden XML declaration")
@@ -1067,6 +1109,7 @@ def export_human_pagexml(
         raise ProjectStoreError("stored PAGE XML cannot be parsed for export") from error
     pages = [element for element in document.iter() if _xml_local_name(element) == "Page"]
     seen: set[tuple[int, str, str]] = set()
+    seen_geometries: set[tuple[int, str, str]] = set()
     for page_index, page in enumerate(pages):
         raw_page_id = page.get("id")
         page_id = raw_page_id.strip() if isinstance(raw_page_id, str) and raw_page_id.strip() else (
@@ -1080,15 +1123,28 @@ def export_human_pagexml(
                 continue
             key = (page_index, page_id, raw_line_id.strip())
             revised_text = revisions.get(key)
-            if revised_text is None:
-                continue
-            _replace_text_equiv(line, revised_text)
-            seen.add(key)
+            geometry = geometries.get(key)
+            if revised_text is not None:
+                _replace_text_equiv(line, revised_text)
+                seen.add(key)
+            if geometry is not None:
+                _replace_line_geometry(
+                    line,
+                    polygon=geometry[0],
+                    baseline=geometry[1],
+                )
+                seen_geometries.add(key)
     missing = sorted(set(revisions) - seen)
     if missing:
         raise ProjectStoreError(
             "stored PAGE XML no longer matches the project's revision locators: "
             f"{missing[0]!r}"
+        )
+    missing_geometries = sorted(set(geometries) - seen_geometries)
+    if missing_geometries:
+        raise ProjectStoreError(
+            "stored PAGE XML no longer matches the project's geometry locators: "
+            f"{missing_geometries[0]!r}"
         )
 
     rendered = ET.tostring(document, encoding="utf-8", xml_declaration=True)
@@ -1101,6 +1157,7 @@ def export_human_pagexml(
         "output": str(output_path),
         "output_sha256": hashlib.sha256(rendered).hexdigest(),
         "human_revision_count": len(revisions),
+        "line_geometry_revision_count": len(geometries),
         "network_required": False,
     }
 
