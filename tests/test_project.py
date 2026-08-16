@@ -19,8 +19,8 @@ from aktreader.project import (
     inspect_project,
     list_project_pages,
     load_project_page,
-    revoke_training_consent,
     revise_line_transcription,
+    revoke_training_consent,
     training_readiness,
 )
 
