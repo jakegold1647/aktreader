@@ -161,7 +161,7 @@ requires the exact SHA-256 of a local non-UNC `ketos` executable and explicit de
 runtime, architecture, normalization, split, and optimization settings. It accepts no remote
 endpoint, credential, model-download, or arbitrary command field.
 
-    aktreader kraken-train --config E:\\AKTREADER_LOCAL\\kraken-training.json --plan E:\\training\\corpus-plan.json --corpus-directory E:\\training\\serock-htr-corpus --output-directory E:\\training\\serock-training-run
+    aktreader kraken-train --config E:\AKTREADER_LOCAL\kraken-training.json --plan E:\training\corpus-plan.json --corpus-directory E:\training\serock-htr-corpus --output-directory E:\training\serock-training-run
 
 The runner repeats corpus inspection immediately before launching `ketos --config … train` with
 no shell, an allow-listed credential-free environment, and offline Hugging Face/Transformers
@@ -171,4 +171,22 @@ weights file is published atomically. The receipt pins the executable, corpus, p
 logs, and produced artifacts without exposing local source paths.
 
 This runner trains a fresh local model only. It does not install Kraken, resume or fine-tune a
-previous model, evaluate a test split, upload artifacts, or make a hosted-service claim.
+previous model, upload artifacts, or make a hosted-service claim.
+
+## Held-out local evaluation
+
+Evaluation is available only when the same corpus plan includes a non-empty `test` split. Copy
+[local-kraken-evaluation.config.example.json](../examples/local-kraken-evaluation.config.example.json)
+to an untracked path and replace the local executable and model pins. The selected
+`.safetensors` model must be a checksummed output named in the supplied training-run receipt,
+and its receipt must match the corpus and plan that are still current and consent-eligible.
+
+    aktreader kraken-evaluate --config E:\AKTREADER_LOCAL\kraken-evaluation.json --plan E:\training\corpus-plan.json --corpus-directory E:\training\serock-htr-corpus --training-run-directory E:\training\serock-training-run --output-directory E:\training\serock-evaluation-run
+
+The runner invokes the documented `ketos test` form with explicit XML format, batch size,
+normalization, and whitespace policy. It uses the same credential-free offline environment as
+training and atomically publishes stdout, stderr, and
+`evaluation-run.aktreader.json`. The receipt pins the current corpus, plan, executable, exact
+training-run receipt, model, test manifest, and option set. Kraken's human-readable CER/WER and
+confusion report is retained verbatim in the logs; AKT Reader does not invent a separate metrics
+schema for it.
