@@ -170,3 +170,31 @@ def test_eval_runs_with_sockets_disabled(
     assert exit_code == 0
     assert output.exists()
     assert table.exists()
+
+
+def test_compare_runs_with_sockets_disabled(
+    sockets_disabled: None, tmp_path: Path, capsys
+) -> None:
+    output = tmp_path / "comparison.json"
+    csv = tmp_path / "comparison.csv"
+
+    exit_code = main(
+        [
+            "compare",
+            str(ROOT / "labels" / "readerA"),
+            str(ROOT / "labels" / "readerB"),
+            "--output",
+            str(output),
+            "--csv",
+            str(csv),
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "PASS"
+    assert payload["network_used"] is False
+    assert payload["output"] == str(output)
+    assert payload["csv_output"] == str(csv)
+    assert output.is_file()
+    assert csv.is_file()
