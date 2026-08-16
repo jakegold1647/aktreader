@@ -164,7 +164,11 @@ class LocalWorkbench:
                 width=2,
                 tags=(tag, "line-box"),
             )
-            self.canvas.tag_bind(tag, "<Button-1>", lambda _event, value=span_id: self._select_span(value))
+            self.canvas.tag_bind(
+                tag,
+                "<Button-1>",
+                lambda _event, value=span_id: self._select_span(value),
+            )
 
     def _populate_lines(self) -> None:
         self.line_list.delete(0, "end")
@@ -209,7 +213,10 @@ class LocalWorkbench:
             return
         selected = self.line_list.curselection()
         if not selected:
-            self.messagebox.showwarning("AKT Reader", "Select a line before saving a transcription.")
+            self.messagebox.showwarning(
+                "AKT Reader",
+                "Select a line before saving a transcription.",
+            )
             return
         line = self.current_lines[int(selected[0])]
         editor = self.editor.get().strip()
@@ -252,7 +259,8 @@ def launch_workbench(project: Path | str) -> None:
         from PIL import ImageTk
     except ImportError as error:
         raise WorkbenchError(
-            "this Python installation has no Tk desktop support; install a Python build with tkinter"
+            "this Python installation has no Tk desktop support; install a Python build "
+            "with tkinter"
         ) from error
     LocalWorkbench(
         project,
