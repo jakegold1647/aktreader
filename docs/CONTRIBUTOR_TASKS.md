@@ -76,7 +76,9 @@ output is current (regenerate-and-diff).
 **Acceptance:** running the tool twice is idempotent; CI fails if the committed reference drifts
 from the schemas.
 
-## 5. Actionable validator error messages
+## 5. Actionable validator error messages — shipped
+
+**Status:** completed in PR #10. Reader-label and gold validation errors retain their specific reason while pointing to the governing contract and the next local source to read.
 
 **Why:** validator errors are precise but terse (e.g. `PRESENT requires a value`); a contributor
 who triggers one gets no pointer to the rule it enforces.
