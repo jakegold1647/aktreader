@@ -418,9 +418,30 @@ def _verify_bundle(
         document = ET.fromstring(pagexml_bytes)
     except ET.ParseError as error:
         raise HtrCorpusError("training bundle PAGE XML is not well formed") from error
+    if document.tag.rsplit("}", 1)[-1] != "PcGts":
+        raise HtrCorpusError("training bundle PAGE XML root must be PcGts")
     pages = [element for element in document.iter() if element.tag.rsplit("}", 1)[-1] == "Page"]
     if len(pages) != page_count:
         raise HtrCorpusError("training bundle PAGE XML page count is inconsistent")
+    lines = [
+        element
+        for element in document.iter()
+        if element.tag.rsplit("}", 1)[-1] == "TextLine"
+    ]
+    if len(lines) != line_count:
+        raise HtrCorpusError("training bundle PAGE XML line count is inconsistent")
+    for line in lines:
+        text_equivs = [
+            child for child in line if child.tag.rsplit("}", 1)[-1] == "TextEquiv"
+        ]
+        if not text_equivs:
+            raise HtrCorpusError("training bundle PAGE XML line is missing TextEquiv")
+        if not any(
+            child.tag.rsplit("}", 1)[-1] == "Unicode"
+            for text_equiv in text_equivs
+            for child in text_equiv
+        ):
+            raise HtrCorpusError("training bundle PAGE XML line is missing Unicode text")
     referenced_images: set[str] = set()
     for page in pages:
         image_filename = page.get("imageFilename")
