@@ -8,8 +8,10 @@ from pathlib import Path
 from PIL import Image
 
 from aktreader.cli import main
+from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
+    export_human_pagexml,
     import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
@@ -279,3 +281,108 @@ def test_project_cli_creates_and_inspects_an_offline_project(tmp_path: Path, cap
     assert create_report["project"] == str(project.resolve())
     assert inspect_report["project_id"] == create_report["project_id"]
     assert inspect_report["network_required"] is False
+
+
+def test_project_exports_human_revisions_as_derivative_pagexml(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ?",
+        editor="reviewer-1",
+    )
+    exported_path = tmp_path / "serock-human.page.xml"
+
+    report = export_human_pagexml(
+        project,
+        exported_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert report["status"] == "SUCCEEDED"
+    assert report["source_pagexml_sha256"] == hashlib.sha256(source_bytes).hexdigest()
+    assert report["output_sha256"] == hashlib.sha256(exported_path.read_bytes()).hexdigest()
+    assert report["human_revision_count"] == 1
+    assert source.read_bytes() == source_bytes
+    exported = import_pagexml(exported_path, image_root=source_root)
+    assert exported["pages"][0]["lines"][0]["text"] == "Александръ?"
+
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ!?",
+        editor="reviewer-2",
+    )
+    repeated = export_human_pagexml(
+        project,
+        exported_path,
+        manifest_sha256=imported["manifest_sha256"],
+        replace_existing=True,
+    )
+
+    assert repeated["human_revision_count"] == 1
+    assert import_pagexml(exported_path, image_root=source_root)["pages"][0]["lines"][0][
+        "text"
+    ] == "Александръ!?"
+
+
+def test_project_export_can_add_text_equiv_for_previously_blank_line(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "blank.xml"
+    source.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="40" imageHeight="30">
+    <TextRegion id="region-1">
+      <Coords points="0,0 40,0 40,30 0,30"/>
+      <TextLine id="line-1">
+        <Coords points="2,2 38,2 38,12 2,12"/>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    exported_path = tmp_path / "blank-human.page.xml"
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="рукописный текст",
+    )
+
+    report = export_human_pagexml(
+        project,
+        exported_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert report["human_revision_count"] == 1
+    assert import_pagexml(exported_path, image_root=source_root)["pages"][0]["lines"][0][
+        "text"
+    ] == "рукописный текст"
