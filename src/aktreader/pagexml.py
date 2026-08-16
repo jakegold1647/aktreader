@@ -289,7 +289,13 @@ def _page_payload(
     page_index: int,
     image_root: Path,
 ) -> dict[str, Any]:
-    page_id = _required_identifier(page, field=f"Page at index {page_index}")
+    declared_page_id = page.get("id")
+    if isinstance(declared_page_id, str) and declared_page_id.strip():
+        page_id = declared_page_id.strip()
+        page_id_origin = "PAGE_XML"
+    else:
+        page_id = f"page-index-{page_index}"
+        page_id_origin = "SYNTHETIC_INDEX"
     page_field = f"page {page_id}"
     image_filename = page.get("imageFilename")
     if not isinstance(image_filename, str):
@@ -375,6 +381,7 @@ def _page_payload(
     return {
         "page_index": page_index,
         "page_id": page_id,
+        "page_id_origin": page_id_origin,
         "image": {
             "path": str(image_path),
             "sha256": _sha256(image_path),
