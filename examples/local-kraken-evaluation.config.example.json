@@ -1,0 +1,23 @@
+{
+  "contract": {
+    "name": "aktreader-local-kraken-evaluation",
+    "version": "1.0.0"
+  },
+  "ketos": {
+    "path": "C:\\AKTREADER_LOCAL\\kraken\\Scripts\\ketos.exe",
+    "sha256": "<64-lowercase-hex-sha256-of-local-ketos>"
+  },
+  "model": {
+    "path": "E:\\training\\serock-training-run\\checkpoints\\model.safetensors",
+    "sha256": "<64-lowercase-hex-sha256-of-training-run-model>"
+  },
+  "runtime": {
+    "timeout_seconds": 3600
+  },
+  "test": {
+    "format_type": "xml",
+    "batch_size": 1,
+    "normalization": "NFC",
+    "normalize_whitespace": true
+  }
+}

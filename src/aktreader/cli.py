@@ -64,7 +64,12 @@ from aktreader.htr_corpus import (
 )
 from aktreader.installation import inspect_application_checkout
 from aktreader.kraken import KrakenError, LocalKraken
-from aktreader.kraken_training import KrakenTrainingError, run_kraken_training
+from aktreader.kraken_training import (
+    KrakenEvaluationError,
+    KrakenTrainingError,
+    run_kraken_evaluation,
+    run_kraken_training,
+)
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
@@ -474,6 +479,16 @@ def build_parser() -> argparse.ArgumentParser:
     kraken_train.add_argument("--plan", required=True, type=Path)
     kraken_train.add_argument("--corpus-directory", required=True, type=Path)
     kraken_train.add_argument("--output-directory", required=True, type=Path)
+
+    kraken_evaluate = subparsers.add_parser(
+        "kraken-evaluate",
+        help="run a pinned local Kraken model against an inspected held-out split",
+    )
+    kraken_evaluate.add_argument("--config", required=True, type=Path)
+    kraken_evaluate.add_argument("--plan", required=True, type=Path)
+    kraken_evaluate.add_argument("--corpus-directory", required=True, type=Path)
+    kraken_evaluate.add_argument("--training-run-directory", required=True, type=Path)
+    kraken_evaluate.add_argument("--output-directory", required=True, type=Path)
 
     infer = subparsers.add_parser(
         "reader-infer", help="run one explicitly configured local Reader inference"
@@ -1187,6 +1202,45 @@ def _command_kraken_train(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_kraken_evaluate(args: argparse.Namespace) -> int:
+    config = local_input_path(args.config, role="Kraken evaluation configuration")
+    plan = local_input_path(args.plan, role="HTR corpus plan")
+    corpus_directory = local_input_path(
+        args.corpus_directory,
+        role="HTR training corpus directory",
+    )
+    training_run_directory = local_input_path(
+        args.training_run_directory,
+        role="Kraken training run directory",
+    )
+    output_directory = local_output_path(
+        args.output_directory,
+        role="Kraken evaluation output directory",
+    )
+    if (
+        not config.is_file()
+        or not plan.is_file()
+        or not corpus_directory.is_dir()
+        or not training_run_directory.is_dir()
+    ):
+        raise CliConfigurationError(
+            "Kraken evaluation requires local configuration, plan, corpus, and training run"
+        )
+    if output_directory.exists():
+        raise CliConfigurationError(
+            f"Kraken evaluation output directory already exists: {output_directory}"
+        )
+    report = run_kraken_evaluation(
+        config,
+        plan,
+        corpus_directory,
+        training_run_directory,
+        output_directory,
+    )
+    _emit_json(report)
+    return 0
+
+
 def _command_batch_run(args: argparse.Namespace) -> int:
     config_path = local_input_path(args.config, role="reader config")
     reader = LocalReader(load_local_reader_config(config_path))
@@ -1484,6 +1538,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "kraken-inspect": _command_kraken_inspect,
         "kraken-recognize": _command_kraken_recognize,
         "kraken-train": _command_kraken_train,
+        "kraken-evaluate": _command_kraken_evaluate,
         "batch-run": _command_batch_run,
         "adjudicate": _command_adjudicate,
         "eval": _command_eval,
@@ -1502,6 +1557,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         CliConfigurationError,
         KrakenError,
         KrakenTrainingError,
+        KrakenEvaluationError,
         LocalReaderError,
         OSError,
         TypeError,

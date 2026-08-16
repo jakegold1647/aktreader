@@ -149,8 +149,8 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-training-readiness`, `project-export-consented-training-pagexml`, `htr-build-corpus`,
 `htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
-`reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `batch-run`, `adjudicate`,
-`compare`, and `eval`. To run the repository's built-in
+`reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `kraken-evaluate`,
+`batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in
 reader comparison without supplying scans or model files:
 
 ```powershell
@@ -307,6 +307,19 @@ python -m aktreader kraken-train `
   --plan corpus-plan.json `
   --corpus-directory serock-htr-corpus `
   --output-directory serock-training-run
+```
+
+When the same plan includes an explicit held-out `test` split, evaluate a checksummed weights
+file from that training run. The evaluation runner repeats consent/corpus inspection and verifies
+the executable, model, and training receipt before it invokes local `ketos test`.
+
+```powershell
+python -m aktreader kraken-evaluate `
+  --config local-kraken-evaluation.json `
+  --plan corpus-plan.json `
+  --corpus-directory serock-htr-corpus `
+  --training-run-directory serock-training-run `
+  --output-directory serock-evaluation-run
 ```
 
 See [the local Kraken guide](docs/local-kraken.md) for the configuration contract.
