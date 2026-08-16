@@ -1331,6 +1331,22 @@ def load_project_page(
             """,
             (manifest_sha256,),
         ).fetchall()
+        review_rows = connection.execute(
+            """
+            SELECT
+                source_span_id,
+                proposal_sha256,
+                contributor,
+                proposed_text,
+                state,
+                revised_at
+            FROM review_proposals
+            WHERE manifest_sha256 = ?
+              AND state IN ('PENDING', 'CONFLICT')
+            ORDER BY imported_at, proposal_sha256
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project page: {error}") from error
     finally:
@@ -1344,6 +1360,17 @@ def load_project_page(
                 "result_pagexml_sha256": suggestion[3],
                 "text": suggestion[4],
                 "imported_at": suggestion[5],
+            }
+        )
+    reviews_by_span: dict[str, list[dict[str, object]]] = {}
+    for review in review_rows:
+        reviews_by_span.setdefault(review[0], []).append(
+            {
+                "proposal_sha256": review[1],
+                "contributor": review[2],
+                "text": review[3],
+                "state": review[4],
+                "revised_at": review[5],
             }
         )
     return {
@@ -1365,6 +1392,7 @@ def load_project_page(
                 "bbox": json.loads(row[4]),
                 "locator": json.loads(row[5]),
                 "suggestions": suggestions_by_span.get(row[0], []),
+                "review_proposals": reviews_by_span.get(row[0], []),
             }
             for row in lines
         ],
@@ -2053,6 +2081,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         training_split_assignment_count = connection.execute(
             "SELECT COUNT(*) FROM training_split_assignments"
         ).fetchone()[0]
+        review_proposal_count = connection.execute(
+            "SELECT COUNT(*) FROM review_proposals"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2071,6 +2102,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "training_consent_grant_count": training_consent_grant_count,
         "training_consent_revocation_count": training_consent_revocation_count,
         "training_split_assignment_count": training_split_assignment_count,
+        "review_proposal_count": review_proposal_count,
         "network_required": False,
     }
 
@@ -2351,6 +2383,7 @@ def import_review_package(
         role="review package source PAGE XML SHA-256",
     )
     contributor = str(package["contributor"]).strip()
+    proposal_sha256s: list[str] = []
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         connection.execute("PRAGMA foreign_keys = ON")
@@ -2395,6 +2428,7 @@ def import_review_package(
                         }
                     ).encode("utf-8")
                 ).hexdigest()
+                proposal_sha256s.append(proposal_sha256)
                 cursor = connection.execute(
                     """
                     INSERT OR IGNORE INTO review_proposals (
@@ -2440,6 +2474,7 @@ def import_review_package(
         "pending_count": pending_count,
         "conflict_count": conflict_count,
         "already_imported_count": already_imported_count,
+        "proposal_sha256s": proposal_sha256s,
         "network_required": False,
     }
 
