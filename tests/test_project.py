@@ -205,15 +205,13 @@ def test_project_keeps_htr_suggestions_separate_from_human_revisions(tmp_path: P
     )
     line = page["lines"][0]
     assert line["source_text"] == line["text"] == "Александр"
-    assert line["suggestions"] == [
-        {
-            "engine": "kraken",
-            "runtime_fingerprint": "a" * 64,
-            "result_pagexml_sha256": hashlib.sha256(recognized.read_bytes()).hexdigest(),
-            "text": "Александръ",
-            "imported_at": line["suggestions"][0]["imported_at"],
-        }
-    ]
+    assert len(line["suggestions"]) == 1
+    suggestion = line["suggestions"][0]
+    assert suggestion["engine"] == "kraken"
+    assert suggestion["runtime_fingerprint"] == "a" * 64
+    assert suggestion["result_pagexml_sha256"] == hashlib.sha256(recognized.read_bytes()).hexdigest()
+    assert suggestion["text"] == "Александръ"
+    assert isinstance(suggestion["imported_at"], str)
     revised = revise_line_transcription(
         project,
         manifest_sha256=imported["manifest_sha256"],
