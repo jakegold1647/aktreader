@@ -20,7 +20,11 @@ def test_external_actions_are_pinned_to_full_commit_shas() -> None:
         references = ACTION_REFERENCE.findall(content)
 
         assert references, f"{workflow.relative_to(ROOT)} has no action references"
-        unpinned = [reference for reference in references if not FULL_COMMIT_SHA.fullmatch(reference)]
+        unpinned = [
+            reference
+            for reference in references
+            if not FULL_COMMIT_SHA.fullmatch(reference)
+        ]
         assert unpinned == [], (
             f"{workflow.relative_to(ROOT)} uses mutable action references: {', '.join(unpinned)}"
         )
