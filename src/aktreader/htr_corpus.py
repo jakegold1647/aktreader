@@ -634,3 +634,181 @@ def assemble_consented_training_corpus(
         },
         "network_required": False,
     }
+
+
+
+def inspect_consented_training_corpus(
+    plan: Path | str,
+    corpus_directory: Path | str,
+) -> dict[str, object]:
+    """Verify a corpus against its current-consent plan without running Kraken.
+
+    The plan is loaded through the same current-revision and active-consent
+    gate used during assembly. The on-disk corpus then has to reproduce that
+    plan exactly, including each copied PAGE XML bundle and root split list.
+    """
+
+    plan_path, inputs = _load_corpus_plan(plan)
+    corpus = _resolve_local_path(
+        corpus_directory,
+        role="HTR training corpus directory",
+        must_exist=True,
+    )
+    if not corpus.is_dir():
+        raise HtrCorpusError(f"HTR training corpus is not a directory: {corpus}")
+    manifest_path = corpus / "corpus.aktreader.json"
+    payload = _read_json(manifest_path, role="HTR corpus manifest")
+    _required_keys(
+        payload,
+        required={
+            "contract",
+            "created_at",
+            "source_plan_sha256",
+            "format_type",
+            "inputs",
+            "splits",
+            "kraken",
+            "network_required",
+        },
+        role="HTR corpus manifest",
+    )
+    if payload["contract"] != _CORPUS_CONTRACT:
+        raise HtrCorpusError("HTR corpus manifest has an unsupported contract")
+    if payload["network_required"] is not False:
+        raise HtrCorpusError("HTR corpus manifest must explicitly require no network")
+    if payload["format_type"] != "xml":
+        raise HtrCorpusError("HTR corpus manifest format_type must be xml")
+    source_plan_sha256 = _require_sha256(
+        payload["source_plan_sha256"],
+        role="HTR corpus source plan SHA-256",
+    )
+    if source_plan_sha256 != _sha256_file(plan_path):
+        raise HtrCorpusError("HTR corpus does not match the supplied corpus plan")
+
+    receipts = payload["inputs"]
+    if not isinstance(receipts, list) or len(receipts) != len(inputs):
+        raise HtrCorpusError("HTR corpus receipt count does not match the corpus plan")
+    split_pagexml: dict[str, list[str]] = {split: [] for split in _SPLITS}
+    for source, receipt in zip(inputs, receipts, strict=True):
+        if not isinstance(receipt, dict):
+            raise HtrCorpusError("HTR corpus input receipt must be an object")
+        _required_keys(
+            receipt,
+            required={
+                "project",
+                "source_import",
+                "split",
+                "bundle",
+                "page_count",
+                "eligible_training_line_count",
+                "image_count",
+            },
+            role="HTR corpus input receipt",
+        )
+        expected_bundle_path = (Path("data") / source.manifest_sha256).as_posix()
+        bundle = receipt["bundle"]
+        if not isinstance(bundle, dict) or set(bundle) != {"path", "manifest_sha256"}:
+            raise HtrCorpusError("HTR corpus bundle receipt is invalid")
+        if bundle["path"] != expected_bundle_path:
+            raise HtrCorpusError("HTR corpus bundle path does not match the corpus plan")
+        _require_sha256(bundle["manifest_sha256"], role="HTR corpus bundle manifest SHA-256")
+        bundle_directory = _bundle_path(
+            corpus,
+            bundle["path"],
+            role="HTR corpus bundle path",
+        )
+        if not bundle_directory.is_dir():
+            raise HtrCorpusError("HTR corpus bundle path is not a directory")
+        verified = _verify_bundle(bundle_directory, source=source)
+        expected_receipt = {
+            "project": {
+                "project_id": verified.project_id,
+                "name": verified.project_name,
+            },
+            "source_import": {
+                "manifest_sha256": verified.source_manifest_sha256,
+                "source_pagexml_sha256": verified.source_pagexml_sha256,
+            },
+            "split": verified.split,
+            "bundle": {
+                "path": expected_bundle_path,
+                "manifest_sha256": verified.bundle_manifest_sha256,
+            },
+            "page_count": verified.page_count,
+            "eligible_training_line_count": verified.line_count,
+            "image_count": verified.image_count,
+        }
+        if receipt != expected_receipt:
+            raise HtrCorpusError("HTR corpus input receipt does not match its checked bundle")
+        split_pagexml[source.split].append(
+            (Path("data") / source.manifest_sha256 / "document.page.xml").as_posix()
+        )
+
+    expected_splits = {
+        split: {
+            "manifest": f"{split}.lst",
+            "pagexml_count": len(split_pagexml[split]),
+        }
+        for split in _SPLITS
+        if split_pagexml[split]
+    }
+    if payload["splits"] != expected_splits:
+        raise HtrCorpusError("HTR corpus split receipt does not match its input bundles")
+    for split, expected in expected_splits.items():
+        manifest = _bundle_path(
+            corpus,
+            expected["manifest"],
+            role=f"HTR corpus {split} manifest path",
+        )
+        expected_content = "\n".join(split_pagexml[split]) + "\n"
+        if manifest.read_text(encoding="utf-8") != expected_content:
+            raise HtrCorpusError(f"HTR corpus {split} manifest does not match its split")
+    for split in _SPLITS:
+        if split not in expected_splits and (corpus / f"{split}.lst").exists():
+            raise HtrCorpusError(f"HTR corpus has an unexpected {split} manifest")
+
+    expected_kraken = {
+        "working_directory": ".",
+        "format_type": "xml",
+        "automatic_partitioning": False,
+        "train_command": [
+            "ketos",
+            "train",
+            "-f",
+            "xml",
+            "-t",
+            "train.lst",
+            "-e",
+            "validation.lst",
+        ],
+        "test_command": (
+            [
+                "ketos",
+                "test",
+                "-f",
+                "xml",
+                "-e",
+                "test.lst",
+                "-m",
+                "<local-model-weights>",
+            ]
+            if "test" in expected_splits
+            else None
+        ),
+    }
+    if payload["kraken"] != expected_kraken:
+        raise HtrCorpusError("HTR corpus Kraken command receipt is invalid")
+
+    return {
+        "status": "READY_FOR_LOCAL_KRAKEN_TRAINING",
+        "corpus": str(corpus),
+        "corpus_manifest": str(manifest_path),
+        "corpus_manifest_sha256": _sha256_file(manifest_path),
+        "source_plan_sha256": source_plan_sha256,
+        "split_pagexml_counts": {
+            split: len(split_pagexml[split])
+            for split in _SPLITS
+            if split_pagexml[split]
+        },
+        "network_required": False,
+    }
