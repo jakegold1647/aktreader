@@ -115,6 +115,25 @@ def test_import_pagexml_preserves_line_provenance_and_geometry(tmp_path: Path) -
     assert len(line["source_span_id"]) == len("pagexml-") + 24
 
 
+
+def test_import_pagexml_generates_a_stable_page_id_when_the_source_omits_one(
+    tmp_path: Path,
+) -> None:
+    _write_image(tmp_path / "page.png")
+    source = tmp_path / "page.xml"
+    _write_pagexml(source)
+    source.write_text(
+        source.read_text(encoding="utf-8").replace('<Page id="page-1"', "<Page"),
+        encoding="utf-8",
+    )
+
+    payload = import_pagexml(source)
+
+    assert payload["pages"][0]["page_id"] == "page-index-0"
+    assert payload["pages"][0]["page_id_origin"] == "SYNTHETIC_INDEX"
+    assert payload["pages"][0]["lines"][0]["locator"]["page_id"] == "page-index-0"
+
+
 def test_import_pagexml_supports_a_separate_local_image_root(tmp_path: Path) -> None:
     source_root = tmp_path / "source"
     image_root = tmp_path / "images"
