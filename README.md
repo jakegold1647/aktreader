@@ -29,6 +29,7 @@ New to the project? Start with the [AKT Reader glossary](docs/GLOSSARY.md) for t
 - A local-only Python package and CLI; no hosted model API, API key, inference server, or
   automatic model download.
 - Content-pinned `llama-mtmd-cli` integration for an owner-provisioned open-weights vision model.
+- A content-pinned local Kraken adapter that recognizes existing PAGE XML and returns a new PAGE XML result without a server, download, or package dependency.
 - Strict label validation, original-script grounding, typed absence states, consensus, human
   adjudication packets, resumable batch execution, privacy preflight, and SerockBench metrics.
 - A local PAGE XML import foundation that hashes supplied page images and preserves page, region,
@@ -88,10 +89,10 @@ is: none.
   `pagexml-import`.
 - Runtime dependencies are `jsonschema` and `pillow` only; the full reviewed license inventory
   (14 packages, including transitive) is `dependency-licenses.json`.
-- The only external process the package ever starts is the content-pinned local
-  `llama-mtmd-cli` reader subprocess. Owner-side acquisition scripts under `tools/` do use the
-  network and are documented in "Owner-only open training sources"; they are not part of the
-  installed package.
+- The only external processes the package starts are content-pinned local reader and Kraken
+  subprocesses. They receive only local paths and a credential-free, offline environment. Owner-side
+  acquisition scripts under `tools/` do use the network and are documented in "Owner-only open
+  training sources"; they are not part of the installed package.
 
 ## Install and run
 
@@ -144,7 +145,8 @@ stable machine-readable report; a failed or skipped check makes the command exit
 
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `workbench`, `pagexml-import`, `consensus-merge`, `reader-inspect`,
-`reader-infer`, `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in
+`reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
+`eval`. To run the repository's built-in
 reader comparison without supplying scans or model files:
 
 ```powershell
@@ -196,8 +198,10 @@ python -m aktreader pagexml-import page.xml --image-root . --output pagexml-impo
 
 The manifest hashes the XML and each page image, preserves PAGE page/region/line IDs, line polygons
 and baselines, captures explicit reading order when present, and records the selected `TextEquiv`
-text without fabricating missing transcription. The current reader-label schema remains unchanged;
-a later schema revision will bind observation spans to these immutable line locators.
+text without fabricating missing transcription. An owner can run the separately provisioned,
+checksum-pinned [local Kraken PAGE XML adapter](docs/local-kraken.md) against that same geometry;
+its output remains a separate engine proposal until a human reviews it. The current reader-label
+schema remains unchanged; a later schema revision will bind observation spans to these immutable line locators.
 
 The generic [Reader configuration](examples/local-reader.config.example.json) intentionally
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the

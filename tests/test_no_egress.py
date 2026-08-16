@@ -15,6 +15,7 @@ test rather than the promise.
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import socket
 from pathlib import Path
@@ -247,3 +248,42 @@ def test_project_create_runs_with_sockets_disabled(
     assert exit_code == 0
     assert payload["network_required"] is False
     assert (project / "project.akt.json").is_file()
+
+
+def test_kraken_inspect_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    executable = tmp_path / "kraken.exe"
+    model = tmp_path / "register.safetensors"
+    executable.write_bytes(b"local kraken executable")
+    model.write_bytes(b"local recognition model")
+    config = tmp_path / "kraken.json"
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0.0",
+                "artifacts": {
+                    "executable": {
+                        "path": str(executable),
+                        "sha256": hashlib.sha256(executable.read_bytes()).hexdigest(),
+                    },
+                    "model": {
+                        "path": str(model),
+                        "sha256": hashlib.sha256(model.read_bytes()).hexdigest(),
+                    },
+                },
+                "inference": {"device": "cpu", "precision": "32", "batch_size": 1},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["kraken-inspect", "--config", str(config)])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "READY"
+    assert payload["reader"] == "LOCAL_KRAKEN_PAGEXML"
+    assert payload["network_required"] is False

@@ -10,9 +10,15 @@ from pathlib import Path
 from typing import Any
 
 from aktreader.batch import BatchJob
+from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import LocalReader, LocalReaderConfig, PinnedArtifact
 
 READER_CONFIG_VERSION = "1.0.0"
+
+KRAKEN_CONFIG_VERSION = "1.0.0"
+_KRAKEN_REQUIRED_ARTIFACTS = frozenset({"executable", "model"})
+_KRAKEN_INFERENCE_KEYS = frozenset({"device", "precision", "batch_size", "timeout_seconds"})
+
 _REQUIRED_ARTIFACTS = frozenset(
     {"executable", "model", "mmproj", "prompt", "schema", "model_schema"}
 )
@@ -285,6 +291,104 @@ def load_local_reader_config(path: Path | str) -> LocalReaderConfig:
         lora=lora,
         **validated_generation,
     )
+
+
+def _kraken_artifact_from_config(
+    raw: Any,
+    *,
+    role: str,
+    config_dir: Path,
+) -> PinnedArtifact:
+    if not isinstance(raw, Mapping):
+        raise CliConfigurationError(f"kraken config.artifacts.{role} must be an object")
+    require_keys(
+        raw,
+        required={"path", "sha256"},
+        location=f"kraken config.artifacts.{role}",
+    )
+    path_value = raw["path"]
+    digest = raw["sha256"]
+    if not isinstance(path_value, str) or not path_value.strip():
+        raise CliConfigurationError(f"kraken config.artifacts.{role}.path must be a string")
+    if not isinstance(digest, str):
+        raise CliConfigurationError(f"kraken config.artifacts.{role}.sha256 must be a string")
+    raw_local_path(path_value, role=f"kraken config.artifacts.{role}.path")
+    artifact_path = Path(path_value)
+    if not artifact_path.is_absolute():
+        artifact_path = config_dir / artifact_path
+    return PinnedArtifact(path=artifact_path.resolve(), sha256=digest)
+
+
+def load_kraken_config(path: Path | str) -> KrakenConfig:
+    """Load one strict local-only, content-pinned Kraken configuration."""
+    config_path = local_input_path(path, role="kraken config")
+    if not config_path.is_file():
+        raise CliConfigurationError(f"kraken config is not a file: {config_path}")
+    payload = load_json_object(config_path, role="kraken config")
+    require_local_only_data(payload, location="kraken config")
+    require_keys(
+        payload,
+        required={"schema_version", "artifacts"},
+        optional={"inference"},
+        location="kraken config",
+    )
+    if payload["schema_version"] != KRAKEN_CONFIG_VERSION:
+        raise CliConfigurationError(
+            f"kraken config.schema_version must be {KRAKEN_CONFIG_VERSION!r}"
+        )
+    artifacts = payload["artifacts"]
+    if not isinstance(artifacts, Mapping):
+        raise CliConfigurationError("kraken config.artifacts must be an object")
+    require_keys(
+        artifacts,
+        required=_KRAKEN_REQUIRED_ARTIFACTS,
+        location="kraken config.artifacts",
+    )
+    pins = {
+        role: _kraken_artifact_from_config(
+            artifacts[role],
+            role=role,
+            config_dir=config_path.parent,
+        )
+        for role in sorted(_KRAKEN_REQUIRED_ARTIFACTS)
+    }
+    inference = payload.get("inference", {})
+    if not isinstance(inference, Mapping):
+        raise CliConfigurationError("kraken config.inference must be an object")
+    require_keys(
+        inference,
+        required=frozenset(),
+        optional=_KRAKEN_INFERENCE_KEYS,
+        location="kraken config.inference",
+    )
+    try:
+        return KrakenConfig(
+            executable=pins["executable"],
+            model=pins["model"],
+            **dict(inference),
+        )
+    except (TypeError, ValueError) as error:
+        raise CliConfigurationError(f"invalid kraken config.inference: {error}") from error
+
+
+def kraken_report(kraken: LocalKraken) -> dict[str, Any]:
+    """Render verified local Kraken pins without executing the runtime."""
+    return {
+        "status": "READY",
+        "reader": "LOCAL_KRAKEN_PAGEXML",
+        "network_required": False,
+        "runtime_fingerprint": kraken.runtime_fingerprint,
+        "artifacts": {
+            role: {"path": str(pin.path), "sha256": pin.sha256}
+            for role, pin in sorted(
+                {
+                    "executable": kraken.config.executable,
+                    "model": kraken.config.model,
+                }.items()
+            )
+        },
+        "inference": kraken.inference_settings,
+    }
 
 
 def generation_report(config: LocalReaderConfig) -> dict[str, Any]:

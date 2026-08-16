@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "artifacts": {
+    "executable": {
+      "path": "E:\\AKTREADER_LOCAL\\runtime\\kraken.exe",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "model": {
+      "path": "E:\\AKTREADER_LOCAL\\models\\cyrillic-register.safetensors",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    }
+  },
+  "inference": {
+    "device": "cpu",
+    "precision": "32",
+    "batch_size": 1,
+    "timeout_seconds": 1800
+  }
+}
