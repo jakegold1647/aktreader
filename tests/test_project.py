@@ -797,3 +797,59 @@ def test_offline_review_package_detects_a_stale_base_without_applying_text(
     )["lines"][0]
     assert current["text"] == "Owner correction"
     assert current["revision"] == 1
+
+
+def test_review_package_cli_queues_then_resolves_a_proposal(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    reviewer = tmp_path / "reviewer.aktproj"
+    owner = tmp_path / "owner.aktproj"
+    create_project(reviewer, name="Reviewer copy")
+    create_project(owner, name="Owner copy")
+    reviewer_import = import_pagexml_into_project(reviewer, source)
+    import_pagexml_into_project(owner, source)
+    reviewer_line = load_project_page(
+        reviewer,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        reviewer,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        source_span_id=reviewer_line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+    )
+    package = tmp_path / "reviewer.aktreview.json"
+    export_review_package(
+        reviewer,
+        package,
+        manifest_sha256=reviewer_import["manifest_sha256"],
+        contributor="reviewer-1",
+    )
+
+    imported_exit = main(["project-import-review-package", str(owner), str(package)])
+    imported = json.loads(capsys.readouterr().out)
+    resolved_exit = main(
+        [
+            "project-resolve-review-proposal",
+            str(owner),
+            "--proposal-sha256",
+            imported["proposal_sha256s"][0],
+            "--decision",
+            "reject",
+            "--editor",
+            "owner-1",
+        ]
+    )
+    resolved = json.loads(capsys.readouterr().out)
+
+    assert imported_exit == resolved_exit == 0
+    assert imported["status"] == "QUEUED"
+    assert resolved["status"] == "REJECTED"
