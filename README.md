@@ -146,7 +146,7 @@ stable machine-readable report; a failed or skipped check makes the command exit
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
-`project-training-readiness`, `project-export-consented-training-pagexml`, `workbench`,
+`project-training-readiness`, `project-export-consented-training-pagexml`, `htr-build-corpus`,
 `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
@@ -245,6 +245,47 @@ python -m aktreader project-export-consented-training-pagexml serock.aktproj `
 
 The bundle is local only and does not run or download Kraken. Its `bundle.aktreader.json` records
 the exact PAGE XML, image, consent, and split inputs for a separately provisioned local trainer.
+
+To prepare one reproducible training corpus across projects, create a local JSON plan. It records
+only local project locations, the immutable import IDs, and the intended split; those source paths
+do not appear in the resulting corpus receipt.
+
+```json
+{
+  "contract": {
+    "name": "aktreader-local-htr-corpus-plan",
+    "version": "1.0.0"
+  },
+  "inputs": [
+    {
+      "project": "serock-train.aktproj",
+      "manifest_sha256": "<project-import-manifest-sha256>",
+      "split": "train"
+    },
+    {
+      "project": "serock-validation.aktproj",
+      "manifest_sha256": "<project-import-manifest-sha256>",
+      "split": "validation"
+    }
+  ]
+}
+```
+
+Build the local corpus from that plan:
+
+```powershell
+python -m aktreader htr-build-corpus `
+  --plan corpus-plan.json `
+  --output-directory serock-htr-corpus
+```
+
+The command rechecks each project's current human revisions and active consent before writing an
+atomic corpus. It requires both train and validation inputs, rejects duplicated source PAGE XML,
+writes explicit `train.lst` and `validation.lst` manifests, and forbids Kraken's random
+partitioning. Run the pinned local trainer from the corpus directory with the exact command
+recorded in `corpus.aktreader.json`; it has no server address, credentials, source-project paths,
+or network requirement.
+
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
 

@@ -58,6 +58,7 @@ from aktreader.grounding import (
     paired_quality_metrics,
     validate_cross_reader_grounding,
 )
+from aktreader.htr_corpus import assemble_consented_training_corpus
 from aktreader.installation import inspect_application_checkout
 from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.local_reader import LocalReader, LocalReaderError
@@ -360,6 +361,23 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=Path,
         help="new local bundle directory outside the project",
+    )
+
+    htr_corpus = subparsers.add_parser(
+        "htr-build-corpus",
+        help="assemble current-consent local PAGE XML into explicit Kraken data splits",
+    )
+    htr_corpus.add_argument(
+        "--plan",
+        required=True,
+        type=Path,
+        help="local JSON plan listing project imports and their fixed splits",
+    )
+    htr_corpus.add_argument(
+        "--output-directory",
+        required=True,
+        type=Path,
+        help="new local corpus directory outside every source project",
     )
 
     workbench = subparsers.add_parser(
@@ -903,6 +921,24 @@ def _command_project_export_consented_training_pagexml(args: argparse.Namespace)
     _emit_json(report)
     return 0
 
+
+def _command_htr_build_corpus(args: argparse.Namespace) -> int:
+    plan = local_input_path(args.plan, role="HTR corpus plan")
+    if not plan.is_file():
+        raise CliConfigurationError(f"HTR corpus plan is not a file: {plan}")
+    output_directory = local_output_path(
+        args.output_directory,
+        role="HTR training corpus directory",
+    )
+    if output_directory.exists():
+        raise CliConfigurationError(
+            f"HTR training corpus directory already exists: {output_directory}"
+        )
+    report = assemble_consented_training_corpus(plan, output_directory)
+    _emit_json(report)
+    return 0
+
+
 def _command_workbench(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1367,6 +1403,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-export-consented-training-pagexml": (
             _command_project_export_consented_training_pagexml
         ),
+        "htr-build-corpus": _command_htr_build_corpus,
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,

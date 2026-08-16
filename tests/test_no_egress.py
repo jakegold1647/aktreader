@@ -578,3 +578,100 @@ def test_consented_training_bundle_export_runs_with_sockets_disabled(
     assert payload["status"] == "SUCCEEDED"
     assert payload["network_required"] is False
     assert (bundle / "bundle.aktreader.json").is_file()
+
+
+def test_htr_corpus_assembly_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    def ready_project(name: str, text: str) -> tuple[Path, str]:
+        source_root = tmp_path / f"{name}-source"
+        source_root.mkdir()
+        image = source_root / "page.png"
+        Image.new("L", (20, 20), color=255).save(image)
+        source = source_root / "page.xml"
+        source.write_text(
+            f"""<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>{text}</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+            encoding="utf-8",
+        )
+        project = tmp_path / f"{name}.aktproj"
+        assert main(["project-create", str(project), "--name", name]) == 0
+        capsys.readouterr()
+        assert main(["project-import-pagexml", str(project), str(source)]) == 0
+        imported = json.loads(capsys.readouterr().out)
+        line = load_project_page(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            page_index=0,
+        )["lines"][0]
+        revise_line_transcription(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            source_span_id=line["source_span_id"],
+            text=f"{text} reviewed",
+            editor="local-user",
+        )
+        grant_training_consent(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            contributor="local-user",
+            all_human_revised=True,
+        )
+        return project, imported["manifest_sha256"]
+
+    train_project, train_manifest = ready_project("train", "Александр")
+    validation_project, validation_manifest = ready_project("validation", "Екатерина")
+    plan = tmp_path / "corpus-plan.json"
+    plan.write_text(
+        json.dumps(
+            {
+                "contract": {
+                    "name": "aktreader-local-htr-corpus-plan",
+                    "version": "1.0.0",
+                },
+                "inputs": [
+                    {
+                        "project": str(train_project),
+                        "manifest_sha256": train_manifest,
+                        "split": "train",
+                    },
+                    {
+                        "project": str(validation_project),
+                        "manifest_sha256": validation_manifest,
+                        "split": "validation",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    corpus = tmp_path / "corpus"
+
+    exit_code = main(
+        [
+            "htr-build-corpus",
+            "--plan",
+            str(plan),
+            "--output-directory",
+            str(corpus),
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "SUCCEEDED"
+    assert payload["network_required"] is False
+    assert (corpus / "train.lst").is_file()
+    assert (corpus / "validation.lst").is_file()
