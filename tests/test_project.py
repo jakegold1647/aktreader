@@ -261,6 +261,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE review_proposals")
             connection.execute("DROP TABLE training_split_assignments")
             connection.execute("DROP TABLE training_consent_revocations")
             connection.execute("DROP TABLE training_consent_grants")
@@ -543,6 +544,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE review_proposals")
             connection.execute("DROP TABLE training_split_assignments")
             connection.execute("DROP TABLE training_consent_revocations")
             connection.execute("DROP TABLE training_consent_grants")
@@ -638,6 +640,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE review_proposals")
             connection.execute("DROP TABLE training_split_assignments")
             connection.execute("PRAGMA user_version = 4")
     finally:
