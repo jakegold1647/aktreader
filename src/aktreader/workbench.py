@@ -16,6 +16,7 @@ from aktreader.project import (
     ProjectStoreError,
     list_project_pages,
     load_project_page,
+    resolve_review_proposal,
     revise_line_transcription,
 )
 
@@ -105,9 +106,16 @@ class LocalWorkbench:
             wraplength=360,
         )
         self.suggestion_label.grid(row=4, column=0, pady=(8, 0), sticky="ew")
+        self.review_label = self.ttk.Label(
+            side,
+            justify="left",
+            text="No pending reviewer proposal for the selected line",
+            wraplength=360,
+        )
+        self.review_label.grid(row=5, column=0, pady=(6, 0), sticky="ew")
         controls = self.ttk.Frame(side)
-        controls.grid(row=5, column=0, pady=(8, 0), sticky="ew")
-        controls.columnconfigure(2, weight=1)
+        controls.grid(row=6, column=0, pady=(8, 0), sticky="ew")
+        controls.columnconfigure(3, weight=1)
         self.save_button = self.ttk.Button(
             controls,
             text="Save human revision",
@@ -121,8 +129,15 @@ class LocalWorkbench:
             text="Use engine suggestion",
         )
         self.use_suggestion_button.grid(row=0, column=1, padx=(8, 0), sticky="w")
+        self.accept_review_button = self.ttk.Button(
+            controls,
+            command=self._accept_review_proposal,
+            state="disabled",
+            text="Accept reviewer proposal",
+        )
+        self.accept_review_button.grid(row=0, column=2, padx=(8, 0), sticky="w")
         self.status = self.ttk.Label(controls, text="Local-only; source XML is never overwritten")
-        self.status.grid(row=0, column=2, padx=(12, 0), sticky="w")
+        self.status.grid(row=0, column=3, padx=(12, 0), sticky="w")
 
     def _on_page_changed(self, _event: Any) -> None:
         index = self.page_selector.current()
@@ -235,6 +250,24 @@ class LocalWorkbench:
         else:
             self.suggestion_label.configure(text="No engine suggestion for the selected line")
             self.use_suggestion_button.configure(state="disabled")
+        reviews = list(line["review_proposals"])
+        pending = next((review for review in reviews if review["state"] == "PENDING"), None)
+        if pending is not None:
+            preview = str(pending["text"]).replace("\n", " ")[:96]
+            self.review_label.configure(
+                text=f"Reviewer {pending['contributor']} proposal: {preview}"
+            )
+            self.accept_review_button.configure(state="normal")
+        elif reviews:
+            self.review_label.configure(
+                text="Reviewer proposal is stale; compare it manually before revising"
+            )
+            self.accept_review_button.configure(state="disabled")
+        else:
+            self.review_label.configure(
+                text="No pending reviewer proposal for the selected line"
+            )
+            self.accept_review_button.configure(state="disabled")
         self.canvas.itemconfigure("line-box", outline="#f6ad55")
         self.canvas.itemconfigure(f"line:{line['source_span_id']}", outline="#68d391")
 
@@ -251,6 +284,43 @@ class LocalWorkbench:
         self.status.configure(
             text="Engine suggestion copied to editor; review it, then save a human revision"
         )
+
+    def _accept_review_proposal(self) -> None:
+        selected = self.line_list.curselection()
+        if not selected:
+            return
+        line = self.current_lines[int(selected[0])]
+        proposal = next(
+            (
+                value
+                for value in line["review_proposals"]
+                if value["state"] == "PENDING"
+            ),
+            None,
+        )
+        if proposal is None:
+            return
+        editor = self.editor.get().strip()
+        try:
+            result = resolve_review_proposal(
+                self.project,
+                proposal_sha256=str(proposal["proposal_sha256"]),
+                decision="accept",
+                editor=editor,
+            )
+        except ProjectStoreError as error:
+            self.messagebox.showerror("AKT Reader", str(error))
+            return
+        self.status.configure(
+            text=(
+                "Reviewer proposal became stale; compare it manually"
+                if result["status"] == "CONFLICT"
+                else f"Accepted reviewer proposal as human revision {result['revision']}"
+            )
+        )
+        page_index = self.page_selector.current()
+        self._show_page(page_index)
+        self._select_span(str(line["source_span_id"]))
 
     def _save_revision(self) -> None:
         if self.current_page is None:
