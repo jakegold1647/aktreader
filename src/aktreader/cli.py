@@ -484,7 +484,8 @@ def _command_pagexml_import(args: argparse.Namespace) -> int:
         raise CliConfigurationError("PAGE XML import manifest must not overwrite the XML source")
     if output.exists() and not args.replace_existing:
         raise CliConfigurationError(
-            "PAGE XML import manifest already exists; pass --replace-existing to replace "\n            "it atomically"
+            "PAGE XML import manifest already exists; pass --replace-existing to replace "
+            "it atomically"
         )
     manifest = import_pagexml(source, image_root=image_root)
     atomic_write_json(output, manifest)
