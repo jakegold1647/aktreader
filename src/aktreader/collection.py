@@ -501,7 +501,7 @@ def search_collection(
                 document_index.tags_json
             FROM text_index
             JOIN projects ON projects.project_id = text_index.project_id
-            JOIN document_index
+            LEFT JOIN document_index
                 ON document_index.project_id = text_index.project_id
                 AND document_index.manifest_sha256 = text_index.manifest_sha256
             ORDER BY projects.project_name, text_index.manifest_sha256,
@@ -524,7 +524,7 @@ def search_collection(
             "revision": row[9],
             "document_id": row[10],
             "document_title": row[11],
-            "document_tags": _decode_tags(row[12]),
+            "document_tags": _decode_tags(row[12]) if row[12] is not None else [],
         }
         for row in rows
         if needle in row[8].casefold()
