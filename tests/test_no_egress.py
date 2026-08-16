@@ -1,9 +1,11 @@
 """No-egress guard: "local-only" as an executable assertion, not a promise.
 
 Static half: every module under ``src/aktreader`` is parsed and its imports are
-checked against a blocklist of networking-capable modules, and the declared
-runtime dependency set is pinned, so a network client cannot arrive - directly
-or transitively - without this file changing in the same review.
+checked against a blocklist of networking-capable modules. The one reviewed
+exception is the explicitly started, loopback-only browser workbench; its exact
+imports are scoped to its one module below. The declared runtime dependency set
+is pinned, so an egress-capable client cannot arrive without this file changing
+in the same review.
 
 Runtime half: representative CLI paths run with socket creation forcibly
 disabled at the ``socket`` module level. The static half proves the package
@@ -67,9 +69,19 @@ BLOCKED_TOP_LEVEL = frozenset(
     }
 )
 
-# Exact dotted imports permitted despite a blocked top level (none today;
-# e.g. "urllib.parse" would belong here if a module ever needs URL parsing).
-ALLOWED_EXACT: frozenset[str] = frozenset()
+# The browser workbench creates a loopback listener only after the explicit
+# `serve` command. Keep these networking imports scoped to that module: no
+# other package module may import them, and socket-level local-only tests still
+# cover every regular CLI path.
+LOOPBACK_ONLY_IMPORTS: dict[str, frozenset[str]] = {
+    "src/aktreader/web_workbench.py": frozenset(
+        {
+            "http",
+            "http.server",
+            "urllib.parse",
+        }
+    )
+}
 
 # The reviewed local-only runtime dependency set (see dependency-licenses.json
 # for the full transitive license inventory). Neither package opens sockets.
@@ -90,11 +102,12 @@ def test_package_imports_no_networking_modules() -> None:
     violations: list[str] = []
     for source in sorted(PACKAGE_ROOT.rglob("*.py")):
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        relative = source.relative_to(ROOT)
+        allowed_for_source = LOOPBACK_ONLY_IMPORTS.get(relative.as_posix(), frozenset())
         for lineno, name in _imported_names(tree):
-            if name in ALLOWED_EXACT:
+            if name in allowed_for_source:
                 continue
             if name.split(".")[0] in BLOCKED_TOP_LEVEL:
-                relative = source.relative_to(ROOT)
                 violations.append(f"{relative}:{lineno}: imports {name}")
 
     assert violations == []

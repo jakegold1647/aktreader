@@ -103,6 +103,7 @@ from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
 from aktreader.verification import CHECK_NAMES, verify_application_checkout
+from aktreader.web_workbench import create_self_hosted_workbench_server
 from aktreader.workbench import launch_workbench
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -641,6 +642,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="open the local image-and-line transcription workbench",
     )
     workbench.add_argument("project", type=Path, help="local .aktproj directory")
+
+    serve = subparsers.add_parser(
+        "serve",
+        help="serve one local project in a loopback-only browser workbench",
+    )
+    serve.add_argument("project", type=Path, help="local .aktproj directory")
+    serve.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="loopback TCP port from 0 to 65535 (default: 8765)",
+    )
 
     pagexml = subparsers.add_parser(
         "pagexml-import",
@@ -1426,6 +1439,27 @@ def _command_workbench(args: argparse.Namespace) -> int:
     launch_workbench(project)
     return 0
 
+def _command_serve(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    server = create_self_hosted_workbench_server(project, port=args.port)
+    _emit_json(
+        {
+            "status": "SERVING",
+            "project": str(project),
+            "url": server.url,
+            "bind_address": "127.0.0.1",
+            "network_required": False,
+        }
+    )
+    try:
+        server.serve_forever(poll_interval=0.5)
+    finally:
+        server.server_close()
+    return 0
+
+
 def _command_pagexml_import(args: argparse.Namespace) -> int:
     source = local_input_path(args.source, role="PAGE XML source")
     if not source.is_file():
@@ -1962,6 +1996,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "htr-build-corpus": _command_htr_build_corpus,
         "htr-inspect-corpus": _command_htr_inspect_corpus,
         "workbench": _command_workbench,
+        "serve": _command_serve,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
         "reader-inspect": _command_reader_inspect,
