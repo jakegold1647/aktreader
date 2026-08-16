@@ -144,7 +144,8 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
-`project-import-pagexml`, `workbench`, `pagexml-import`, `consensus-merge`, `reader-inspect`,
+`project-import-pagexml`, `project-import-htr-suggestions`, `workbench`, `pagexml-import`,
+`consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
 `eval`. To run the repository's built-in
 reader comparison without supplying scans or model files:
@@ -200,8 +201,8 @@ The manifest hashes the XML and each page image, preserves PAGE page/region/line
 and baselines, captures explicit reading order when present, and records the selected `TextEquiv`
 text without fabricating missing transcription. An owner can run the separately provisioned,
 checksum-pinned [local Kraken PAGE XML adapter](docs/local-kraken.md) against that same geometry;
-its output remains a separate engine proposal until a human reviews it. The current reader-label
-schema remains unchanged; a later schema revision will bind observation spans to these immutable line locators.
+its output can be imported as aligned, versioned project suggestions but remains separate until a
+human reviews it. The current reader-label schema remains unchanged; a later schema revision will bind observation spans to these immutable line locators.
 
 The generic [Reader configuration](examples/local-reader.config.example.json) intentionally
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
