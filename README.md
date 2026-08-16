@@ -33,6 +33,8 @@ New to the project? Start with the [AKT Reader glossary](docs/GLOSSARY.md) for t
   adjudication packets, resumable batch execution, privacy preflight, and SerockBench metrics.
 - A local PAGE XML import foundation that hashes supplied page images and preserves page, region,
   line, polygon, baseline, reading-order, and transcription provenance in a deterministic manifest.
+- An experimental local `.aktproj` store with a SQLite index and content-addressed copies of
+  PAGE XML and page images; no server, account, or network connection is involved.
 - A 36-record evaluation corpus, frozen prompts and schemas, provenance manifests, and a
   documented failure history.
 
@@ -140,9 +142,10 @@ holdout separation.
 It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
-The CLI also provides `label-validate`, `pagexml-import`, `consensus-merge`, `reader-inspect`,
-`reader-infer`, `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in
-reader comparison without supplying scans or model files:
+The CLI also provides `label-validate`, `project-create`, `project-inspect`,
+`project-import-pagexml`, `pagexml-import`, `consensus-merge`, `reader-inspect`, `reader-infer`,
+`batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in reader
+comparison without supplying scans or model files:
 
 ```powershell
 python -m aktreader compare labels/readerA labels/readerB `
@@ -152,6 +155,21 @@ python -m aktreader compare labels/readerA labels/readerB `
 
 See [local comparisons](docs/comparisons.md). `reader-infer` and `batch-run` execute local
 inference; the other commands validate or process existing artifacts.
+
+### Local projects
+
+Create a project before importing material that should remain available to the future desktop
+workbench. Importing copies the XML and its named page images into the project by SHA-256, while
+the stored manifest retains the original local paths for provenance.
+
+```powershell
+python -m aktreader project-create serock.aktproj --name "Serock births"
+python -m aktreader project-import-pagexml serock.aktproj page.xml --image-root .
+python -m aktreader project-inspect serock.aktproj
+```
+
+Projects are intentionally local-only and contain no training consent. Importing source material
+does not make it training data or publishable data.
 
 ### PAGE XML import
 
