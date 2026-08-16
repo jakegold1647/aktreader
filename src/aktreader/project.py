@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 7
+PROJECT_DATABASE_VERSION = 8
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 7;
+                PRAGMA user_version = 8;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -244,6 +244,18 @@ def _initialize_database(path: Path) -> None:
                     PRIMARY KEY (manifest_sha256, source_span_id, revision),
                     FOREIGN KEY (manifest_sha256, source_span_id)
                         REFERENCES lines(manifest_sha256, source_span_id)
+                );
+                CREATE TABLE page_reading_order_revisions (
+                    manifest_sha256 TEXT NOT NULL REFERENCES pagexml_imports(manifest_sha256),
+                    page_index INTEGER NOT NULL CHECK (page_index >= 0),
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    prior_region_ids_json TEXT NOT NULL,
+                    region_ids_json TEXT NOT NULL,
+                    editor TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (manifest_sha256, page_index, revision),
+                    FOREIGN KEY (manifest_sha256, page_index)
+                        REFERENCES pages(manifest_sha256, page_index)
                 );
                 """
             )
@@ -410,6 +422,28 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 7
+
+        if version == 7:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE page_reading_order_revisions (
+                        manifest_sha256 TEXT NOT NULL
+                            REFERENCES pagexml_imports(manifest_sha256),
+                        page_index INTEGER NOT NULL CHECK (page_index >= 0),
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        prior_region_ids_json TEXT NOT NULL,
+                        region_ids_json TEXT NOT NULL,
+                        editor TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (manifest_sha256, page_index, revision),
+                        FOREIGN KEY (manifest_sha256, page_index)
+                            REFERENCES pages(manifest_sha256, page_index)
+                    );
+                    PRAGMA user_version = 8;
+                    """
+                )
+            version = 8
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
@@ -960,6 +994,42 @@ def _replace_text_equiv(line: ET.Element, text: str) -> None:
     unicode.text = text
 
 
+
+def _replace_page_reading_order(page: ET.Element, region_ids: Sequence[str]) -> None:
+    source_region_ids: list[str] = []
+    for element in page.iter():
+        if _xml_local_name(element) != "TextRegion":
+            continue
+        region_id = element.get("id")
+        if not isinstance(region_id, str) or not region_id.strip():
+            raise ProjectStoreError("stored PAGE XML TextRegion is missing an ID")
+        source_region_ids.append(region_id.strip())
+    if (
+        len(source_region_ids) != len(set(source_region_ids))
+        or len(region_ids) != len(source_region_ids)
+        or len(set(region_ids)) != len(region_ids)
+        or set(region_ids) != set(source_region_ids)
+    ):
+        raise ProjectStoreError(
+            "stored PAGE XML regions no longer match the project's reading-order revision"
+        )
+    for child in list(page):
+        if _xml_local_name(child) == "ReadingOrder":
+            page.remove(child)
+    reading_order = ET.Element(_xml_tag_like(page, "ReadingOrder"))
+    ordered_group = ET.SubElement(
+        reading_order,
+        _xml_tag_like(reading_order, "OrderedGroup"),
+        {"id": "aktreader-revised-reading-order"},
+    )
+    for index, region_id in enumerate(region_ids):
+        ET.SubElement(
+            ordered_group,
+            _xml_tag_like(ordered_group, "RegionRefIndexed"),
+            {"index": str(index), "regionRef": region_id},
+        )
+    page.insert(0, reading_order)
+
 def export_human_pagexml(
     project: Path | str,
     output: Path | str,
@@ -1048,6 +1118,21 @@ def export_human_pagexml(
             """,
             (manifest_sha256,),
         ).fetchall()
+        reading_order_rows = connection.execute(
+            """
+            SELECT page_index, region_ids_json
+            FROM page_reading_order_revisions
+            WHERE manifest_sha256 = ?
+              AND revision = (
+                    SELECT MAX(latest.revision)
+                    FROM page_reading_order_revisions AS latest
+                    WHERE latest.manifest_sha256 = page_reading_order_revisions.manifest_sha256
+                      AND latest.page_index = page_reading_order_revisions.page_index
+              )
+            ORDER BY page_index
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project revisions for export: {error}") from error
     finally:
@@ -1100,6 +1185,30 @@ def export_human_pagexml(
             raise ProjectStoreError(f"project contains duplicate geometry locator {key!r}")
         geometries[key] = polygon, baseline
 
+    reading_orders: dict[int, list[str]] = {}
+    for page_index, region_ids_json in reading_order_rows:
+        try:
+            region_ids = json.loads(region_ids_json)
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError(
+                f"stored reading order is unreadable for project page {page_index}"
+            ) from error
+        if (
+            not isinstance(page_index, int)
+            or not isinstance(region_ids, list)
+            or any(
+                not isinstance(region_id, str) or not region_id.strip()
+                for region_id in region_ids
+            )
+            or len(region_ids) != len(set(region_ids))
+        ):
+            raise ProjectStoreError(
+                f"stored reading order is invalid for project page {page_index}"
+            )
+        if page_index in reading_orders:
+            raise ProjectStoreError(f"project contains duplicate reading order page {page_index}")
+        reading_orders[page_index] = region_ids
+
     source_bytes = source_path.read_bytes()
     if _FORBIDDEN_PAGE_XML_DECLARATION.search(source_bytes):
         raise ProjectStoreError("stored PAGE XML contains a forbidden XML declaration")
@@ -1110,6 +1219,7 @@ def export_human_pagexml(
     pages = [element for element in document.iter() if _xml_local_name(element) == "Page"]
     seen: set[tuple[int, str, str]] = set()
     seen_geometries: set[tuple[int, str, str]] = set()
+    seen_reading_orders: set[int] = set()
     for page_index, page in enumerate(pages):
         raw_page_id = page.get("id")
         page_id = raw_page_id.strip() if isinstance(raw_page_id, str) and raw_page_id.strip() else (
@@ -1134,6 +1244,10 @@ def export_human_pagexml(
                     baseline=geometry[1],
                 )
                 seen_geometries.add(key)
+        region_ids = reading_orders.get(page_index)
+        if region_ids is not None:
+            _replace_page_reading_order(page, region_ids)
+            seen_reading_orders.add(page_index)
     missing = sorted(set(revisions) - seen)
     if missing:
         raise ProjectStoreError(
@@ -1145,6 +1259,12 @@ def export_human_pagexml(
         raise ProjectStoreError(
             "stored PAGE XML no longer matches the project's geometry locators: "
             f"{missing_geometries[0]!r}"
+        )
+    missing_reading_orders = sorted(set(reading_orders) - seen_reading_orders)
+    if missing_reading_orders:
+        raise ProjectStoreError(
+            "stored PAGE XML no longer has project page "
+            f"{missing_reading_orders[0]} for its reading-order revision"
         )
 
     rendered = ET.tostring(document, encoding="utf-8", xml_declaration=True)
@@ -1158,6 +1278,7 @@ def export_human_pagexml(
         "output_sha256": hashlib.sha256(rendered).hexdigest(),
         "human_revision_count": len(revisions),
         "line_geometry_revision_count": len(geometries),
+        "page_reading_order_revision_count": len(reading_orders),
         "network_required": False,
     }
 
@@ -2181,6 +2302,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         line_geometry_revision_count = connection.execute(
             "SELECT COUNT(*) FROM line_geometry_revisions"
         ).fetchone()[0]
+        page_reading_order_revision_count = connection.execute(
+            "SELECT COUNT(*) FROM page_reading_order_revisions"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2201,6 +2325,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "training_split_assignment_count": training_split_assignment_count,
         "review_proposal_count": review_proposal_count,
         "line_geometry_revision_count": line_geometry_revision_count,
+        "page_reading_order_revision_count": page_reading_order_revision_count,
         "network_required": False,
     }
 
@@ -2871,6 +2996,205 @@ def revise_line_geometry(
         "network_required": False,
     }
 
+
+
+def _stored_page_region_order(
+    root: Path,
+    connection: sqlite3.Connection,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+) -> list[str]:
+    row = connection.execute(
+        """
+        SELECT manifest_relative_path
+        FROM pagexml_imports
+        WHERE manifest_sha256 = ?
+        """,
+        (manifest_sha256,),
+    ).fetchone()
+    if row is None:
+        raise ProjectStoreError("project PAGE XML import was not found")
+    relative_path = row[0]
+    if not isinstance(relative_path, str):
+        raise ProjectStoreError("project import manifest path is invalid")
+    manifest_path = (root / relative_path).resolve()
+    if root not in manifest_path.parents or not manifest_path.is_file():
+        raise ProjectStoreError("project import manifest is missing or outside the project")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ProjectStoreError("project import manifest is unreadable") from error
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("pages"), list):
+        raise ProjectStoreError("project import manifest is invalid")
+    page = next(
+        (
+            item
+            for item in manifest["pages"]
+            if isinstance(item, dict) and item.get("page_index") == page_index
+        ),
+        None,
+    )
+    if page is None:
+        raise ProjectStoreError("project page was not found in its import manifest")
+    regions = page.get("regions")
+    reading_order = page.get("reading_order")
+    if not isinstance(regions, list) or not isinstance(reading_order, dict):
+        raise ProjectStoreError("project page regions or reading order are invalid")
+    source_region_ids: list[str] = []
+    for region in regions:
+        if not isinstance(region, dict):
+            raise ProjectStoreError("project page region is invalid")
+        region_id = region.get("region_id")
+        if not isinstance(region_id, str) or not region_id.strip():
+            raise ProjectStoreError("project page region ID is invalid")
+        source_region_ids.append(region_id)
+    region_ids = reading_order.get("region_ids")
+    if (
+        not isinstance(region_ids, list)
+        or any(not isinstance(region_id, str) or not region_id.strip() for region_id in region_ids)
+        or len(region_ids) != len(source_region_ids)
+        or len(set(region_ids)) != len(region_ids)
+        or set(region_ids) != set(source_region_ids)
+    ):
+        raise ProjectStoreError("project page reading order is invalid")
+    return list(region_ids)
+
+
+def _validated_region_order(
+    region_ids: Sequence[str],
+    *,
+    expected_region_ids: Sequence[str],
+) -> list[str]:
+    if isinstance(region_ids, (str, bytes)) or not isinstance(region_ids, Sequence):
+        raise ProjectStoreError("region_ids must be a sequence of imported PAGE XML region IDs")
+    normalized: list[str] = []
+    for position, region_id in enumerate(region_ids):
+        if (
+            not isinstance(region_id, str)
+            or not region_id.strip()
+            or region_id != region_id.strip()
+        ):
+            raise ProjectStoreError(f"region_ids[{position}] must be a nonblank exact region ID")
+        normalized.append(region_id)
+    if (
+        len(normalized) != len(expected_region_ids)
+        or len(set(normalized)) != len(normalized)
+        or set(normalized) != set(expected_region_ids)
+    ):
+        raise ProjectStoreError(
+            "region_ids must be an exact permutation of the imported PAGE XML regions"
+        )
+    return normalized
+
+
+def revise_page_reading_order(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+    region_ids: Sequence[str],
+    editor: str,
+) -> dict[str, object]:
+    """Append an audited page-region order revision without altering source XML."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+        raise ProjectStoreError("page_index must be a non-negative integer")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("reading-order editor must be a nonblank string")
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            source_region_ids = _stored_page_region_order(
+                root,
+                connection,
+                manifest_sha256=manifest_sha256,
+                page_index=page_index,
+            )
+            revised_region_ids = _validated_region_order(
+                region_ids,
+                expected_region_ids=source_region_ids,
+            )
+            page = connection.execute(
+                """
+                SELECT 1
+                FROM pages
+                WHERE manifest_sha256 = ? AND page_index = ?
+                """,
+                (manifest_sha256, page_index),
+            ).fetchone()
+            if page is None:
+                raise ProjectStoreError("project page was not found")
+            latest = connection.execute(
+                """
+                SELECT revision, region_ids_json
+                FROM page_reading_order_revisions
+                WHERE manifest_sha256 = ? AND page_index = ?
+                ORDER BY revision DESC
+                LIMIT 1
+                """,
+                (manifest_sha256, page_index),
+            ).fetchone()
+            if latest is None:
+                current_revision = 0
+                prior_region_ids = source_region_ids
+            else:
+                current_revision = int(latest[0])
+                try:
+                    prior_region_ids = json.loads(latest[1])
+                except (TypeError, json.JSONDecodeError) as error:
+                    raise ProjectStoreError("stored page reading order is unreadable") from error
+                prior_region_ids = _validated_region_order(
+                    prior_region_ids,
+                    expected_region_ids=source_region_ids,
+                )
+            if _canonical_json(prior_region_ids) == _canonical_json(revised_region_ids):
+                return {
+                    "status": "UNCHANGED",
+                    "project": str(root),
+                    "manifest_sha256": manifest_sha256,
+                    "page_index": page_index,
+                    "revision": current_revision,
+                    "region_ids": revised_region_ids,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
+            connection.execute(
+                """
+                INSERT INTO page_reading_order_revisions (
+                    manifest_sha256, page_index, revision, prior_region_ids_json,
+                    region_ids_json, editor, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    page_index,
+                    revision,
+                    _canonical_json(prior_region_ids),
+                    _canonical_json(revised_region_ids),
+                    editor.strip(),
+                    _timestamp(),
+                ),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot save page reading order revision: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "SAVED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "page_index": page_index,
+        "revision": revision,
+        "prior_region_ids": prior_region_ids,
+        "region_ids": revised_region_ids,
+        "editor": editor.strip(),
+        "network_required": False,
+    }
 
 def _replace_line_geometry(
     line: ET.Element,
