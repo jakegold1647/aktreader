@@ -201,8 +201,7 @@ and baselines, captures explicit reading order when present, and records the sel
 text without fabricating missing transcription. An owner can run the separately provisioned,
 checksum-pinned [local Kraken PAGE XML adapter](docs/local-kraken.md) against that same geometry;
 its output remains a separate engine proposal until a human reviews it. The current reader-label
-schema remains unchanged;
-a later schema revision will bind observation spans to these immutable line locators.
+schema remains unchanged; a later schema revision will bind observation spans to these immutable line locators.
 
 The generic [Reader configuration](examples/local-reader.config.example.json) intentionally
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
