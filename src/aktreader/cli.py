@@ -921,6 +921,7 @@ def _command_project_export_consented_training_pagexml(args: argparse.Namespace)
     _emit_json(report)
     return 0
 
+
 def _command_htr_build_corpus(args: argparse.Namespace) -> int:
     plan = local_input_path(args.plan, role="HTR corpus plan")
     if not plan.is_file():
