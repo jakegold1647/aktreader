@@ -86,6 +86,7 @@ from aktreader.project import (
     resolve_review_proposal,
     revise_line_geometry,
     revise_page_reading_order,
+    revise_region_geometry,
     revoke_training_consent,
     training_readiness,
 )
@@ -291,6 +292,43 @@ def build_parser() -> argparse.ArgumentParser:
         "--editor",
         required=True,
         help="local editor recording the reading-order revision",
+    )
+
+    project_region_geometry = subparsers.add_parser(
+        "project-revise-region-geometry",
+        help="append one validated local TextRegion polygon revision",
+    )
+    project_region_geometry.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_region_geometry.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_region_geometry.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+    project_region_geometry.add_argument(
+        "--region-id",
+        required=True,
+        help="exact PAGE XML TextRegion ID",
+    )
+    project_region_geometry.add_argument(
+        "--geometry",
+        required=True,
+        type=Path,
+        help="strict local JSON object with a polygon field",
+    )
+    project_region_geometry.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the region geometry revision",
     )
 
     project_export_review = subparsers.add_parser(
@@ -1042,6 +1080,29 @@ def _command_project_revise_page_reading_order(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_revise_region_geometry(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    geometry_path = local_input_path(args.geometry, role="region geometry")
+    if not project.is_dir() or not geometry_path.is_file():
+        raise CliConfigurationError(
+            "region geometry revision requires a project and JSON file"
+        )
+    geometry = load_strict_json(geometry_path, role="region geometry")
+    if not isinstance(geometry, dict) or set(geometry) != {"polygon"}:
+        raise CliConfigurationError("region geometry must have exactly a polygon field")
+    _emit_json(
+        revise_region_geometry(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+            region_id=args.region_id,
+            polygon=geometry["polygon"],
+            editor=args.editor,
+        )
+    )
+    return 0
+
+
 def _command_project_export_review_package(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1750,6 +1811,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-export-pagexml": _command_project_export_pagexml,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
         "project-revise-page-reading-order": _command_project_revise_page_reading_order,
+        "project-revise-region-geometry": _command_project_revise_region_geometry,
         "project-export-review-package": _command_project_export_review_package,
         "project-import-review-package": _command_project_import_review_package,
         "project-resolve-review-proposal": _command_project_resolve_review_proposal,
