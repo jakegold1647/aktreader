@@ -6,15 +6,13 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 from aktreader.gold import GoldValidationError, validate_gold_record
-from aktreader.labels import (
-    EVIDENCE_KEYS as LABEL_EVIDENCE_KEYS,
-    LabelValidationError,
-    OBSERVATION_STATES as LABEL_OBSERVATION_STATES,
-    parse_canonical_reader_label,
-)
+from aktreader.labels import EVIDENCE_KEYS as LABEL_EVIDENCE_KEYS
+from aktreader.labels import OBSERVATION_STATES as LABEL_OBSERVATION_STATES
+from aktreader.labels import LabelValidationError, parse_canonical_reader_label
 
 ROOT = Path(__file__).resolve().parents[1]
 READER_B = ROOT / "labels" / "readerB" / "serock-1890-death-1.json"
