@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 8
+PROJECT_DATABASE_VERSION = 9
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 8;
+                PRAGMA user_version = 9;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -254,6 +254,19 @@ def _initialize_database(path: Path) -> None:
                     editor TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     PRIMARY KEY (manifest_sha256, page_index, revision),
+                    FOREIGN KEY (manifest_sha256, page_index)
+                        REFERENCES pages(manifest_sha256, page_index)
+                );
+                CREATE TABLE region_geometry_revisions (
+                    manifest_sha256 TEXT NOT NULL REFERENCES pagexml_imports(manifest_sha256),
+                    page_index INTEGER NOT NULL CHECK (page_index >= 0),
+                    region_id TEXT NOT NULL,
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    prior_polygon_json TEXT NOT NULL,
+                    polygon_json TEXT NOT NULL,
+                    editor TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (manifest_sha256, page_index, region_id, revision),
                     FOREIGN KEY (manifest_sha256, page_index)
                         REFERENCES pages(manifest_sha256, page_index)
                 );
@@ -444,6 +457,29 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 8
+
+        if version == 8:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE region_geometry_revisions (
+                        manifest_sha256 TEXT NOT NULL
+                            REFERENCES pagexml_imports(manifest_sha256),
+                        page_index INTEGER NOT NULL CHECK (page_index >= 0),
+                        region_id TEXT NOT NULL,
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        prior_polygon_json TEXT NOT NULL,
+                        polygon_json TEXT NOT NULL,
+                        editor TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (manifest_sha256, page_index, region_id, revision),
+                        FOREIGN KEY (manifest_sha256, page_index)
+                            REFERENCES pages(manifest_sha256, page_index)
+                    );
+                    PRAGMA user_version = 9;
+                    """
+                )
+            version = 9
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
@@ -995,6 +1031,16 @@ def _replace_text_equiv(line: ET.Element, text: str) -> None:
 
 
 
+
+def _replace_region_geometry(region: ET.Element, *, polygon: list[list[int]]) -> None:
+    coords = next(
+        (child for child in region if _xml_local_name(child) == "Coords"),
+        None,
+    )
+    if coords is None:
+        raise ProjectStoreError("stored PAGE XML TextRegion is missing Coords")
+    coords.set("points", " ".join(f"{x},{y}" for x, y in polygon))
+
 def _replace_page_reading_order(page: ET.Element, region_ids: Sequence[str]) -> None:
     source_region_ids: list[str] = []
     for element in page.iter():
@@ -1133,6 +1179,30 @@ def export_human_pagexml(
             """,
             (manifest_sha256,),
         ).fetchall()
+        region_geometry_rows = connection.execute(
+            """
+            SELECT
+                region_geometry_revisions.page_index,
+                region_geometry_revisions.region_id,
+                region_geometry_revisions.polygon_json,
+                pages.width_px,
+                pages.height_px
+            FROM region_geometry_revisions
+            JOIN pages
+                ON pages.manifest_sha256 = region_geometry_revisions.manifest_sha256
+               AND pages.page_index = region_geometry_revisions.page_index
+            WHERE region_geometry_revisions.manifest_sha256 = ?
+              AND region_geometry_revisions.revision = (
+                    SELECT MAX(latest.revision)
+                    FROM region_geometry_revisions AS latest
+                    WHERE latest.manifest_sha256 = region_geometry_revisions.manifest_sha256
+                      AND latest.page_index = region_geometry_revisions.page_index
+                      AND latest.region_id = region_geometry_revisions.region_id
+              )
+            ORDER BY region_geometry_revisions.page_index, region_geometry_revisions.region_id
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project revisions for export: {error}") from error
     finally:
@@ -1209,6 +1279,32 @@ def export_human_pagexml(
             raise ProjectStoreError(f"project contains duplicate reading order page {page_index}")
         reading_orders[page_index] = region_ids
 
+    region_geometries: dict[tuple[int, str], list[list[int]]] = {}
+    for page_index, region_id, polygon_json, width, height in region_geometry_rows:
+        try:
+            polygon = json.loads(polygon_json)
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError(
+                f"stored region geometry is unreadable for project region {region_id!r}"
+            ) from error
+        if (
+            not isinstance(page_index, int)
+            or not isinstance(region_id, str)
+            or not region_id.strip()
+        ):
+            raise ProjectStoreError("stored region geometry locator is invalid")
+        revised_polygon = _validated_points(
+            polygon,
+            role=f"stored region geometry {region_id!r}",
+            width=int(width),
+            height=int(height),
+            allow_none=False,
+        )
+        key = (page_index, region_id)
+        if key in region_geometries:
+            raise ProjectStoreError(f"project contains duplicate region geometry locator {key!r}")
+        region_geometries[key] = revised_polygon
+
     source_bytes = source_path.read_bytes()
     if _FORBIDDEN_PAGE_XML_DECLARATION.search(source_bytes):
         raise ProjectStoreError("stored PAGE XML contains a forbidden XML declaration")
@@ -1220,6 +1316,7 @@ def export_human_pagexml(
     seen: set[tuple[int, str, str]] = set()
     seen_geometries: set[tuple[int, str, str]] = set()
     seen_reading_orders: set[int] = set()
+    seen_region_geometries: set[tuple[int, str]] = set()
     for page_index, page in enumerate(pages):
         raw_page_id = page.get("id")
         page_id = raw_page_id.strip() if isinstance(raw_page_id, str) and raw_page_id.strip() else (
@@ -1248,6 +1345,17 @@ def export_human_pagexml(
         if region_ids is not None:
             _replace_page_reading_order(page, region_ids)
             seen_reading_orders.add(page_index)
+        for region in page.iter():
+            if _xml_local_name(region) != "TextRegion":
+                continue
+            raw_region_id = region.get("id")
+            if not isinstance(raw_region_id, str) or not raw_region_id.strip():
+                continue
+            key = (page_index, raw_region_id.strip())
+            polygon = region_geometries.get(key)
+            if polygon is not None:
+                _replace_region_geometry(region, polygon=polygon)
+                seen_region_geometries.add(key)
     missing = sorted(set(revisions) - seen)
     if missing:
         raise ProjectStoreError(
@@ -1266,6 +1374,12 @@ def export_human_pagexml(
             "stored PAGE XML no longer has project page "
             f"{missing_reading_orders[0]} for its reading-order revision"
         )
+    missing_region_geometries = sorted(set(region_geometries) - seen_region_geometries)
+    if missing_region_geometries:
+        raise ProjectStoreError(
+            "stored PAGE XML no longer matches the project's region geometry locator: "
+            f"{missing_region_geometries[0]!r}"
+        )
 
     rendered = ET.tostring(document, encoding="utf-8", xml_declaration=True)
     _atomic_write_bytes(output_path, rendered, replace_existing=replace_existing)
@@ -1279,6 +1393,7 @@ def export_human_pagexml(
         "human_revision_count": len(revisions),
         "line_geometry_revision_count": len(geometries),
         "page_reading_order_revision_count": len(reading_orders),
+        "region_geometry_revision_count": len(region_geometries),
         "network_required": False,
     }
 
@@ -2305,6 +2420,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         page_reading_order_revision_count = connection.execute(
             "SELECT COUNT(*) FROM page_reading_order_revisions"
         ).fetchone()[0]
+        region_geometry_revision_count = connection.execute(
+            "SELECT COUNT(*) FROM region_geometry_revisions"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2326,6 +2444,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "review_proposal_count": review_proposal_count,
         "line_geometry_revision_count": line_geometry_revision_count,
         "page_reading_order_revision_count": page_reading_order_revision_count,
+        "region_geometry_revision_count": region_geometry_revision_count,
         "network_required": False,
     }
 
@@ -3192,6 +3311,189 @@ def revise_page_reading_order(
         "revision": revision,
         "prior_region_ids": prior_region_ids,
         "region_ids": revised_region_ids,
+        "editor": editor.strip(),
+        "network_required": False,
+    }
+
+
+def _stored_region_polygon(
+    root: Path,
+    connection: sqlite3.Connection,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+    region_id: str,
+) -> object:
+    row = connection.execute(
+        """
+        SELECT manifest_relative_path
+        FROM pagexml_imports
+        WHERE manifest_sha256 = ?
+        """,
+        (manifest_sha256,),
+    ).fetchone()
+    if row is None:
+        raise ProjectStoreError("project PAGE XML import was not found")
+    relative_path = row[0]
+    if not isinstance(relative_path, str):
+        raise ProjectStoreError("project import manifest path is invalid")
+    manifest_path = (root / relative_path).resolve()
+    if root not in manifest_path.parents or not manifest_path.is_file():
+        raise ProjectStoreError("project import manifest is missing or outside the project")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ProjectStoreError("project import manifest is unreadable") from error
+    if not isinstance(manifest, dict) or not isinstance(manifest.get("pages"), list):
+        raise ProjectStoreError("project import manifest is invalid")
+    page = next(
+        (
+            item
+            for item in manifest["pages"]
+            if isinstance(item, dict) and item.get("page_index") == page_index
+        ),
+        None,
+    )
+    if page is None or not isinstance(page.get("regions"), list):
+        raise ProjectStoreError("project page regions are invalid")
+    regions = [
+        item
+        for item in page["regions"]
+        if isinstance(item, dict) and item.get("region_id") == region_id
+    ]
+    if len(regions) != 1:
+        raise ProjectStoreError("project region was not found in its import manifest")
+    return regions[0].get("polygon")
+
+
+def revise_region_geometry(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+    region_id: str,
+    polygon: Sequence[Sequence[int]],
+    editor: str,
+) -> dict[str, object]:
+    """Append an audited local TextRegion polygon revision without altering source XML."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+        raise ProjectStoreError("page_index must be a non-negative integer")
+    if (
+        not isinstance(region_id, str)
+        or not region_id.strip()
+        or region_id != region_id.strip()
+    ):
+        raise ProjectStoreError("region_id must be a nonblank exact PAGE XML region ID")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("region geometry editor must be a nonblank string")
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            page = connection.execute(
+                """
+                SELECT width_px, height_px
+                FROM pages
+                WHERE manifest_sha256 = ? AND page_index = ?
+                """,
+                (manifest_sha256, page_index),
+            ).fetchone()
+            if page is None:
+                raise ProjectStoreError("project page was not found")
+            width, height = int(page[0]), int(page[1])
+            source_polygon = _validated_points(
+                _stored_region_polygon(
+                    root,
+                    connection,
+                    manifest_sha256=manifest_sha256,
+                    page_index=page_index,
+                    region_id=region_id,
+                ),
+                role="stored region polygon",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            revised_polygon = _validated_points(
+                polygon,
+                role="region polygon",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            latest = connection.execute(
+                """
+                SELECT revision, polygon_json
+                FROM region_geometry_revisions
+                WHERE manifest_sha256 = ? AND page_index = ? AND region_id = ?
+                ORDER BY revision DESC
+                LIMIT 1
+                """,
+                (manifest_sha256, page_index, region_id),
+            ).fetchone()
+            if latest is None:
+                current_revision = 0
+                prior_polygon = source_polygon
+            else:
+                current_revision = int(latest[0])
+                try:
+                    prior_polygon = json.loads(latest[1])
+                except (TypeError, json.JSONDecodeError) as error:
+                    raise ProjectStoreError("stored region geometry is unreadable") from error
+                prior_polygon = _validated_points(
+                    prior_polygon,
+                    role="stored region polygon",
+                    width=width,
+                    height=height,
+                    allow_none=False,
+                )
+            if _canonical_json(prior_polygon) == _canonical_json(revised_polygon):
+                return {
+                    "status": "UNCHANGED",
+                    "project": str(root),
+                    "manifest_sha256": manifest_sha256,
+                    "page_index": page_index,
+                    "region_id": region_id,
+                    "revision": current_revision,
+                    "polygon": revised_polygon,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
+            connection.execute(
+                """
+                INSERT INTO region_geometry_revisions (
+                    manifest_sha256, page_index, region_id, revision,
+                    prior_polygon_json, polygon_json, editor, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    page_index,
+                    region_id,
+                    revision,
+                    _canonical_json(prior_polygon),
+                    _canonical_json(revised_polygon),
+                    editor.strip(),
+                    _timestamp(),
+                ),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot save region geometry revision: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "SAVED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "page_index": page_index,
+        "region_id": region_id,
+        "revision": revision,
+        "prior_polygon": prior_polygon,
+        "polygon": revised_polygon,
         "editor": editor.strip(),
         "network_required": False,
     }
