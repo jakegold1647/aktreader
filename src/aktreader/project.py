@@ -10,10 +10,12 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import sqlite3
 import tempfile
 import uuid
+import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -294,6 +296,28 @@ def _atomic_write_json(path: Path, payload: object) -> None:
         if temporary.exists():
             temporary.unlink()
 
+
+
+def _atomic_write_bytes(path: Path, payload: bytes, *, replace_existing: bool) -> None:
+    if path.exists() and not replace_existing:
+        raise ProjectStoreError(
+            f"export destination already exists; pass replace_existing=True: {path}"
+        )
+    descriptor, temporary_raw = tempfile.mkstemp(
+        prefix=f".{path.name}.",
+        suffix=".tmp",
+        dir=path.parent,
+    )
+    temporary = Path(temporary_raw)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(payload)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 def _timestamp() -> str:
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
@@ -705,6 +729,199 @@ def import_htr_suggestions(
         "network_required": False,
     }
 
+
+
+_FORBIDDEN_PAGE_XML_DECLARATION = re.compile(
+    br"<!\s*(?:DOCTYPE|ENTITY)\b",
+    re.IGNORECASE,
+)
+
+
+def _xml_local_name(element: ET.Element) -> str:
+    return element.tag.rsplit("}", 1)[-1]
+
+
+def _xml_tag_like(element: ET.Element, local_name: str) -> str:
+    if element.tag.startswith("{"):
+        namespace = element.tag.split("}", 1)[0][1:]
+        return f"{{{namespace}}}{local_name}"
+    return local_name
+
+
+def _selected_text_equiv(line: ET.Element) -> ET.Element | None:
+    candidates: list[tuple[int, int, ET.Element]] = []
+    for position, candidate in enumerate(line):
+        if _xml_local_name(candidate) != "TextEquiv":
+            continue
+        raw_index = candidate.get("index")
+        try:
+            index = 0 if raw_index is None else int(raw_index)
+        except ValueError as error:
+            raise ProjectStoreError("stored PAGE XML has a non-integer TextEquiv index") from error
+        candidates.append((index, position, candidate))
+    if not candidates:
+        return None
+    return min(candidates, key=lambda item: (item[0], item[1]))[2]
+
+
+def _replace_text_equiv(line: ET.Element, text: str) -> None:
+    selected = _selected_text_equiv(line)
+    if selected is None:
+        selected = ET.SubElement(line, _xml_tag_like(line, "TextEquiv"))
+    unicode = next(
+        (child for child in selected if _xml_local_name(child) == "Unicode"),
+        None,
+    )
+    if unicode is None:
+        unicode = ET.SubElement(selected, _xml_tag_like(selected, "Unicode"))
+    for child in list(unicode):
+        unicode.remove(child)
+    unicode.text = text
+
+
+def export_human_pagexml(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    replace_existing: bool = False,
+) -> dict[str, object]:
+    """Export human revisions as a new local PAGE XML document.
+
+    The content-addressed source XML, page images, HTR proposals, and revision
+    history are unchanged.  The generated XML applies only the latest explicit
+    human revision for each affected PAGE TextLine.
+    """
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(replace_existing, bool):
+        raise ProjectStoreError("replace_existing must be a boolean")
+    root = _required_project_root(project)
+    output_path = _local_path(output, role="PAGE XML export", must_exist=False)
+    if not output_path.parent.is_dir():
+        raise ProjectStoreError(f"PAGE XML export parent does not exist: {output_path.parent}")
+    if output_path == root or root in output_path.parents:
+        raise ProjectStoreError(
+            "PAGE XML export must be outside the project so project objects stay immutable"
+        )
+
+    database = root / PROJECT_DATABASE_NAME
+    connection = sqlite3.connect(database)
+    try:
+        source = connection.execute(
+            """
+            SELECT pagexml_imports.pagexml_sha256, source_objects.relative_path
+            FROM pagexml_imports
+            JOIN source_objects ON source_objects.sha256 = pagexml_imports.pagexml_sha256
+            WHERE pagexml_imports.manifest_sha256 = ?
+            """,
+            (manifest_sha256,),
+        ).fetchone()
+        if source is None:
+            raise ProjectStoreError("project PAGE XML import was not found")
+        revision_rows = connection.execute(
+            """
+            SELECT
+                lines.source_span_id,
+                lines.page_index,
+                lines.page_id,
+                lines.line_id,
+                lines.locator_json,
+                transcription_revisions.revised_text
+            FROM lines
+            JOIN transcription_revisions
+                ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+               AND transcription_revisions.source_span_id = lines.source_span_id
+               AND transcription_revisions.revision = (
+                    SELECT MAX(latest.revision)
+                    FROM transcription_revisions AS latest
+                    WHERE latest.manifest_sha256 = lines.manifest_sha256
+                      AND latest.source_span_id = lines.source_span_id
+               )
+            WHERE lines.manifest_sha256 = ?
+            ORDER BY lines.page_index, lines.rowid
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project revisions for export: {error}") from error
+    finally:
+        connection.close()
+
+    source_sha256, source_relative_path = source
+    source_path = root / source_relative_path
+    if not source_path.is_file() or _sha256_file(source_path) != source_sha256:
+        raise ProjectStoreError("project PAGE XML source object is missing or checksum-mismatched")
+    if output_path == source_path:
+        raise ProjectStoreError("PAGE XML export must not overwrite its immutable source object")
+
+    revisions: dict[tuple[int, str, str], str] = {}
+    for source_span_id, page_index, page_id, line_id, locator_json, revised_text in revision_rows:
+        try:
+            locator = json.loads(locator_json)
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError(
+                f"stored locator is unreadable for project line {source_span_id}"
+            ) from error
+        if (
+            not isinstance(locator, dict)
+            or locator.get("kind") != "PAGE_XML_TEXT_LINE"
+            or locator.get("page_index") != page_index
+            or locator.get("page_id") != page_id
+            or locator.get("line_id") != line_id
+            or not isinstance(revised_text, str)
+        ):
+            raise ProjectStoreError(f"stored locator is invalid for project line {source_span_id}")
+        key = (page_index, page_id, line_id)
+        if key in revisions:
+            raise ProjectStoreError(f"project contains duplicate export locator {key!r}")
+        revisions[key] = revised_text
+
+    source_bytes = source_path.read_bytes()
+    if _FORBIDDEN_PAGE_XML_DECLARATION.search(source_bytes):
+        raise ProjectStoreError("stored PAGE XML contains a forbidden XML declaration")
+    try:
+        document = ET.fromstring(source_bytes)
+    except ET.ParseError as error:
+        raise ProjectStoreError("stored PAGE XML cannot be parsed for export") from error
+    pages = [element for element in document.iter() if _xml_local_name(element) == "Page"]
+    seen: set[tuple[int, str, str]] = set()
+    for page_index, page in enumerate(pages):
+        raw_page_id = page.get("id")
+        page_id = raw_page_id.strip() if isinstance(raw_page_id, str) and raw_page_id.strip() else (
+            f"page-index-{page_index}"
+        )
+        for line in page.iter():
+            if _xml_local_name(line) != "TextLine":
+                continue
+            raw_line_id = line.get("id")
+            if not isinstance(raw_line_id, str) or not raw_line_id.strip():
+                continue
+            key = (page_index, page_id, raw_line_id.strip())
+            revised_text = revisions.get(key)
+            if revised_text is None:
+                continue
+            _replace_text_equiv(line, revised_text)
+            seen.add(key)
+    missing = sorted(set(revisions) - seen)
+    if missing:
+        raise ProjectStoreError(
+            "stored PAGE XML no longer matches the project's revision locators: "
+            f"{missing[0]!r}"
+        )
+
+    rendered = ET.tostring(document, encoding="utf-8", xml_declaration=True)
+    _atomic_write_bytes(output_path, rendered, replace_existing=replace_existing)
+    return {
+        "status": "SUCCEEDED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_pagexml_sha256": source_sha256,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(rendered).hexdigest(),
+        "human_revision_count": len(revisions),
+        "network_required": False,
+    }
 
 def list_project_pages(path: Path | str) -> list[dict[str, object]]:
     """List every imported page in stable import and page order."""

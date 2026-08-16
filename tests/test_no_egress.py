@@ -339,3 +339,51 @@ def test_project_htr_suggestion_import_runs_with_sockets_disabled(
     assert exit_code == 0
     assert payload["suggestion_count"] == 1
     assert payload["network_required"] is False
+
+
+def test_project_pagexml_export_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    image = tmp_path / "page.png"
+    Image.new("L", (20, 20), color=255).save(image)
+    source = tmp_path / "page.xml"
+    source.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>source text</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    project = tmp_path / "register.aktproj"
+    exported = tmp_path / "human.page.xml"
+
+    assert main(["project-create", str(project), "--name", "Serock births"]) == 0
+    capsys.readouterr()
+    assert main(["project-import-pagexml", str(project), str(source)]) == 0
+    imported = json.loads(capsys.readouterr().out)
+    exit_code = main(
+        [
+            "project-export-pagexml",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--output",
+            str(exported),
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["human_revision_count"] == 0
+    assert payload["network_required"] is False
+    assert exported.is_file()

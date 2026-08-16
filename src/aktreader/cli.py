@@ -64,6 +64,7 @@ from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
+    export_human_pagexml,
     import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
@@ -192,6 +193,29 @@ def build_parser() -> argparse.ArgumentParser:
         "--image-root",
         type=Path,
         help="local directory containing the recognition XML imageFilename paths",
+    )
+
+
+    project_export = subparsers.add_parser(
+        "project-export-pagexml",
+        help="export latest human revisions as a new local PAGE XML document",
+    )
+    project_export.add_argument("project", type=Path, help="local .aktproj directory")
+    project_export.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_export.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new PAGE XML export path outside the project",
+    )
+    project_export.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing PAGE XML export",
     )
 
     workbench = subparsers.add_parser(
@@ -606,6 +630,27 @@ def _command_project_import_htr_suggestions(args: argparse.Namespace) -> int:
         engine=args.engine,
         runtime_fingerprint=args.runtime_fingerprint,
         image_root=image_root,
+    )
+    _emit_json(report)
+    return 0
+
+
+def _command_project_export_pagexml(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="PAGE XML export")
+    if output.is_dir():
+        raise CliConfigurationError(f"PAGE XML export is a directory: {output}")
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "PAGE XML export already exists; pass --replace-existing to replace it atomically"
+        )
+    report = export_human_pagexml(
+        project,
+        output,
+        manifest_sha256=args.manifest_sha256,
+        replace_existing=args.replace_existing,
     )
     _emit_json(report)
     return 0
@@ -1066,6 +1111,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-inspect": _command_project_inspect,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
+        "project-export-pagexml": _command_project_export_pagexml,
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
