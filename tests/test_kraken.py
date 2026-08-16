@@ -47,7 +47,7 @@ def _pagexml(text: str = "") -> bytes:
         "<TextRegion id=\"region-1\"><TextLine id=\"line-1\">"
         f"<TextEquiv><Unicode>{text}</Unicode></TextEquiv>"
         "</TextLine></TextRegion></Page></PcGts>"
-    ).encode("utf-8")
+    ).encode()
 
 
 def _mock_success(monkeypatch: pytest.MonkeyPatch, captured: dict[str, Any]) -> None:
