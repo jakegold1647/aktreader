@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 
 from PIL import Image
@@ -73,6 +74,33 @@ def test_collection_indexes_and_refreshes_effective_project_text(tmp_path: Path)
     assert search_collection(collection, "alexander")["match_count"] == 0
     refreshed = search_collection(collection, "corrected")
     assert refreshed["matches"][0]["revision"] == 1
+
+
+def test_collection_migrates_v1_without_losing_text_search(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    source = _source(source_root)
+    project = tmp_path / "register.aktproj"
+    collection = tmp_path / "registers.aktcollection"
+    create_project(project, name="Serock births")
+    import_pagexml_into_project(project, source)
+    create_collection(collection, name="Serock collection")
+    add_project_to_collection(collection, project)
+
+    database = collection / "collection.sqlite3"
+    connection = sqlite3.connect(database)
+    try:
+        with connection:
+            connection.execute("DROP TABLE document_index")
+            connection.execute("PRAGMA user_version = 1")
+    finally:
+        connection.close()
+
+    migrated = search_collection(collection, "record")
+
+    assert migrated["match_count"] == 1
+    assert migrated["matches"][0]["document_id"] is None
+    assert inspect_collection(collection)["document_count"] == 0
 
 
 def test_collection_discovers_document_metadata(tmp_path: Path) -> None:
