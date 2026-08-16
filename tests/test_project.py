@@ -27,6 +27,7 @@ from aktreader.project import (
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
+    revise_region_geometry,
     revoke_training_consent,
     training_readiness,
 )
@@ -294,6 +295,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("DROP TABLE line_geometry_revisions")
             connection.execute("DROP TABLE review_proposals")
@@ -312,7 +314,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
     finally:
         connection.close()
 
@@ -579,6 +581,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("DROP TABLE line_geometry_revisions")
             connection.execute("DROP TABLE review_proposals")
@@ -595,7 +598,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     assert report["training_consent_revocation_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
     finally:
         connection.close()
 
@@ -677,6 +680,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("DROP TABLE line_geometry_revisions")
             connection.execute("DROP TABLE review_proposals")
@@ -690,7 +694,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     assert report["training_split_assignment_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
     finally:
         connection.close()
 
@@ -705,6 +709,7 @@ def test_project_migrates_v7_store_for_page_reading_order_revisions(
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
             connection.execute("PRAGMA user_version = 7")
     finally:
@@ -715,7 +720,32 @@ def test_project_migrates_v7_store_for_page_reading_order_revisions(
     assert report["page_reading_order_revision_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
+    finally:
+        connection.close()
+
+
+
+def test_project_migrates_v8_store_for_region_geometry_revisions(
+    tmp_path: Path,
+) -> None:
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        with connection:
+            connection.execute("DROP TABLE region_geometry_revisions")
+            connection.execute("PRAGMA user_version = 8")
+    finally:
+        connection.close()
+
+    report = inspect_project(project)
+
+    assert report["region_geometry_revision_count"] == 0
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 9
     finally:
         connection.close()
 
@@ -1016,6 +1046,108 @@ def test_project_cli_revises_page_reading_order(tmp_path: Path, capsys) -> None:
     assert exit_code == 0
     assert report["status"] == "SAVED"
     assert report["region_ids"] == ["region-2", "region-1"]
+
+
+
+def test_project_keeps_region_geometry_revisions_separate_and_exports_them(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+
+    revision = revise_region_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="layout-reviewer",
+    )
+    try:
+        revise_region_geometry(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            page_index=0,
+            region_id="region-2",
+            polygon=[[1, 15], [41, 15], [39, 29], [1, 29]],
+            editor="layout-reviewer",
+        )
+    except ProjectStoreError as error:
+        assert "outside source image" in str(error)
+    else:
+        raise AssertionError("out-of-bounds region geometry must be rejected")
+    output = tmp_path / "region-geometry-revised.page.xml"
+    exported = export_human_pagexml(
+        project,
+        output,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+    unchanged = revise_region_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="layout-reviewer",
+    )
+
+    assert revision["status"] == "SAVED"
+    assert revision["prior_polygon"] == [[0, 15], [40, 15], [40, 30], [0, 30]]
+    assert exported["region_geometry_revision_count"] == 1
+    assert source.read_bytes() == source_bytes
+    rendered = import_pagexml(output, image_root=source_root)
+    region = next(
+        item for item in rendered["pages"][0]["regions"] if item["region_id"] == "region-2"
+    )
+    assert region["polygon"] == [[1, 15], [39, 15], [39, 29], [1, 29]]
+    assert unchanged["status"] == "UNCHANGED"
+    assert unchanged["revision"] == 1
+    assert inspect_project(project)["region_geometry_revision_count"] == 1
+
+
+def test_project_cli_revises_region_geometry(tmp_path: Path, capsys) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    geometry = tmp_path / "region-geometry.json"
+    geometry.write_text(
+        json.dumps({"polygon": [[1, 15], [39, 15], [39, 29], [1, 29]]}),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "project-revise-region-geometry",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--page-index",
+            "0",
+            "--region-id",
+            "region-2",
+            "--geometry",
+            str(geometry),
+            "--editor",
+            "layout-reviewer",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "SAVED"
+    assert report["region_id"] == "region-2"
 
 
 def test_project_keeps_line_geometry_revisions_separate_and_exports_them(
