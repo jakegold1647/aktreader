@@ -14,7 +14,8 @@ from aktreader.project import (
     inspect_project,
     list_project_pages,
     load_project_page,
-    revise_line_transcription,\n)
+    revise_line_transcription,
+)
 
 
 def _write_image(path: Path) -> None:
