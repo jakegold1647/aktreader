@@ -148,7 +148,7 @@ def render_reference() -> str:
     for path in paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
         title = _markdown(str(schema.get("title", path.stem)))
-        lines.append(f"- \`${path.name}\` — {${title}}")
+        lines.append(f"- \`${path.name}\` — {title}")
     for path in paths:
         lines.extend(["", *_schema_reference(path)])
     return "\n".join(lines) + "\n"
