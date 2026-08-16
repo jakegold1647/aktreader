@@ -452,6 +452,228 @@ def import_pagexml_into_project(
     }
 
 
+
+def list_project_pages(path: Path | str) -> list[dict[str, object]]:
+    """List every imported page in stable import and page order."""
+
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                pages.manifest_sha256,
+                pages.page_index,
+                pages.page_id,
+                pages.image_sha256,
+                pages.width_px,
+                pages.height_px,
+                source_objects.relative_path
+            FROM pages
+            JOIN pagexml_imports
+                ON pagexml_imports.manifest_sha256 = pages.manifest_sha256
+            JOIN source_objects ON source_objects.sha256 = pages.image_sha256
+            ORDER BY pagexml_imports.imported_at, pages.manifest_sha256, pages.page_index
+            """
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot list project pages: {error}") from error
+    finally:
+        connection.close()
+    return [
+        {
+            "manifest_sha256": row[0],
+            "page_index": row[1],
+            "page_id": row[2],
+            "image_sha256": row[3],
+            "width_px": row[4],
+            "height_px": row[5],
+            "image_path": str(root / row[6]),
+        }
+        for row in rows
+    ]
+
+
+def load_project_page(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+) -> dict[str, object]:
+    """Load one image-backed page with effective, revision-aware line text."""
+
+    if not isinstance(manifest_sha256, str) or len(manifest_sha256) != 64:
+        raise ProjectStoreError("manifest_sha256 must be a SHA-256 string")
+    if not isinstance(page_index, int) or page_index < 0:
+        raise ProjectStoreError("page_index must be a non-negative integer")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        page = connection.execute(
+            """
+            SELECT pages.page_id, pages.image_sha256, pages.width_px, pages.height_px,
+                   source_objects.relative_path
+            FROM pages
+            JOIN source_objects ON source_objects.sha256 = pages.image_sha256
+            WHERE pages.manifest_sha256 = ? AND pages.page_index = ?
+            """,
+            (manifest_sha256, page_index),
+        ).fetchone()
+        if page is None:
+            raise ProjectStoreError("project page was not found")
+        lines = connection.execute(
+            """
+            SELECT
+                lines.source_span_id,
+                lines.region_id,
+                lines.line_id,
+                lines.text_equiv,
+                lines.bbox_json,
+                lines.locator_json,
+                COALESCE(MAX(transcription_revisions.revision), 0) AS revision,
+                (
+                    SELECT revised_text
+                    FROM transcription_revisions AS latest
+                    WHERE latest.manifest_sha256 = lines.manifest_sha256
+                      AND latest.source_span_id = lines.source_span_id
+                    ORDER BY latest.revision DESC
+                    LIMIT 1
+                ) AS revised_text
+            FROM lines
+            LEFT JOIN transcription_revisions
+                ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+               AND transcription_revisions.source_span_id = lines.source_span_id
+            WHERE lines.manifest_sha256 = ? AND lines.page_index = ?
+            GROUP BY
+                lines.manifest_sha256,
+                lines.source_span_id,
+                lines.region_id,
+                lines.line_id,
+                lines.text_equiv,
+                lines.bbox_json,
+                lines.locator_json
+            ORDER BY lines.rowid
+            """,
+            (manifest_sha256, page_index),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project page: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "manifest_sha256": manifest_sha256,
+        "page_index": page_index,
+        "page_id": page[0],
+        "image_sha256": page[1],
+        "width_px": page[2],
+        "height_px": page[3],
+        "image_path": str(root / page[4]),
+        "lines": [
+            {
+                "source_span_id": row[0],
+                "region_id": row[1],
+                "line_id": row[2],
+                "source_text": row[3],
+                "text": row[7] if row[7] is not None else row[3],
+                "revision": row[6],
+                "bbox": json.loads(row[4]),
+                "locator": json.loads(row[5]),
+            }
+            for row in lines
+        ],
+    }
+
+
+def revise_line_transcription(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    source_span_id: str,
+    text: str,
+    editor: str = "local-user",
+) -> dict[str, object]:
+    """Append one human transcription revision without changing PAGE XML source text."""
+
+    if not isinstance(manifest_sha256, str) or len(manifest_sha256) != 64:
+        raise ProjectStoreError("manifest_sha256 must be a SHA-256 string")
+    if not isinstance(source_span_id, str) or not source_span_id.strip():
+        raise ProjectStoreError("source_span_id must be a nonblank string")
+    if not isinstance(text, str):
+        raise ProjectStoreError("transcription text must be a string")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("editor must be a nonblank string")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        with connection:
+            row = connection.execute(
+                """
+                SELECT
+                    lines.text_equiv,
+                    COALESCE(MAX(transcription_revisions.revision), 0),
+                    (
+                        SELECT revised_text
+                        FROM transcription_revisions AS latest
+                        WHERE latest.manifest_sha256 = lines.manifest_sha256
+                          AND latest.source_span_id = lines.source_span_id
+                        ORDER BY latest.revision DESC
+                        LIMIT 1
+                    )
+                FROM lines
+                LEFT JOIN transcription_revisions
+                    ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+                   AND transcription_revisions.source_span_id = lines.source_span_id
+                WHERE lines.manifest_sha256 = ? AND lines.source_span_id = ?
+                GROUP BY lines.manifest_sha256, lines.source_span_id, lines.text_equiv
+                """,
+                (manifest_sha256, source_span_id),
+            ).fetchone()
+            if row is None:
+                raise ProjectStoreError("project line was not found")
+            current_text = row[2] if row[2] is not None else row[0]
+            current_revision = row[1]
+            if current_text == text:
+                return {
+                    "status": "UNCHANGED",
+                    "project": str(root),
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "revision": current_revision,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
+            created_at = _timestamp()
+            connection.execute(
+                """
+                INSERT INTO transcription_revisions
+                    (manifest_sha256, source_span_id, revision, prior_text, revised_text, editor,
+                     created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    source_span_id,
+                    revision,
+                    current_text,
+                    text,
+                    editor.strip(),
+                    created_at,
+                ),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot save transcription revision: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "SAVED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_span_id": source_span_id,
+        "revision": revision,
+        "editor": editor.strip(),
+        "network_required": False,
+    }
+
 def inspect_project(path: Path | str) -> dict[str, object]:
     """Return the local project identity and durable-content counts."""
 
@@ -463,6 +685,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         import_count = connection.execute("SELECT COUNT(*) FROM pagexml_imports").fetchone()[0]
         page_count = connection.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
         line_count = connection.execute("SELECT COUNT(*) FROM lines").fetchone()[0]
+        revision_count = connection.execute(
+            "SELECT COUNT(*) FROM transcription_revisions"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -475,5 +700,6 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "pagexml_import_count": import_count,
         "page_count": page_count,
         "line_count": line_count,
+        "transcription_revision_count": revision_count,
         "network_required": False,
     }
