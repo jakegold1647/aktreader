@@ -254,7 +254,7 @@ def _reading_order_payload(project: Path, payload: object) -> dict[str, object]:
         editor=payload["editor"],
     )
 
-_handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
+def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
     class ProjectHandler(BaseHTTPRequestHandler):
         server_version = "AKTReaderWorkbench/0.1"
 
