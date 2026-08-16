@@ -144,7 +144,8 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
-`project-import-pagexml`, `project-import-htr-suggestions`, `workbench`, `pagexml-import`,
+`project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`, `workbench`,
+`pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
 `eval`. To run the repository's built-in
@@ -184,6 +185,19 @@ SQLite index; it does not overwrite the imported PAGE XML or alter the source im
 python -m aktreader workbench serock.aktproj
 ```
 
+After a reviewer has explicitly saved corrections, export a separate, standards-compatible PAGE XML
+derivative for interchange or local HTR training. The command applies only the latest human revision
+for each line; it never promotes an engine proposal by itself and it never changes the project source
+object or revision history.
+
+```powershell
+python -m aktreader project-export-pagexml serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --output serock-human.page.xml
+```
+
+Exports must live outside the project and will not replace an existing file unless
+`--replace-existing` is explicit.
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
 
