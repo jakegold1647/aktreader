@@ -45,7 +45,13 @@ from aktreader.cli_support import (
     require_keys,
     require_local_only_data,
 )
-from aktreader.collection import (\n    add_project_to_collection,\n    create_collection,\n    inspect_collection,\n    search_collection,\n)\nfrom aktreader.comparison import compare_reader_labels, render_disagreements_csv
+from aktreader.collection import (
+    add_project_to_collection,
+    create_collection,
+    inspect_collection,
+    search_collection,
+)
+from aktreader.comparison import compare_reader_labels, render_disagreements_csv
 from aktreader.consensus import merge_labels
 from aktreader.consensus_record import build_consensus_record, write_consensus_record
 from aktreader.evaluation import (
