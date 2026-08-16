@@ -189,7 +189,9 @@ def _image_metadata(path: Path, *, page_field: str) -> tuple[int, int]:
             image.load()
             width, height = image.size
     except (OSError, UnidentifiedImageError) as error:
-        raise PageXmlImportError(\n            f"{page_field}.imageFilename is not a readable image: {path}"\n        ) from error
+        raise PageXmlImportError(
+            f"{page_field}.imageFilename is not a readable image: {path}"
+        ) from error
     if width < 1 or height < 1:
         raise PageXmlImportError(f"{page_field}.imageFilename has invalid dimensions")
     return width, height
@@ -302,11 +304,13 @@ def _page_payload(
     declared_height = _positive_integer(page.get("imageHeight"), field=f"{page_field}.imageHeight")
     if declared_width is not None and declared_width != actual_width:
         raise PageXmlImportError(
-            f"{page_field}.imageWidth={declared_width} does not match source image width "\n            f"{actual_width}"
+            f"{page_field}.imageWidth={declared_width} does not match source image width "
+            f"{actual_width}"
         )
     if declared_height is not None and declared_height != actual_height:
         raise PageXmlImportError(
-            f"{page_field}.imageHeight={declared_height} does not match source image height "\n            f"{actual_height}"
+            f"{page_field}.imageHeight={declared_height} does not match source image height "
+            f"{actual_height}"
         )
 
     regions: dict[str, dict[str, Any]] = {}
@@ -319,7 +323,9 @@ def _page_payload(
         if local == "TextRegion":
             region_id = _required_identifier(element, field=f"{page_field}.TextRegion")
             if region_id in regions:
-                raise PageXmlImportError(\n                    f"{page_field} contains duplicate TextRegion id {region_id!r}"\n                )
+                raise PageXmlImportError(
+                    f"{page_field} contains duplicate TextRegion id {region_id!r}"
+                )
             region_field = f"{page_field}.TextRegion {region_id}"
             polygon = _points(_first_child(element, "Coords"), field=region_field)
             _verify_within_image(
