@@ -232,3 +232,18 @@ def test_pagexml_import_runs_with_sockets_disabled(
     assert exit_code == 0
     assert payload["network_required"] is False
     assert output.is_file()
+
+
+def test_project_create_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    project = tmp_path / "register.aktproj"
+
+    exit_code = main(["project-create", str(project), "--name", "Serock births"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["network_required"] is False
+    assert (project / "project.akt.json").is_file()
