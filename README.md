@@ -143,9 +143,9 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
-`project-import-pagexml`, `pagexml-import`, `consensus-merge`, `reader-inspect`, `reader-infer`,
-`batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in reader
-comparison without supplying scans or model files:
+`project-import-pagexml`, `workbench`, `pagexml-import`, `consensus-merge`, `reader-inspect`,
+`reader-infer`, `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in
+reader comparison without supplying scans or model files:
 
 ```powershell
 python -m aktreader compare labels/readerA labels/readerB `
@@ -170,6 +170,19 @@ python -m aktreader project-inspect serock.aktproj
 
 Projects are intentionally local-only and contain no training consent. Importing source material
 does not make it training data or publishable data.
+
+### Local transcription workbench
+
+Open an imported project in a local desktop window to see the source image with PAGE line bounds,
+select lines, and save human transcription revisions. Each save appends a revision to the project
+SQLite index; it does not overwrite the imported PAGE XML or alter the source image.
+
+```powershell
+python -m aktreader workbench serock.aktproj
+```
+
+The workbench requires a Python installation that includes Tk desktop support. It never starts a
+web server, sends data to a service, or treats a correction as model-training consent.
 
 ### PAGE XML import
 

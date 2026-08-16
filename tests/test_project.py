@@ -8,7 +8,14 @@ from pathlib import Path
 from PIL import Image
 
 from aktreader.cli import main
-from aktreader.project import create_project, import_pagexml_into_project, inspect_project
+from aktreader.project import (
+    create_project,
+    import_pagexml_into_project,
+    inspect_project,
+    list_project_pages,
+    load_project_page,
+    revise_line_transcription,
+)
 
 
 def _write_image(path: Path) -> None:
@@ -108,6 +115,62 @@ def test_project_import_copies_hashed_pagexml_images_and_lines(tmp_path: Path) -
     assert report_after_repeat["pagexml_import_count"] == 1
     assert report_after_repeat["page_count"] == 1
     assert report_after_repeat["line_count"] == 1
+
+
+
+def test_project_keeps_human_transcription_revisions_separate_from_source(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+
+    pages = list_project_pages(project)
+
+    assert len(pages) == 1
+    assert pages[0]["manifest_sha256"] == imported["manifest_sha256"]
+    page = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )
+    line = page["lines"][0]
+    assert line["source_text"] == line["text"] == "Александр"
+    assert line["revision"] == 0
+
+    saved = revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+    )
+
+    assert saved["status"] == "SAVED"
+    assert saved["revision"] == 1
+    updated = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    assert updated["source_text"] == "Александр"
+    assert updated["text"] == "Александръ"
+    assert updated["revision"] == 1
+    assert source.read_text(encoding="utf-8").count("Александр") == 1
+
+    unchanged = revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ",
+    )
+
+    assert unchanged["status"] == "UNCHANGED"
+    assert unchanged["revision"] == 1
+    assert inspect_project(project)["transcription_revision_count"] == 1
 
 
 def test_project_cli_creates_and_inspects_an_offline_project(tmp_path: Path, capsys) -> None:

@@ -64,6 +64,7 @@ from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
 from aktreader.verification import CHECK_NAMES, verify_application_checkout
+from aktreader.workbench import launch_workbench
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ACT_RECORD_SCHEMA_PATH = runtime_asset_path("schemas/act-record-2.0.0.schema.json")
@@ -157,6 +158,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="local directory containing imageFilename paths (defaults to the XML directory)",
     )
+
+    workbench = subparsers.add_parser(
+        "workbench",
+        help="open the local image-and-line transcription workbench",
+    )
+    workbench.add_argument("project", type=Path, help="local .aktproj directory")
 
     pagexml = subparsers.add_parser(
         "pagexml-import",
@@ -521,6 +528,14 @@ def _command_project_import_pagexml(args: argparse.Namespace) -> int:
             raise CliConfigurationError(f"PAGE XML image root is not a directory: {image_root}")
     report = import_pagexml_into_project(project, source, image_root=image_root)
     _emit_json(report)
+    return 0
+
+
+def _command_workbench(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    launch_workbench(project)
     return 0
 
 def _command_pagexml_import(args: argparse.Namespace) -> int:
@@ -930,6 +945,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
         "project-import-pagexml": _command_project_import_pagexml,
+        "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
         "reader-inspect": _command_reader_inspect,
