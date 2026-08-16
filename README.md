@@ -149,7 +149,8 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
 `project-resolve-review-proposal`, `project-revise-line-geometry`,
-`project-revise-page-reading-order`, `htr-build-corpus`,
+`project-revise-page-reading-order`, `project-revise-region-geometry`,
+`htr-build-corpus`,
 `htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `kraken-evaluate`,
@@ -234,6 +235,9 @@ applied only to a newly exported PAGE XML derivative. See [line geometry revisio
 Page region sequence is its own audited revision stream: a reviewer supplies a complete permutation
 of the imported region IDs for one page, and only a new PAGE XML derivative receives that order. See
 [page reading-order revisions](docs/page-reading-order.md).
+
+TextRegion polygons use an independent versioned source-pixel revision stream and are likewise
+applied only to a derivative. See [region geometry revisions](docs/region-geometry.md).
 
 Evaluate a specific imported HTR result only against saved human revisions. The report is pinned
 to the project import and recognition PAGE XML hashes; it uses Unicode NFC with exact whitespace,
