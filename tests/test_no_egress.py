@@ -103,7 +103,7 @@ def test_package_imports_no_networking_modules() -> None:
     for source in sorted(PACKAGE_ROOT.rglob("*.py")):
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         relative = source.relative_to(ROOT)
-        allowed_for_source = LOOPBACK_ONLY_IMPORTS.get(str(relative), frozenset())
+        allowed_for_source = LOOPBACK_ONLY_IMPORTS.get(relative.as_posix(), frozenset())
         for lineno, name in _imported_names(tree):
             if name in allowed_for_source:
                 continue
