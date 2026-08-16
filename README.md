@@ -203,9 +203,10 @@ touching the PAGE XML or images; see [document metadata](docs/document-metadata.
 
 ### Local transcription workbench
 
-Open an imported project in a local desktop window to see the source image with PAGE line bounds,
-select lines, and save human transcription revisions. Each save appends a revision to the project
-SQLite index; it does not overwrite the imported PAGE XML or alter the source image.
+Open an imported project in a local desktop window to choose a named document, page through only
+that document's imported pages, see the source image with PAGE line bounds, select lines, and save
+human transcription revisions. Each save appends a revision to the project SQLite index; it does not
+overwrite the imported PAGE XML or alter the source image.
 
 ```powershell
 python -m aktreader workbench serock.aktproj
