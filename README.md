@@ -144,6 +144,7 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-search`, `project-create`, `project-inspect`,
+`project-list-documents`, `project-update-document`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
@@ -193,6 +194,9 @@ python -m aktreader project-inspect serock.aktproj
 
 Projects are intentionally local-only and contain no training consent. Importing source material
 does not make it training data or publishable data.
+
+Every import is also a stable document record. Its local title, tags, and notes can be updated without
+touching the PAGE XML or images; see [document metadata](docs/document-metadata.md).
 
 ### Local transcription workbench
 
