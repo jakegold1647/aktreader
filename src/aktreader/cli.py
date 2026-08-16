@@ -34,10 +34,12 @@ from aktreader.cli_support import (
     brief_for_job,
     generation_report,
     load_json_object,
+    load_kraken_config,
     load_local_reader_config,
     load_strict_json,
     local_input_path,
     local_output_path,
+    kraken_report,
     model_identity,
     reader_report,
     require_keys,
@@ -57,6 +59,7 @@ from aktreader.grounding import (
     validate_cross_reader_grounding,
 )
 from aktreader.installation import inspect_application_checkout
+from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
 from aktreader.project import create_project, import_pagexml_into_project, inspect_project
@@ -204,6 +207,25 @@ def build_parser() -> argparse.ArgumentParser:
         "reader-inspect", help="verify pinned local Reader artifacts without running inference"
     )
     inspect_reader.add_argument("--config", required=True, type=Path)
+
+    kraken_inspect = subparsers.add_parser(
+        "kraken-inspect",
+        help="verify pinned local Kraken artifacts without running recognition",
+    )
+    kraken_inspect.add_argument("--config", required=True, type=Path)
+
+    kraken_recognize = subparsers.add_parser(
+        "kraken-recognize",
+        help="recognize one local pre-segmented PAGE XML document with Kraken",
+    )
+    kraken_recognize.add_argument("--config", required=True, type=Path)
+    kraken_recognize.add_argument("--pagexml", required=True, type=Path)
+    kraken_recognize.add_argument("--output", required=True, type=Path)
+    kraken_recognize.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing PAGE XML recognition result",
+    )
 
     infer = subparsers.add_parser(
         "reader-infer", help="run one explicitly configured local Reader inference"
@@ -629,6 +651,47 @@ def _command_consensus_merge(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_kraken_inspect(args: argparse.Namespace) -> int:
+    config_path = local_input_path(args.config, role="kraken config")
+    kraken = LocalKraken(load_kraken_config(config_path))
+    _emit_json(kraken_report(kraken))
+    return 0
+
+
+def _command_kraken_recognize(args: argparse.Namespace) -> int:
+    config_path = local_input_path(args.config, role="kraken config")
+    kraken = LocalKraken(load_kraken_config(config_path))
+    pagexml = local_input_path(args.pagexml, role="input PAGE XML")
+    if not pagexml.is_file():
+        raise CliConfigurationError(f"input PAGE XML is not a file: {pagexml}")
+    output = local_output_path(args.output, role="Kraken PAGE XML output")
+    if output in {config_path, pagexml}:
+        raise CliConfigurationError("Kraken PAGE XML output must not overwrite any input file")
+    result = kraken.recognize_pagexml(
+        pagexml,
+        output,
+        replace_existing=args.replace_existing,
+    )
+    stdout_path = output.with_suffix(".kraken.stdout.txt")
+    stderr_path = output.with_suffix(".kraken.stderr.txt")
+    atomic_write_text(stdout_path, result.stdout)
+    atomic_write_text(stderr_path, result.stderr)
+    _emit_json(
+        {
+            "status": "SUCCEEDED",
+            "input_pagexml": str(pagexml),
+            "output": str(result.output_path),
+            "raw_stdout": str(stdout_path),
+            "raw_stderr": str(stderr_path),
+            "source_sha256": result.source_sha256,
+            "output_sha256": result.output_sha256,
+            "runtime_fingerprint": result.runtime_fingerprint,
+            "network_required": False,
+        }
+    )
+    return 0
+
+
 def _command_reader_inspect(args: argparse.Namespace) -> int:
     config_path = local_input_path(args.config, role="reader config")
     reader = LocalReader(load_local_reader_config(config_path))
@@ -950,6 +1013,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "consensus-merge": _command_consensus_merge,
         "reader-inspect": _command_reader_inspect,
         "reader-infer": _command_reader_infer,
+        "kraken-inspect": _command_kraken_inspect,
+        "kraken-recognize": _command_kraken_recognize,
         "batch-run": _command_batch_run,
         "adjudicate": _command_adjudicate,
         "eval": _command_eval,
@@ -964,6 +1029,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     except KeyboardInterrupt:
         print("aktreader: interrupted; checkpoint state was preserved", file=sys.stderr)
         return 130
-    except (CliConfigurationError, LocalReaderError, OSError, TypeError, ValueError) as error:
+    except (
+        CliConfigurationError,
+        KrakenError,
+        LocalReaderError,
+        OSError,
+        TypeError,
+        ValueError,
+    ) as error:
         print(f"aktreader: error: {error}", file=sys.stderr)
         return 2
