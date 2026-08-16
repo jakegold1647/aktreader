@@ -238,7 +238,6 @@ class LocalWorkbench:
         self.canvas.itemconfigure("line-box", outline="#f6ad55")
         self.canvas.itemconfigure(f"line:{line['source_span_id']}", outline="#68d391")
 
-
     def _use_suggestion(self) -> None:
         selected = self.line_list.curselection()
         if not selected:
