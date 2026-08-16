@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import unicodedata
 import os
 import re
 import shutil
@@ -17,6 +18,7 @@ import tempfile
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -920,6 +922,147 @@ def export_human_pagexml(
         "output": str(output_path),
         "output_sha256": hashlib.sha256(rendered).hexdigest(),
         "human_revision_count": len(revisions),
+        "network_required": False,
+    }
+
+
+def _levenshtein_distance(reference: Sequence[str], hypothesis: Sequence[str]) -> int:
+    """Return the exact insertion/deletion/substitution distance for two sequences."""
+
+    if len(reference) < len(hypothesis):
+        reference, hypothesis = hypothesis, reference
+    previous = list(range(len(hypothesis) + 1))
+    for row_index, reference_item in enumerate(reference, start=1):
+        current = [row_index]
+        for column_index, hypothesis_item in enumerate(hypothesis, start=1):
+            current.append(
+                min(
+                    current[column_index - 1] + 1,
+                    previous[column_index] + 1,
+                    previous[column_index - 1]
+                    + (0 if reference_item == hypothesis_item else 1),
+                )
+            )
+        previous = current
+    return previous[-1]
+
+
+def _normalize_htr_text(text: str) -> str:
+    return unicodedata.normalize("NFC", text)
+
+
+def evaluate_htr_suggestions(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    result_pagexml_sha256: str,
+) -> dict[str, object]:
+    """Compare one imported local HTR result with explicit human revisions only."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    result_pagexml_sha256 = _require_sha256(
+        result_pagexml_sha256,
+        role="result_pagexml_sha256",
+    )
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        run = connection.execute(
+            """
+            SELECT engine, runtime_fingerprint, line_count
+            FROM htr_runs
+            WHERE manifest_sha256 = ? AND output_sha256 = ?
+            """,
+            (manifest_sha256, result_pagexml_sha256),
+        ).fetchone()
+        if run is None:
+            raise ProjectStoreError("imported HTR result was not found for this project import")
+        source_line_count = connection.execute(
+            "SELECT COUNT(*) FROM lines WHERE manifest_sha256 = ?",
+            (manifest_sha256,),
+        ).fetchone()[0]
+        rows = connection.execute(
+            """
+            SELECT htr_suggestions.suggested_text, transcription_revisions.revised_text
+            FROM lines
+            JOIN transcription_revisions
+                ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+               AND transcription_revisions.source_span_id = lines.source_span_id
+               AND transcription_revisions.revision = (
+                    SELECT MAX(latest.revision)
+                    FROM transcription_revisions AS latest
+                    WHERE latest.manifest_sha256 = lines.manifest_sha256
+                      AND latest.source_span_id = lines.source_span_id
+               )
+            LEFT JOIN htr_suggestions
+                ON htr_suggestions.manifest_sha256 = lines.manifest_sha256
+               AND htr_suggestions.source_span_id = lines.source_span_id
+               AND htr_suggestions.output_sha256 = ?
+            WHERE lines.manifest_sha256 = ?
+            ORDER BY lines.page_index, lines.rowid
+            """,
+            (result_pagexml_sha256, manifest_sha256),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot evaluate imported HTR suggestions: {error}") from error
+    finally:
+        connection.close()
+
+    human_revision_count = len(rows)
+    suggestion_count = sum(row[0] is not None for row in rows)
+    evaluated_pairs: list[tuple[str, str]] = []
+    for suggested_text, revised_text in rows:
+        if suggested_text is None:
+            continue
+        if not isinstance(suggested_text, str) or not isinstance(revised_text, str):
+            raise ProjectStoreError("stored HTR suggestion or human revision is invalid")
+        evaluated_pairs.append(
+            (_normalize_htr_text(revised_text), _normalize_htr_text(suggested_text))
+        )
+
+    reference_char_count = sum(len(reference) for reference, _ in evaluated_pairs)
+    hypothesis_char_count = sum(len(hypothesis) for _, hypothesis in evaluated_pairs)
+    char_edit_distance = sum(
+        _levenshtein_distance(reference, hypothesis)
+        for reference, hypothesis in evaluated_pairs
+    )
+    reference_word_count = sum(len(reference.split()) for reference, _ in evaluated_pairs)
+    hypothesis_word_count = sum(len(hypothesis.split()) for _, hypothesis in evaluated_pairs)
+    word_edit_distance = sum(
+        _levenshtein_distance(reference.split(), hypothesis.split())
+        for reference, hypothesis in evaluated_pairs
+    )
+    exact_line_match_count = sum(
+        reference == hypothesis for reference, hypothesis in evaluated_pairs
+    )
+    evaluated_line_count = len(evaluated_pairs)
+    return {
+        "status": "SUCCEEDED" if evaluated_line_count else "NO_EVALUABLE_HUMAN_REVISIONS",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "result_pagexml_sha256": result_pagexml_sha256,
+        "engine": run[0],
+        "runtime_fingerprint": run[1],
+        "source_line_count": source_line_count,
+        "run_line_count": run[2],
+        "human_revision_count": human_revision_count,
+        "suggestion_count_for_human_revisions": suggestion_count,
+        "evaluated_line_count": evaluated_line_count,
+        "normalization": "UNICODE_NFC_EXACT_WHITESPACE",
+        "character_error_rate": (
+            char_edit_distance / reference_char_count if reference_char_count else None
+        ),
+        "character_edit_distance": char_edit_distance,
+        "reference_character_count": reference_char_count,
+        "hypothesis_character_count": hypothesis_char_count,
+        "word_error_rate": word_edit_distance / reference_word_count if reference_word_count else None,
+        "word_edit_distance": word_edit_distance,
+        "reference_word_count": reference_word_count,
+        "hypothesis_word_count": hypothesis_word_count,
+        "exact_line_match_rate": (
+            exact_line_match_count / evaluated_line_count if evaluated_line_count else None
+        ),
+        "exact_line_match_count": exact_line_match_count,
         "network_required": False,
     }
 
