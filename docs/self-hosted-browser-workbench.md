@@ -20,11 +20,13 @@ Stop it with Ctrl+C.
 ## What it provides
 
 - document-first and page-scoped navigation;
-- source-page image display with PAGE XML line bounds;
+- source-page image display with PAGE XML line and region bounds;
 - effective transcription, local HTR suggestions, and pending review-proposal
   context for each line;
 - an editor that appends the same human transcription revisions as the
-  desktop workbench; and
+  desktop workbench;
+- region-polygon and region-reading-order edits that append the same audited
+  PAGE layout revisions as the local project commands; and
 - project state that remains content-addressed and local.
 
 The API never sends image filesystem paths to the browser. Source images are
