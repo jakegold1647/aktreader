@@ -259,7 +259,7 @@ def _line_payload(
         _verify_within_image(baseline, width=image_width, height=image_height, field=field)
     text, text_equiv_index = _text_equiv(element, field=field)
     span_digest = hashlib.sha256(
-        f"{document_sha256}\0{page_id}\0{line_id}".encode("utf-8")
+        f"{document_sha256}\0{page_id}\0{line_id}".encode()
     ).hexdigest()[:24]
     source_span_id = f"pagexml-{span_digest}"
     locator: dict[str, Any] = {
