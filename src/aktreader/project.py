@@ -584,7 +584,9 @@ def import_htr_suggestions(
             )
         }
         if len(output_pages) != len(target_pages):
-            raise ProjectStoreError(\n                "recognition PAGE XML page count does not match the project import"\n            )
+            raise ProjectStoreError(
+                "recognition PAGE XML page count does not match the project import"
+            )
 
         suggestions: list[tuple[str, str | None]] = []
         observed_line_keys: set[tuple[int, str, str | None, str]] = set()
