@@ -2809,3 +2809,31 @@ def revise_line_geometry(
         "baseline": revised_baseline,
         "network_required": False,
     }
+
+
+def _replace_line_geometry(
+    line: ET.Element,
+    *,
+    polygon: list[list[int]],
+    baseline: list[list[int]] | None,
+) -> None:
+    coords = next(
+        (child for child in line if _xml_local_name(child) == "Coords"),
+        None,
+    )
+    if coords is None:
+        raise ProjectStoreError("stored PAGE XML line is missing Coords")
+    coords.set("points", " ".join(f"{x},{y}" for x, y in polygon))
+    baselines = [child for child in line if _xml_local_name(child) == "Baseline"]
+    if baseline is None:
+        for item in baselines:
+            line.remove(item)
+        return
+    if baselines:
+        target = baselines[0]
+        for duplicate in baselines[1:]:
+            line.remove(duplicate)
+    else:
+        target = ET.Element(_xml_tag_like(line, "Baseline"))
+        line.insert(1, target)
+    target.set("points", " ".join(f"{x},{y}" for x, y in baseline))
