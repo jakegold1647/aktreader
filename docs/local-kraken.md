@@ -95,3 +95,23 @@ The readiness report names only opaque source-span IDs and records no source tex
 only when every imported line is both human-revised and actively consented. This gate currently
 does not export, publish, or train data; the following corpus-export step will consume its
 content-addressed readiness evidence.
+
+## Consented PAGE XML training bundle
+
+After `project-training-readiness` reports `READY_FOR_PAGEXML_TRAINING_EXPORT`, create a
+split-pinned local bundle:
+
+    aktreader project-export-consented-training-pagexml E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --split train --output-directory E:\training\serock-train
+
+The bundle contains rewritten PAGE XML, copies of only the project’s checksum-verified source
+images, a `train.lst`/`validation.lst`/`test.lst` file, and `bundle.aktreader.json`. It does not
+contain original source paths, a server address, credentials, or a model. A PAGE XML import may
+receive one immutable split only, preventing later train/validation/test leakage through that
+project import.
+
+Use a separately provisioned Kraken installation to compile or train locally. The current
+[Kraken recognition-training guide](https://kraken.re/main/user_guide/training_recognition.html)
+documents `ketos compile -f xml -o training.arrow document.page.xml` for PAGE XML data and
+`ketos train` with explicit training and validation manifests. The bundle intentionally does not
+launch either command: model pins, train/validation bundle selection, and the final experiment
+recipe are separate auditable decisions.
