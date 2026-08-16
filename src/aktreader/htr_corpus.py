@@ -672,6 +672,11 @@ def inspect_consented_training_corpus(
     )
     if not corpus.is_dir():
         raise HtrCorpusError(f"HTR training corpus is not a directory: {corpus}")
+    for source in inputs:
+        if corpus == source.project or source.project in corpus.parents:
+            raise HtrCorpusError(
+                "HTR training corpus must remain outside every source project"
+            )
     manifest_path = corpus / "corpus.aktreader.json"
     payload = _read_json(manifest_path, role="HTR corpus manifest")
     _required_keys(
