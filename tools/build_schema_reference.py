@@ -22,18 +22,18 @@ def _markdown(value: str) -> str:
 def _summary(node: dict[str, Any]) -> str:
     parts: list[str] = []
     if "$ref" in node:
-        parts.append(f"reference to \`{node['$ref']}\`")
+        parts.append(f"reference to `{node['$ref']}`")
     elif "const" in node:
-        parts.append(f"constant \`{_inline(node['const'])}\`")
+        parts.append(f"constant `{_inline(node['const'])}`")
     elif "enum" in node:
-        values = ", ".join(f"\`{_inline(value)}\`" for value in node['enum'])
+        values = ", ".join(f"`{_inline(value)}`" for value in node['enum'])
         parts.append(f"one of {values}")
     elif "type" in node:
         node_type = node['type']
         if isinstance(node_type, list):
-            parts.append(" or ".join(f"\`{value}\`" for value in node_type))
+            parts.append(" or ".join(f"`{value}`" for value in node_type))
         else:
-            parts.append(f"\`{node_type}\`")
+            parts.append(f"`{node_type}`")
 
     if "items" in node:
         parts.append(f"items: {_summary(node['items'])}")
@@ -60,7 +60,7 @@ def _constraints(node: dict[str, Any]) -> str:
         "maxProperties",
     ):
         if keyword in node:
-            parts.append(f"{keyword}: \`{_inline(node[keyword])}\`")
+            parts.append(f"{keyword}: `{_inline(node[keyword])}`")
     if node.get("uniqueItems") is True:
         parts.append("unique items")
     if node.get("additionalProperties") is False:
@@ -85,7 +85,7 @@ def _field_table(properties: dict[str, Any], required: list[str]) -> list[str]:
         if constraints:
             summary = f"{summary}<br>{_markdown(constraints)}"
         lines.append(
-            f"| \`{_markdown(name)}\` | {'yes' if name in required_names else 'no'} "
+            f"| `{_markdown(name)}` | {'yes' if name in required_names else 'no'} "
             f"| {summary} | {description} |"
         )
     lines.append("")
@@ -93,7 +93,7 @@ def _field_table(properties: dict[str, Any], required: list[str]) -> list[str]:
 
 
 def _section(name: str, node: dict[str, Any], required: list[str]) -> list[str]:
-    lines = [f"#### \`{name}\`", "", f"Type: {_summary(node)}."]
+    lines = [f"#### `{name}`", "", f"Type: {_summary(node)}."]
     constraints = _constraints(node)
     if constraints:
         lines.extend(["", f"Constraints: {constraints}."])
@@ -111,10 +111,10 @@ def _schema_reference(path: Path) -> list[str]:
     lines = [
         f"## {title}",
         "",
-        f"Source: [\`{relative}\`](../{relative})",
+        f"Source: [`{relative}`](../{relative})",
     ]
     if "$id" in schema:
-        lines.extend(["", f"Schema ID: \`{_markdown(str(schema['$id']))}\`"])
+        lines.extend(["", f"Schema ID: `{_markdown(str(schema['$id']))}`"])
     lines.extend(["", "### Field tree", "", *_section("root", schema, schema.get("required", []))])
 
     definitions = schema.get("$defs", {})
@@ -132,13 +132,13 @@ def render_reference() -> str:
         "# Schema reference",
         "",
         "This reference is generated from the versioned JSON Schemas in "
-        "[\`schemas/\`](../schemas/) by "
-        "[\`tools/build_schema_reference.py\`](../tools/build_schema_reference.py). "
+        "[`schemas/`](../schemas/) by "
+        "[`tools/build_schema_reference.py`](../tools/build_schema_reference.py). "
         "Do not edit it by hand.",
         "",
         "It lists each schema's named object fields, required status, declared type or "
         "structure, and any description carried by the contract. References to "
-        "\`$defs\` remain pointers to the reusable definition named below rather than being "
+        "`$defs` remain pointers to the reusable definition named below rather than being "
         "expanded repeatedly.",
         "",
         "## Schemas",
@@ -148,7 +148,7 @@ def render_reference() -> str:
     for path in paths:
         schema = json.loads(path.read_text(encoding="utf-8"))
         title = _markdown(str(schema.get("title", path.stem)))
-        lines.append(f"- \`${path.name}\` — {title}")
+        lines.append(f"- `${path.name}` — {title}")
     for path in paths:
         lines.extend(["", *_schema_reference(path)])
     return "\n".join(lines) + "\n"
