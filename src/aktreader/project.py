@@ -24,6 +24,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
+PROJECT_DATABASE_VERSION = 2
 
 
 class ProjectStoreError(ValueError):
@@ -72,6 +73,7 @@ def _required_project_root(path: Path | str) -> Path:
     database = root / PROJECT_DATABASE_NAME
     if not database.is_file():
         raise ProjectStoreError(f"project is missing {PROJECT_DATABASE_NAME}")
+    _migrate_database(database)
     return root
 
 
@@ -93,7 +95,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 1;
+                PRAGMA user_version = 2;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -131,11 +133,57 @@ def _initialize_database(path: Path) -> None:
                     locator_json TEXT NOT NULL,
                     PRIMARY KEY (manifest_sha256, source_span_id)
                 );
+                CREATE TABLE transcription_revisions (
+                    manifest_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    prior_text TEXT,
+                    revised_text TEXT NOT NULL,
+                    editor TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (manifest_sha256, source_span_id, revision),
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
+                );
                 """
             )
     finally:
         connection.close()
 
+
+
+def _migrate_database(path: Path) -> None:
+    connection = sqlite3.connect(path)
+    try:
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+        if version < 1:
+            raise ProjectStoreError("project database has no supported schema version")
+        if version == 1:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE transcription_revisions (
+                        manifest_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        prior_text TEXT,
+                        revised_text TEXT NOT NULL,
+                        editor TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (manifest_sha256, source_span_id, revision),
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    PRAGMA user_version = 2;
+                    """
+                )
+            version = PROJECT_DATABASE_VERSION
+        if version != PROJECT_DATABASE_VERSION:
+            raise ProjectStoreError(f"unsupported project database version: {version}")
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"project database migration failed: {error}") from error
+    finally:
+        connection.close()
 
 def _object_relative_path(digest: str) -> Path:
     return Path("objects") / "sha256" / digest[:2] / digest
