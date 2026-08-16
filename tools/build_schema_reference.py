@@ -85,7 +85,7 @@ def _field_table(properties: dict[str, Any], required: list[str]) -> list[str]:
         if constraints:
             summary = f"{summary}<br>{_markdown(constraints)}"
         lines.append(
-            f"| \`{_markdown(name)}\` | {"yes" if name in required_names else "no"} "
+            f"| \`{_markdown(name)}\` | {'yes' if name in required_names else 'no'} "
             f"| {summary} | {description} |"
         )
     lines.append("")
