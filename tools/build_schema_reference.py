@@ -22,21 +22,21 @@ def _markdown(value: str) -> str:
 def _summary(node: dict[str, Any]) -> str:
     parts: list[str] = []
     if "$ref" in node:
-        parts.append(f"reference to \`{node["$ref"]}\`")
+        parts.append(f"reference to \`{node['$ref']}\`")
     elif "const" in node:
-        parts.append(f"constant \`{_inline(node["const"])}\`")
+        parts.append(f"constant \`{_inline(node['const'])}\`")
     elif "enum" in node:
-        values = ", ".join(f"\`{_inline(value)}\`" for value in node["enum"])
+        values = ", ".join(f"\`{_inline(value)}\`" for value in node['enum'])
         parts.append(f"one of {values}")
     elif "type" in node:
-        node_type = node["type"]
+        node_type = node['type']
         if isinstance(node_type, list):
             parts.append(" or ".join(f"\`{value}\`" for value in node_type))
         else:
             parts.append(f"\`{node_type}\`")
 
     if "items" in node:
-        parts.append(f"items: {_summary(node["items"])}")
+        parts.append(f"items: {_summary(node['items'])}")
     for keyword in ("oneOf", "anyOf", "allOf"):
         if keyword in node:
             options = " / ".join(_summary(option) for option in node[keyword])
@@ -114,7 +114,7 @@ def _schema_reference(path: Path) -> list[str]:
         f"Source: [\`{relative}\`](../{relative})",
     ]
     if "$id" in schema:
-        lines.extend(["", f"Schema ID: \`{_markdown(str(schema["$id"]))}\`"])
+        lines.extend(["", f"Schema ID: \`{_markdown(str(schema['$id']))}\`"])
     lines.extend(["", "### Field tree", "", *_section("root", schema, schema.get("required", []))])
 
     definitions = schema.get("$defs", {})
