@@ -173,7 +173,6 @@ def _initialize_database(path: Path) -> None:
         connection.close()
 
 
-
 def _migrate_database(path: Path) -> None:
     connection = sqlite3.connect(path)
     try:
@@ -502,7 +501,6 @@ def import_pagexml_into_project(
     }
 
 
-
 def _require_sha256(value: str, *, role: str) -> str:
     if not isinstance(value, str) or len(value) != 64:
         raise ProjectStoreError(f"{role} must be a lowercase SHA-256 string")
@@ -586,7 +584,7 @@ def import_htr_suggestions(
             )
         }
         if len(output_pages) != len(target_pages):
-            raise ProjectStoreError("recognition PAGE XML page count does not match the project import")
+            raise ProjectStoreError(\n                "recognition PAGE XML page count does not match the project import"\n            )
 
         suggestions: list[tuple[str, str | None]] = []
         observed_line_keys: set[tuple[int, str, str | None, str]] = set()
