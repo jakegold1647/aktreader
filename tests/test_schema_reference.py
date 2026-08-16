@@ -13,5 +13,5 @@ def test_schema_reference_is_current() -> None:
 def test_schema_reference_lists_each_versioned_contract() -> None:
     reference = render_reference()
     for schema in sorted(SCHEMA_DIR.glob("*.schema.json")):
-        assert f"\`{schema.name}\`" in reference
-        assert f"Source: [\`schemas/{schema.name}\`]" in reference
+        assert f"`{schema.name}`" in reference
+        assert f"Source: [`schemas/{schema.name}`]" in reference
