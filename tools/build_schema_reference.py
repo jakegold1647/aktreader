@@ -138,17 +138,17 @@ def render_reference() -> str:
         "",
         "It lists each schema's named object fields, required status, declared type or "
         "structure, and any description carried by the contract. References to "
-        "\`$defs\` remain links to the reusable definition named below rather than being "
+        "\`$defs\` remain pointers to the reusable definition named below rather than being "
         "expanded repeatedly.",
         "",
         "## Schemas",
         "",
     ]
     paths = sorted(SCHEMA_DIR.glob("*.schema.json"))
-    lines.extend(
-        f"- [{_markdown(str(json.loads(path.read_text(encoding="utf-8")).get("title", path.stem))}]"
-        f"(#{path.stem.lower()})" for path in paths
-    )
+    for path in paths:
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        title = _markdown(str(schema.get("title", path.stem)))
+        lines.append(f"- \`${path.name}\` — {${title}}")
     for path in paths:
         lines.extend(["", *_schema_reference(path)])
     return "\n".join(lines) + "\n"
