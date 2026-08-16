@@ -11,6 +11,7 @@ from aktreader.cli import main
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
+    evaluate_htr_suggestions,
     export_human_pagexml,
     import_htr_suggestions,
     import_pagexml_into_project,
@@ -386,3 +387,57 @@ def test_project_export_can_add_text_equiv_for_previously_blank_line(tmp_path: P
     assert import_pagexml(exported_path, image_root=source_root)["pages"][0]["lines"][0][
         "text"
     ] == "рукописный текст"
+
+
+def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    recognized = source_root / "page.kraken.xml"
+    _write_pagexml(source, text="act.")
+    _write_pagexml(recognized, text="akt")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    htr = import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="a" * 64,
+    )
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="act",
+        editor="reviewer-1",
+    )
+
+    report = evaluate_htr_suggestions(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        result_pagexml_sha256=htr["result_pagexml_sha256"],
+    )
+
+    assert report["status"] == "SUCCEEDED"
+    assert report["engine"] == "kraken"
+    assert report["source_line_count"] == report["run_line_count"] == 1
+    assert report["human_revision_count"] == report["evaluated_line_count"] == 1
+    assert report["suggestion_count_for_human_revisions"] == 1
+    assert report["normalization"] == "UNICODE_NFC_EXACT_WHITESPACE"
+    assert report["reference_character_count"] == report["hypothesis_character_count"] == 3
+    assert report["character_edit_distance"] == 1
+    assert report["character_error_rate"] == 1 / 3
+    assert report["reference_word_count"] == report["hypothesis_word_count"] == 1
+    assert report["word_edit_distance"] == 1
+    assert report["word_error_rate"] == 1
+    assert report["exact_line_match_count"] == 0
+    assert report["exact_line_match_rate"] == 0
+    assert report["network_required"] is False
