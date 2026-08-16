@@ -242,7 +242,10 @@ def _load_corpus_plan(plan: Path | str) -> tuple[Path, list[CorpusInput]]:
             "HTR corpus plan must contain at least one validation input; "
             "random trainer partitioning is not allowed"
         )
-    return plan_path, sorted(inputs, key=lambda item: (_SPLITS.index(item.split), item.manifest_sha256))
+    return plan_path, sorted(
+        inputs,
+        key=lambda item: (_SPLITS.index(item.split), item.manifest_sha256),
+    )
 
 
 def _bundle_path(bundle: Path, value: object, *, role: str) -> Path:
@@ -252,7 +255,8 @@ def _bundle_path(bundle: Path, value: object, *, role: str) -> Path:
     if "://" in normalized or normalized.startswith(("/", "\\", "//")):
         raise HtrCorpusError(f"{role} must be a safe bundle-relative path")
     relative = Path(normalized)
-    if relative.is_absolute() or ":" in normalized or any(part in ("", ".", "..") for part in relative.parts):
+    unsafe_parts = any(part in ("", ".", "..") for part in relative.parts)
+    if relative.is_absolute() or ":" in normalized or unsafe_parts:
         raise HtrCorpusError(f"{role} must be a safe bundle-relative path")
     try:
         resolved = (bundle / relative).resolve(strict=True)
@@ -425,7 +429,9 @@ def _verify_bundle(
             raise HtrCorpusError("training bundle PAGE XML image is missing from its inventory")
         referenced_images.add(image_filename)
     if referenced_images != set(image_digests):
-        raise HtrCorpusError("training bundle image inventory is not exactly the PAGE XML image set")
+        raise HtrCorpusError(
+            "training bundle image inventory is not exactly the PAGE XML image set"
+        )
 
     return VerifiedBundle(
         bundle_manifest_sha256=_sha256_file(manifest_path),
@@ -504,7 +510,9 @@ def assemble_consented_training_corpus(
             )
             verified = _verify_bundle(staged_bundle, source=source)
             if exported["source_pagexml_sha256"] != verified.source_pagexml_sha256:
-                raise HtrCorpusError("exported training bundle source identity changed unexpectedly")
+                raise HtrCorpusError(
+                    "exported training bundle source identity changed unexpectedly"
+                )
             corpus_bundle = data_directory / source.manifest_sha256
             shutil.move(str(staged_bundle), str(corpus_bundle))
             relative_pagexml = (
