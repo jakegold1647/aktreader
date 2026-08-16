@@ -77,10 +77,13 @@ from aktreader.project import (
     evaluate_htr_suggestions,
     export_consented_training_pagexml,
     export_human_pagexml,
+    export_review_package,
     grant_training_consent,
     import_htr_suggestions,
     import_pagexml_into_project,
+    import_review_package,
     inspect_project,
+    resolve_review_proposal,
     revoke_training_consent,
     training_readiness,
 )
@@ -231,6 +234,78 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing PAGE XML export",
+    )
+
+    project_export_review = subparsers.add_parser(
+        "project-export-review-package",
+        help="export one contributor's current revisions as an offline review package",
+    )
+    project_export_review.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_export_review.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_export_review.add_argument(
+        "--contributor",
+        required=True,
+        help="editor identity whose current revisions are exported",
+    )
+    project_export_review.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new JSON package path outside the project",
+    )
+    project_export_review.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing review package",
+    )
+
+    project_import_review = subparsers.add_parser(
+        "project-import-review-package",
+        help="queue one local offline review package without applying text",
+    )
+    project_import_review.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_import_review.add_argument(
+        "package",
+        type=Path,
+        help="local offline review package JSON",
+    )
+
+    project_resolve_review = subparsers.add_parser(
+        "project-resolve-review-proposal",
+        help="explicitly accept or reject one queued offline review proposal",
+    )
+    project_resolve_review.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_resolve_review.add_argument(
+        "--proposal-sha256",
+        required=True,
+        help="proposal SHA-256 emitted by project-import-review-package",
+    )
+    project_resolve_review.add_argument(
+        "--decision",
+        required=True,
+        choices=("accept", "reject"),
+        help="explicit owner decision",
+    )
+    project_resolve_review.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the decision",
     )
 
 
@@ -860,6 +935,54 @@ def _command_project_export_pagexml(args: argparse.Namespace) -> int:
         replace_existing=args.replace_existing,
     )
     _emit_json(report)
+    return 0
+
+
+def _command_project_export_review_package(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="review package output")
+    if output.is_dir():
+        raise CliConfigurationError(f"review package output is a directory: {output}")
+    if output == project or project in output.parents:
+        raise CliConfigurationError("review package output must be outside the project")
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "review package output already exists; pass --replace-existing to replace it"
+        )
+    report = export_review_package(
+        project,
+        output,
+        manifest_sha256=args.manifest_sha256,
+        contributor=args.contributor,
+        replace_existing=args.replace_existing,
+    )
+    _emit_json(report)
+    return 0
+
+
+def _command_project_import_review_package(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    package = local_input_path(args.package, role="review package")
+    if not project.is_dir() or not package.is_file():
+        raise CliConfigurationError("review package import requires a project and package file")
+    _emit_json(import_review_package(project, package))
+    return 0
+
+
+def _command_project_resolve_review_proposal(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        resolve_review_proposal(
+            project,
+            proposal_sha256=args.proposal_sha256,
+            decision=args.decision,
+            editor=args.editor,
+        )
+    )
     return 0
 
 
@@ -1521,6 +1644,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
+        "project-export-review-package": _command_project_export_review_package,
+        "project-import-review-package": _command_project_import_review_package,
+        "project-resolve-review-proposal": _command_project_resolve_review_proposal,
         "project-evaluate-htr": _command_project_evaluate_htr,
         "project-grant-training-consent": _command_project_grant_training_consent,
         "project-revoke-training-consent": _command_project_revoke_training_consent,
