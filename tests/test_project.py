@@ -10,6 +10,7 @@ from PIL import Image
 from aktreader.cli import main
 from aktreader.project import (
     create_project,
+    import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
     list_project_pages,
@@ -22,16 +23,16 @@ def _write_image(path: Path) -> None:
     Image.new("L", (40, 30), color=255).save(path)
 
 
-def _write_pagexml(path: Path) -> None:
+def _write_pagexml(path: Path, *, text: str = "Александр") -> None:
     path.write_text(
-        """<PcGts>
+        f"""<PcGts>
   <Page imageFilename="page.png" imageWidth="40" imageHeight="30">
     <TextRegion id="region-1">
       <Coords points="0,0 40,0 40,30 0,30"/>
       <TextLine id="line-1">
         <Coords points="2,2 38,2 38,12 2,12"/>
         <Baseline points="2,10 38,10"/>
-        <TextEquiv><Unicode>Александр</Unicode></TextEquiv>
+        <TextEquiv><Unicode>{text}</Unicode></TextEquiv>
       </TextLine>
     </TextRegion>
   </Page>
@@ -172,6 +173,98 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(tmp_pa
     assert unchanged["revision"] == 1
     assert inspect_project(project)["transcription_revision_count"] == 1
 
+
+
+def test_project_keeps_htr_suggestions_separate_from_human_revisions(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    recognized = source_root / "page.kraken.xml"
+    _write_pagexml(source)
+    _write_pagexml(recognized, text="Александръ")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+
+    stored = import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="a" * 64,
+    )
+
+    assert stored["status"] == "SUCCEEDED"
+    assert stored["already_imported"] is False
+    assert stored["suggestion_count"] == 1
+    page = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )
+    line = page["lines"][0]
+    assert line["source_text"] == line["text"] == "Александр"
+    assert len(line["suggestions"]) == 1
+    suggestion = line["suggestions"][0]
+    assert suggestion["engine"] == "kraken"
+    assert suggestion["runtime_fingerprint"] == "a" * 64
+    assert suggestion["result_pagexml_sha256"] == hashlib.sha256(
+        recognized.read_bytes()
+    ).hexdigest()
+    assert suggestion["text"] == "Александръ"
+    assert isinstance(suggestion["imported_at"], str)
+    revised = revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ?",
+        editor="reviewer-1",
+    )
+    assert revised["status"] == "SAVED"
+    after_revision = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    assert after_revision["text"] == "Александръ?"
+    assert after_revision["suggestions"][0]["text"] == "Александръ"
+
+    repeated = import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="a" * 64,
+    )
+    assert repeated["already_imported"] is True
+    report = inspect_project(project)
+    assert report["htr_run_count"] == 1
+    assert report["htr_suggestion_count"] == 1
+
+
+def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        with connection:
+            connection.execute("DROP TABLE htr_suggestions")
+            connection.execute("DROP TABLE htr_runs")
+            connection.execute("PRAGMA user_version = 2")
+    finally:
+        connection.close()
+
+    report = inspect_project(project)
+
+    assert report["htr_run_count"] == 0
+    assert report["htr_suggestion_count"] == 0
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 3
+    finally:
+        connection.close()
 
 def test_project_cli_creates_and_inspects_an_offline_project(tmp_path: Path, capsys) -> None:
     project = tmp_path / "register.aktproj"

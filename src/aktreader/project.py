@@ -24,7 +24,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 2
+PROJECT_DATABASE_VERSION = 3
 
 
 class ProjectStoreError(ValueError):
@@ -95,7 +95,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 2;
+                PRAGMA user_version = 3;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -145,11 +145,32 @@ def _initialize_database(path: Path) -> None:
                     FOREIGN KEY (manifest_sha256, source_span_id)
                         REFERENCES lines(manifest_sha256, source_span_id)
                 );
+
+                CREATE TABLE htr_runs (
+                    manifest_sha256 TEXT NOT NULL REFERENCES pagexml_imports(manifest_sha256),
+                    output_sha256 TEXT NOT NULL REFERENCES source_objects(sha256),
+                    engine TEXT NOT NULL,
+                    runtime_fingerprint TEXT NOT NULL,
+                    output_relative_path TEXT NOT NULL,
+                    imported_at TEXT NOT NULL,
+                    line_count INTEGER NOT NULL CHECK (line_count >= 0),
+                    PRIMARY KEY (manifest_sha256, output_sha256)
+                );
+                CREATE TABLE htr_suggestions (
+                    manifest_sha256 TEXT NOT NULL,
+                    output_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    suggested_text TEXT,
+                    PRIMARY KEY (manifest_sha256, output_sha256, source_span_id),
+                    FOREIGN KEY (manifest_sha256, output_sha256)
+                        REFERENCES htr_runs(manifest_sha256, output_sha256),
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
+                );
                 """
             )
     finally:
         connection.close()
-
 
 
 def _migrate_database(path: Path) -> None:
@@ -177,13 +198,43 @@ def _migrate_database(path: Path) -> None:
                     PRAGMA user_version = 2;
                     """
                 )
-            version = PROJECT_DATABASE_VERSION
+            version = 2
+        if version == 2:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE htr_runs (
+                        manifest_sha256 TEXT NOT NULL REFERENCES pagexml_imports(manifest_sha256),
+                        output_sha256 TEXT NOT NULL REFERENCES source_objects(sha256),
+                        engine TEXT NOT NULL,
+                        runtime_fingerprint TEXT NOT NULL,
+                        output_relative_path TEXT NOT NULL,
+                        imported_at TEXT NOT NULL,
+                        line_count INTEGER NOT NULL CHECK (line_count >= 0),
+                        PRIMARY KEY (manifest_sha256, output_sha256)
+                    );
+                    CREATE TABLE htr_suggestions (
+                        manifest_sha256 TEXT NOT NULL,
+                        output_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        suggested_text TEXT,
+                        PRIMARY KEY (manifest_sha256, output_sha256, source_span_id),
+                        FOREIGN KEY (manifest_sha256, output_sha256)
+                            REFERENCES htr_runs(manifest_sha256, output_sha256),
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    PRAGMA user_version = 3;
+                    """
+                )
+            version = 3
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
     except sqlite3.Error as error:
         raise ProjectStoreError(f"project database migration failed: {error}") from error
     finally:
         connection.close()
+
 
 def _object_relative_path(digest: str) -> Path:
     return Path("objects") / "sha256" / digest[:2] / digest
@@ -452,6 +503,208 @@ def import_pagexml_into_project(
     }
 
 
+def _require_sha256(value: str, *, role: str) -> str:
+    if not isinstance(value, str) or len(value) != 64:
+        raise ProjectStoreError(f"{role} must be a lowercase SHA-256 string")
+    try:
+        int(value, 16)
+    except ValueError as error:
+        raise ProjectStoreError(f"{role} must be a lowercase SHA-256 string") from error
+    if value != value.lower():
+        raise ProjectStoreError(f"{role} must be a lowercase SHA-256 string")
+    return value
+
+
+def _htr_line_key(
+    page_index: int,
+    page_id: str,
+    region_id: str | None,
+    line_id: str,
+) -> tuple[int, str, str | None, str]:
+    return page_index, page_id, region_id, line_id
+
+
+def import_htr_suggestions(
+    project: Path | str,
+    source: Path | str,
+    *,
+    manifest_sha256: str,
+    engine: str,
+    runtime_fingerprint: str,
+    image_root: Path | str | None = None,
+) -> dict[str, object]:
+    """Persist aligned PAGE XML recognition text as separate local suggestions."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    runtime_fingerprint = _require_sha256(
+        runtime_fingerprint,
+        role="runtime_fingerprint",
+    )
+    if not isinstance(engine, str) or not engine or not engine.replace("-", "").isalnum():
+        raise ProjectStoreError("engine must be a nonblank lowercase alphanumeric identifier")
+    if engine != engine.lower():
+        raise ProjectStoreError("engine must be a nonblank lowercase alphanumeric identifier")
+
+    root = _required_project_root(project)
+    imported = import_pagexml(source, image_root=image_root)
+    source_info = imported["source"]
+    output_sha256 = source_info["sha256"]
+    if not isinstance(output_sha256, str):
+        raise ProjectStoreError("PAGE XML importer returned an invalid result digest")
+    output_sha256 = _require_sha256(output_sha256, role="result PAGE XML SHA-256")
+    output_path = Path(source_info["path"])
+    output_pages = imported["pages"]
+    database = root / PROJECT_DATABASE_NAME
+    connection = sqlite3.connect(database)
+    try:
+        target_import = connection.execute(
+            "SELECT 1 FROM pagexml_imports WHERE manifest_sha256 = ?",
+            (manifest_sha256,),
+        ).fetchone()
+        if target_import is None:
+            raise ProjectStoreError("project PAGE XML import was not found")
+        target_pages = {
+            row[0]: (row[1], row[2], row[3], row[4])
+            for row in connection.execute(
+                """
+                SELECT page_index, page_id, image_sha256, width_px, height_px
+                FROM pages
+                WHERE manifest_sha256 = ?
+                """,
+                (manifest_sha256,),
+            )
+        }
+        target_lines = {
+            _htr_line_key(row[0], row[1], row[2], row[3]): (row[4], row[5])
+            for row in connection.execute(
+                """
+                SELECT page_index, page_id, region_id, line_id, source_span_id, bbox_json
+                FROM lines
+                WHERE manifest_sha256 = ?
+                """,
+                (manifest_sha256,),
+            )
+        }
+        if len(output_pages) != len(target_pages):
+            raise ProjectStoreError(
+                "recognition PAGE XML page count does not match the project import"
+            )
+
+        suggestions: list[tuple[str, str | None]] = []
+        observed_line_keys: set[tuple[int, str, str | None, str]] = set()
+        for page in output_pages:
+            page_index = page["page_index"]
+            page_id = page["page_id"]
+            image = page["image"]
+            expected_page = target_pages.get(page_index)
+            observed_page = (
+                page_id,
+                image["sha256"],
+                image["width_px"],
+                image["height_px"],
+            )
+            if expected_page != observed_page:
+                raise ProjectStoreError(
+                    "recognition PAGE XML page identity, image, or dimensions do not match "
+                    "the project import"
+                )
+            for line in page["lines"]:
+                locator = line["locator"]
+                key = _htr_line_key(
+                    page_index,
+                    page_id,
+                    locator["region_id"],
+                    locator["line_id"],
+                )
+                target_line = target_lines.get(key)
+                if target_line is None:
+                    raise ProjectStoreError(
+                        "recognition PAGE XML contains a line not present in the project import"
+                    )
+                if _canonical_json(line["bbox"]) != target_line[1]:
+                    raise ProjectStoreError(
+                        "recognition PAGE XML line geometry does not match the project import"
+                    )
+                observed_line_keys.add(key)
+                suggested_text = line["text"]
+                if suggested_text is not None and not isinstance(suggested_text, str):
+                    raise ProjectStoreError("recognition PAGE XML returned a non-string line text")
+                suggestions.append((target_line[0], suggested_text))
+        if observed_line_keys != set(target_lines):
+            raise ProjectStoreError(
+                "recognition PAGE XML does not contain exactly the project import's lines"
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot validate recognition PAGE XML: {error}") from error
+    finally:
+        connection.close()
+
+    stored_output = _store_object(
+        root,
+        output_path,
+        digest=output_sha256,
+        object_kind=f"{engine}-pagexml-result",
+    )
+    imported_at = _timestamp()
+    connection = sqlite3.connect(database)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            _insert_object(
+                connection,
+                digest=output_sha256,
+                object_kind=f"{engine}-pagexml-result",
+                source=output_path,
+                relative_path=stored_output,
+                imported_at=imported_at,
+            )
+            cursor = connection.execute(
+                """
+                INSERT OR IGNORE INTO htr_runs
+                    (manifest_sha256, output_sha256, engine, runtime_fingerprint,
+                     output_relative_path, imported_at, line_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    output_sha256,
+                    engine,
+                    runtime_fingerprint,
+                    stored_output,
+                    imported_at,
+                    len(suggestions),
+                ),
+            )
+            already_imported = cursor.rowcount == 0
+            if not already_imported:
+                connection.executemany(
+                    """
+                    INSERT INTO htr_suggestions
+                        (manifest_sha256, output_sha256, source_span_id, suggested_text)
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    [
+                        (manifest_sha256, output_sha256, source_span_id, text)
+                        for source_span_id, text in suggestions
+                    ],
+                )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot store recognition suggestions: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "SUCCEEDED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "engine": engine,
+        "runtime_fingerprint": runtime_fingerprint,
+        "result_pagexml_sha256": output_sha256,
+        "result_pagexml_object": stored_output,
+        "already_imported": already_imported,
+        "suggestion_count": len(suggestions),
+        "network_required": False,
+    }
+
 
 def list_project_pages(path: Path | str) -> list[dict[str, object]]:
     """List every imported page in stable import and page order."""
@@ -556,10 +809,39 @@ def load_project_page(
             """,
             (manifest_sha256, page_index),
         ).fetchall()
+        suggestion_rows = connection.execute(
+            """
+            SELECT
+                htr_suggestions.source_span_id,
+                htr_runs.engine,
+                htr_runs.runtime_fingerprint,
+                htr_runs.output_sha256,
+                htr_suggestions.suggested_text,
+                htr_runs.imported_at
+            FROM htr_suggestions
+            JOIN htr_runs
+                ON htr_runs.manifest_sha256 = htr_suggestions.manifest_sha256
+               AND htr_runs.output_sha256 = htr_suggestions.output_sha256
+            WHERE htr_suggestions.manifest_sha256 = ?
+            ORDER BY htr_runs.imported_at DESC, htr_suggestions.output_sha256
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project page: {error}") from error
     finally:
         connection.close()
+    suggestions_by_span: dict[str, list[dict[str, object]]] = {}
+    for suggestion in suggestion_rows:
+        suggestions_by_span.setdefault(suggestion[0], []).append(
+            {
+                "engine": suggestion[1],
+                "runtime_fingerprint": suggestion[2],
+                "result_pagexml_sha256": suggestion[3],
+                "text": suggestion[4],
+                "imported_at": suggestion[5],
+            }
+        )
     return {
         "manifest_sha256": manifest_sha256,
         "page_index": page_index,
@@ -578,6 +860,7 @@ def load_project_page(
                 "revision": row[6],
                 "bbox": json.loads(row[4]),
                 "locator": json.loads(row[5]),
+                "suggestions": suggestions_by_span.get(row[0], []),
             }
             for row in lines
         ],
@@ -688,6 +971,10 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         revision_count = connection.execute(
             "SELECT COUNT(*) FROM transcription_revisions"
         ).fetchone()[0]
+        htr_run_count = connection.execute("SELECT COUNT(*) FROM htr_runs").fetchone()[0]
+        htr_suggestion_count = connection.execute(
+            "SELECT COUNT(*) FROM htr_suggestions"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -701,5 +988,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "page_count": page_count,
         "line_count": line_count,
         "transcription_revision_count": revision_count,
+        "htr_run_count": htr_run_count,
+        "htr_suggestion_count": htr_suggestion_count,
         "network_required": False,
     }

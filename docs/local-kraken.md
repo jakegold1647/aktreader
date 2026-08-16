@@ -45,3 +45,21 @@ the requested output location. Pass --replace-existing only to replace a previou
 This first adapter intentionally does not claim that an arbitrary available model can read
 nineteenth-century Congress-Poland handwriting. Model selection, evaluation, and future
 training require rights-cleared, human-reviewed data and clerk-year-separated evaluation.
+
+
+## Importing suggestions into a project
+
+After recognition, retain the JSON printed by the command: it contains the runtime fingerprint
+and the result PAGE XML hash. The original project import prints its manifest SHA-256. Use both
+to attach the result to that exact project import:
+
+    aktreader project-import-htr-suggestions E:\projects\serock.aktproj E:\register\page.kraken.xml --manifest-sha256 <project-import-manifest-sha256> --engine kraken --runtime-fingerprint <kraken-runtime-fingerprint>
+
+The project checks that every result page points at the same image bytes and dimensions, and that
+the page identifiers, line identifiers, region identifiers, and line geometry exactly match the
+imported source. It copies the result PAGE XML into content-addressed local project storage and
+records its engine and runtime fingerprint. Any mismatch is rejected rather than guessed.
+
+In the workbench, the newest aligned engine suggestion appears below the human editor. Using it
+only copies text into the editor. Saving still appends a human revision and leaves both the
+source PAGE XML and the engine proposal unchanged.

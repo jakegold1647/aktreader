@@ -98,17 +98,31 @@ class LocalWorkbench:
         self.ttk.Label(side, text="Transcription").grid(row=2, column=0, pady=(8, 0), sticky="w")
         self.text_editor = self.tk.Text(side, height=7, wrap="word", undo=True)
         self.text_editor.grid(row=3, column=0, sticky="nsew")
+        self.suggestion_label = self.ttk.Label(
+            side,
+            justify="left",
+            text="No engine suggestion for the selected line",
+            wraplength=360,
+        )
+        self.suggestion_label.grid(row=4, column=0, pady=(8, 0), sticky="ew")
         controls = self.ttk.Frame(side)
-        controls.grid(row=4, column=0, pady=(8, 0), sticky="ew")
-        controls.columnconfigure(1, weight=1)
+        controls.grid(row=5, column=0, pady=(8, 0), sticky="ew")
+        controls.columnconfigure(2, weight=1)
         self.save_button = self.ttk.Button(
             controls,
             text="Save human revision",
             command=self._save_revision,
         )
         self.save_button.grid(row=0, column=0, sticky="w")
+        self.use_suggestion_button = self.ttk.Button(
+            controls,
+            command=self._use_suggestion,
+            state="disabled",
+            text="Use engine suggestion",
+        )
+        self.use_suggestion_button.grid(row=0, column=1, padx=(8, 0), sticky="w")
         self.status = self.ttk.Label(controls, text="Local-only; source XML is never overwritten")
-        self.status.grid(row=0, column=1, padx=(12, 0), sticky="w")
+        self.status.grid(row=0, column=2, padx=(12, 0), sticky="w")
 
     def _on_page_changed(self, _event: Any) -> None:
         index = self.page_selector.current()
@@ -205,8 +219,38 @@ class LocalWorkbench:
         self.text_editor.delete("1.0", "end")
         if line["text"] is not None:
             self.text_editor.insert("1.0", str(line["text"]))
+        suggestions = list(line["suggestions"])
+        if suggestions and suggestions[0]["text"] is not None:
+            suggestion = suggestions[0]
+            preview = str(suggestion["text"]).replace("\n", " ")[:96]
+            self.suggestion_label.configure(
+                text=f"{suggestion['engine']} suggestion (review before saving): {preview}"
+            )
+            self.use_suggestion_button.configure(state="normal")
+        elif suggestions:
+            self.suggestion_label.configure(
+                text=f"{suggestions[0]['engine']} produced no text for this line"
+            )
+            self.use_suggestion_button.configure(state="disabled")
+        else:
+            self.suggestion_label.configure(text="No engine suggestion for the selected line")
+            self.use_suggestion_button.configure(state="disabled")
         self.canvas.itemconfigure("line-box", outline="#f6ad55")
         self.canvas.itemconfigure(f"line:{line['source_span_id']}", outline="#68d391")
+
+    def _use_suggestion(self) -> None:
+        selected = self.line_list.curselection()
+        if not selected:
+            return
+        line = self.current_lines[int(selected[0])]
+        suggestions = list(line["suggestions"])
+        if not suggestions or suggestions[0]["text"] is None:
+            return
+        self.text_editor.delete("1.0", "end")
+        self.text_editor.insert("1.0", str(suggestions[0]["text"]))
+        self.status.configure(
+            text="Engine suggestion copied to editor; review it, then save a human revision"
+        )
 
     def _save_revision(self) -> None:
         if self.current_page is None:
