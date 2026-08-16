@@ -79,7 +79,7 @@ is: none.
 - `tests/test_no_egress.py` (CI-enforced) parses every module in `src/aktreader` and fails if
   any networking-capable module is imported, and pins the runtime dependency set so a network
   client cannot arrive transitively without that test changing in the same review.
-- The same file re-runs representative CLI paths (`doctor`, `prompt-verify`, `eval`) with
+- The same file re-runs representative CLI paths (`doctor`, `prompt-verify`, `compare`, `eval`) with
   socket creation disabled; any attempt to open a socket fails the run.
 - Runtime dependencies are `jsonschema` and `pillow` only; the full reviewed license inventory
   (14 packages, including transitive) is `dependency-licenses.json`.
