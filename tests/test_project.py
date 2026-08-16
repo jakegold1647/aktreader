@@ -11,17 +11,17 @@ from aktreader.cli import main
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
-    grant_training_consent,
-    revoke_training_consent,
-    training_readiness,
     evaluate_htr_suggestions,
     export_human_pagexml,
+    grant_training_consent,
     import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
     list_project_pages,
     load_project_page,
+    revoke_training_consent,
     revise_line_transcription,
+    training_readiness,
 )
 
 
