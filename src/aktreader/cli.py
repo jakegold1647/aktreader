@@ -1364,7 +1364,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-grant-training-consent": _command_project_grant_training_consent,
         "project-revoke-training-consent": _command_project_revoke_training_consent,
         "project-training-readiness": _command_project_training_readiness,
-        "project-export-consented-training-pagexml": _command_project_export_consented_training_pagexml,
+        "project-export-consented-training-pagexml": (
+            _command_project_export_consented_training_pagexml
+        ),
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
