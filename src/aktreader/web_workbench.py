@@ -8,11 +8,12 @@ same append-only project store used by the desktop workbench.
 from __future__ import annotations
 
 import json
-import mimetypes
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse
+
+from PIL import Image
 
 from aktreader.project import (
     ProjectStoreError,
@@ -174,7 +175,11 @@ def _image_payload(project: Path, manifest_sha256: str, page_index: int) -> tupl
         image = image_path.read_bytes()
     except OSError as error:
         raise WebWorkbenchError("project image is unavailable") from error
-    media_type = mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
+    try:
+        with Image.open(image_path) as opened:
+            media_type = Image.MIME.get(opened.format or "", "application/octet-stream")
+    except OSError as error:
+        raise WebWorkbenchError("project image format is unreadable") from error
     return media_type, image
 
 
