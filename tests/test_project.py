@@ -83,7 +83,9 @@ def test_project_import_copies_hashed_pagexml_images_and_lines(tmp_path: Path) -
         f"objects/sha256/{image_digest[:2]}/{image_digest}"
     )
     assert (project / manifest["source"]["stored_object"]).read_bytes() == source.read_bytes()
-    assert (\n        project / manifest["pages"][0]["image"]["stored_object"]\n    ).read_bytes() == image.read_bytes()
+    assert (
+        project / manifest["pages"][0]["image"]["stored_object"]
+    ).read_bytes() == image.read_bytes()
     line = manifest["pages"][0]["lines"][0]
     assert line["locator"]["page_id"] == "page-index-0"
     assert line["locator"]["line_id"] == "line-1"
