@@ -20,6 +20,7 @@ import socket
 from pathlib import Path
 
 import pytest
+from PIL import Image
 import tomllib
 
 from aktreader.cli import main
