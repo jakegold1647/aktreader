@@ -14,6 +14,7 @@ from PIL import Image
 
 from aktreader.project import (
     ProjectStoreError,
+    list_project_documents,
     list_project_pages,
     load_project_page,
     resolve_review_proposal,
@@ -23,6 +24,46 @@ from aktreader.project import (
 
 class WorkbenchError(ValueError):
     """Raised when the local interactive workbench cannot be started."""
+
+
+def _document_page_groups(
+    documents: list[dict[str, object]],
+    pages: list[dict[str, object]],
+) -> list[tuple[dict[str, object], list[dict[str, object]]]]:
+    """Partition stable project pages by their immutable document imports."""
+
+    pages_by_manifest: dict[str, list[dict[str, object]]] = {}
+    for page in pages:
+        manifest_sha256 = page.get("manifest_sha256")
+        page_index = page.get("page_index")
+        if not isinstance(manifest_sha256, str) or not isinstance(page_index, int):
+            raise WorkbenchError("project page identity is invalid")
+        pages_by_manifest.setdefault(manifest_sha256, []).append(page)
+    groups: list[tuple[dict[str, object], list[dict[str, object]]]] = []
+    seen_manifests: set[str] = set()
+    for document in documents:
+        manifest_sha256 = document.get("manifest_sha256")
+        title = document.get("title")
+        page_count = document.get("page_count")
+        if (
+            not isinstance(manifest_sha256, str)
+            or not isinstance(title, str)
+            or not title.strip()
+            or not isinstance(page_count, int)
+            or page_count < 1
+            or manifest_sha256 in seen_manifests
+        ):
+            raise WorkbenchError("project document metadata is invalid")
+        document_pages = pages_by_manifest.pop(manifest_sha256, [])
+        if len(document_pages) != page_count:
+            raise WorkbenchError("project document page count is inconsistent")
+        groups.append((document, document_pages))
+        seen_manifests.add(manifest_sha256)
+    if pages_by_manifest:
+        raise WorkbenchError("project pages are missing document metadata")
+    if not groups:
+        raise WorkbenchError("project has no imported documents; import PAGE XML before opening it")
+    return groups
 
 
 class LocalWorkbench:
@@ -43,18 +84,20 @@ class LocalWorkbench:
         self.messagebox = messagebox
         self.image_tk = image_tk
         self.pages = list_project_pages(self.project)
-        if not self.pages:
-            raise WorkbenchError("project has no imported pages; import PAGE XML before opening it")
+        self.documents = list_project_documents(self.project)
+        self.document_page_groups = _document_page_groups(self.documents, self.pages)
         self.root = tk.Tk()
         self.root.title("AKT Reader Workbench — local-only")
         self.root.minsize(960, 640)
+        self.current_document: dict[str, object] | None = None
+        self.current_document_pages: list[dict[str, object]] = []
         self.current_page: dict[str, object] | None = None
         self.current_lines: list[dict[str, object]] = []
         self.line_indices: dict[str, int] = {}
         self.photo: Any = None
         self.scale = 1.0
         self._build()
-        self._show_page(0)
+        self._show_document(0)
 
     def _build(self) -> None:
         self.root.columnconfigure(0, weight=3)
@@ -64,21 +107,26 @@ class LocalWorkbench:
         toolbar = self.ttk.Frame(self.root, padding=8)
         toolbar.grid(row=0, column=0, columnspan=2, sticky="ew")
         toolbar.columnconfigure(1, weight=1)
-        self.ttk.Label(toolbar, text="Page").grid(row=0, column=0, sticky="w")
-        self.page_selector = self.ttk.Combobox(
+        toolbar.columnconfigure(3, weight=1)
+        self.ttk.Label(toolbar, text="Document").grid(row=0, column=0, sticky="w")
+        self.document_selector = self.ttk.Combobox(
             toolbar,
             state="readonly",
             values=[
-                f"{index + 1}. {page['page_id']} ({page['width_px']}×{page['height_px']})"
-                for index, page in enumerate(self.pages)
+                f"{index + 1}. {document['title']} ({document['page_count']} pages)"
+                for index, (document, _pages) in enumerate(self.document_page_groups)
             ],
         )
-        self.page_selector.grid(row=0, column=1, padx=(8, 16), sticky="ew")
+        self.document_selector.grid(row=0, column=1, padx=(8, 16), sticky="ew")
+        self.document_selector.bind("<<ComboboxSelected>>", self._on_document_changed)
+        self.ttk.Label(toolbar, text="Page").grid(row=0, column=2, sticky="w")
+        self.page_selector = self.ttk.Combobox(toolbar, state="readonly")
+        self.page_selector.grid(row=0, column=3, padx=(8, 16), sticky="ew")
         self.page_selector.bind("<<ComboboxSelected>>", self._on_page_changed)
-        self.ttk.Label(toolbar, text="Editor").grid(row=0, column=2, sticky="w")
+        self.ttk.Label(toolbar, text="Editor").grid(row=0, column=4, sticky="w")
         self.editor = self.ttk.Entry(toolbar, width=20)
         self.editor.insert(0, "local-user")
-        self.editor.grid(row=0, column=3, padx=(8, 0), sticky="e")
+        self.editor.grid(row=0, column=5, padx=(8, 0), sticky="e")
 
         image_frame = self.ttk.Frame(self.root, padding=(8, 0, 4, 8))
         image_frame.grid(row=1, column=0, sticky="nsew")
@@ -139,13 +187,38 @@ class LocalWorkbench:
         self.status = self.ttk.Label(controls, text="Local-only; source XML is never overwritten")
         self.status.grid(row=0, column=3, padx=(12, 0), sticky="w")
 
+    def _on_document_changed(self, _event: Any) -> None:
+        index = self.document_selector.current()
+        if index >= 0:
+            self._show_document(index)
+
+    def _show_document(self, document_choice_index: int) -> None:
+        if not 0 <= document_choice_index < len(self.document_page_groups):
+            raise WorkbenchError("selected project document is unavailable")
+        document, pages = self.document_page_groups[document_choice_index]
+        self.current_document = document
+        self.current_document_pages = pages
+        self.document_selector.current(document_choice_index)
+        self.page_selector.configure(
+            values=[
+                (
+                    f"{index + 1} of {len(pages)}. {page['page_id']} "
+                    f"({page['width_px']}×{page['height_px']})"
+                )
+                for index, page in enumerate(pages)
+            ]
+        )
+        self._show_page(0)
+
     def _on_page_changed(self, _event: Any) -> None:
         index = self.page_selector.current()
         if index >= 0:
             self._show_page(index)
 
     def _show_page(self, page_choice_index: int) -> None:
-        selected = self.pages[page_choice_index]
+        if not 0 <= page_choice_index < len(self.current_document_pages):
+            raise WorkbenchError("selected document page is unavailable")
+        selected = self.current_document_pages[page_choice_index]
         page = load_project_page(
             self.project,
             manifest_sha256=str(selected["manifest_sha256"]),
@@ -159,7 +232,14 @@ class LocalWorkbench:
         self.page_selector.current(page_choice_index)
         self._draw_page()
         self._populate_lines()
-        self.status.configure(text="Local-only; source XML is never overwritten")
+        document_title = (
+            str(self.current_document["title"])
+            if self.current_document is not None
+            else "selected document"
+        )
+        self.status.configure(
+            text=f"Local-only; {document_title}; source XML is never overwritten"
+        )
 
     def _draw_page(self) -> None:
         if self.current_page is None:
