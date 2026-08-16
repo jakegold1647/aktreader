@@ -19,9 +19,12 @@ from aktreader.project import (
     ProjectStoreError,
     inspect_project,
     list_project_documents,
+    load_project_page_layout,
     list_project_pages,
     load_project_page,
     revise_line_transcription,
+    revise_page_reading_order,
+    revise_region_geometry,
 )
 
 LOOPBACK_HOST = "127.0.0.1"
@@ -145,10 +148,16 @@ def _document_pages(project: Path, manifest_sha256: str) -> dict[str, object]:
 
 def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[str, object]:
     manifest_sha256 = _require_manifest_sha256(manifest_sha256)
+    page_index = _require_page_index(page_index)
     page = load_project_page(
         project,
         manifest_sha256=manifest_sha256,
-        page_index=_require_page_index(page_index),
+        page_index=page_index,
+    )
+    layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
     )
     safe_fields = {
         "manifest_sha256": manifest_sha256,
@@ -158,6 +167,8 @@ def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[
         "width_px": page["width_px"],
         "height_px": page["height_px"],
         "lines": page["lines"],
+        "regions": layout["regions"],
+        "reading_order": layout["reading_order"],
         "image_url": f"/api/image?{_page_query(manifest_sha256, page_index)}",
         "network_required": False,
     }
@@ -210,7 +221,40 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
     )
 
 
-def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
+
+def _region_geometry_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("region geometry request must be a JSON object")
+    expected = {"manifest_sha256", "page_index", "region_id", "polygon", "editor"}
+    if set(payload) != expected:
+        raise WebWorkbenchError(
+            "region geometry request has invalid keys"
+        )
+    return revise_region_geometry(
+        project,
+        manifest_sha256=_require_manifest_sha256(payload["manifest_sha256"]),
+        page_index=_require_page_index(payload["page_index"]),
+        region_id=payload["region_id"],
+        polygon=payload["polygon"],
+        editor=payload["editor"],
+    )
+
+
+def _reading_order_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("reading-order request must be a JSON object")
+    expected = {"manifest_sha256", "page_index", "region_ids", "editor"}
+    if set(payload) != expected:
+        raise WebWorkbenchError("reading-order request has invalid keys")
+    return revise_page_reading_order(
+        project,
+        manifest_sha256=_require_manifest_sha256(payload["manifest_sha256"]),
+        page_index=_require_page_index(payload["page_index"]),
+        region_ids=payload["region_ids"],
+        editor=payload["editor"],
+    )
+
+_handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
     class ProjectHandler(BaseHTTPRequestHandler):
         server_version = "AKTReaderWorkbench/0.1"
 
@@ -302,10 +346,17 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
         def do_POST(self) -> None:
             parsed = urlparse(self.path)
             try:
-                if parsed.path != "/api/transcriptions":
+                payload = self._request_json()
+                if parsed.path == "/api/transcriptions":
+                    response = _revision_payload(project, payload)
+                elif parsed.path == "/api/region-geometry":
+                    response = _region_geometry_payload(project, payload)
+                elif parsed.path == "/api/reading-order":
+                    response = _reading_order_payload(project, payload)
+                else:
                     self._error(HTTPStatus.NOT_FOUND, "route was not found")
                     return
-                self._json(HTTPStatus.OK, _revision_payload(project, self._request_json()))
+                self._json(HTTPStatus.OK, response)
             except (ProjectStoreError, WebWorkbenchError) as error:
                 self._error(HTTPStatus.BAD_REQUEST, str(error))
 
