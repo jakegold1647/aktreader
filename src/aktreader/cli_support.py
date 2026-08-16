@@ -10,7 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from aktreader.batch import BatchJob
-from aktreader.kraken import KrakenConfig, LocalKraken\nfrom aktreader.local_reader import LocalReader, LocalReaderConfig, PinnedArtifact
+from aktreader.kraken import KrakenConfig, LocalKraken
+from aktreader.local_reader import LocalReader, LocalReaderConfig, PinnedArtifact
 
 READER_CONFIG_VERSION = "1.0.0"
 
