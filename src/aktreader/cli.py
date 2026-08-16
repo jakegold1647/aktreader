@@ -65,6 +65,7 @@ from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
     evaluate_htr_suggestions,
+    export_consented_training_pagexml,
     export_human_pagexml,
     grant_training_consent,
     import_htr_suggestions,
@@ -331,6 +332,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing local readiness report",
+    )
+
+
+    project_export_training = subparsers.add_parser(
+        "project-export-consented-training-pagexml",
+        help="create one consent-gated local PAGE XML HTR training bundle",
+    )
+    project_export_training.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_export_training.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_export_training.add_argument(
+        "--split",
+        required=True,
+        choices=("train", "validation", "test"),
+        help="immutable split assignment for this project import",
+    )
+    project_export_training.add_argument(
+        "--output-directory",
+        required=True,
+        type=Path,
+        help="new local bundle directory outside the project",
     )
 
     workbench = subparsers.add_parser(
@@ -852,6 +881,28 @@ def _command_project_training_readiness(args: argparse.Namespace) -> int:
     _emit_json(report)
     return 0
 
+
+def _command_project_export_consented_training_pagexml(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output_directory = local_output_path(
+        args.output_directory,
+        role="consented PAGE XML training bundle directory",
+    )
+    if output_directory.exists():
+        raise CliConfigurationError(
+            f"consented PAGE XML training bundle directory already exists: {output_directory}"
+        )
+    report = export_consented_training_pagexml(
+        project,
+        output_directory,
+        manifest_sha256=args.manifest_sha256,
+        split=args.split,
+    )
+    _emit_json(report)
+    return 0
+
 def _command_workbench(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1313,6 +1364,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-grant-training-consent": _command_project_grant_training_consent,
         "project-revoke-training-consent": _command_project_revoke_training_consent,
         "project-training-readiness": _command_project_training_readiness,
+        "project-export-consented-training-pagexml": (
+            _command_project_export_consented_training_pagexml
+        ),
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,

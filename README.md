@@ -146,7 +146,7 @@ stable machine-readable report; a failed or skipped check makes the command exit
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
-`project-training-readiness`, `workbench`,
+`project-training-readiness`, `project-export-consented-training-pagexml`, `workbench`,
 `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
@@ -232,6 +232,19 @@ python -m aktreader project-training-readiness serock.aktproj `
 A report is `READY_FOR_PAGEXML_TRAINING_EXPORT` only when every source line has both a current
 human revision and an active consent bound to that exact revision.
 
+When readiness is green, create a self-contained PAGE XML bundle for a fixed split. It copies the
+project’s checksum-verified images, writes only the human revisions, records opaque consent
+evidence, and refuses to assign the same project import to another split later.
+
+```powershell
+python -m aktreader project-export-consented-training-pagexml serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --split train `
+  --output-directory serock-train-bundle
+```
+
+The bundle is local only and does not run or download Kraken. Its `bundle.aktreader.json` records
+the exact PAGE XML, image, consent, and split inputs for a separately provisioned local trainer.
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
 

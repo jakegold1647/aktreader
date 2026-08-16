@@ -10,8 +10,10 @@ from PIL import Image
 from aktreader.cli import main
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
+    ProjectStoreError,
     create_project,
     evaluate_htr_suggestions,
+    export_consented_training_pagexml,
     export_human_pagexml,
     grant_training_consent,
     import_htr_suggestions,
@@ -256,6 +258,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE training_split_assignments")
             connection.execute("DROP TABLE training_consent_revocations")
             connection.execute("DROP TABLE training_consent_grants")
             connection.execute("DROP TABLE htr_suggestions")
@@ -270,7 +273,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
     finally:
         connection.close()
 
@@ -537,6 +540,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE training_split_assignments")
             connection.execute("DROP TABLE training_consent_revocations")
             connection.execute("DROP TABLE training_consent_grants")
             connection.execute("PRAGMA user_version = 3")
@@ -549,6 +553,98 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     assert report["training_consent_revocation_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+    finally:
+        connection.close()
+
+
+def test_project_exports_a_consented_htr_training_bundle(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    image = source_root / "page.png"
+    _write_image(image)
+    source = source_root / "page.xml"
+    _write_pagexml(source, text="Александр")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+    )
+    grant_training_consent(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        contributor="reviewer-1",
+        all_human_revised=True,
+    )
+    bundle = tmp_path / "serock-train"
+
+    report = export_consented_training_pagexml(
+        project,
+        bundle,
+        manifest_sha256=imported["manifest_sha256"],
+        split="train",
+    )
+
+    image_sha256 = hashlib.sha256(image.read_bytes()).hexdigest()
+    bundle_manifest = json.loads(
+        (bundle / "bundle.aktreader.json").read_text(encoding="utf-8")
+    )
+    assert report["status"] == "SUCCEEDED"
+    assert report["split"] == "train"
+    assert report["eligible_training_line_count"] == 1
+    assert (bundle / "train.lst").read_text(encoding="utf-8") == "document.page.xml\n"
+    assert (bundle / "images" / f"{image_sha256}.png").is_file()
+    assert bundle_manifest["contract"] == {
+        "name": "aktreader-consented-pagexml-training-bundle",
+        "version": "1.0.0",
+    }
+    assert bundle_manifest["source_import"]["manifest_sha256"] == imported["manifest_sha256"]
+    assert bundle_manifest["split"] == "train"
+    assert bundle_manifest["network_required"] is False
+    exported = import_pagexml(bundle / "document.page.xml", image_root=bundle)
+    assert exported["pages"][0]["lines"][0]["text"] == "Александръ"
+    assert inspect_project(project)["training_split_assignment_count"] == 1
+
+    try:
+        export_consented_training_pagexml(
+            project,
+            tmp_path / "serock-validation",
+            manifest_sha256=imported["manifest_sha256"],
+            split="validation",
+        )
+    except ProjectStoreError as error:
+        assert "different immutable training split assignment" in str(error)
+    else:
+        raise AssertionError("a source import must not be assigned to two training splits")
+
+
+def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path) -> None:
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        with connection:
+            connection.execute("DROP TABLE training_split_assignments")
+            connection.execute("PRAGMA user_version = 4")
+    finally:
+        connection.close()
+
+    report = inspect_project(project)
+
+    assert report["training_split_assignment_count"] == 0
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
     finally:
         connection.close()
