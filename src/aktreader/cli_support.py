@@ -293,8 +293,6 @@ def load_local_reader_config(path: Path | str) -> LocalReaderConfig:
     )
 
 
-
-
 def _kraken_artifact_from_config(
     raw: Any,
     *,
