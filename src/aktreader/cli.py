@@ -64,6 +64,7 @@ from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
+    evaluate_htr_suggestions,
     export_human_pagexml,
     import_htr_suggestions,
     import_pagexml_into_project,
@@ -216,6 +217,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing PAGE XML export",
+    )
+
+
+    project_evaluate_htr = subparsers.add_parser(
+        "project-evaluate-htr",
+        help="evaluate one imported HTR result against explicit human revisions",
+    )
+    project_evaluate_htr.add_argument("project", type=Path, help="local .aktproj directory")
+    project_evaluate_htr.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_evaluate_htr.add_argument(
+        "--result-pagexml-sha256",
+        required=True,
+        help="imported recognition PAGE XML SHA-256",
+    )
+    project_evaluate_htr.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new local HTR evaluation report path outside the project",
+    )
+    project_evaluate_htr.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing local evaluation report",
     )
 
     workbench = subparsers.add_parser(
@@ -652,6 +681,32 @@ def _command_project_export_pagexml(args: argparse.Namespace) -> int:
         manifest_sha256=args.manifest_sha256,
         replace_existing=args.replace_existing,
     )
+    _emit_json(report)
+    return 0
+
+
+def _command_project_evaluate_htr(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="HTR evaluation report")
+    if output.is_dir():
+        raise CliConfigurationError(f"HTR evaluation report is a directory: {output}")
+    if output == project or project in output.parents:
+        raise CliConfigurationError(
+            "HTR evaluation report must be outside the project so project storage stays immutable"
+        )
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "HTR evaluation report already exists; pass --replace-existing to replace it atomically"
+        )
+    report = evaluate_htr_suggestions(
+        project,
+        manifest_sha256=args.manifest_sha256,
+        result_pagexml_sha256=args.result_pagexml_sha256,
+    )
+    report = {**report, "output": str(output)}
+    atomic_write_json(output, report)
     _emit_json(report)
     return 0
 
@@ -1112,6 +1167,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
+        "project-evaluate-htr": _command_project_evaluate_htr,
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,

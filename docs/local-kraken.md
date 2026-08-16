@@ -63,3 +63,19 @@ records its engine and runtime fingerprint. Any mismatch is rejected rather than
 In the workbench, the newest aligned engine suggestion appears below the human editor. Using it
 only copies text into the editor. Saving still appends a human revision and leaves both the
 source PAGE XML and the engine proposal unchanged.
+
+## Evaluating a pinned result
+
+A recognition result is useful for model selection only after a reviewer has saved explicit
+corrections. Evaluate the result hash returned by `project-import-htr-suggestions` against those
+human revisions:
+
+    aktreader project-evaluate-htr E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --result-pagexml-sha256 <imported-result-pagexml-sha256> --output E:\reports\serock-kraken.json
+
+The report records the engine and runtime fingerprint, and reports exact-line-match rate,
+character error rate (CER), word error rate (WER), and all denominators. Text is normalized to
+Unicode NFC only; case and whitespace remain significant. It evaluates only a line that has both
+an imported engine suggestion and a later human revision. With none, the command writes a
+`NO_EVALUABLE_HUMAN_REVISIONS` report rather than using source PAGE XML text as ground truth.
+The report must live outside the project and will not replace an existing file unless
+`--replace-existing` is explicit.

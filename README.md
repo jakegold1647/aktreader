@@ -144,7 +144,8 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `project-create`, `project-inspect`,
-`project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`, `workbench`,
+`project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
+`project-evaluate-htr`, `workbench`,
 `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
@@ -198,6 +199,20 @@ python -m aktreader project-export-pagexml serock.aktproj `
 
 Exports must live outside the project and will not replace an existing file unless
 `--replace-existing` is explicit.
+
+Evaluate a specific imported HTR result only against saved human revisions. The report is pinned
+to the project import and recognition PAGE XML hashes; it uses Unicode NFC with exact whitespace,
+and reports CER, WER, exact-line match, and the coverage counts needed to judge whether the sample
+is meaningful. With no explicit human revisions it writes a `NO_EVALUABLE_HUMAN_REVISIONS` report
+rather than treating imported text as truth.
+
+```powershell
+python -m aktreader project-evaluate-htr serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --result-pagexml-sha256 <imported-result-pagexml-sha256> `
+  --output serock-kraken-evaluation.json
+```
+
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
 
