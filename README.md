@@ -152,7 +152,7 @@ The CLI also provides `label-validate`, `collection-create`, `collection-add-pro
 `project-resolve-review-proposal`, `project-revise-line-geometry`,
 `project-revise-page-reading-order`, `project-revise-region-geometry`,
 `htr-build-corpus`,
-`htr-inspect-corpus`, `pagexml-import`,
+`htr-inspect-corpus`, `workbench`, `serve`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `kraken-evaluate`,
 `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in
@@ -200,6 +200,18 @@ does not make it training data or publishable data.
 
 Every import is also a stable document record. Its local title, tags, and notes can be updated without
 touching the PAGE XML or images; see [document metadata](docs/document-metadata.md).
+
+### Loopback browser workbench
+
+For a single-user browser editor on the same machine, explicitly serve one project on loopback:
+
+```powershell
+python -m aktreader serve serock.aktproj
+```
+
+It prints a `127.0.0.1` URL with document/page navigation, PAGE line overlays, and saved human
+transcription revisions. It has no accounts and cannot bind to a LAN or public address, so it is not
+yet a shared deployment. See [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).
 
 ### Local transcription workbench
 
