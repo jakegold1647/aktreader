@@ -204,7 +204,7 @@ def add_project_to_collection(
                 (str(project_path),),
             ).fetchone()
             if conflicting is not None and conflicting[0] != project_id:
-                raise CollectionError("collection path belongs to a different local project identity")
+                raise CollectionError(\n                    "collection path belongs to a different local project identity"\n                )
             connection.execute(
                 """
                 INSERT INTO projects (project_id, project_path, project_name, indexed_at)
