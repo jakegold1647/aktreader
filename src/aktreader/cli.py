@@ -85,6 +85,7 @@ from aktreader.project import (
     inspect_project,
     resolve_review_proposal,
     revise_line_geometry,
+    revise_page_reading_order,
     revoke_training_consent,
     training_readiness,
 )
@@ -262,6 +263,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--editor",
         required=True,
         help="local editor recording the geometry revision",
+    )
+
+    project_reading_order = subparsers.add_parser(
+        "project-revise-page-reading-order",
+        help="append one validated local page region reading-order revision",
+    )
+    project_reading_order.add_argument("project", type=Path, help="local .aktproj directory")
+    project_reading_order.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_reading_order.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+    project_reading_order.add_argument(
+        "--region-order",
+        required=True,
+        type=Path,
+        help="strict local JSON object with a region_ids field",
+    )
+    project_reading_order.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the reading-order revision",
     )
 
     project_export_review = subparsers.add_parser(
@@ -989,6 +1018,30 @@ def _command_project_revise_line_geometry(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_revise_page_reading_order(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    order_path = local_input_path(args.region_order, role="page region order")
+    if not project.is_dir() or not order_path.is_file():
+        raise CliConfigurationError(
+            "page reading-order revision requires a project and JSON file"
+        )
+    order = load_strict_json(order_path, role="page region order")
+    if not isinstance(order, dict) or set(order) != {"region_ids"}:
+        raise CliConfigurationError(
+            "page region order must have exactly a region_ids field"
+        )
+    _emit_json(
+        revise_page_reading_order(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+            region_ids=order["region_ids"],
+            editor=args.editor,
+        )
+    )
+    return 0
+
+
 def _command_project_export_review_package(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1696,6 +1749,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
+        "project-revise-page-reading-order": _command_project_revise_page_reading_order,
         "project-export-review-package": _command_project_export_review_package,
         "project-import-review-package": _command_project_import_review_package,
         "project-resolve-review-proposal": _command_project_resolve_review_proposal,
