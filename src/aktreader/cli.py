@@ -167,7 +167,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="local directory containing imageFilename paths (defaults to the XML directory)",
     )
 
-
     project_htr_suggestions = subparsers.add_parser(
         "project-import-htr-suggestions",
         help="store one aligned local PAGE XML recognition result as project suggestions",
@@ -584,7 +583,6 @@ def _command_project_import_pagexml(args: argparse.Namespace) -> int:
     report = import_pagexml_into_project(project, source, image_root=image_root)
     _emit_json(report)
     return 0
-
 
 
 def _command_project_import_htr_suggestions(args: argparse.Namespace) -> int:
