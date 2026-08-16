@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 6
+PROJECT_DATABASE_VERSION = 7
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 6;
+                PRAGMA user_version = 7;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -228,6 +228,20 @@ def _initialize_database(path: Path) -> None:
                     imported_at TEXT NOT NULL,
                     decided_by TEXT,
                     decided_at TEXT,
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
+                );
+                CREATE TABLE line_geometry_revisions (
+                    manifest_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    prior_polygon_json TEXT NOT NULL,
+                    prior_baseline_json TEXT,
+                    polygon_json TEXT NOT NULL,
+                    baseline_json TEXT,
+                    editor TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (manifest_sha256, source_span_id, revision),
                     FOREIGN KEY (manifest_sha256, source_span_id)
                         REFERENCES lines(manifest_sha256, source_span_id)
                 );
@@ -373,6 +387,29 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 6
+
+        if version == 6:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE line_geometry_revisions (
+                        manifest_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        prior_polygon_json TEXT NOT NULL,
+                        prior_baseline_json TEXT,
+                        polygon_json TEXT NOT NULL,
+                        baseline_json TEXT,
+                        editor TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (manifest_sha256, source_span_id, revision),
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    PRAGMA user_version = 7;
+                    """
+                )
+            version = 7
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
