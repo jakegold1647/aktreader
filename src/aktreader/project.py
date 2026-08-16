@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 4
+PROJECT_DATABASE_VERSION = 5
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 4;
+                PRAGMA user_version = 5;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -202,6 +202,14 @@ def _initialize_database(path: Path) -> None:
                     reason TEXT NOT NULL,
                     revoked_at TEXT NOT NULL
                 );
+
+                CREATE TABLE training_split_assignments (
+                    manifest_sha256 TEXT PRIMARY KEY
+                        REFERENCES pagexml_imports(manifest_sha256),
+                    split TEXT NOT NULL CHECK (split IN ('train', 'validation', 'test')),
+                    bundle_manifest_sha256 TEXT NOT NULL,
+                    exported_at TEXT NOT NULL
+                );
                 """
             )
     finally:
@@ -297,6 +305,23 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 4
+
+
+        if version == 4:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE training_split_assignments (
+                        manifest_sha256 TEXT PRIMARY KEY
+                            REFERENCES pagexml_imports(manifest_sha256),
+                        split TEXT NOT NULL CHECK (split IN ('train', 'validation', 'test')),
+                        bundle_manifest_sha256 TEXT NOT NULL,
+                        exported_at TEXT NOT NULL
+                    );
+                    PRAGMA user_version = 5;
+                    """
+                )
+            version = 5
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
@@ -1714,6 +1739,242 @@ def training_readiness(
         "network_required": False,
     }
 
+
+_TRAINING_SPLITS = frozenset({"train", "validation", "test"})
+
+
+def _require_training_split(split: str) -> str:
+    if not isinstance(split, str) or split not in _TRAINING_SPLITS:
+        allowed = ", ".join(sorted(_TRAINING_SPLITS))
+        raise ProjectStoreError(f"split must be one of: {allowed}")
+    return split
+
+
+def _training_image_suffix(image_filename: str | None) -> str:
+    if not isinstance(image_filename, str):
+        return ".img"
+    suffix = Path(image_filename.replace("\\", "/")).suffix
+    if re.fullmatch(r"\.[A-Za-z0-9]{1,10}", suffix):
+        return suffix.lower()
+    return ".img"
+
+
+def export_consented_training_pagexml(
+    project: Path | str,
+    output_directory: Path | str,
+    *,
+    manifest_sha256: str,
+    split: str,
+) -> dict[str, object]:
+    """Create an atomic, consent-gated local PAGE XML training bundle.
+
+    A bundle holds one fully human-revised and actively consented PAGE XML
+    import, copied source images, an explicit split manifest, and an opaque
+    provenance receipt. It does not run or download a training engine.
+    """
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    split = _require_training_split(split)
+    root = _required_project_root(project)
+    readiness = training_readiness(root, manifest_sha256=manifest_sha256)
+    if readiness["status"] != "READY_FOR_PAGEXML_TRAINING_EXPORT":
+        raise ProjectStoreError(
+            "project import is not ready for training export; every source line needs "
+            "a current human revision and active contributor consent"
+        )
+    destination = _local_path(
+        output_directory,
+        role="training bundle directory",
+        must_exist=False,
+    )
+    if not destination.parent.is_dir():
+        raise ProjectStoreError(
+            f"training bundle parent does not exist: {destination.parent}"
+        )
+    if destination.exists():
+        raise ProjectStoreError(f"training bundle destination already exists: {destination}")
+    if destination == root or root in destination.parents:
+        raise ProjectStoreError(
+            "training bundle must be outside the project so project storage stays immutable"
+        )
+
+    database = root / PROJECT_DATABASE_NAME
+    connection = sqlite3.connect(database)
+    try:
+        image_rows = connection.execute(
+            """
+            SELECT pages.page_index, pages.image_sha256, source_objects.relative_path
+            FROM pages
+            JOIN source_objects ON source_objects.sha256 = pages.image_sha256
+            WHERE pages.manifest_sha256 = ?
+            ORDER BY pages.page_index
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load training-bundle source images: {error}") from error
+    finally:
+        connection.close()
+    images_by_page = {row[0]: (row[1], row[2]) for row in image_rows}
+
+    temporary = Path(
+        tempfile.mkdtemp(prefix=f".{destination.name}.", dir=destination.parent)
+    )
+    moved = False
+    try:
+        pagexml_path = temporary / "document.page.xml"
+        exported = export_human_pagexml(
+            root,
+            pagexml_path,
+            manifest_sha256=manifest_sha256,
+        )
+        try:
+            document = ET.fromstring(pagexml_path.read_bytes())
+        except (OSError, ET.ParseError) as error:
+            raise ProjectStoreError("generated PAGE XML training export is unreadable") from error
+        pages = [element for element in document.iter() if _xml_local_name(element) == "Page"]
+        if len(pages) != len(images_by_page):
+            raise ProjectStoreError(
+                "generated PAGE XML page count does not match the project import"
+            )
+        copied_images: dict[str, str] = {}
+        for page_index, page in enumerate(pages):
+            image = images_by_page.get(page_index)
+            if image is None:
+                raise ProjectStoreError(
+                    "generated PAGE XML page order does not match the project import"
+                )
+            image_sha256, relative_path = image
+            source_image = root / relative_path
+            if not source_image.is_file() or _sha256_file(source_image) != image_sha256:
+                raise ProjectStoreError(
+                    f"project image object is missing or checksum-mismatched: {image_sha256}"
+                )
+            suffix = _training_image_suffix(page.get("imageFilename"))
+            relative_destination = (Path("images") / f"{image_sha256}{suffix}").as_posix()
+            target_image = temporary / relative_destination
+            if relative_destination not in copied_images:
+                target_image.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source_image, target_image)
+                if _sha256_file(target_image) != image_sha256:
+                    raise ProjectStoreError(
+                        f"training-bundle image copy failed checksum verification: {image_sha256}"
+                    )
+                copied_images[relative_destination] = image_sha256
+            page.set("imageFilename", relative_destination)
+
+        rendered_pagexml = ET.tostring(document, encoding="utf-8", xml_declaration=True)
+        _atomic_write_bytes(
+            pagexml_path,
+            rendered_pagexml,
+            replace_existing=True,
+        )
+        split_manifest = f"{split}.lst"
+        split_path = temporary / split_manifest
+        _atomic_write_bytes(split_path, b"document.page.xml\n", replace_existing=False)
+        project_manifest = _read_project_manifest(root)
+        bundle_payload = {
+            "contract": {
+                "name": "aktreader-consented-pagexml-training-bundle",
+                "version": "1.0.0",
+            },
+            "created_at": _timestamp(),
+            "project": {
+                "project_id": project_manifest["project_id"],
+                "name": project_manifest["name"],
+            },
+            "source_import": {
+                "manifest_sha256": manifest_sha256,
+                "source_pagexml_sha256": exported["source_pagexml_sha256"],
+                "page_count": len(pages),
+                "eligible_training_line_count": readiness["eligible_training_line_count"],
+                "active_consent_grant_count": readiness["active_consent_grant_count"],
+            },
+            "split": split,
+            "kraken": {
+                "format_type": "xml",
+                "manifest": split_manifest,
+                "pagexml": pagexml_path.name,
+                "compile_command": (
+                    f"ketos compile -f xml -o {split}.arrow {pagexml_path.name}"
+                ),
+            },
+            "files": {
+                "pagexml": {
+                    "path": pagexml_path.name,
+                    "sha256": hashlib.sha256(rendered_pagexml).hexdigest(),
+                },
+                "manifest": {
+                    "path": split_manifest,
+                    "sha256": _sha256_file(split_path),
+                },
+                "images": [
+                    {"path": path, "sha256": digest}
+                    for path, digest in sorted(copied_images.items())
+                ],
+            },
+            "network_required": False,
+        }
+        bundle_manifest_path = temporary / "bundle.aktreader.json"
+        _atomic_write_json(bundle_manifest_path, bundle_payload)
+        bundle_manifest_sha256 = _sha256_file(bundle_manifest_path)
+
+        connection = sqlite3.connect(database)
+        try:
+            with connection:
+                existing = connection.execute(
+                    """
+                    SELECT split
+                    FROM training_split_assignments
+                    WHERE manifest_sha256 = ?
+                    """,
+                    (manifest_sha256,),
+                ).fetchone()
+                if existing is not None and existing[0] != split:
+                    raise ProjectStoreError(
+                        "project import already has a different immutable training split "
+                        f"assignment: {existing[0]}"
+                    )
+                os.replace(temporary, destination)
+                moved = True
+                connection.execute(
+                    """
+                    INSERT INTO training_split_assignments
+                        (manifest_sha256, split, bundle_manifest_sha256, exported_at)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(manifest_sha256) DO UPDATE SET
+                        bundle_manifest_sha256 = excluded.bundle_manifest_sha256,
+                        exported_at = excluded.exported_at
+                    """,
+                    (
+                        manifest_sha256,
+                        split,
+                        bundle_manifest_sha256,
+                        _timestamp(),
+                    ),
+                )
+        except sqlite3.Error as error:
+            raise ProjectStoreError(f"cannot record training split assignment: {error}") from error
+        finally:
+            connection.close()
+    finally:
+        if not moved and temporary.exists():
+            shutil.rmtree(temporary, ignore_errors=True)
+
+    return {
+        "status": "SUCCEEDED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "split": split,
+        "bundle": str(destination),
+        "bundle_manifest": str(destination / "bundle.aktreader.json"),
+        "bundle_manifest_sha256": bundle_manifest_sha256,
+        "pagexml_sha256": hashlib.sha256(rendered_pagexml).hexdigest(),
+        "page_count": len(pages),
+        "eligible_training_line_count": readiness["eligible_training_line_count"],
+        "network_required": False,
+    }
+
 def inspect_project(path: Path | str) -> dict[str, object]:
     """Return the local project identity and durable-content counts."""
 
@@ -1738,6 +1999,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         training_consent_revocation_count = connection.execute(
             "SELECT COUNT(*) FROM training_consent_revocations"
         ).fetchone()[0]
+        training_split_assignment_count = connection.execute(
+            "SELECT COUNT(*) FROM training_split_assignments"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -1755,5 +2019,6 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "htr_suggestion_count": htr_suggestion_count,
         "training_consent_grant_count": training_consent_grant_count,
         "training_consent_revocation_count": training_consent_revocation_count,
+        "training_split_assignment_count": training_split_assignment_count,
         "network_required": False,
     }
