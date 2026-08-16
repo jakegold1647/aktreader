@@ -148,7 +148,7 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
-`project-resolve-review-proposal`, `htr-build-corpus`,
+`project-resolve-review-proposal`, `project-revise-line-geometry`, `htr-build-corpus`,
 `htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `kraken-evaluate`,
@@ -226,6 +226,9 @@ python -m aktreader project-resolve-review-proposal owner.aktproj `
 See [offline review exchange](docs/offline-review-exchange.md) for the integrity and conflict
 rules. Contributor names are local claims, not authentication, and training consent is always a
 separate explicit step.
+
+Line polygons and baselines can also be corrected as versioned source-pixel geometry revisions and
+applied only to a newly exported PAGE XML derivative. See [line geometry revisions](docs/line-geometry.md).
 
 Evaluate a specific imported HTR result only against saved human revisions. The report is pinned
 to the project import and recognition PAGE XML hashes; it uses Unicode NFC with exact whitespace,
