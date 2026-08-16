@@ -141,6 +141,14 @@ split. If the plan also contains a `test` input, run the recorded evaluation for
 
     ketos test -f xml -e test.lst -m <local-model-weights>
 
-Corpus assembly checks and writes only local files. It does not install Kraken, invoke `ketos`, or
-allow a network setting. A later, separately pinned runner records the executable, model, options,
-outputs, and evaluation receipt.
+Inspect a corpus immediately before training:
+
+    aktreader htr-inspect-corpus --plan E:\training\corpus-plan.json --corpus-directory E:\training\serock-htr-corpus
+
+Inspection repeats the current-consent check and validates the plan hash, each bundle receipt, PAGE
+XML, image checksum, and root split manifest. It does not invoke a model. A changed or withdrawn
+revision therefore makes the corpus ineligible until it is rebuilt.
+
+Corpus assembly and inspection check only local files. They do not install Kraken, invoke `ketos`,
+or allow a network setting. A later, separately pinned runner records the executable, model,
+options, outputs, and evaluation receipt.

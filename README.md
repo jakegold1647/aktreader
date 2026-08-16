@@ -147,7 +147,7 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`, `htr-build-corpus`,
-`pagexml-import`,
+`htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
 `eval`. To run the repository's built-in
@@ -285,6 +285,16 @@ writes explicit `train.lst` and `validation.lst` manifests, and forbids Kraken's
 partitioning. Run the pinned local trainer from the corpus directory with the exact command
 recorded in `corpus.aktreader.json`; it has no server address, credentials, source-project paths,
 or network requirement.
+
+Inspect it again immediately before an eventual trainer run. The inspector rereads the current plan
+and consent state, then verifies every copied bundle, image, PAGE XML file, receipt, and root split
+manifest without running a model.
+
+```powershell
+python -m aktreader htr-inspect-corpus `
+  --plan corpus-plan.json `
+  --corpus-directory serock-htr-corpus
+```
 
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.

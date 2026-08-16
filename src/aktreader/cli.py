@@ -58,7 +58,10 @@ from aktreader.grounding import (
     paired_quality_metrics,
     validate_cross_reader_grounding,
 )
-from aktreader.htr_corpus import assemble_consented_training_corpus
+from aktreader.htr_corpus import (
+    assemble_consented_training_corpus,
+    inspect_consented_training_corpus,
+)
 from aktreader.installation import inspect_application_checkout
 from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.local_reader import LocalReader, LocalReaderError
@@ -378,6 +381,23 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         type=Path,
         help="new local corpus directory outside every source project",
+    )
+
+    htr_inspect = subparsers.add_parser(
+        "htr-inspect-corpus",
+        help="verify one consented local PAGE XML corpus before Kraken training",
+    )
+    htr_inspect.add_argument(
+        "--plan",
+        required=True,
+        type=Path,
+        help="local JSON plan used to build the corpus",
+    )
+    htr_inspect.add_argument(
+        "--corpus-directory",
+        required=True,
+        type=Path,
+        help="existing local corpus directory to inspect",
     )
 
     workbench = subparsers.add_parser(
@@ -939,6 +959,23 @@ def _command_htr_build_corpus(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_htr_inspect_corpus(args: argparse.Namespace) -> int:
+    plan = local_input_path(args.plan, role="HTR corpus plan")
+    if not plan.is_file():
+        raise CliConfigurationError(f"HTR corpus plan is not a file: {plan}")
+    corpus_directory = local_input_path(
+        args.corpus_directory,
+        role="HTR training corpus directory",
+    )
+    if not corpus_directory.is_dir():
+        raise CliConfigurationError(
+            f"HTR training corpus directory is not a directory: {corpus_directory}"
+        )
+    report = inspect_consented_training_corpus(plan, corpus_directory)
+    _emit_json(report)
+    return 0
+
+
 def _command_workbench(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1404,6 +1441,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             _command_project_export_consented_training_pagexml
         ),
         "htr-build-corpus": _command_htr_build_corpus,
+        "htr-inspect-corpus": _command_htr_inspect_corpus,
         "workbench": _command_workbench,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
