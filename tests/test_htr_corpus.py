@@ -283,3 +283,47 @@ def test_corpus_inspection_rejects_tampered_image_bytes(tmp_path: Path) -> None:
 
     with pytest.raises(HtrCorpusError, match="image checksum mismatch"):
         inspect_consented_training_corpus(plan, corpus)
+
+
+def test_corpus_inspection_rejects_a_stale_but_reconsented_revision(tmp_path: Path) -> None:
+    train_project, train_manifest = _ready_project(
+        tmp_path,
+        name="train",
+        text="Александр",
+    )
+    validation_project, validation_manifest = _ready_project(
+        tmp_path,
+        name="validation",
+        text="Екатерина",
+    )
+    plan = tmp_path / "corpus-plan.json"
+    _write_plan(
+        plan,
+        train_project=train_project,
+        train_manifest=train_manifest,
+        validation_project=validation_project,
+        validation_manifest=validation_manifest,
+    )
+    corpus = tmp_path / "corpus"
+    assemble_consented_training_corpus(plan, corpus)
+    line = load_project_page(
+        train_project,
+        manifest_sha256=train_manifest,
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        train_project,
+        manifest_sha256=train_manifest,
+        source_span_id=line["source_span_id"],
+        text="Александр revised again",
+        editor="reviewer-1",
+    )
+    grant_training_consent(
+        train_project,
+        manifest_sha256=train_manifest,
+        contributor="reviewer-1",
+        all_human_revised=True,
+    )
+
+    with pytest.raises(HtrCorpusError, match="does not match current consented project content"):
+        inspect_consented_training_corpus(plan, corpus)
