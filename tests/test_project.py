@@ -276,7 +276,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
     finally:
         connection.close()
 
@@ -556,7 +556,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     assert report["training_consent_revocation_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
     finally:
         connection.close()
 
@@ -648,7 +648,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     assert report["training_split_assignment_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 5
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
     finally:
         connection.close()
 
