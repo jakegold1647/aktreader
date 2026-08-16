@@ -118,12 +118,22 @@ def _load_runtime(value: object) -> dict[str, object]:
         raise KrakenTrainingError("training runtime must be an object")
     _require_keys(
         value,
-        required={"device", "precision", "workers", "threads", "seed", "deterministic", "timeout_seconds"},
+        required={
+            "device",
+            "precision",
+            "workers",
+            "threads",
+            "seed",
+            "deterministic",
+            "timeout_seconds",
+        },
         role="training runtime",
     )
     device = value["device"]
     if not isinstance(device, str) or not _DEVICE.fullmatch(device):
-        raise KrakenTrainingError("training runtime device must be auto, cpu, mps, cuda, or cuda:<index>")
+        raise KrakenTrainingError(
+            "training runtime device must be auto, cpu, mps, cuda, or cuda:<index>"
+        )
     precision = value["precision"]
     if precision not in {"32-true", "16-mixed", "bf16-mixed"}:
         raise KrakenTrainingError("training runtime precision is unsupported")
@@ -133,7 +143,11 @@ def _load_runtime(value: object) -> dict[str, object]:
     return {
         "device": device,
         "precision": precision,
-        "workers": _positive_int(value["workers"], role="training runtime workers", allow_zero=True),
+        "workers": _positive_int(
+            value["workers"],
+            role="training runtime workers",
+            allow_zero=True,
+        ),
         "threads": _positive_int(value["threads"], role="training runtime threads"),
         "seed": _positive_int(value["seed"], role="training runtime seed", allow_zero=True),
         "deterministic": deterministic,
