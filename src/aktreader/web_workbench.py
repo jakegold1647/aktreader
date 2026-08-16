@@ -184,7 +184,9 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
         raise WebWorkbenchError("revision request must be a JSON object")
     allowed = {"manifest_sha256", "source_span_id", "text", "editor"}
     if set(payload) != allowed:
-        raise WebWorkbenchError("revision request must contain only manifest_sha256, source_span_id, text, editor")
+        raise WebWorkbenchError(
+            "revision request must contain only manifest_sha256, source_span_id, text, editor"
+        )
     manifest_sha256 = _require_manifest_sha256(payload["manifest_sha256"])
     source_span_id = payload["source_span_id"]
     text = payload["text"]
@@ -258,13 +260,20 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
             query = parse_qs(parsed.query, keep_blank_values=True)
             try:
                 if parsed.path == "/":
-                    self._bytes(HTTPStatus.OK, "text/html; charset=utf-8", _INDEX_HTML.encode("utf-8"))
+                    self._bytes(
+                        HTTPStatus.OK,
+                        "text/html; charset=utf-8",
+                        _INDEX_HTML.encode("utf-8"),
+                    )
                 elif parsed.path == "/api/healthz":
                     self._json(HTTPStatus.OK, {"status": "READY", "network_required": False})
                 elif parsed.path == "/api/project":
                     self._json(HTTPStatus.OK, _project_summary(project))
                 elif parsed.path == "/api/pages":
-                    self._json(HTTPStatus.OK, _document_pages(project, _query_value(query, "manifest_sha256")))
+                    self._json(
+                        HTTPStatus.OK,
+                        _document_pages(project, _query_value(query, "manifest_sha256")),
+                    )
                 elif parsed.path == "/api/page":
                     self._json(
                         HTTPStatus.OK,
@@ -325,45 +334,52 @@ body { margin: 0; background: #f5f7fa; color: #18212f; }
 header { background: #172a45; color: white; padding: 16px 24px; }
 header h1 { margin: 0; font-size: 1.2rem; }
 header p { margin: 4px 0 0; color: #dbeafe; font-size: .9rem; }
-main { display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr); gap: 16px; padding: 16px; }
+main { display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  gap: 16px; padding: 16px; }
 .panel { background: white; border: 1px solid #d9e1ea; border-radius: 8px; padding: 14px; }
 .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 label { display: grid; gap: 4px; font-size: .85rem; font-weight: 650; }
 select, input, textarea, button { font: inherit; }
-select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px; padding: 7px; background: white; color: #18212f; }
+select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
+  padding: 7px; background: white; color: #18212f; }
 .scan { position: relative; display: inline-block; max-width: 100%; background: #18212f; }
 #image { display: block; max-width: 100%; height: auto; }
 #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
 .line-box { fill: rgba(245, 158, 11, .12); stroke: #d97706; stroke-width: 2; cursor: pointer; }
 .line-box.selected { fill: rgba(22, 163, 74, .16); stroke: #15803d; stroke-width: 3; }
 #line-list { display: grid; gap: 6px; max-height: 300px; overflow: auto; margin-bottom: 12px; }
-.line { text-align: left; border: 1px solid #d9e1ea; border-radius: 5px; padding: 8px; background: white; color: #18212f; }
+.line { text-align: left; border: 1px solid #d9e1ea; border-radius: 5px;
+  padding: 8px; background: white; color: #18212f; }
 .line.selected { outline: 2px solid #15803d; }
 small, #status { color: #52616f; }
 textarea { min-height: 120px; resize: vertical; width: 100%; box-sizing: border-box; }
 .actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
-button { background: #0f766e; border: 0; border-radius: 5px; color: white; cursor: pointer; padding: 8px 12px; }
+button { background: #0f766e; border: 0; border-radius: 5px; color: white;
+  cursor: pointer; padding: 8px 12px; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 #detail { white-space: pre-wrap; color: #52616f; font-size: .9rem; }
 @media (max-width: 850px) { main { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
-<header><h1>AKT Reader browser workbench</h1><p>Single-user, loopback-only, local project data.</p></header>
+<header><h1>AKT Reader browser workbench</h1>
+<p>Single-user, loopback-only, local project data.</p></header>
 <main>
 <section class="panel">
   <div class="controls">
     <label>Document <select id="document"></select></label>
     <label>Page <select id="page"></select></label>
   </div>
-  <div class="scan"><img id="image" alt="Selected source page"><svg id="overlay" aria-label="PAGE XML line bounds"></svg></div>
+  <div class="scan"><img id="image" alt="Selected source page">
+    <svg id="overlay" aria-label="PAGE XML line bounds"></svg></div>
 </section>
 <aside class="panel">
   <label>Editor <input id="editor" value="local-user" autocomplete="off"></label>
   <p id="detail">Choose a document and page.</p>
   <div id="line-list" aria-label="Lines"></div>
   <label>Transcription <textarea id="text" disabled></textarea></label>
-  <div class="actions"><button id="save" disabled>Save human revision</button><span id="status"></span></div>
+  <div class="actions"><button id="save" disabled>Save human revision</button>
+    <span id="status"></span></div>
 </aside>
 </main>
 <script>
@@ -399,7 +415,8 @@ function selectLine(sourceSpanId) {
   renderLines(); drawOverlay();
   if (line) {
     const suggestion = line.suggestions && line.suggestions[0];
-    const review = line.review_proposals && line.review_proposals.find(item => item.state === "PENDING");
+    const review = line.review_proposals
+      && line.review_proposals.find(item => item.state === "PENDING");
     detail.textContent = [
       "Line: " + line.line_id + " · revision " + line.revision,
       suggestion ? "Suggestion: " + (suggestion.text || "no text") : "No engine suggestion",
@@ -426,7 +443,9 @@ function drawOverlay() {
     const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rectangle.setAttribute("x", box.x); rectangle.setAttribute("y", box.y);
     rectangle.setAttribute("width", box.width); rectangle.setAttribute("height", box.height);
-    rectangle.setAttribute("class", "line-box" + (line.source_span_id === state.selected ? " selected" : ""));
+    rectangle.setAttribute(
+      "class", "line-box" + (line.source_span_id === state.selected ? " selected" : "")
+    );
     rectangle.addEventListener("click", () => selectLine(line.source_span_id));
     overlay.append(rectangle);
   });
@@ -441,21 +460,30 @@ async function loadPage() {
   selectLine(state.selected);
 }
 async function loadDocument() {
-  const response = await api("/api/pages?manifest_sha256=" + encodeURIComponent(documentSelect.value));
+  const response = await api(
+    "/api/pages?manifest_sha256=" + encodeURIComponent(documentSelect.value)
+  );
   pageSelect.replaceChildren();
-  response.pages.forEach((page, index) => option(pageSelect, page.page_url, (index + 1) + " of " + response.pages.length + ". " + page.page_id));
+  response.pages.forEach((page, index) => {
+    option(pageSelect, page.page_url,
+      (index + 1) + " of " + response.pages.length + ". " + page.page_id);
+  });
   if (response.pages.length) await loadPage();
 }
 async function boot() {
   try {
     const project = await api("/api/project");
     documentSelect.replaceChildren();
-    project.documents.forEach((document, index) => option(documentSelect, document.manifest_sha256, (index + 1) + ". " + document.title + " (" + document.page_count + " pages)"));
+    project.documents.forEach((document, index) => {
+      option(documentSelect, document.manifest_sha256,
+        (index + 1) + ". " + document.title + " (" + document.page_count + " pages)");
+    });
     if (project.documents.length) await loadDocument();
     else detail.textContent = "This project has no imported documents.";
   } catch (error) { detail.textContent = error.message; }
 }
-documentSelect.addEventListener("change", () => loadDocument().catch(error => setStatus(error.message)));
+documentSelect.addEventListener("change", () =>
+  loadDocument().catch(error => setStatus(error.message)));
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 save.addEventListener("click", async () => {
   const line = selectedLine(); if (!line) return;
@@ -471,7 +499,9 @@ save.addEventListener("click", async () => {
         editor: editor.value
       })
     });
-    setStatus(result.status === "UNCHANGED" ? "No change to save." : "Saved human revision " + result.revision + ".");
+    setStatus(result.status === "UNCHANGED"
+      ? "No change to save."
+      : "Saved human revision " + result.revision + ".");
     await loadPage();
   } catch (error) { setStatus(error.message); }
 });
