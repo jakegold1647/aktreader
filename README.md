@@ -31,6 +31,8 @@ New to the project? Start with the [AKT Reader glossary](docs/GLOSSARY.md) for t
 - Content-pinned `llama-mtmd-cli` integration for an owner-provisioned open-weights vision model.
 - Strict label validation, original-script grounding, typed absence states, consensus, human
   adjudication packets, resumable batch execution, privacy preflight, and SerockBench metrics.
+- A local PAGE XML import foundation that hashes supplied page images and preserves page, region,
+  line, polygon, baseline, reading-order, and transcription provenance in a deterministic manifest.
 - A 36-record evaluation corpus, frozen prompts and schemas, provenance manifests, and a
   documented failure history.
 
@@ -80,7 +82,8 @@ is: none.
   any networking-capable module is imported, and pins the runtime dependency set so a network
   client cannot arrive transitively without that test changing in the same review.
 - The same file re-runs representative CLI paths (`doctor`, `prompt-verify`, `compare`, `eval`) with
-  socket creation disabled; any attempt to open a socket fails the run.
+  socket creation disabled; any attempt to open a socket fails the run. This includes
+  `pagexml-import`.
 - Runtime dependencies are `jsonschema` and `pillow` only; the full reviewed license inventory
   (14 packages, including transitive) is `dependency-licenses.json`.
 - The only external process the package ever starts is the content-pinned local
@@ -137,9 +140,9 @@ holdout separation.
 It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
-The CLI also provides `label-validate`, `consensus-merge`, `reader-inspect`, `reader-infer`,
-`batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in reader
-comparison without supplying scans or model files:
+The CLI also provides `label-validate`, `pagexml-import`, `consensus-merge`, `reader-inspect`,
+`reader-infer`, `batch-run`, `adjudicate`, `compare`, and `eval`. To run the repository's built-in
+reader comparison without supplying scans or model files:
 
 ```powershell
 python -m aktreader compare labels/readerA labels/readerB `
@@ -149,6 +152,21 @@ python -m aktreader compare labels/readerA labels/readerB `
 
 See [local comparisons](docs/comparisons.md). `reader-infer` and `batch-run` execute local
 inference; the other commands validate or process existing artifacts.
+
+### PAGE XML import
+
+`pagexml-import` is the first workbench-facing contract. It accepts one local PAGE XML file and
+the local page images named by its `imageFilename` values, then writes a deterministic manifest.
+It does not run a model, alter the XML, upload material, or treat a transcription as verified.
+
+```powershell
+python -m aktreader pagexml-import page.xml --image-root . --output pagexml-import.json
+```
+
+The manifest hashes the XML and each page image, preserves PAGE page/region/line IDs, line polygons
+and baselines, captures explicit reading order when present, and records the selected `TextEquiv`
+text without fabricating missing transcription. The current reader-label schema remains unchanged;
+a later schema revision will bind observation spans to these immutable line locators.
 
 The generic [Reader configuration](examples/local-reader.config.example.json) intentionally
 cannot run. The [baseline configuration](examples/p2-baseline.local-reader.json) contains the
