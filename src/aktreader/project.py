@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 9
+PROJECT_DATABASE_VERSION = 10
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 9;
+                PRAGMA user_version = 10;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -269,6 +269,16 @@ def _initialize_database(path: Path) -> None:
                     PRIMARY KEY (manifest_sha256, page_index, region_id, revision),
                     FOREIGN KEY (manifest_sha256, page_index)
                         REFERENCES pages(manifest_sha256, page_index)
+                );
+                CREATE TABLE documents (
+                    manifest_sha256 TEXT PRIMARY KEY
+                        REFERENCES pagexml_imports(manifest_sha256),
+                    document_id TEXT NOT NULL UNIQUE,
+                    title TEXT NOT NULL,
+                    tags_json TEXT NOT NULL,
+                    notes TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
                 );
                 """
             )
@@ -481,6 +491,51 @@ def _migrate_database(path: Path) -> None:
                 )
             version = 9
 
+        if version == 9:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE documents (
+                        manifest_sha256 TEXT PRIMARY KEY
+                            REFERENCES pagexml_imports(manifest_sha256),
+                        document_id TEXT NOT NULL UNIQUE,
+                        title TEXT NOT NULL,
+                        tags_json TEXT NOT NULL,
+                        notes TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL
+                    );
+                    """
+                )
+                rows = connection.execute(
+                    """
+                    SELECT manifest_sha256, pagexml_sha256, imported_at
+                    FROM pagexml_imports
+                    ORDER BY manifest_sha256
+                    """
+                ).fetchall()
+                for manifest_sha256, pagexml_sha256, imported_at in rows:
+                    connection.execute(
+                        """
+                        INSERT INTO documents (
+                            manifest_sha256, document_id, title, tags_json,
+                            notes, created_at, updated_at
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            manifest_sha256,
+                            _document_id(manifest_sha256),
+                            f"Imported PAGE XML {pagexml_sha256[:12]}",
+                            _canonical_json([]),
+                            "",
+                            imported_at,
+                            imported_at,
+                        ),
+                    )
+                connection.execute("PRAGMA user_version = 10")
+            version = 10
+
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
     except sqlite3.Error as error:
@@ -573,6 +628,10 @@ def _atomic_write_bytes(path: Path, payload: bytes, *, replace_existing: bool) -
 def _timestamp() -> str:
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
+
+
+def _document_id(manifest_sha256: str) -> str:
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"aktreader-document:{manifest_sha256}"))
 
 def create_project(path: Path | str, *, name: str) -> dict[str, object]:
     """Create a new local workbench project atomically."""
@@ -762,6 +821,24 @@ def import_pagexml_into_project(
                                 _canonical_json(locator),
                             ),
                         )
+                connection.execute(
+                    """
+                    INSERT OR IGNORE INTO documents (
+                        manifest_sha256, document_id, title, tags_json,
+                        notes, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        manifest_sha256,
+                        _document_id(manifest_sha256),
+                        source_path.stem or f"Imported PAGE XML {pagexml_sha256[:12]}",
+                        _canonical_json([]),
+                        "",
+                        imported_at,
+                        imported_at,
+                    ),
+                )
     finally:
         connection.close()
 
@@ -770,6 +847,7 @@ def import_pagexml_into_project(
         "project": str(root),
         "manifest_sha256": manifest_sha256,
         "manifest": str(manifest_path),
+        "document_id": _document_id(manifest_sha256),
         "already_imported": already_imported,
         "page_count": summary["page_count"],
         "region_count": summary["region_count"],
@@ -1540,6 +1618,136 @@ def evaluate_htr_suggestions(
         "network_required": False,
     }
 
+
+def _document_record(row: tuple[object, ...]) -> dict[str, object]:
+    try:
+        tags = json.loads(row[3])
+    except (TypeError, json.JSONDecodeError) as error:
+        raise ProjectStoreError("stored document tags are unreadable") from error
+    if (
+        not isinstance(tags, list)
+        or any(not isinstance(tag, str) or not tag.strip() for tag in tags)
+        or len(tags) != len(set(tags))
+    ):
+        raise ProjectStoreError("stored document tags are invalid")
+    return {
+        "manifest_sha256": row[0],
+        "document_id": row[1],
+        "title": row[2],
+        "tags": tags,
+        "notes": row[4],
+        "page_count": row[5],
+        "region_count": row[6],
+        "line_count": row[7],
+        "source_pagexml_sha256": row[8],
+        "created_at": row[9],
+        "updated_at": row[10],
+    }
+
+
+def list_project_documents(path: Path | str) -> list[dict[str, object]]:
+    """List each immutable PAGE XML import with mutable local document metadata."""
+
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                documents.manifest_sha256, documents.document_id, documents.title,
+                documents.tags_json, documents.notes, pagexml_imports.page_count,
+                pagexml_imports.region_count, pagexml_imports.line_count,
+                pagexml_imports.pagexml_sha256, documents.created_at, documents.updated_at
+            FROM documents
+            JOIN pagexml_imports
+                ON pagexml_imports.manifest_sha256 = documents.manifest_sha256
+            ORDER BY documents.created_at, documents.manifest_sha256
+            """
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot list project documents: {error}") from error
+    finally:
+        connection.close()
+    return [_document_record(row) for row in rows]
+
+
+def _validated_document_tags(tags: Sequence[str]) -> list[str]:
+    if isinstance(tags, (str, bytes)) or not isinstance(tags, Sequence):
+        raise ProjectStoreError("document tags must be a sequence of nonblank strings")
+    normalized: list[str] = []
+    for position, tag in enumerate(tags):
+        if not isinstance(tag, str) or not tag.strip() or tag != tag.strip():
+            raise ProjectStoreError(f"document tags[{position}] must be a nonblank exact string")
+        normalized.append(tag)
+    if len(normalized) != len(set(normalized)):
+        raise ProjectStoreError("document tags must be unique")
+    return normalized
+
+
+def update_project_document(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    title: str | None = None,
+    tags: Sequence[str] | None = None,
+    notes: str | None = None,
+) -> dict[str, object]:
+    """Update mutable local metadata for one immutable PAGE XML import."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if title is None and tags is None and notes is None:
+        raise ProjectStoreError("document update requires title, tags, or notes")
+    if title is not None and (not isinstance(title, str) or not title.strip()):
+        raise ProjectStoreError("document title must be a nonblank string")
+    if notes is not None and not isinstance(notes, str):
+        raise ProjectStoreError("document notes must be a string")
+    normalized_tags = None if tags is None else _validated_document_tags(tags)
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        with connection:
+            row = connection.execute(
+                """
+                SELECT
+                    documents.manifest_sha256, documents.document_id, documents.title,
+                    documents.tags_json, documents.notes, pagexml_imports.page_count,
+                    pagexml_imports.region_count, pagexml_imports.line_count,
+                    pagexml_imports.pagexml_sha256, documents.created_at, documents.updated_at
+                FROM documents
+                JOIN pagexml_imports
+                    ON pagexml_imports.manifest_sha256 = documents.manifest_sha256
+                WHERE documents.manifest_sha256 = ?
+                """,
+                (manifest_sha256,),
+            ).fetchone()
+            if row is None:
+                raise ProjectStoreError("project document was not found")
+            current = _document_record(row)
+            next_title = title.strip() if title is not None else current["title"]
+            next_tags = normalized_tags if normalized_tags is not None else current["tags"]
+            next_notes = notes if notes is not None else current["notes"]
+            updated_at = _timestamp()
+            connection.execute(
+                """
+                UPDATE documents
+                SET title = ?, tags_json = ?, notes = ?, updated_at = ?
+                WHERE manifest_sha256 = ?
+                """,
+                (next_title, _canonical_json(next_tags), next_notes, updated_at, manifest_sha256),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot update project document: {error}") from error
+    finally:
+        connection.close()
+    return {
+        **current,
+        "title": next_title,
+        "tags": next_tags,
+        "notes": next_notes,
+        "updated_at": updated_at,
+        "network_required": False,
+    }
+
 def list_project_pages(path: Path | str) -> list[dict[str, object]]:
     """List every imported page in stable import and page order."""
 
@@ -1550,6 +1758,7 @@ def list_project_pages(path: Path | str) -> list[dict[str, object]]:
             """
             SELECT
                 pages.manifest_sha256,
+                documents.document_id,
                 pages.page_index,
                 pages.page_id,
                 pages.image_sha256,
@@ -1557,6 +1766,7 @@ def list_project_pages(path: Path | str) -> list[dict[str, object]]:
                 pages.height_px,
                 source_objects.relative_path
             FROM pages
+            JOIN documents ON documents.manifest_sha256 = pages.manifest_sha256
             JOIN pagexml_imports
                 ON pagexml_imports.manifest_sha256 = pages.manifest_sha256
             JOIN source_objects ON source_objects.sha256 = pages.image_sha256
@@ -1570,12 +1780,13 @@ def list_project_pages(path: Path | str) -> list[dict[str, object]]:
     return [
         {
             "manifest_sha256": row[0],
-            "page_index": row[1],
-            "page_id": row[2],
-            "image_sha256": row[3],
-            "width_px": row[4],
-            "height_px": row[5],
-            "image_path": str(root / row[6]),
+            "document_id": row[1],
+            "page_index": row[2],
+            "page_id": row[3],
+            "image_sha256": row[4],
+            "width_px": row[5],
+            "height_px": row[6],
+            "image_path": str(root / row[7]),
         }
         for row in rows
     ]
@@ -2423,6 +2634,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         region_geometry_revision_count = connection.execute(
             "SELECT COUNT(*) FROM region_geometry_revisions"
         ).fetchone()[0]
+        document_count = connection.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2445,6 +2657,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "line_geometry_revision_count": line_geometry_revision_count,
         "page_reading_order_revision_count": page_reading_order_revision_count,
         "region_geometry_revision_count": region_geometry_revision_count,
+        "document_count": document_count,
         "network_required": False,
     }
 
