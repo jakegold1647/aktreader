@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 5
+PROJECT_DATABASE_VERSION = 6
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 5;
+                PRAGMA user_version = 6;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -209,6 +209,27 @@ def _initialize_database(path: Path) -> None:
                     split TEXT NOT NULL CHECK (split IN ('train', 'validation', 'test')),
                     bundle_manifest_sha256 TEXT NOT NULL,
                     exported_at TEXT NOT NULL
+                );
+                CREATE TABLE review_proposals (
+                    proposal_sha256 TEXT PRIMARY KEY,
+                    package_sha256 TEXT NOT NULL,
+                    manifest_sha256 TEXT NOT NULL
+                        REFERENCES pagexml_imports(manifest_sha256),
+                    source_pagexml_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    contributor TEXT NOT NULL,
+                    base_text_sha256 TEXT,
+                    proposed_text TEXT NOT NULL,
+                    proposed_text_sha256 TEXT NOT NULL,
+                    revised_at TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK (
+                        state IN ('PENDING', 'CONFLICT', 'ACCEPTED', 'REJECTED')
+                    ),
+                    imported_at TEXT NOT NULL,
+                    decided_by TEXT,
+                    decided_at TEXT,
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
                 );
                 """
             )
@@ -322,6 +343,36 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 5
+
+        if version == 5:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE review_proposals (
+                        proposal_sha256 TEXT PRIMARY KEY,
+                        package_sha256 TEXT NOT NULL,
+                        manifest_sha256 TEXT NOT NULL
+                            REFERENCES pagexml_imports(manifest_sha256),
+                        source_pagexml_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        contributor TEXT NOT NULL,
+                        base_text_sha256 TEXT,
+                        proposed_text TEXT NOT NULL,
+                        proposed_text_sha256 TEXT NOT NULL,
+                        revised_at TEXT NOT NULL,
+                        state TEXT NOT NULL CHECK (
+                            state IN ('PENDING', 'CONFLICT', 'ACCEPTED', 'REJECTED')
+                        ),
+                        imported_at TEXT NOT NULL,
+                        decided_by TEXT,
+                        decided_at TEXT,
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    PRAGMA user_version = 6;
+                    """
+                )
+            version = 6
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
