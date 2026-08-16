@@ -29,9 +29,9 @@ from aktreader.project import (
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
-    update_project_document,
     revoke_training_consent,
     training_readiness,
+    update_project_document,
 )
 
 
