@@ -149,7 +149,7 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `project-training-readiness`, `project-export-consented-training-pagexml`, `htr-build-corpus`,
 `htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
-`reader-infer`, `kraken-inspect`, `kraken-recognize`, `batch-run`, `adjudicate`, `compare`, and
+`reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `batch-run`, `adjudicate`,
 `eval`. To run the repository's built-in
 reader comparison without supplying scans or model files:
 
@@ -295,6 +295,21 @@ python -m aktreader htr-inspect-corpus `
   --plan corpus-plan.json `
   --corpus-directory serock-htr-corpus
 ```
+
+Once that check is green, launch a fresh run only through a checksum-pinned local `ketos`
+configuration. The runner generates the explicit experiment file, passes no remote settings,
+retains local logs, and publishes `training-run.aktreader.json` with hashes for the corpus,
+executable, options, and produced weights.
+
+```powershell
+python -m aktreader kraken-train `
+  --config local-kraken-training.json `
+  --plan corpus-plan.json `
+  --corpus-directory serock-htr-corpus `
+  --output-directory serock-training-run
+```
+
+See [the local Kraken guide](docs/local-kraken.md) for the configuration contract.
 
 The workbench requires a Python installation that includes Tk desktop support. It never starts a
 web server, sends data to a service, or treats a correction as model-training consent.
