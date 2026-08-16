@@ -76,8 +76,17 @@ MENTION_ID_RE = re.compile(r"^[a-z0-9-]+#[a-z0-9-]+$")
 UNCLEAR_RE = re.compile(r"\[unclear:\s*(.+?)\]", re.IGNORECASE)
 
 
+LABEL_CONTRACT_GUIDANCE = (
+    " [Rule: reader-label evidence contract; see docs/architecture.md and "
+    "schemas/reader-label-1.0.0.schema.json.]"
+)
+
+
 class LabelValidationError(ValueError):
     """Raised when a reader label violates its declared contract."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"{detail}{LABEL_CONTRACT_GUIDANCE}")
 
 
 def _freeze(value: Any) -> Any:
