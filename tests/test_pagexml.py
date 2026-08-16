@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+from aktreader.cli import main
 from aktreader.pagexml import PageXmlImportError, import_pagexml
 
 
@@ -187,3 +188,34 @@ def test_pagexml_manifest_is_json_serializable(tmp_path: Path) -> None:
     rendered = json.dumps(import_pagexml(source), ensure_ascii=False, sort_keys=True)
 
     assert "PAGE_XML_TEXT_LINE" in rendered
+
+
+def test_pagexml_import_cli_writes_an_explicit_manifest(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _write_image(tmp_path / "page.png")
+    source = tmp_path / "page.xml"
+    output = tmp_path / "manifest.json"
+    _write_pagexml(source)
+
+    exit_code = main(["pagexml-import", str(source), "--output", str(output)])
+
+    report = json.loads(capsys.readouterr().out)
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report == {
+        "line_count": 2,
+        "network_required": False,
+        "output": str(output.resolve()),
+        "page_count": 1,
+        "pagexml_sha256": manifest["source"]["sha256"],
+        "region_count": 2,
+        "status": "SUCCEEDED",
+    }
+    assert manifest["summary"]["line_count"] == 2
+
+    repeat_exit = main(["pagexml-import", str(source), "--output", str(output)])
+
+    assert repeat_exit == 2
+    assert "already exists" in capsys.readouterr().err
