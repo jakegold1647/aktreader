@@ -58,6 +58,7 @@ from aktreader.grounding import (
 )
 from aktreader.installation import inspect_application_checkout
 from aktreader.local_reader import LocalReader, LocalReaderError
+from aktreader.pagexml import import_pagexml
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
@@ -130,6 +131,23 @@ def build_parser() -> argparse.ArgumentParser:
         "label-validate", help="validate external blind-reader label JSON files"
     )
     labels.add_argument("labels", nargs="+", type=Path)
+
+    pagexml = subparsers.add_parser(
+        "pagexml-import",
+        help="import local PAGE XML and its local page images into an immutable manifest",
+    )
+    pagexml.add_argument("source", type=Path, help="local PAGE XML source")
+    pagexml.add_argument(
+        "--image-root",
+        type=Path,
+        help="local directory containing imageFilename paths (defaults to the XML directory)",
+    )
+    pagexml.add_argument("--output", required=True, type=Path, help="import manifest path")
+    pagexml.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing import manifest",
+    )
 
     consensus = subparsers.add_parser(
         "consensus-merge",
@@ -449,6 +467,39 @@ def _command_label_validate(args: argparse.Namespace) -> int:
             }
         )
     _emit_json({"status": "PASS", "labels": results, "count": len(results)})
+    return 0
+
+
+def _command_pagexml_import(args: argparse.Namespace) -> int:
+    source = local_input_path(args.source, role="PAGE XML source")
+    if not source.is_file():
+        raise CliConfigurationError(f"PAGE XML source is not a file: {source}")
+    image_root = None
+    if args.image_root is not None:
+        image_root = local_input_path(args.image_root, role="PAGE XML image root")
+        if not image_root.is_dir():
+            raise CliConfigurationError(f"PAGE XML image root is not a directory: {image_root}")
+    output = local_output_path(args.output, role="PAGE XML import manifest")
+    if output == source:
+        raise CliConfigurationError("PAGE XML import manifest must not overwrite the XML source")
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "PAGE XML import manifest already exists; pass --replace-existing to replace "
+            "it atomically"
+        )
+    manifest = import_pagexml(source, image_root=image_root)
+    atomic_write_json(output, manifest)
+    _emit_json(
+        {
+            "status": "SUCCEEDED",
+            "output": str(output),
+            "pagexml_sha256": manifest["source"]["sha256"],
+            "page_count": manifest["summary"]["page_count"],
+            "region_count": manifest["summary"]["region_count"],
+            "line_count": manifest["summary"]["line_count"],
+            "network_required": False,
+        }
+    )
     return 0
 
 
@@ -823,6 +874,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "checkout-verify": _command_checkout_verify,
         "prompt-verify": _command_prompt_verify,
         "label-validate": _command_label_validate,
+        "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
         "reader-inspect": _command_reader_inspect,
         "reader-infer": _command_reader_infer,

@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 import tomllib
+from PIL import Image
 
 from aktreader.cli import main
 
@@ -198,3 +199,36 @@ def test_compare_runs_with_sockets_disabled(
     assert payload["csv_output"] == str(csv)
     assert output.is_file()
     assert csv.is_file()
+
+
+def test_pagexml_import_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    image = tmp_path / "page.png"
+    Image.new("L", (20, 20), color=255).save(image)
+    source = tmp_path / "page.xml"
+    source.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>test</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    output = tmp_path / "manifest.json"
+
+    exit_code = main(["pagexml-import", str(source), "--output", str(output)])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["network_required"] is False
+    assert output.is_file()
