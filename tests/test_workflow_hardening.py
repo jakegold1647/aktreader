@@ -37,3 +37,15 @@ def test_workflows_default_to_read_only_contents_permission() -> None:
         assert "permissions:\n  contents: read\n" in content, (
             f"{workflow.relative_to(ROOT)} must explicitly default to contents: read"
         )
+
+
+def test_workflows_keep_untrusted_prs_on_the_pull_request_event() -> None:
+    for workflow in WORKFLOWS:
+        content = workflow.read_text(encoding="utf-8")
+
+        assert "pull_request_target:" not in content, (
+            f"{workflow.relative_to(ROOT)} must not run untrusted PR code via pull_request_target"
+        )
+        assert "pull_request:" in content, (
+            f"{workflow.relative_to(ROOT)} must run pull request checks on pull_request"
+        )
