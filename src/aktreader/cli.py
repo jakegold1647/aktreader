@@ -84,6 +84,7 @@ from aktreader.project import (
     import_review_package,
     inspect_project,
     resolve_review_proposal,
+    revise_line_geometry,
     revoke_training_consent,
     training_readiness,
 )
@@ -234,6 +235,33 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing PAGE XML export",
+    )
+
+    project_geometry = subparsers.add_parser(
+        "project-revise-line-geometry",
+        help="append one validated local line polygon/baseline revision",
+    )
+    project_geometry.add_argument("project", type=Path, help="local .aktproj directory")
+    project_geometry.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_geometry.add_argument(
+        "--source-span-id",
+        required=True,
+        help="PAGE XML line source span ID",
+    )
+    project_geometry.add_argument(
+        "--geometry",
+        required=True,
+        type=Path,
+        help="strict local JSON object with polygon and baseline fields",
+    )
+    project_geometry.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the geometry revision",
     )
 
     project_export_review = subparsers.add_parser(
@@ -935,6 +963,29 @@ def _command_project_export_pagexml(args: argparse.Namespace) -> int:
         replace_existing=args.replace_existing,
     )
     _emit_json(report)
+    return 0
+
+
+def _command_project_revise_line_geometry(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    geometry_path = local_input_path(args.geometry, role="line geometry")
+    if not project.is_dir() or not geometry_path.is_file():
+        raise CliConfigurationError("line geometry revision requires a project and JSON file")
+    geometry = load_strict_json(geometry_path, role="line geometry")
+    if not isinstance(geometry, dict) or set(geometry) != {"polygon", "baseline"}:
+        raise CliConfigurationError(
+            "line geometry must have exactly polygon and baseline fields"
+        )
+    _emit_json(
+        revise_line_geometry(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            source_span_id=args.source_span_id,
+            polygon=geometry["polygon"],
+            baseline=geometry["baseline"],
+            editor=args.editor,
+        )
+    )
     return 0
 
 
@@ -1644,6 +1695,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
+        "project-revise-line-geometry": _command_project_revise_line_geometry,
         "project-export-review-package": _command_project_export_review_package,
         "project-import-review-package": _command_project_import_review_package,
         "project-resolve-review-proposal": _command_project_resolve_review_proposal,

@@ -24,6 +24,7 @@ from aktreader.project import (
     list_project_pages,
     load_project_page,
     resolve_review_proposal,
+    revise_line_geometry,
     revise_line_transcription,
     revoke_training_consent,
     training_readiness,
@@ -261,6 +262,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE line_geometry_revisions")
             connection.execute("DROP TABLE review_proposals")
             connection.execute("DROP TABLE training_split_assignments")
             connection.execute("DROP TABLE training_consent_revocations")
@@ -277,7 +279,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
     finally:
         connection.close()
 
@@ -544,6 +546,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE line_geometry_revisions")
             connection.execute("DROP TABLE review_proposals")
             connection.execute("DROP TABLE training_split_assignments")
             connection.execute("DROP TABLE training_consent_revocations")
@@ -558,7 +561,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     assert report["training_consent_revocation_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
     finally:
         connection.close()
 
@@ -640,6 +643,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE line_geometry_revisions")
             connection.execute("DROP TABLE review_proposals")
             connection.execute("DROP TABLE training_split_assignments")
             connection.execute("PRAGMA user_version = 4")
@@ -651,7 +655,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     assert report["training_split_assignment_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 7
     finally:
         connection.close()
 
@@ -856,3 +860,47 @@ def test_review_package_cli_queues_then_resolves_a_proposal(
     assert imported_exit == resolved_exit == 0
     assert imported["status"] == "QUEUED"
     assert resolved["status"] == "REJECTED"
+
+
+def test_project_keeps_line_geometry_revisions_separate_and_exports_them(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+
+    revision = revise_line_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        polygon=[[1, 1], [39, 1], [39, 16], [1, 16]],
+        baseline=[[2, 13], [38, 13]],
+        editor="layout-reviewer",
+    )
+    output = tmp_path / "layout-revised.page.xml"
+    exported = export_human_pagexml(
+        project,
+        output,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert revision["status"] == "SAVED"
+    assert revision["revision"] == 1
+    assert exported["human_revision_count"] == 0
+    assert exported["line_geometry_revision_count"] == 1
+    assert source.read_bytes() == source_bytes
+    rendered = import_pagexml(output, image_root=source_root)
+    locator = rendered["pages"][0]["lines"][0]["locator"]
+    assert locator["polygon"] == [[1, 1], [39, 1], [39, 16], [1, 16]]
+    assert locator["baseline"] == [[2, 13], [38, 13]]

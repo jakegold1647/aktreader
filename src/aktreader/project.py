@@ -28,7 +28,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 6
+PROJECT_DATABASE_VERSION = 7
 
 
 class ProjectStoreError(ValueError):
@@ -104,7 +104,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 6;
+                PRAGMA user_version = 7;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -228,6 +228,20 @@ def _initialize_database(path: Path) -> None:
                     imported_at TEXT NOT NULL,
                     decided_by TEXT,
                     decided_at TEXT,
+                    FOREIGN KEY (manifest_sha256, source_span_id)
+                        REFERENCES lines(manifest_sha256, source_span_id)
+                );
+                CREATE TABLE line_geometry_revisions (
+                    manifest_sha256 TEXT NOT NULL,
+                    source_span_id TEXT NOT NULL,
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    prior_polygon_json TEXT NOT NULL,
+                    prior_baseline_json TEXT,
+                    polygon_json TEXT NOT NULL,
+                    baseline_json TEXT,
+                    editor TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (manifest_sha256, source_span_id, revision),
                     FOREIGN KEY (manifest_sha256, source_span_id)
                         REFERENCES lines(manifest_sha256, source_span_id)
                 );
@@ -373,6 +387,29 @@ def _migrate_database(path: Path) -> None:
                     """
                 )
             version = 6
+
+        if version == 6:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE line_geometry_revisions (
+                        manifest_sha256 TEXT NOT NULL,
+                        source_span_id TEXT NOT NULL,
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        prior_polygon_json TEXT NOT NULL,
+                        prior_baseline_json TEXT,
+                        polygon_json TEXT NOT NULL,
+                        baseline_json TEXT,
+                        editor TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (manifest_sha256, source_span_id, revision),
+                        FOREIGN KEY (manifest_sha256, source_span_id)
+                            REFERENCES lines(manifest_sha256, source_span_id)
+                    );
+                    PRAGMA user_version = 7;
+                    """
+                )
+            version = 7
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
@@ -987,6 +1024,30 @@ def export_human_pagexml(
             """,
             (manifest_sha256,),
         ).fetchall()
+        geometry_rows = connection.execute(
+            """
+            SELECT
+                lines.source_span_id,
+                lines.page_index,
+                lines.page_id,
+                lines.line_id,
+                line_geometry_revisions.polygon_json,
+                line_geometry_revisions.baseline_json
+            FROM lines
+            JOIN line_geometry_revisions
+                ON line_geometry_revisions.manifest_sha256 = lines.manifest_sha256
+               AND line_geometry_revisions.source_span_id = lines.source_span_id
+               AND line_geometry_revisions.revision = (
+                    SELECT MAX(latest.revision)
+                    FROM line_geometry_revisions AS latest
+                    WHERE latest.manifest_sha256 = lines.manifest_sha256
+                      AND latest.source_span_id = lines.source_span_id
+               )
+            WHERE lines.manifest_sha256 = ?
+            ORDER BY lines.page_index, lines.rowid
+            """,
+            (manifest_sha256,),
+        ).fetchall()
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot load project revisions for export: {error}") from error
     finally:
@@ -1021,6 +1082,24 @@ def export_human_pagexml(
             raise ProjectStoreError(f"project contains duplicate export locator {key!r}")
         revisions[key] = revised_text
 
+    geometries: dict[tuple[int, str, str], tuple[list[list[int]], list[list[int]] | None]] = {}
+    for source_span_id, page_index, page_id, line_id, polygon_json, baseline_json in geometry_rows:
+        try:
+            polygon = json.loads(polygon_json)
+            baseline = json.loads(baseline_json) if baseline_json is not None else None
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError(
+                f"stored geometry is unreadable for project line {source_span_id}"
+            ) from error
+        if not isinstance(polygon, list) or (
+            baseline is not None and not isinstance(baseline, list)
+        ):
+            raise ProjectStoreError(f"stored geometry is invalid for project line {source_span_id}")
+        key = (page_index, page_id, line_id)
+        if key in geometries:
+            raise ProjectStoreError(f"project contains duplicate geometry locator {key!r}")
+        geometries[key] = polygon, baseline
+
     source_bytes = source_path.read_bytes()
     if _FORBIDDEN_PAGE_XML_DECLARATION.search(source_bytes):
         raise ProjectStoreError("stored PAGE XML contains a forbidden XML declaration")
@@ -1030,6 +1109,7 @@ def export_human_pagexml(
         raise ProjectStoreError("stored PAGE XML cannot be parsed for export") from error
     pages = [element for element in document.iter() if _xml_local_name(element) == "Page"]
     seen: set[tuple[int, str, str]] = set()
+    seen_geometries: set[tuple[int, str, str]] = set()
     for page_index, page in enumerate(pages):
         raw_page_id = page.get("id")
         page_id = raw_page_id.strip() if isinstance(raw_page_id, str) and raw_page_id.strip() else (
@@ -1043,15 +1123,28 @@ def export_human_pagexml(
                 continue
             key = (page_index, page_id, raw_line_id.strip())
             revised_text = revisions.get(key)
-            if revised_text is None:
-                continue
-            _replace_text_equiv(line, revised_text)
-            seen.add(key)
+            geometry = geometries.get(key)
+            if revised_text is not None:
+                _replace_text_equiv(line, revised_text)
+                seen.add(key)
+            if geometry is not None:
+                _replace_line_geometry(
+                    line,
+                    polygon=geometry[0],
+                    baseline=geometry[1],
+                )
+                seen_geometries.add(key)
     missing = sorted(set(revisions) - seen)
     if missing:
         raise ProjectStoreError(
             "stored PAGE XML no longer matches the project's revision locators: "
             f"{missing[0]!r}"
+        )
+    missing_geometries = sorted(set(geometries) - seen_geometries)
+    if missing_geometries:
+        raise ProjectStoreError(
+            "stored PAGE XML no longer matches the project's geometry locators: "
+            f"{missing_geometries[0]!r}"
         )
 
     rendered = ET.tostring(document, encoding="utf-8", xml_declaration=True)
@@ -1064,6 +1157,7 @@ def export_human_pagexml(
         "output": str(output_path),
         "output_sha256": hashlib.sha256(rendered).hexdigest(),
         "human_revision_count": len(revisions),
+        "line_geometry_revision_count": len(geometries),
         "network_required": False,
     }
 
@@ -2084,6 +2178,9 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         review_proposal_count = connection.execute(
             "SELECT COUNT(*) FROM review_proposals"
         ).fetchone()[0]
+        line_geometry_revision_count = connection.execute(
+            "SELECT COUNT(*) FROM line_geometry_revisions"
+        ).fetchone()[0]
     finally:
         connection.close()
     return {
@@ -2103,6 +2200,7 @@ def inspect_project(path: Path | str) -> dict[str, object]:
         "training_consent_revocation_count": training_consent_revocation_count,
         "training_split_assignment_count": training_split_assignment_count,
         "review_proposal_count": review_proposal_count,
+        "line_geometry_revision_count": line_geometry_revision_count,
         "network_required": False,
     }
 
@@ -2595,3 +2693,208 @@ def resolve_review_proposal(
         "revision": revision,
         "network_required": False,
     }
+
+
+def _validated_points(
+    value: object,
+    *,
+    role: str,
+    width: int,
+    height: int,
+    allow_none: bool,
+) -> list[list[int]] | None:
+    if value is None and allow_none:
+        return None
+    if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):
+        raise ProjectStoreError(f"{role} must be an array of [x, y] source-pixel points")
+    points: list[list[int]] = []
+    for position, point in enumerate(value, start=1):
+        if (
+            isinstance(point, (str, bytes))
+            or not isinstance(point, Sequence)
+            or len(point) != 2
+            or isinstance(point[0], bool)
+            or isinstance(point[1], bool)
+            or not isinstance(point[0], int)
+            or not isinstance(point[1], int)
+        ):
+            raise ProjectStoreError(f"{role} point {position} must be two integer pixels")
+        x, y = point
+        if not 0 <= x <= width or not 0 <= y <= height:
+            raise ProjectStoreError(
+                f"{role} point {position} is outside source image {width}x{height}"
+            )
+        points.append([x, y])
+    if len(points) < 2 or len({tuple(point) for point in points}) < 2:
+        raise ProjectStoreError(f"{role} must contain at least two distinct points")
+    return points
+
+
+def _geometry_bbox(points: list[list[int]]) -> dict[str, int | str]:
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    return {
+        "x": min(xs),
+        "y": min(ys),
+        "width": max(1, max(xs) - min(xs)),
+        "height": max(1, max(ys) - min(ys)),
+        "coordinate_space": "source_pixels",
+    }
+
+
+def revise_line_geometry(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    source_span_id: str,
+    polygon: Sequence[Sequence[int]],
+    baseline: Sequence[Sequence[int]] | None,
+    editor: str,
+) -> dict[str, object]:
+    """Append an audited local line geometry revision without altering source XML."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(source_span_id, str) or not source_span_id.strip():
+        raise ProjectStoreError("source_span_id must be a nonblank string")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("geometry editor must be a nonblank string")
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        connection.execute("PRAGMA foreign_keys = ON")
+        with connection:
+            row = connection.execute(
+                """
+                SELECT lines.locator_json, pages.width_px, pages.height_px
+                FROM lines
+                JOIN pages
+                    ON pages.manifest_sha256 = lines.manifest_sha256
+                   AND pages.page_index = lines.page_index
+                WHERE lines.manifest_sha256 = ? AND lines.source_span_id = ?
+                """,
+                (manifest_sha256, source_span_id),
+            ).fetchone()
+            if row is None:
+                raise ProjectStoreError("project line was not found")
+            try:
+                locator = json.loads(row[0])
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored line locator is unreadable") from error
+            if not isinstance(locator, dict):
+                raise ProjectStoreError("stored line locator is invalid")
+            source_polygon = locator.get("polygon")
+            source_baseline = locator.get("baseline")
+            if not isinstance(source_polygon, list):
+                raise ProjectStoreError("stored line polygon is invalid")
+            width, height = int(row[1]), int(row[2])
+            revised_polygon = _validated_points(
+                polygon,
+                role="line polygon",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            revised_baseline = _validated_points(
+                baseline,
+                role="line baseline",
+                width=width,
+                height=height,
+                allow_none=True,
+            )
+            latest = connection.execute(
+                """
+                SELECT revision, polygon_json, baseline_json
+                FROM line_geometry_revisions
+                WHERE manifest_sha256 = ? AND source_span_id = ?
+                ORDER BY revision DESC
+                LIMIT 1
+                """,
+                (manifest_sha256, source_span_id),
+            ).fetchone()
+            if latest is None:
+                current_revision = 0
+                prior_polygon = source_polygon
+                prior_baseline = source_baseline
+            else:
+                current_revision = int(latest[0])
+                prior_polygon = json.loads(latest[1])
+                prior_baseline = json.loads(latest[2]) if latest[2] is not None else None
+            if (
+                _canonical_json(prior_polygon) == _canonical_json(revised_polygon)
+                and _canonical_json(prior_baseline) == _canonical_json(revised_baseline)
+            ):
+                return {
+                    "status": "UNCHANGED",
+                    "project": str(root),
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "revision": current_revision,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
+            connection.execute(
+                """
+                INSERT INTO line_geometry_revisions (
+                    manifest_sha256, source_span_id, revision,
+                    prior_polygon_json, prior_baseline_json,
+                    polygon_json, baseline_json, editor, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    source_span_id,
+                    revision,
+                    _canonical_json(prior_polygon),
+                    _canonical_json(prior_baseline) if prior_baseline is not None else None,
+                    _canonical_json(revised_polygon),
+                    _canonical_json(revised_baseline)
+                    if revised_baseline is not None
+                    else None,
+                    editor.strip(),
+                    _timestamp(),
+                ),
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot save line geometry revision: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": "SAVED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_span_id": source_span_id,
+        "revision": revision,
+        "editor": editor.strip(),
+        "polygon": revised_polygon,
+        "baseline": revised_baseline,
+        "network_required": False,
+    }
+
+
+def _replace_line_geometry(
+    line: ET.Element,
+    *,
+    polygon: list[list[int]],
+    baseline: list[list[int]] | None,
+) -> None:
+    coords = next(
+        (child for child in line if _xml_local_name(child) == "Coords"),
+        None,
+    )
+    if coords is None:
+        raise ProjectStoreError("stored PAGE XML line is missing Coords")
+    coords.set("points", " ".join(f"{x},{y}" for x, y in polygon))
+    baselines = [child for child in line if _xml_local_name(child) == "Baseline"]
+    if baseline is None:
+        for item in baselines:
+            line.remove(item)
+        return
+    if baselines:
+        target = baselines[0]
+        for duplicate in baselines[1:]:
+            line.remove(duplicate)
+    else:
+        target = ET.Element(_xml_tag_like(line, "Baseline"))
+        line.insert(1, target)
+    target.set("points", " ".join(f"{x},{y}" for x, y in baseline))
