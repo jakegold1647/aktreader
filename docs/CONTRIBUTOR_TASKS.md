@@ -9,6 +9,15 @@ Claim a task by opening an issue (or commenting on an existing one) so work is n
 If a task turns out to be bigger than its scope says, stop and say so in the issue — shrinking
 scope is always acceptable here, silently expanding it is not.
 
+
+## Current public queue
+
+The task entries below are completed examples, not work to claim. New public tasks are added to
+the GitHub issue queue with a clear scope, privacy boundary, and acceptance check. If that queue
+is empty, do not reopen a completed task just to start work: use the
+[sanitized usage-feedback form](https://github.com/jakegold1647/aktreader/issues/new?template=usage-feedback.yml)
+or open a short issue that proposes a bounded docs or test improvement first.
+
 ## 1. Test Windows in CI — shipped
 
 **Status:** completed on 2026-08-12. CI retains the Ubuntu Python 3.11–3.13 jobs and adds one
