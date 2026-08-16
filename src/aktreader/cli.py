@@ -59,8 +59,8 @@ from aktreader.grounding import (
 from aktreader.installation import inspect_application_checkout
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
-from aktreader.prompt import verify_reader_prompt
 from aktreader.project import create_project, import_pagexml_into_project, inspect_project
+from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
 from aktreader.verification import CHECK_NAMES, verify_application_checkout
