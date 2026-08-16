@@ -1055,7 +1055,9 @@ def evaluate_htr_suggestions(
         "character_edit_distance": char_edit_distance,
         "reference_character_count": reference_char_count,
         "hypothesis_character_count": hypothesis_char_count,
-        "word_error_rate": word_edit_distance / reference_word_count if reference_word_count else None,
+        "word_error_rate": (
+            word_edit_distance / reference_word_count if reference_word_count else None
+        ),
         "word_edit_distance": word_edit_distance,
         "reference_word_count": reference_word_count,
         "hypothesis_word_count": hypothesis_word_count,
