@@ -150,7 +150,7 @@ The CLI also provides `label-validate`, `project-create`, `project-inspect`,
 `htr-inspect-corpus`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
 `reader-infer`, `kraken-inspect`, `kraken-recognize`, `kraken-train`, `batch-run`, `adjudicate`,
-`eval`. To run the repository's built-in
+`compare`, and `eval`. To run the repository's built-in
 reader comparison without supplying scans or model files:
 
 ```powershell
