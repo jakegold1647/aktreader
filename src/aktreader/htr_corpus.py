@@ -697,77 +697,77 @@ def inspect_consented_training_corpus(
     split_pagexml: dict[str, list[str]] = {split: [] for split in _SPLITS}
     try:
         for source, receipt in zip(inputs, receipts, strict=True):
-        if not isinstance(receipt, dict):
-            raise HtrCorpusError("HTR corpus input receipt must be an object")
-        _required_keys(
-            receipt,
-            required={
-                "project",
-                "source_import",
-                "split",
-                "bundle",
-                "page_count",
-                "eligible_training_line_count",
-                "image_count",
-            },
-            role="HTR corpus input receipt",
-        )
-        expected_bundle_path = (Path("data") / source.manifest_sha256).as_posix()
-        bundle = receipt["bundle"]
-        if not isinstance(bundle, dict) or set(bundle) != {"path", "manifest_sha256"}:
-            raise HtrCorpusError("HTR corpus bundle receipt is invalid")
-        if bundle["path"] != expected_bundle_path:
-            raise HtrCorpusError("HTR corpus bundle path does not match the corpus plan")
-        _require_sha256(bundle["manifest_sha256"], role="HTR corpus bundle manifest SHA-256")
-        bundle_directory = _bundle_path(
-            corpus,
-            bundle["path"],
-            role="HTR corpus bundle path",
-        )
-        if not bundle_directory.is_dir():
-            raise HtrCorpusError("HTR corpus bundle path is not a directory")
-        verified = _verify_bundle(bundle_directory, source=source)
-        expected_receipt = {
-            "project": {
-                "project_id": verified.project_id,
-                "name": verified.project_name,
-            },
-            "source_import": {
-                "manifest_sha256": verified.source_manifest_sha256,
-                "source_pagexml_sha256": verified.source_pagexml_sha256,
-            },
-            "split": verified.split,
-            "bundle": {
-                "path": expected_bundle_path,
-                "manifest_sha256": verified.bundle_manifest_sha256,
-            },
-            "page_count": verified.page_count,
-            "eligible_training_line_count": verified.line_count,
-            "image_count": verified.image_count,
-        }
-        if receipt != expected_receipt:
-            raise HtrCorpusError("HTR corpus input receipt does not match its checked bundle")
-        readiness = training_readiness(
-            source.project,
-            manifest_sha256=source.manifest_sha256,
-        )
-        if readiness["status"] != "READY_FOR_PAGEXML_TRAINING_EXPORT":
-            raise HtrCorpusError(
-                "HTR corpus source lost current training eligibility during inspection"
+            if not isinstance(receipt, dict):
+                raise HtrCorpusError("HTR corpus input receipt must be an object")
+            _required_keys(
+                receipt,
+                required={
+                    "project",
+                    "source_import",
+                    "split",
+                    "bundle",
+                    "page_count",
+                    "eligible_training_line_count",
+                    "image_count",
+                },
+                role="HTR corpus input receipt",
             )
-        current_pagexml = current_directory / f"{source.manifest_sha256}.page.xml"
-        current = export_human_pagexml(
-            source.project,
-            current_pagexml,
-            manifest_sha256=source.manifest_sha256,
-        )
-        if current["pagexml_sha256"] != verified.pagexml_sha256:
-            raise HtrCorpusError(
-                "HTR corpus PAGE XML does not match current consented project content"
+            expected_bundle_path = (Path("data") / source.manifest_sha256).as_posix()
+            bundle = receipt["bundle"]
+            if not isinstance(bundle, dict) or set(bundle) != {"path", "manifest_sha256"}:
+                raise HtrCorpusError("HTR corpus bundle receipt is invalid")
+            if bundle["path"] != expected_bundle_path:
+                raise HtrCorpusError("HTR corpus bundle path does not match the corpus plan")
+            _require_sha256(bundle["manifest_sha256"], role="HTR corpus bundle manifest SHA-256")
+            bundle_directory = _bundle_path(
+                corpus,
+                bundle["path"],
+                role="HTR corpus bundle path",
             )
-        split_pagexml[source.split].append(
-            (Path("data") / source.manifest_sha256 / "document.page.xml").as_posix()
-        )
+            if not bundle_directory.is_dir():
+                raise HtrCorpusError("HTR corpus bundle path is not a directory")
+            verified = _verify_bundle(bundle_directory, source=source)
+            expected_receipt = {
+                "project": {
+                    "project_id": verified.project_id,
+                    "name": verified.project_name,
+                },
+                "source_import": {
+                    "manifest_sha256": verified.source_manifest_sha256,
+                    "source_pagexml_sha256": verified.source_pagexml_sha256,
+                },
+                "split": verified.split,
+                "bundle": {
+                    "path": expected_bundle_path,
+                    "manifest_sha256": verified.bundle_manifest_sha256,
+                },
+                "page_count": verified.page_count,
+                "eligible_training_line_count": verified.line_count,
+                "image_count": verified.image_count,
+            }
+            if receipt != expected_receipt:
+                raise HtrCorpusError("HTR corpus input receipt does not match its checked bundle")
+            readiness = training_readiness(
+                source.project,
+                manifest_sha256=source.manifest_sha256,
+            )
+            if readiness["status"] != "READY_FOR_PAGEXML_TRAINING_EXPORT":
+                raise HtrCorpusError(
+                    "HTR corpus source lost current training eligibility during inspection"
+                )
+            current_pagexml = current_directory / f"{source.manifest_sha256}.page.xml"
+            current = export_human_pagexml(
+                source.project,
+                current_pagexml,
+                manifest_sha256=source.manifest_sha256,
+            )
+            if current["pagexml_sha256"] != verified.pagexml_sha256:
+                raise HtrCorpusError(
+                    "HTR corpus PAGE XML does not match current consented project content"
+                )
+            split_pagexml[source.split].append(
+                (Path("data") / source.manifest_sha256 / "document.page.xml").as_posix()
+            )
     finally:
         shutil.rmtree(current_directory, ignore_errors=True)
 
