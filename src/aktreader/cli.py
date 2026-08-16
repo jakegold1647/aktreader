@@ -49,6 +49,7 @@ from aktreader.collection import (
     add_project_to_collection,
     create_collection,
     inspect_collection,
+    list_collection_documents,
     search_collection,
 )
 from aktreader.comparison import compare_reader_labels, render_disagreements_csv
@@ -185,6 +186,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="inspect a local collection",
     )
     collection_inspect.add_argument("collection", type=Path)
+    collection_documents = subparsers.add_parser(
+        "collection-list-documents",
+        help="list local collection documents and search their metadata",
+    )
+    collection_documents.add_argument("collection", type=Path)
+    collection_documents.add_argument("--query")
+    collection_documents.add_argument("--limit", type=int, default=100)
     collection_search = subparsers.add_parser(
         "collection-search",
         help="search a local collection",
@@ -1028,6 +1036,17 @@ def _command_collection_inspect(args: argparse.Namespace) -> int:
 
 def _command_collection_search(args: argparse.Namespace) -> int:
     _emit_json(search_collection(args.collection, args.query, limit=args.limit))
+    return 0
+
+
+def _command_collection_list_documents(args: argparse.Namespace) -> int:
+    _emit_json(
+        list_collection_documents(
+            args.collection,
+            query=args.query,
+            limit=args.limit,
+        )
+    )
     return 0
 
 
@@ -1918,6 +1937,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "collection-create": _command_collection_create,
         "collection-add-project": _command_collection_add_project,
         "collection-inspect": _command_collection_inspect,
+        "collection-list-documents": _command_collection_list_documents,
         "collection-search": _command_collection_search,
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
