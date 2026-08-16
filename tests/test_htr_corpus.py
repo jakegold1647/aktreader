@@ -7,7 +7,11 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from aktreader.htr_corpus import HtrCorpusError, assemble_consented_training_corpus
+from aktreader.htr_corpus import (
+    HtrCorpusError,
+    assemble_consented_training_corpus,
+    inspect_consented_training_corpus,
+)
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
@@ -161,6 +165,11 @@ def test_assembles_current_consent_projects_into_explicit_kraken_corpus(tmp_path
         image_root=corpus / "data" / train_manifest,
     )
     assert train_pagexml["pages"][0]["lines"][0]["text"] == "Александр reviewed"
+    inspected = inspect_consented_training_corpus(plan, corpus)
+
+    assert inspected["status"] == "READY_FOR_LOCAL_KRAKEN_TRAINING"
+    assert inspected["corpus_manifest_sha256"] == report["corpus_manifest_sha256"]
+    assert inspected["network_required"] is False
     assert inspect_project(train_project)["training_split_assignment_count"] == 1
     assert inspect_project(validation_project)["training_split_assignment_count"] == 1
 
@@ -246,3 +255,31 @@ def test_corpus_rejects_one_source_pagexml_across_multiple_splits(tmp_path: Path
 
     assert inspect_project(projects[0][0])["training_split_assignment_count"] == 0
     assert inspect_project(projects[1][0])["training_split_assignment_count"] == 0
+
+
+def test_corpus_inspection_rejects_tampered_image_bytes(tmp_path: Path) -> None:
+    train_project, train_manifest = _ready_project(
+        tmp_path,
+        name="train",
+        text="Александр",
+    )
+    validation_project, validation_manifest = _ready_project(
+        tmp_path,
+        name="validation",
+        text="Екатерина",
+    )
+    plan = tmp_path / "corpus-plan.json"
+    _write_plan(
+        plan,
+        train_project=train_project,
+        train_manifest=train_manifest,
+        validation_project=validation_project,
+        validation_manifest=validation_manifest,
+    )
+    corpus = tmp_path / "corpus"
+    assemble_consented_training_corpus(plan, corpus)
+    image = next((corpus / "data" / train_manifest / "images").iterdir())
+    image.write_bytes(b"tampered training image")
+
+    with pytest.raises(HtrCorpusError, match="image checksum mismatch"):
+        inspect_consented_training_corpus(plan, corpus)
