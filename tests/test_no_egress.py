@@ -25,6 +25,11 @@ import tomllib
 from PIL import Image
 
 from aktreader.cli import main
+from aktreader.project import (
+    grant_training_consent,
+    load_project_page,
+    revise_line_transcription,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = ROOT / "src" / "aktreader"
@@ -505,3 +510,71 @@ def test_project_training_readiness_runs_with_sockets_disabled(
     assert payload["status"] == "BLOCKED_HUMAN_REVISIONS"
     assert payload["network_required"] is False
     assert report_path.is_file()
+
+
+def test_consented_training_bundle_export_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    image = tmp_path / "page.png"
+    Image.new("L", (20, 20), color=255).save(image)
+    source = tmp_path / "page.xml"
+    source.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>source text</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    project = tmp_path / "register.aktproj"
+    bundle = tmp_path / "training-bundle"
+
+    assert main(["project-create", str(project), "--name", "Serock births"]) == 0
+    capsys.readouterr()
+    assert main(["project-import-pagexml", str(project), str(source)]) == 0
+    imported = json.loads(capsys.readouterr().out)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="reviewed text",
+        editor="local-user",
+    )
+    grant_training_consent(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        contributor="local-user",
+        all_human_revised=True,
+    )
+    exit_code = main(
+        [
+            "project-export-consented-training-pagexml",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--split",
+            "train",
+            "--output-directory",
+            str(bundle),
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["status"] == "SUCCEEDED"
+    assert payload["network_required"] is False
+    assert (bundle / "bundle.aktreader.json").is_file()
