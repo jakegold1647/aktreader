@@ -47,7 +47,9 @@ is authoritative for each term. Sources: `README.md`, `SPEC.md`,
 software vocabulary appears in the glossary; definitions do not contradict the grading contract
 in `skills/uncertainty-grading.md`.
 
-## 3. Property-based tests for the label validators
+## 3. Property-based tests for the label validators — shipped
+
+**Status:** completed in merged PR #7.
 
 **Why:** the validators in `src/aktreader/labels.py` and `src/aktreader/gold.py` are the
 project's safety floor; today they are covered by example-based tests only.
@@ -60,7 +62,9 @@ valid label/evidence structures (drop keys, corrupt observation states, break th
 contract (`EVIDENCE_KEYS`, observation states, UNCLEAR conventions) is generatively covered;
 `python -m tools.check_dependency_licenses` still passes after the dependency addition.
 
-## 4. Auto-generated field reference from the schemas
+## 4. Auto-generated field reference from the schemas — shipped
+
+**Status:** completed in PR #8. The checked-in [schema reference](schema-reference.md) is generated from the versioned contracts and guarded by a regenerate-and-diff test.
 
 **Why:** the versioned JSON Schemas under `schemas/` are the real contract, but there is no
 human-readable field reference; people read the prompt text instead.

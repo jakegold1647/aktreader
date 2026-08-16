@@ -190,7 +190,7 @@ Evidence Lab rather than treating their shared import namespace as identity.
 ## Repository map
 
 - `src/aktreader/`: package and CLI implementation.
-- `schemas/`: versioned label, model-output, gold, and adjudication contracts.
+- `schemas/`: versioned label, model-output, gold, and adjudication contracts. See the generated [schema reference](docs/schema-reference.md) for the human-readable field tree.
 - `prompts/` and `skills/`: frozen reader instructions and domain constraints.
 - `gold/`: evaluation records and clerk-year holdout metadata.
 - `labels/`: attributable reader and consensus evidence, including quarantined historical data.
