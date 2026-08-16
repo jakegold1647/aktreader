@@ -405,11 +405,15 @@ def run_kraken_training(
             raise KrakenTrainingError(
                 f"local Kraken training failed with exit code {completed.returncode}"
             )
-        artifacts = [
-            path
-            for path in sorted(checkpoints.rglob("*.safetensors"))
-            if path.is_file()
-        ] if checkpoints.is_dir() else []
+        artifacts = (
+            [
+                path
+                for path in sorted(checkpoints.rglob("*.safetensors"))
+                if path.is_file()
+            ]
+            if checkpoints.is_dir()
+            else []
+        )
         if not artifacts:
             raise KrakenTrainingError(
                 "local Kraken training completed without a safetensors weights artifact"
