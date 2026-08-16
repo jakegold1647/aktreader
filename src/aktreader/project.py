@@ -1202,7 +1202,9 @@ def export_human_pagexml(
             )
             or len(region_ids) != len(set(region_ids))
         ):
-            raise ProjectStoreError(f"stored reading order is invalid for project page {page_index}")
+            raise ProjectStoreError(
+                f"stored reading order is invalid for project page {page_index}"
+            )
         if page_index in reading_orders:
             raise ProjectStoreError(f"project contains duplicate reading order page {page_index}")
         reading_orders[page_index] = region_ids
