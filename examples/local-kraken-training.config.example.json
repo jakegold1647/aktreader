@@ -1,0 +1,39 @@
+{
+  "contract": {
+    "name": "aktreader-local-kraken-training",
+    "version": "1.0.0"
+  },
+  "ketos": {
+    "path": "C:\\AKTREADER_LOCAL\\kraken\\Scripts\\ketos.exe",
+    "sha256": "<64-lowercase-hex-sha256-of-local-ketos>"
+  },
+  "runtime": {
+    "device": "cpu",
+    "precision": "32-true",
+    "workers": 0,
+    "threads": 1,
+    "seed": 7,
+    "deterministic": true,
+    "timeout_seconds": 14400
+  },
+  "train": {
+    "architecture": {
+      "kind": "ppocrv6",
+      "variant": "small",
+      "height": 96,
+      "max_width": 2560
+    },
+    "weights_format": "safetensors",
+    "normalization": "NFC",
+    "normalize_whitespace": true,
+    "quit": "early",
+    "epochs": 24,
+    "lag": 10,
+    "lrate": 0.001,
+    "schedule": "constant",
+    "warmup": 200,
+    "augment": true,
+    "batch_size": 1,
+    "accumulate_grad_batches": 1
+  }
+}
