@@ -150,5 +150,25 @@ XML, image checksum, and root split manifest. It does not invoke a model. A chan
 revision therefore makes the corpus ineligible until it is rebuilt.
 
 Corpus assembly and inspection check only local files. They do not install Kraken, invoke `ketos`,
-or allow a network setting. A later, separately pinned runner records the executable, model,
-options, outputs, and evaluation receipt.
+or allow a network setting.
+
+## Pinned local training
+
+To run a fresh local training job, copy
+[local-kraken-training.config.example.json](../examples/local-kraken-training.config.example.json)
+to an untracked path and replace its executable path and placeholder checksum. The configuration
+requires the exact SHA-256 of a local non-UNC `ketos` executable and explicit deterministic
+runtime, architecture, normalization, split, and optimization settings. It accepts no remote
+endpoint, credential, model-download, or arbitrary command field.
+
+    aktreader kraken-train --config E:\\AKTREADER_LOCAL\\kraken-training.json --plan E:\\training\\corpus-plan.json --corpus-directory E:\\training\\serock-htr-corpus --output-directory E:\\training\\serock-training-run
+
+The runner repeats corpus inspection immediately before launching `ketos --config … train` with
+no shell, an allow-listed credential-free environment, and offline Hugging Face/Transformers
+settings. It writes the generated experiment, stdout, stderr, safetensors weights, and a
+checksum receipt to a temporary sibling directory; only a successful run with at least one
+weights file is published atomically. The receipt pins the executable, corpus, plan, options,
+logs, and produced artifacts without exposing local source paths.
+
+This runner trains a fresh local model only. It does not install Kraken, resume or fine-tune a
+previous model, evaluate a test split, upload artifacts, or make a hosted-service claim.
