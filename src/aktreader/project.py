@@ -3199,6 +3199,128 @@ def _geometry_bbox(points: list[list[int]]) -> dict[str, int | str]:
     }
 
 
+
+def load_project_page_layout(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+) -> dict[str, object]:
+    """Load effective region geometry and reading order for one imported page."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+        raise ProjectStoreError("page_index must be a non-negative integer")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        page = connection.execute(
+            """
+            SELECT width_px, height_px
+            FROM pages
+            WHERE manifest_sha256 = ? AND page_index = ?
+            """,
+            (manifest_sha256, page_index),
+        ).fetchone()
+        if page is None:
+            raise ProjectStoreError("project page was not found")
+        width, height = int(page[0]), int(page[1])
+        source_region_ids = _stored_page_region_order(
+            root,
+            connection,
+            manifest_sha256=manifest_sha256,
+            page_index=page_index,
+        )
+        source_polygons = {
+            region_id: _validated_points(
+                _stored_region_polygon(
+                    root,
+                    connection,
+                    manifest_sha256=manifest_sha256,
+                    page_index=page_index,
+                    region_id=region_id,
+                ),
+                role="stored region polygon",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            for region_id in source_region_ids
+        }
+        geometry_rows = connection.execute(
+            """
+            SELECT region_id, revision, polygon_json
+            FROM region_geometry_revisions
+            WHERE manifest_sha256 = ? AND page_index = ?
+            ORDER BY region_id, revision
+            """,
+            (manifest_sha256, page_index),
+        ).fetchall()
+        effective_regions: dict[str, tuple[int, list[list[int]]]] = {
+            region_id: (0, polygon) for region_id, polygon in source_polygons.items()
+        }
+        for region_id, revision, polygon_json in geometry_rows:
+            if region_id not in source_polygons:
+                raise ProjectStoreError("stored region geometry refers to an unknown region")
+            try:
+                polygon = json.loads(polygon_json)
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored region geometry is unreadable") from error
+            effective_regions[region_id] = (
+                int(revision),
+                _validated_points(
+                    polygon,
+                    role="stored region polygon",
+                    width=width,
+                    height=height,
+                    allow_none=False,
+                ),
+            )
+        order_row = connection.execute(
+            """
+            SELECT revision, region_ids_json
+            FROM page_reading_order_revisions
+            WHERE manifest_sha256 = ? AND page_index = ?
+            ORDER BY revision DESC
+            LIMIT 1
+            """,
+            (manifest_sha256, page_index),
+        ).fetchone()
+        if order_row is None:
+            reading_order_revision = 0
+            region_ids = source_region_ids
+        else:
+            try:
+                stored_region_ids = json.loads(order_row[1])
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored page reading order is unreadable") from error
+            reading_order_revision = int(order_row[0])
+            region_ids = _validated_region_order(
+                stored_region_ids,
+                expected_region_ids=source_region_ids,
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project page layout: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "manifest_sha256": manifest_sha256,
+        "page_index": page_index,
+        "reading_order": {
+            "revision": reading_order_revision,
+            "region_ids": region_ids,
+        },
+        "regions": [
+            {
+                "region_id": region_id,
+                "polygon": effective_regions[region_id][1],
+                "revision": effective_regions[region_id][0],
+            }
+            for region_id in region_ids
+        ],
+        "network_required": False,
+    }
+
 def revise_line_geometry(
     project: Path | str,
     *,
