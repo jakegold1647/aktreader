@@ -7,18 +7,20 @@
       "BSD-2-Clause",
       "BSD-3-Clause",
       "MIT",
-      "MIT-CMU"
+      "MIT-CMU",
+      "MPL-2.0"
     ],
     "copyleft_runtime_dependency_allowed": false
   },
   "declared_dependencies": {
     "runtime": ["jsonschema", "pillow"],
-    "development": ["pytest", "ruff"],
+    "development": ["hypothesis", "pytest", "ruff"],
     "build": ["setuptools"]
   },
   "reviewed_packages": [
     {"name": "attrs", "relationship": "jsonschema transitive", "spdx": "MIT"},
     {"name": "colorama", "relationship": "pytest Windows transitive", "spdx": "BSD-3-Clause"},
+    {"name": "hypothesis", "relationship": "direct development", "spdx": "MPL-2.0"},
     {"name": "iniconfig", "relationship": "pytest transitive", "spdx": "MIT"},
     {"name": "jsonschema", "relationship": "direct runtime", "spdx": "MIT"},
     {
