@@ -1,8 +1,8 @@
 # Schema reference
 
-This reference is generated from the versioned JSON Schemas in [\`schemas/\`](../schemas/) by [\`tools/build_schema_reference.py\`](../tools/build_schema_reference.py). Do not edit it by hand.
+This reference is generated from the versioned JSON Schemas in [`schemas/`](../schemas/) by [`tools/build_schema_reference.py`](../tools/build_schema_reference.py). Do not edit it by hand.
 
-It lists each schema's named object fields, required status, declared type or structure, and any description carried by the contract. References to \`$defs\` remain pointers to the reusable definition named below rather than being expanded repeatedly.
+It lists each schema's named object fields, required status, declared type or structure, and any description carried by the contract. References to `$defs` remain pointers to the reusable definition named below rather than being expanded repeatedly.
 
 ## Schemas
 
