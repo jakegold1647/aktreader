@@ -66,6 +66,7 @@ class VerifiedBundle:
     source_pagexml_sha256: str
     source_manifest_sha256: str
     pagexml_sha256: str
+    pagexml_content_sha256: str
     split: str
     project_id: str
     project_name: str
@@ -248,6 +249,17 @@ def _load_corpus_plan(plan: Path | str) -> tuple[Path, list[CorpusInput]]:
         inputs,
         key=lambda item: (_SPLITS.index(item.split), item.manifest_sha256),
     )
+
+
+def _pagexml_content_sha256(document: ET.Element) -> str:
+    """Hash PAGE XML after removing only its local Page image references."""
+
+    normalized = ET.fromstring(ET.tostring(document, encoding="utf-8"))
+    for element in normalized.iter():
+        if element.tag.rsplit("}", 1)[-1] == "Page":
+            element.attrib.pop("imageFilename", None)
+    rendered = ET.tostring(normalized, encoding="utf-8", xml_declaration=True)
+    return hashlib.sha256(rendered).hexdigest()
 
 
 def _bundle_path(bundle: Path, value: object, *, role: str) -> Path:
@@ -461,6 +473,7 @@ def _verify_bundle(
         source_pagexml_sha256=source_pagexml_sha256,
         source_manifest_sha256=source_manifest_sha256,
         pagexml_sha256=_sha256_file(pagexml_path),
+        pagexml_content_sha256=_pagexml_content_sha256(document),
         split=source.split,
         project_id=project_id,
         project_name=project_name,
@@ -756,12 +769,18 @@ def inspect_consented_training_corpus(
                     "HTR corpus source lost current training eligibility during inspection"
                 )
             current_pagexml = current_directory / f"{source.manifest_sha256}.page.xml"
-            current = export_human_pagexml(
+            export_human_pagexml(
                 source.project,
                 current_pagexml,
                 manifest_sha256=source.manifest_sha256,
             )
-            if current["pagexml_sha256"] != verified.pagexml_sha256:
+            try:
+                current_document = ET.fromstring(current_pagexml.read_bytes())
+            except (OSError, ET.ParseError) as error:
+                raise HtrCorpusError(
+                    "current project PAGE XML cannot be checked against the corpus"
+                ) from error
+            if _pagexml_content_sha256(current_document) != verified.pagexml_content_sha256:
                 raise HtrCorpusError(
                     "HTR corpus PAGE XML does not match current consented project content"
                 )
