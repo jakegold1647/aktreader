@@ -59,6 +59,7 @@ from aktreader.grounding import (
 from aktreader.installation import inspect_application_checkout
 from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
+from aktreader.project import create_project, import_pagexml_into_project, inspect_project
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
@@ -131,6 +132,31 @@ def build_parser() -> argparse.ArgumentParser:
         "label-validate", help="validate external blind-reader label JSON files"
     )
     labels.add_argument("labels", nargs="+", type=Path)
+
+    project_create = subparsers.add_parser(
+        "project-create",
+        help="create an empty local AKT Reader workbench project",
+    )
+    project_create.add_argument("project", type=Path, help="new local .aktproj directory")
+    project_create.add_argument("--name", required=True, help="human-readable project name")
+
+    project_inspect = subparsers.add_parser(
+        "project-inspect",
+        help="inspect one local AKT Reader workbench project",
+    )
+    project_inspect.add_argument("project", type=Path, help="local .aktproj directory")
+
+    project_import = subparsers.add_parser(
+        "project-import-pagexml",
+        help="copy local PAGE XML and page images into a local workbench project",
+    )
+    project_import.add_argument("project", type=Path, help="local .aktproj directory")
+    project_import.add_argument("source", type=Path, help="local PAGE XML source")
+    project_import.add_argument(
+        "--image-root",
+        type=Path,
+        help="local directory containing imageFilename paths (defaults to the XML directory)",
+    )
 
     pagexml = subparsers.add_parser(
         "pagexml-import",
@@ -469,6 +495,33 @@ def _command_label_validate(args: argparse.Namespace) -> int:
     _emit_json({"status": "PASS", "labels": results, "count": len(results)})
     return 0
 
+
+
+def _command_project_create(args: argparse.Namespace) -> int:
+    project = local_output_path(args.project, role="project destination")
+    report = create_project(project, name=args.name)
+    _emit_json(report)
+    return 0
+
+
+def _command_project_inspect(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    report = inspect_project(project)
+    _emit_json(report)
+    return 0
+
+
+def _command_project_import_pagexml(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    source = local_input_path(args.source, role="PAGE XML source")
+    image_root = None
+    if args.image_root is not None:
+        image_root = local_input_path(args.image_root, role="PAGE XML image root")
+        if not image_root.is_dir():
+            raise CliConfigurationError(f"PAGE XML image root is not a directory: {image_root}")
+    report = import_pagexml_into_project(project, source, image_root=image_root)
+    _emit_json(report)
+    return 0
 
 def _command_pagexml_import(args: argparse.Namespace) -> int:
     source = local_input_path(args.source, role="PAGE XML source")
@@ -874,6 +927,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "checkout-verify": _command_checkout_verify,
         "prompt-verify": _command_prompt_verify,
         "label-validate": _command_label_validate,
+        "project-create": _command_project_create,
+        "project-inspect": _command_project_inspect,
+        "project-import-pagexml": _command_project_import_pagexml,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
         "reader-inspect": _command_reader_inspect,
