@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -7,6 +8,7 @@ from typing import Any
 import pytest
 
 import aktreader.kraken as kraken_module
+from aktreader.cli_support import CliConfigurationError, load_kraken_config
 from aktreader.kraken import (
     KrakenArtifactError,
     KrakenConfig,
@@ -145,3 +147,20 @@ def test_config_rejects_unapproved_runtime_arguments(device: str, precision: str
 
     with pytest.raises(ValueError):
         KrakenConfig(executable=pin, model=pin, device=device, precision=precision)
+
+
+def test_config_rejects_remote_and_credential_settings(tmp_path: Path) -> None:
+    config = tmp_path / "kraken.json"
+    config.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0.0",
+                "endpoint": "https://example.invalid",
+                "artifacts": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CliConfigurationError, match="hosted-service or credential"):
+        load_kraken_config(config)
