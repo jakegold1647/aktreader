@@ -17,11 +17,11 @@ from __future__ import annotations
 import ast
 import json
 import socket
+import tomllib
 from pathlib import Path
 
 import pytest
 from PIL import Image
-import tomllib
 
 from aktreader.cli import main
 
