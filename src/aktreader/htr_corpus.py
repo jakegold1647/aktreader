@@ -523,17 +523,13 @@ def assemble_consented_training_corpus(
 
         for source in inputs:
             staged_bundle = bundles_directory / source.manifest_sha256
-            exported = export_consented_training_pagexml(
+            export_consented_training_pagexml(
                 source.project,
                 staged_bundle,
                 manifest_sha256=source.manifest_sha256,
                 split=source.split,
             )
             verified = _verify_bundle(staged_bundle, source=source)
-            if exported["source_pagexml_sha256"] != verified.source_pagexml_sha256:
-                raise HtrCorpusError(
-                    "exported training bundle source identity changed unexpectedly"
-                )
             corpus_bundle = data_directory / source.manifest_sha256
             shutil.move(str(staged_bundle), str(corpus_bundle))
             relative_pagexml = (
