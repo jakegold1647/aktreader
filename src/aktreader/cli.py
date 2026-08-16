@@ -64,14 +64,14 @@ from aktreader.local_reader import LocalReader, LocalReaderError
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     create_project,
-    grant_training_consent,
-    revoke_training_consent,
-    training_readiness,
     evaluate_htr_suggestions,
     export_human_pagexml,
+    grant_training_consent,
     import_htr_suggestions,
     import_pagexml_into_project,
     inspect_project,
+    revoke_training_consent,
+    training_readiness,
 )
 from aktreader.prompt import verify_reader_prompt
 from aktreader.validators.dates import validate_dates
@@ -835,11 +835,13 @@ def _command_project_training_readiness(args: argparse.Namespace) -> int:
         raise CliConfigurationError(f"training readiness report is a directory: {output}")
     if output == project or project in output.parents:
         raise CliConfigurationError(
-            "training readiness report must be outside the project so project storage stays immutable"
+            "training readiness report must be outside the project so project storage stays "
+            "immutable"
         )
     if output.exists() and not args.replace_existing:
         raise CliConfigurationError(
-            "training readiness report already exists; pass --replace-existing to replace it atomically"
+            "training readiness report already exists; pass --replace-existing to replace "
+            "it atomically"
         )
     report = training_readiness(
         project,
