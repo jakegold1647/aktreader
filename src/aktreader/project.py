@@ -354,7 +354,7 @@ def import_pagexml_into_project(
                                 page_id,
                                 image_sha256,
                                 width_px,
-                                height_px,
+                                height_px
                             )
                         VALUES (?, ?, ?, ?, ?, ?)
                         """,
