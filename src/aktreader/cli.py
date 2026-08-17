@@ -1605,7 +1605,8 @@ def _command_project_export_transcriptions_csv(args: argparse.Namespace) -> int:
         raise CliConfigurationError(f"transcription CSV export is a directory: {output}")
     if output.exists() and not args.replace_existing:
         raise CliConfigurationError(
-            "transcription CSV export already exists; pass --replace-existing to replace it atomically"
+            "transcription CSV export already exists; pass --replace-existing "
+            "to replace it atomically"
         )
     report = export_human_transcriptions_csv(
         project,
