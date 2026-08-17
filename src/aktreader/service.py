@@ -1053,12 +1053,8 @@ def _snapshot_training_inputs(
     moved = False
     try:
         shutil.copyfile(config_path, temporary / "config.json")
-        shutil.copyfile(plan_path, temporary / "plan.json")
         _copy_regular_tree(corpus_directory, temporary / "corpus")
-        inspected = inspect_consented_training_corpus(
-            temporary / "plan.json",
-            temporary / "corpus",
-        )
+        inspected = inspect_consented_training_corpus(plan_path, temporary / "corpus")
         os.replace(temporary, destination)
         moved = True
     finally:
@@ -2087,6 +2083,7 @@ def queue_service_project_kraken_training(
             "config_sha256": config_report.config_sha256,
             "corpus_manifest_sha256": snapshot["corpus_manifest_sha256"],
             "source_plan_sha256": snapshot["source_plan_sha256"],
+            "plan_path": str(plan),
             "queued_by": queued_by,
         },
         "model": {
@@ -2322,10 +2319,18 @@ class ServiceJobWorker:
                         must_exist=True,
                     )
                     config_path = job_directory / "config.json"
-                    plan_path = job_directory / "plan.json"
+                    plan_value = training.get("plan_path")
+                    if not isinstance(plan_value, str):
+                        raise ServiceError("Kraken training plan pin is invalid")
+                    plan_path = _regular_local_file(
+                        plan_value,
+                        role="Kraken training corpus plan",
+                    )
                     corpus_directory = job_directory / "corpus"
                     if _sha256_file(config_path) != training.get("config_sha256"):
                         raise ServiceError("Kraken training configuration snapshot changed")
+                    if _sha256_file(plan_path) != training.get("source_plan_sha256"):
+                        raise ServiceError("Kraken training corpus plan changed")
                     inspected = inspect_consented_training_corpus(plan_path, corpus_directory)
                     if (
                         inspected["corpus_manifest_sha256"]
