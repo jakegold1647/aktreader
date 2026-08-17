@@ -32,6 +32,7 @@ from aktreader.project import (
     recognize_project_with_kraken,
     revise_line_geometry,
     revise_line_transcription,
+    undo_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
 )
@@ -1819,6 +1820,36 @@ def revise_authorized_project_line(
         if key != "project"
     }
 
+def undo_authorized_project_line(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    source_span_id: str,
+    expected_revision: int,
+) -> dict[str, object]:
+    """Append a role-checked reversal without removing project history."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = undo_line_transcription(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        editor=str(account["username"]),
+        expected_revision=expected_revision,
+    )
+    return {key: value for key, value in revision.items() if key != "project"}
+
+
 def revise_authorized_project_line_geometry(
     service_workspace: Path | str,
     project_id: str,
@@ -2251,6 +2282,29 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.OK, attachment)
                 return
             if (
+                len(parts) == 6
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4:] == ["transcriptions", "undo"]
+            ):
+                required = {
+                    "manifest_sha256",
+                    "source_span_id",
+                    "expected_revision",
+                }
+                if set(payload) != required:
+                    raise ServiceError("transcription undo has invalid keys")
+                account = self._account()
+                revision = undo_authorized_project_line(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    source_span_id=str(payload["source_span_id"]),
+                    expected_revision=payload["expected_revision"],
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
+            if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "transcriptions"
@@ -2535,6 +2589,7 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
         <label>Transcription <textarea id="text" disabled></textarea></label>
         <div class="actions">
           <button id="save" type="button" disabled>Save correction</button>
+          <button id="undo" type="button" disabled>Undo latest correction</button>
           <span id="role"></span>
         </div>
         <p id="review-shortcuts">Keyboard: J/↓ next line · K/↑ previous line ·
@@ -2602,6 +2657,7 @@ const detail = document.getElementById("detail");
 const suggestions = document.getElementById("suggestions");
 const text = document.getElementById("text");
 const save = document.getElementById("save");
+const undo = document.getElementById("undo");
 const role = document.getElementById("role");
 const regionSelect = document.getElementById("region");
 const polygon = document.getElementById("region-polygon");
@@ -2786,6 +2842,12 @@ function selectLine(sourceSpanId) {
   const geometry = selectedLineGeometry();
   text.disabled = !line || !canEdit();
   save.disabled = !line || !canEdit();
+  undo.disabled = !line || !canEdit() || line.revision === 0;
+  undo.title = !line || line.revision === 0
+    ? "There is no human correction to undo."
+    : (canEdit()
+      ? "Append a new revision with the text before the latest correction."
+      : "Only editors and owners can undo a correction.");
   text.value = line ? (line.text || "") : "";
   linePolygon.value = geometry ? JSON.stringify(geometry.polygon) : "";
   lineBaseline.value = geometry ? JSON.stringify(geometry.baseline) : "";
@@ -3107,6 +3169,37 @@ async function saveRevision() {
     save.disabled = !canEdit();
   }
 }
+async function undoRevision() {
+  const line = selectedLine();
+  const doc = currentDocument();
+  if (!line || !doc || !canEdit() || line.revision === 0) return;
+  undo.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/transcriptions/undo",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          source_span_id: line.source_span_id,
+          expected_revision: line.revision
+        })
+      }
+    );
+    await loadPage();
+    setStatus(payload.status === "UNDONE"
+      ? "Latest correction undone as a new revision."
+      : "No human correction is available to undo.");
+  } catch (error) {
+    setStatus(error.message);
+    await loadPage();
+  } finally {
+    const current = selectedLine();
+    undo.disabled = !current || !canEdit() || current.revision === 0;
+  }
+}
 loginForm.addEventListener("submit", async event => {
   event.preventDefault();
   loginStatus.textContent = "Signing in…";
@@ -3171,6 +3264,7 @@ document.addEventListener("keydown", event => {
   selectAdjacentLine(offset);
 });
 save.addEventListener("click", () => saveRevision());
+undo.addEventListener("click", () => undoRevision());
 saveLineGeometry.addEventListener("click", () => saveLineGeometryRevision());
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 saveRegion.addEventListener("click", () => saveRegionRevision());
