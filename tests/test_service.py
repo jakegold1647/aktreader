@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from aktreader import kraken as kraken_module
 import aktreader.service as service_module
+from aktreader import kraken as kraken_module
 from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import PinnedArtifact, sha256_file
 from aktreader.project import create_project, import_pagexml_into_project, inspect_project
