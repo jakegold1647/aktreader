@@ -4306,7 +4306,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
         <section id="invitations" aria-labelledby="invitations-title">
           <h2 id="invitations-title">Your project invitations</h2>
           <p>Choose an invitation addressed to your signed-in account, then enter the code supplied
-            by its owner. The service does not send email or expose the invitation beyond loopback.</p>
+            by its owner. The service does not send email or expose the invitation beyond
+            loopback.</p>
           <form id="accept-invitation-form">
             <label>Invitation <select id="incoming-invitation" required></select></label>
             <label>Invitation code <input id="incoming-invitation-code" required
@@ -4690,7 +4691,8 @@ function renderProjectInvitations() {
   if (!isOwner()) return;
   const memberNames = new Set(state.members.map(member => member.username));
   state.accounts
-    .filter(account => account.username !== state.account.username && !memberNames.has(account.username))
+    .filter(account => account.username !== state.account.username &&
+      !memberNames.has(account.username))
     .forEach(account => option(inviteAccount, account.username, account.username));
   if (!state.projectInvitations.length) {
     const note = document.createElement("li");
