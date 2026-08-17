@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import http.client
 import json
-from io import BytesIO
 import threading
+from io import BytesIO
 from pathlib import Path
 
 from PIL import Image
@@ -88,10 +88,6 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         pages = json.loads(pages_body)
         assert pages_status == 200
         assert pages["pages"][0]["page_id"]
-        assert thumbnail_status == 200
-        assert thumbnail_headers["Content-Type"].startswith("image/png")
-        assert thumbnail_size[0] <= 240
-        assert thumbnail_size[1] <= 180
         page_url = pages["pages"][0]["page_url"]
         thumbnail_url = pages["pages"][0]["thumbnail_url"]
         thumbnail_status, thumbnail_headers, thumbnail = _request(
@@ -101,6 +97,10 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         )
         with Image.open(BytesIO(thumbnail)) as opened_thumbnail:
             thumbnail_size = opened_thumbnail.size
+        assert thumbnail_status == 200
+        assert thumbnail_headers["Content-Type"].startswith("image/png")
+        assert thumbnail_size[0] <= 240
+        assert thumbnail_size[1] <= 180
 
         page_status, _page_headers, page_body = _request(port, "GET", page_url)
         page = json.loads(page_body)
