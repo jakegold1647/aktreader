@@ -21,7 +21,7 @@ reverse proxies, external identity providers, or multi-device synchronization.
 
 | Boundary | Implemented controls | Remaining operator responsibility |
 | --- | --- | --- |
-| Browser to loopback service | Short-lived bearer session, per-project viewer/editor/owner roles, request-size limits, no filesystem paths in browser responses. | Keep the machine and local browser profile trusted; do not expose the port. |
+| Browser to loopback service | Short-lived bearer session, per-project viewer/editor/owner roles, recipient-bound expiring invitation codes, request-size limits, no filesystem paths in browser responses. | Keep the machine and local browser profile trusted; share invitation codes only through an appropriate local channel; do not expose the port. |
 | Project storage | Local content-addressed imported objects, append-only revision tables, output paths outside the project for derivatives. | Protect disk access and choose a backup-retention policy. |
 | Backup and restore | Deterministic archive manifest, checksums, path validation, and restore verification. | Store verified backups somewhere appropriate for the material; test recovery before relying on it. |
 | Local artifacts and runtimes | SHA-256-pinned regular files, declared license metadata, no artifact-byte download through the service. | Review provenance, licensing, executable safety, and model behavior before registration. |
@@ -32,7 +32,7 @@ reverse proxies, external identity providers, or multi-device synchronization.
 The following are not provided and must not be inferred:
 
 - public or LAN hosting, TLS termination, reverse-proxy hardening, or DDoS protection;
-- external identity, invitations, password recovery, MFA, or enterprise audit retention;
+- external identity, email delivery, password recovery, MFA, or enterprise audit retention;
 - encrypted-at-rest project storage, key management, secure deletion, or malware scanning;
 - sandboxing untrusted local model executables or proving a model/dataset license;
 - automatic transcription acceptance, production accuracy claims, or a public data portal;
@@ -52,6 +52,13 @@ A bearer token exists only in the active browser tab, but a person or process wi
 workstation may still act as that browser user. Use OS accounts and disk protection appropriate to
 the records, sign out when finished, and do not leave an authenticated browser open on shared
 machines.
+
+### Local invitation-code disclosure
+
+An invitation code is returned only when its owner creates it, is stored only as a SHA-256 digest,
+is bound to one existing local account, and expires after seven days. Share the displayed code only
+with that named recipient through a channel appropriate to the trusted machine. An owner can revoke
+a pending invitation; an accepted, revoked, expired, or already-used code cannot grant access again.
 
 ### Stale or conflicting review
 
