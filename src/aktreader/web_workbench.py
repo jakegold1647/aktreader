@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import json
 from http import HTTPStatus
-from io import BytesIO
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse
 
