@@ -123,12 +123,16 @@ def test_service_container_listener_requires_an_explicit_safe_address(tmp_path: 
 def test_service_workspace_owns_a_copy_of_each_project(tmp_path: Path) -> None:
     workspace, project, project_id = _managed_project(tmp_path)
 
+    training_directory = workspace / "training"
+    assert training_directory.is_dir()
+    training_directory.rmdir()
     report = inspect_service_workspace(workspace)
     projects = list_service_projects(workspace)
 
     assert report["status"] == "READY"
     assert report["project_count"] == 1
     assert report["network_required"] is False
+    assert training_directory.is_dir()
     assert projects == [
         {
             "project_id": project_id,
