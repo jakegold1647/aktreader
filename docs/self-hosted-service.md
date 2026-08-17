@@ -10,7 +10,8 @@ port; it is not a LAN or public listener.
 This is local collaborative review on one machine, not a production network deployment.
 Authenticated owners, editors, and viewers can use the loopback workbench; text and layout saves
 use optimistic revision checks, so stale writes return a conflict for the reviewer to reload. It
-does not offer LAN/public hosting, external identity, invitations or password recovery, a complete
+supports recipient-bound, time-limited invitation codes for existing local accounts, but does not
+offer LAN/public hosting, external identity, email delivery or password recovery, a complete
 activity/audit policy, cross-device synchronization, or deployment hardening. Do not put it behind
 a reverse proxy or expose its port.
 
@@ -52,6 +53,12 @@ and creates short-lived bearer sessions only through `POST /api/session`. `/api/
 role: `VIEWER` can inspect documents, revisions, layout, and recognition suggestions;
 `EDITOR` can save text and layout corrections and queue backups or configured local recognition;
 and `OWNER` has those capabilities plus local role administration.
+
+An owner can also create a recipient-bound, seven-day local invitation for an existing account in
+the loopback workbench. The service returns a one-time display code only to that owner, stores only
+its SHA-256 digest, and binds acceptance to the named account's active session. The owner must share
+the code out of band; AKT Reader sends no email and has no external identity integration. Pending
+invitations can be revoked, and accepted, revoked, expired, or reused codes cannot grant access.
 
 Account creation remains a local CLI administration action. An `OWNER` can use the loopback
 workbench to list existing local accounts and grant them a `VIEWER`, `EDITOR`, or `OWNER` role on
@@ -178,7 +185,10 @@ Start the local service and open the loopback URL it prints (normally
 token only in memory for that tab.
 
 The workbench lets an authorized reviewer choose a project, PAGE XML document, and page; view the
-source image with line bounds; inspect current line revisions; and save a correction. J or Down
+source image with line bounds; inspect current line revisions; and save a correction. An owner can
+create or revoke recipient-bound local invitations for existing accounts, then copy the shown code
+to the named recipient. Every signed-in account can see invitations addressed to it and accept one
+with that code; no invitation code is retained or shown again after creation. J or Down
 moves to the next line, K or Up moves to the previous line, and Ctrl/Command+Enter saves the
 focused transcription for an editor or owner. Shortcuts do not steal keys from form fields other
 than that explicit save shortcut. Image bytes are fetched only with the authenticated request, and
@@ -298,9 +308,9 @@ python -m aktreader service-queue-backup service-data --project-id <project-id>
 ```
 
 The worker persists jobs in `service.sqlite3`. A job that was running when the process
-stopped returns to the pending queue on restart. `GET /api/healthz`, `GET /api/projects`,
-and `GET /api/jobs/<job-id>` are the only service endpoints in this foundation; every
-response declares `network_required: false`.
+stopped returns to the pending queue on restart. Health, project, invitation, document, review,
+artifact, and job endpoints all declare `network_required: false`; none accepts a remote URL or
+requires an external service.
 
 Each backup is a deterministic ZIP archive under
 `service-data/backups/<project-id>/<snapshot-sha256>.aktbackup.zip`. It contains every
