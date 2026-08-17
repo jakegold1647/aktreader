@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
+import aktreader.service as service_module
 from aktreader import kraken as kraken_module
 from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import PinnedArtifact, sha256_file
@@ -20,6 +21,7 @@ from aktreader.project import create_project, import_pagexml_into_project, inspe
 from aktreader.service import (
     LOOPBACK_HOST,
     ServiceError,
+    ServiceJobWorker,
     activate_service_project_model,
     add_project_to_service,
     attach_service_artifact,
@@ -35,6 +37,7 @@ from aktreader.service import (
     list_service_project_model_releases,
     list_service_projects,
     queue_project_kraken_recognition,
+    queue_service_project_kraken_training,
     register_service_artifact,
     restore_project_backup,
     rollback_service_project_model,
@@ -120,12 +123,16 @@ def test_service_container_listener_requires_an_explicit_safe_address(tmp_path: 
 def test_service_workspace_owns_a_copy_of_each_project(tmp_path: Path) -> None:
     workspace, project, project_id = _managed_project(tmp_path)
 
+    training_directory = workspace / "training"
+    assert training_directory.is_dir()
+    training_directory.rmdir()
     report = inspect_service_workspace(workspace)
     projects = list_service_projects(workspace)
 
     assert report["status"] == "READY"
     assert report["project_count"] == 1
     assert report["network_required"] is False
+    assert training_directory.is_dir()
     assert projects == [
         {
             "project_id": project_id,
@@ -898,6 +905,113 @@ def test_owner_can_attach_model_metadata_without_exposing_artifact_paths(
         server.server_close()
         thread.join(timeout=5)
 
+
+
+def test_service_training_job_snapshots_inputs_and_registers_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace, project_id, _ = _reviewable_service(tmp_path)
+    config = tmp_path / "training-config.json"
+    plan = tmp_path / "corpus-plan.json"
+    corpus = tmp_path / "corpus"
+    config.write_text('{"source":"original-config"}', encoding="utf-8")
+    plan.write_text('{"source":"original-plan"}', encoding="utf-8")
+    corpus.mkdir()
+    (corpus / "source.txt").write_text("original corpus", encoding="utf-8")
+    inspected = {
+        "corpus_manifest_sha256": "a" * 64,
+        "source_plan_sha256": sha256_file(plan),
+    }
+    observed: dict[str, Path] = {}
+
+    class _Config:
+        config_sha256 = sha256_file(config)
+
+    def fake_inspect(plan_path: Path, corpus_path: Path) -> dict[str, object]:
+        assert plan_path.is_file()
+        assert corpus_path.is_dir()
+        return dict(inspected)
+
+    def fake_run(
+        config_path: Path,
+        plan_path: Path,
+        corpus_directory: Path,
+        output_directory: Path,
+    ) -> dict[str, object]:
+        observed["config"] = config_path
+        observed["plan"] = plan_path
+        observed["corpus"] = corpus_directory
+        assert config_path.read_text(encoding="utf-8") == '{"source":"original-config"}'
+        assert plan_path.read_text(encoding="utf-8") == '{"source":"original-plan"}'
+        assert (corpus_directory / "source.txt").read_text(encoding="utf-8") == "original corpus"
+        weights = output_directory / "checkpoints" / "model.safetensors"
+        weights.parent.mkdir(parents=True)
+        weights.write_bytes(b"trained local weights")
+        receipt = {
+            "outputs": [
+                {
+                    "path": "checkpoints/model.safetensors",
+                    "sha256": sha256_file(weights),
+                    "size_bytes": weights.stat().st_size,
+                }
+            ]
+        }
+        (output_directory / "training-run.aktreader.json").write_text(
+            json.dumps(receipt),
+            encoding="utf-8",
+        )
+        return {"receipt_sha256": "d" * 64}
+
+    monkeypatch.setattr(
+        service_module,
+        "load_kraken_training_config",
+        lambda _path: _Config(),
+    )
+    monkeypatch.setattr(service_module, "inspect_consented_training_corpus", fake_inspect)
+    monkeypatch.setattr(service_module, "run_kraken_training", fake_run)
+
+    queued = queue_service_project_kraken_training(
+        workspace,
+        project_id=project_id,
+        config_path=config,
+        plan_path=plan,
+        corpus_directory=corpus,
+        model_name="Local Serock training run",
+        model_license_id="Apache-2.0",
+        model_description="Consent-checked local test output",
+    )
+    config.write_text('{"source":"mutated-config"}', encoding="utf-8")
+    (corpus / "source.txt").write_text("mutated corpus", encoding="utf-8")
+
+    worker = ServiceJobWorker(workspace)
+    worker.start()
+    try:
+        for _ in range(100):
+            job = get_service_job(workspace, str(queued["job_id"]))
+            if job["status"] in {"SUCCEEDED", "FAILED"}:
+                break
+            time.sleep(0.02)
+    finally:
+        worker.stop()
+
+    assert job["status"] == "SUCCEEDED"
+    assert observed["config"] != config
+    assert observed["plan"] == plan
+    assert observed["corpus"] != corpus
+    assert job["result"]["corpus_manifest_sha256"] == "a" * 64
+    assert job["result"]["source_plan_sha256"] == sha256_file(plan)
+    assert job["result"]["training_receipt_sha256"] == "d" * 64
+    registered_models = job["result"]["registered_models"]
+    assert len(registered_models) == 1
+    registered_model = registered_models[0]
+    assert registered_model["kind"] == "MODEL"
+    assert registered_model["name"] == "Local Serock training run"
+    assert registered_model["license_id"] == "Apache-2.0"
+    assert registered_model["description"] == "Consent-checked local test output"
+    assert registered_model["size_bytes"] == len(b"trained local weights")
+    assert len(registered_model["sha256"]) == 64
+    assert "relative_path" not in registered_model
 
 
 def test_service_model_releases_pin_queued_recognition_and_support_rollback(
