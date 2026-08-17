@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 import pypdfium2 as pdfium
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 
 from aktreader.kraken import LocalKraken
 from aktreader.pagexml import import_pagexml
@@ -37,6 +37,7 @@ PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
 PROJECT_DATABASE_VERSION = 10
 ALTO_XML_NAMESPACE = "http://www.loc.gov/standards/alto/ns-v4#"
+PDF_EXPORT_DPI = 300
 
 
 class ProjectStoreError(ValueError):
@@ -2384,6 +2385,280 @@ def _alto_bbox_attributes(points: list[list[int]]) -> dict[str, str]:
         "HEIGHT": str(bbox["height"]),
     }
 
+
+
+def _pdf_export_font_path(font_path: Path | str | None) -> Path:
+    """Resolve an explicit or conventional local TrueType font for PDF rendering."""
+
+    candidates: list[Path] = []
+    if font_path is not None:
+        candidate = _local_path(font_path, role="PDF font", must_exist=True)
+        if not candidate.is_file():
+            raise ProjectStoreError("PDF font must be a readable local file")
+        candidates.append(candidate)
+    else:
+        windows_root = os.environ.get("WINDIR")
+        if windows_root:
+            candidates.append(Path(windows_root) / "Fonts" / "arial.ttf")
+        candidates.extend(
+            [
+                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+                Path("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"),
+                Path("/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
+                Path("/System/Library/Fonts/Supplemental/Arial.ttf"),
+                Path("/Library/Fonts/Arial Unicode.ttf"),
+            ]
+        )
+    for candidate in candidates:
+        try:
+            ImageFont.truetype(str(candidate), size=12)
+        except (OSError, ValueError):
+            continue
+        return candidate
+    if font_path is not None:
+        raise ProjectStoreError("PDF font must be a readable TrueType font")
+    raise ProjectStoreError(
+        "PDF export needs a local Unicode-capable TrueType font; set AKTREADER_PDF_FONT "
+        "or pass --font"
+    )
+
+
+def _draw_pdf_text(
+    image: Image.Image,
+    *,
+    font_path: Path,
+    text: str,
+    polygon: list[list[int]],
+) -> None:
+    """Render one effective line within its latest source-pixel bounding box."""
+
+    bbox = _geometry_bbox(polygon)
+    x = int(bbox["x"])
+    y = int(bbox["y"])
+    width = max(1, int(bbox["width"]))
+    height = max(1, int(bbox["height"]))
+    draw = ImageDraw.Draw(image)
+    selected_font: ImageFont.FreeTypeFont | None = None
+    selected_bounds: tuple[int, int, int, int] | None = None
+    for size in range(height, 0, -1):
+        candidate = ImageFont.truetype(str(font_path), size=size)
+        bounds = draw.multiline_textbbox((0, 0), text, font=candidate, spacing=0)
+        if bounds[2] - bounds[0] <= width and bounds[3] - bounds[1] <= height:
+            selected_font = candidate
+            selected_bounds = bounds
+            break
+    if selected_font is None or selected_bounds is None:
+        selected_font = ImageFont.truetype(str(font_path), size=1)
+        selected_bounds = draw.multiline_textbbox((0, 0), text, font=selected_font, spacing=0)
+    draw.multiline_text(
+        (x - selected_bounds[0], y - selected_bounds[1]),
+        text,
+        fill=(0, 0, 0),
+        font=selected_font,
+        spacing=0,
+    )
+
+
+def export_human_pdf(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    replace_existing: bool = False,
+    font_path: Path | str | None = None,
+) -> dict[str, object]:
+    """Render current human text and layout as a local image-only PDF derivative.
+
+    The PDF derives all line text and geometry from the latest local human
+    revisions and reads the current region order before drawing. It excludes
+    source scans and paths, HTR suggestions, pending review proposals, and
+    editor identities. The output intentionally has no text layer; pair it
+    with ALTO when searchable interchange is needed.
+    """
+
+    output_path, source_sha256, rows = _human_transcription_export_context(
+        project,
+        output,
+        manifest_sha256=manifest_sha256,
+        replace_existing=replace_existing,
+        output_role="PDF export",
+    )
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        page_rows = connection.execute(
+            """
+            SELECT page_index, page_id, width_px, height_px
+            FROM pages
+            WHERE manifest_sha256 = ?
+            ORDER BY page_index
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project pages for PDF export: {error}") from error
+    finally:
+        connection.close()
+
+    pages: list[tuple[int, str, int, int]] = []
+    for page_index, page_id, width, height in page_rows:
+        if (
+            not isinstance(page_index, int)
+            or page_index < 0
+            or not isinstance(page_id, str)
+            or not page_id.strip()
+            or not isinstance(width, int)
+            or width < 1
+            or not isinstance(height, int)
+            or height < 1
+            or width * height > MAX_PDF_RENDER_PIXELS
+        ):
+            raise ProjectStoreError("project contains an invalid PDF export page")
+        pages.append((page_index, page_id, width, height))
+    if not pages:
+        raise ProjectStoreError("project PAGE XML import has no pages for PDF export")
+
+    rows_by_page: dict[int, dict[str, dict[str, int | str]]] = {}
+    for row in rows:
+        page_index = row["page_index"]
+        source_span_id = row["source_span_id"]
+        if not isinstance(page_index, int) or not isinstance(source_span_id, str):
+            raise ProjectStoreError("project contains an invalid PDF export line")
+        page_rows_by_span = rows_by_page.setdefault(page_index, {})
+        if source_span_id in page_rows_by_span:
+            raise ProjectStoreError("project contains duplicate PDF export line identities")
+        page_rows_by_span[source_span_id] = row
+
+    selected_font: Path | None = None
+    rendered_pages: list[Image.Image] = []
+    exported_line_count = 0
+    try:
+        for page_index, page_id, width, height in pages:
+            page = load_project_page(
+                root,
+                manifest_sha256=manifest_sha256,
+                page_index=page_index,
+            )
+            page_layout = load_project_page_layout(
+                root,
+                manifest_sha256=manifest_sha256,
+                page_index=page_index,
+            )
+            if (
+                page.get("page_id") != page_id
+                or page.get("width_px") != width
+                or page.get("height_px") != height
+                or not isinstance(page.get("lines"), list)
+                or not isinstance(page_layout.get("lines"), list)
+                or not isinstance(page_layout.get("reading_order"), dict)
+            ):
+                raise ProjectStoreError("project page changed while preparing the PDF export")
+
+            geometry_by_span: dict[str, list[list[int]]] = {}
+            for line in page_layout["lines"]:
+                if (
+                    not isinstance(line, dict)
+                    or not isinstance(line.get("source_span_id"), str)
+                    or not isinstance(line.get("polygon"), list)
+                ):
+                    raise ProjectStoreError("project contains an invalid PDF line geometry")
+                source_span_id = line["source_span_id"]
+                if source_span_id in geometry_by_span:
+                    raise ProjectStoreError("project contains duplicate PDF line geometry")
+                geometry_by_span[source_span_id] = line["polygon"]
+
+            records_by_span = rows_by_page.get(page_index, {}).copy()
+            lines_by_region: dict[str | None, list[tuple[list[list[int]], str]]] = {}
+            for line in page["lines"]:
+                if not isinstance(line, dict):
+                    raise ProjectStoreError("project contains an invalid PDF page line")
+                source_span_id = line.get("source_span_id")
+                region_id = line.get("region_id")
+                if (
+                    not isinstance(source_span_id, str)
+                    or (region_id is not None and not isinstance(region_id, str))
+                ):
+                    raise ProjectStoreError("project contains an invalid PDF page line")
+                record = records_by_span.pop(source_span_id, None)
+                polygon = geometry_by_span.pop(source_span_id, None)
+                if record is None or polygon is None:
+                    raise ProjectStoreError(
+                        "project text or geometry no longer matches its PDF export line"
+                    )
+                text = record.get("text")
+                if not isinstance(text, str):
+                    raise ProjectStoreError("project contains an invalid PDF text line")
+                lines_by_region.setdefault(region_id, []).append((polygon, text))
+            if records_by_span or geometry_by_span:
+                raise ProjectStoreError("project has a PDF export line outside its source page")
+
+            reading_order = page_layout["reading_order"].get("region_ids")
+            if (
+                not isinstance(reading_order, list)
+                or any(not isinstance(region_id, str) for region_id in reading_order)
+            ):
+                raise ProjectStoreError("project contains an invalid PDF reading order")
+
+            ordered_lines: list[tuple[list[list[int]], str]] = []
+            for region_id in reading_order:
+                ordered_lines.extend(lines_by_region.pop(region_id, []))
+            ordered_lines.extend(lines_by_region.pop(None, []))
+            if lines_by_region:
+                raise ProjectStoreError("project has PDF lines outside its current reading order")
+
+            canvas = Image.new("RGB", (width, height), color=(255, 255, 255))
+            for polygon, text in ordered_lines:
+                if text:
+                    if selected_font is None:
+                        selected_font = _pdf_export_font_path(font_path)
+                    _draw_pdf_text(
+                        canvas,
+                        font_path=selected_font,
+                        text=text,
+                        polygon=polygon,
+                    )
+                exported_line_count += 1
+            rendered_pages.append(canvas)
+
+        if exported_line_count != len(rows):
+            raise ProjectStoreError("project PDF export line count is incomplete")
+        stream = io.BytesIO()
+        try:
+            rendered_pages[0].save(
+                stream,
+                format="PDF",
+                save_all=True,
+                append_images=rendered_pages[1:],
+                resolution=PDF_EXPORT_DPI,
+            )
+            rendered = stream.getvalue()
+        except (OSError, ValueError) as error:
+            raise ProjectStoreError(f"cannot render PDF export: {error}") from error
+        finally:
+            stream.close()
+    finally:
+        for rendered_page in rendered_pages:
+            rendered_page.close()
+
+    _atomic_write_bytes(output_path, rendered, replace_existing=replace_existing)
+    return {
+        "status": "SUCCEEDED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_pagexml_sha256": source_sha256,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(rendered).hexdigest(),
+        "format": "PDF",
+        "render_dpi": PDF_EXPORT_DPI,
+        "coordinate_space": "source_pixels",
+        "text_layer": False,
+        "source_scans_included": False,
+        "font_sha256": _sha256_file(selected_font) if selected_font is not None else None,
+        "page_count": len(pages),
+        "line_count": exported_line_count,
+        "human_revision_count": sum(int(row["revision"]) > 0 for row in rows),
+        "network_required": False,
+    }
 
 def export_human_alto(
     project: Path | str,
