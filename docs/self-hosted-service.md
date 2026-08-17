@@ -121,9 +121,12 @@ Start the local service and open the loopback URL it prints (normally
 token only in memory for that tab.
 
 The workbench lets an authorized reviewer choose a project, PAGE XML document, and page; view the
-source image with line bounds; inspect current line revisions; and save a correction. Image bytes
-are fetched only with the authenticated request, and neither the API nor the page exposes a local
-filesystem path. `VIEWER` accounts can inspect, while `EDITOR` and `OWNER` accounts can save.
+source image with line bounds; inspect current line revisions; and save a correction. J or Down
+moves to the next line, K or Up moves to the previous line, and Ctrl/Command+Enter saves the
+focused transcription for an editor or owner. Shortcuts do not steal keys from form fields other
+than that explicit save shortcut. Image bytes are fetched only with the authenticated request, and
+neither the API nor the page exposes a local filesystem path. `VIEWER` accounts can inspect, while
+`EDITOR` and `OWNER` accounts can save.
 
 Every save includes the line revision that was displayed. If another correction landed first, the
 workbench shows the service's conflict message and reloads the current page instead of overwriting
