@@ -1152,6 +1152,41 @@ def test_project_exports_current_human_content_and_layout_as_alto(
     ).attrib["CONTENT"] == "final human correction"
 
 
+def test_project_alto_export_uses_current_region_reading_order(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    revise_page_reading_order(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="layout-reviewer",
+    )
+    alto_path = tmp_path / "serock-reading-order.alto.xml"
+
+    export_human_alto(
+        project,
+        alto_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    namespace = {"alto": "http://www.loc.gov/standards/alto/ns-v4#"}
+    alto = ET.fromstring(alto_path.read_bytes())
+    assert [
+        string.attrib["CONTENT"]
+        for string in alto.findall(
+            "./alto:Layout/alto:Page/alto:PrintSpace/alto:TextBlock/alto:TextLine/alto:String",
+            namespace,
+        )
+    ] == ["second", "first"]
+
+
 def test_project_export_can_add_text_equiv_for_previously_blank_line(tmp_path: Path) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()
