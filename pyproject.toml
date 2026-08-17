@@ -8,6 +8,7 @@ authors = [{ name = "Jake Goldstein" }]
 dependencies = [
     "jsonschema>=4.23,<5",
     "pillow>=11,<13",
+    "pypdfium2>=5.13,<6",
 ]
 
 [project.urls]
