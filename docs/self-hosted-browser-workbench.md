@@ -19,7 +19,7 @@ Stop it with Ctrl+C.
 
 ## What it provides
 
-- document-first and page-scoped navigation;
+- document-first and page-scoped navigation with bounded, server-generated page thumbnails;
 - source-page image display with PAGE XML line and region bounds;
 - effective transcription, local HTR suggestions, and pending review-proposal
   context for each line;
