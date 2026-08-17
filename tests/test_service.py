@@ -318,6 +318,8 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "Save line outline" in workbench
         assert "Recent project activity" in workbench
         assert "/activity" in workbench
+        assert "Project members" in workbench
+        assert "/members" in workbench
         assert "Undo latest correction" in workbench
         assert "/transcriptions/undo" in workbench
         assert "Save reading order" in workbench
@@ -630,6 +632,112 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         stale_undo_response = connection.getresponse()
         assert stale_undo_response.status == 409
         assert "conflict" in json.loads(stale_undo_response.read())["message"]
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_owner_can_manage_existing_project_members(tmp_path: Path) -> None:
+    workspace, project_id, manifest_sha256 = _reviewable_service(tmp_path)
+    create_local_account(
+        workspace,
+        username="reviewer",
+        password="a sufficiently long local reviewer password",
+    )
+    with pytest.raises(ServiceError, match="retain at least one owner"):
+        grant_project_role(
+            workspace,
+            project_id=project_id,
+            username="editor",
+            role="EDITOR",
+        )
+
+    server = create_self_hosted_service_server(workspace, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
+    try:
+        owner_payload = json.dumps(
+            {
+                "username": "editor",
+                "password": "a sufficiently long local editor password",
+            }
+        )
+        connection.request(
+            "POST",
+            "/api/session",
+            body=owner_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        owner_session = json.loads(connection.getresponse().read())
+        owner_headers = {"Authorization": f"Bearer {owner_session['access_token']}"}
+
+        accounts_route = f"/api/projects/{project_id}/accounts"
+        connection.request("GET", accounts_route, headers=owner_headers)
+        accounts_response = connection.getresponse()
+        accounts = json.loads(accounts_response.read())
+        assert accounts_response.status == 200
+        assert {account["username"] for account in accounts["accounts"]} == {
+            "editor",
+            "reviewer",
+        }
+        assert all("password_hash" not in account for account in accounts["accounts"])
+
+        members_route = f"/api/projects/{project_id}/members"
+        membership_payload = json.dumps({"username": "reviewer", "role": "EDITOR"})
+        connection.request(
+            "POST",
+            members_route,
+            body=membership_payload,
+            headers={"Content-Type": "application/json", **owner_headers},
+        )
+        membership_response = connection.getresponse()
+        membership = json.loads(membership_response.read())
+        assert membership_response.status == 200
+        assert membership["status"] == "GRANTED"
+        assert membership["username"] == "reviewer"
+        assert membership["role"] == "EDITOR"
+
+        connection.request("GET", members_route, headers=owner_headers)
+        members_response = connection.getresponse()
+        members = json.loads(members_response.read())["members"]
+        assert members_response.status == 200
+        assert {(member["username"], member["role"]) for member in members} == {
+            ("editor", "OWNER"),
+            ("reviewer", "EDITOR"),
+        }
+
+        reviewer_payload = json.dumps(
+            {
+                "username": "reviewer",
+                "password": "a sufficiently long local reviewer password",
+            }
+        )
+        connection.request(
+            "POST",
+            "/api/session",
+            body=reviewer_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        reviewer_session = json.loads(connection.getresponse().read())
+        reviewer_headers = {"Authorization": f"Bearer {reviewer_session['access_token']}"}
+
+        connection.request("GET", accounts_route, headers=reviewer_headers)
+        reviewer_accounts_response = connection.getresponse()
+        assert reviewer_accounts_response.status == 403
+        reviewer_accounts_response.read()
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents",
+            headers=reviewer_headers,
+        )
+        reviewer_documents_response = connection.getresponse()
+        reviewer_documents = json.loads(reviewer_documents_response.read())
+        assert reviewer_documents_response.status == 200
+        assert reviewer_documents["documents"][0]["manifest_sha256"] == manifest_sha256
     finally:
         connection.close()
         server.shutdown()
