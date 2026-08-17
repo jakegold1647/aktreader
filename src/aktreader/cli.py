@@ -115,6 +115,7 @@ from aktreader.prompt import verify_reader_prompt
 from aktreader.service import (
     LOOPBACK_HOST,
     ServiceError,
+    activate_service_project_model,
     add_project_to_service,
     attach_service_artifact,
     create_local_account,
@@ -124,10 +125,12 @@ from aktreader.service import (
     inspect_service_workspace,
     list_local_accounts,
     list_service_artifacts,
+    list_service_project_model_releases,
     list_service_projects,
     queue_project_backup,
     register_service_artifact,
     restore_project_backup,
+    rollback_service_project_model,
     verify_project_backup,
 )
 from aktreader.validators.dates import validate_dates
@@ -1038,6 +1041,61 @@ def build_parser() -> argparse.ArgumentParser:
         "--artifact-id",
         required=True,
         help="registered artifact UUID",
+    )
+
+    service_activate_model = subparsers.add_parser(
+        "service-project-activate-model",
+        help="select one attached registered model for future queued recognition",
+    )
+    service_activate_model.add_argument(
+        "workspace",
+        type=Path,
+        help="local service directory",
+    )
+    service_activate_model.add_argument(
+        "--project-id",
+        required=True,
+        help="managed project UUID",
+    )
+    service_activate_model.add_argument(
+        "--artifact-id",
+        required=True,
+        help="attached MODEL artifact UUID",
+    )
+
+    service_model_history = subparsers.add_parser(
+        "service-project-model-history",
+        help="list immutable model-release and rollback history for a managed project",
+    )
+    service_model_history.add_argument(
+        "workspace",
+        type=Path,
+        help="local service directory",
+    )
+    service_model_history.add_argument(
+        "--project-id",
+        required=True,
+        help="managed project UUID",
+    )
+
+    service_rollback_model = subparsers.add_parser(
+        "service-project-rollback-model",
+        help="append a rollback to one prior project model release",
+    )
+    service_rollback_model.add_argument(
+        "workspace",
+        type=Path,
+        help="local service directory",
+    )
+    service_rollback_model.add_argument(
+        "--project-id",
+        required=True,
+        help="managed project UUID",
+    )
+    service_rollback_model.add_argument(
+        "--release-id",
+        required=True,
+        help="prior model release UUID",
     )
 
     service_queue = subparsers.add_parser(
@@ -2218,6 +2276,37 @@ def _command_service_project_attach_artifact(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def _command_service_project_activate_model(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        activate_service_project_model(
+            workspace,
+            project_id=args.project_id,
+            artifact_id=args.artifact_id,
+        )
+    )
+    return 0
+
+
+def _command_service_project_model_history(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(list_service_project_model_releases(workspace, project_id=args.project_id))
+    return 0
+
+
+def _command_service_project_rollback_model(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        rollback_service_project_model(
+            workspace,
+            project_id=args.project_id,
+            release_id=args.release_id,
+        )
+    )
+    return 0
+
+
 def _command_service_queue_backup(args: argparse.Namespace) -> int:
     workspace = local_input_path(args.workspace, role="service workspace")
     _emit_json(queue_project_backup(workspace, args.project_id))
@@ -2831,6 +2920,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "service-artifact-register": _command_service_artifact_register,
         "service-list-artifacts": _command_service_list_artifacts,
         "service-project-attach-artifact": _command_service_project_attach_artifact,
+        "service-project-activate-model": _command_service_project_activate_model,
+        "service-project-model-history": _command_service_project_model_history,
+        "service-project-rollback-model": _command_service_project_rollback_model,
         "service-queue-backup": _command_service_queue_backup,
         "service-backup-verify": _command_service_backup_verify,
         "service-backup-restore": _command_service_backup_restore,
