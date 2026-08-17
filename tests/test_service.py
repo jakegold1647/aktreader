@@ -297,6 +297,10 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
         assert "Run local recognition" in workbench
+        assert "Recognition suggestions" in workbench
+        assert "Use suggestion" in workbench
+        assert "Suggestion copied into the editor. Review it before saving." in workbench
+        assert "apply.disabled = !canEdit()" in workbench
         assert "/api/healthz" in workbench
         assert "/recognitions/kraken" in workbench
         assert "kraken_config" not in workbench
