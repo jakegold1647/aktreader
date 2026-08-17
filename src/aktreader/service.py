@@ -3750,6 +3750,9 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 .region-shape { cursor: pointer; fill: rgba(37, 99, 235, .10); stroke: #2563eb; stroke-width: 2; }
 .region-shape.selected { fill: rgba(21, 128, 61, .16); stroke: #15803d; stroke-width: 3; }
 .vertex { cursor: grab; fill: #15803d; stroke: #fff; stroke-width: 1.5; }
+.skip-link { background: #fff; color: #0f172a; left: 12px; padding: 8px 12px;
+  position: fixed; top: -48px; z-index: 10; }
+.skip-link:focus { top: 12px; }
 #login { margin: 48px auto; max-width: 430px; }
 #login form { display: grid; gap: 12px; }
 .hidden { display: none !important; }
@@ -3758,11 +3761,12 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header>
   <h1>AKT Reader collaborative workbench</h1>
   <p>Authenticated local review service. This page is available only on loopback.</p>
 </header>
-<main>
+<main id="main-content" tabindex="-1">
   <section id="login" class="panel" aria-labelledby="login-title">
     <h2 id="login-title">Sign in</h2>
     <form id="login-form">

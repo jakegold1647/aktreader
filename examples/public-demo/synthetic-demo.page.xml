@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PcGts xmlns="http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15">
+  <Metadata>
+    <Creator>AKT Reader synthetic public demo</Creator>
+    <Created>2026-08-17T00:00:00Z</Created>
+    <LastChange>2026-08-17T00:00:00Z</LastChange>
+  </Metadata>
+  <Page id="synthetic-page-1" imageFilename="synthetic-demo.ppm" imageWidth="48" imageHeight="32">
+    <TextRegion id="synthetic-region-1">
+      <Coords points="2,2 46,2 46,30 2,30"/>
+      <TextLine id="synthetic-line-1">
+        <Coords points="4,6 44,6 44,15 4,15"/>
+        <Baseline points="4,14 44,14"/>
+        <TextEquiv><Unicode>Synthetic public demo</Unicode></TextEquiv>
+      </TextLine>
+      <TextLine id="synthetic-line-2">
+        <Coords points="4,17 44,17 44,26 4,26"/>
+        <Baseline points="4,25 44,25"/>
+        <TextEquiv><Unicode>Review locally and verify sources.</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
