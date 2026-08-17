@@ -1065,10 +1065,32 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
             model=PinnedArtifact(model, sha256_file(model)),
         )
     )
+    registered_model = register_service_artifact(
+        workspace,
+        model,
+        kind="MODEL",
+        name="Service-managed test model",
+        license_id="Apache-2.0",
+    )
+    model_artifact_id = str(registered_model["artifact"]["artifact_id"])
+    attach_service_artifact(
+        workspace,
+        project_id=project_id,
+        artifact_id=model_artifact_id,
+    )
+    activate_service_project_model(
+        workspace,
+        project_id=project_id,
+        artifact_id=model_artifact_id,
+    )
+    used_model_paths: list[Path] = []
 
     def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
         source = Path(command[command.index("-i") + 1])
         destination = Path(command[command.index("-i") + 2])
+        used_model = Path(command[command.index("-m") + 1])
+        used_model_paths.append(used_model)
+        assert used_model.read_bytes() == b"fake local kraken model"
         document = ET.parse(source)
         for element in document.getroot().iter():
             if element.tag.rsplit("}", 1)[-1] == "Unicode":
@@ -1113,8 +1135,10 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
             "result_pagexml_sha256": job["result"]["result_pagexml_sha256"],
             "suggestion_count": 1,
             "runtime_fingerprint": kraken.runtime_fingerprint,
-            "model_artifact_id": None,
+            "model_artifact_id": model_artifact_id,
         }
+        assert len(used_model_paths) == 1
+        assert used_model_paths[0] != model
 
         connection.request(
             "GET",
