@@ -1113,6 +1113,7 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
             "result_pagexml_sha256": job["result"]["result_pagexml_sha256"],
             "suggestion_count": 1,
             "runtime_fingerprint": kraken.runtime_fingerprint,
+            "model_artifact_id": None,
         }
 
         connection.request(
