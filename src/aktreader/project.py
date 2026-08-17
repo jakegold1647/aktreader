@@ -22,6 +22,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from PIL import Image, UnidentifiedImageError
+
 from aktreader.pagexml import import_pagexml
 
 PROJECT_CONTRACT_NAME = "aktreader-project"
@@ -686,6 +688,121 @@ def _insert_object(
         """,
         (digest, object_kind, source.stat().st_size, relative_path, imported_at),
     )
+
+
+_IMAGE_IMPORT_SUFFIXES = frozenset(
+    {".bmp", ".gif", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"}
+)
+
+
+def _image_import_inputs(directory: Path) -> list[tuple[Path, int, int]]:
+    images: list[tuple[Path, int, int]] = []
+    for candidate in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
+        if not candidate.is_file() or candidate.suffix.lower() not in _IMAGE_IMPORT_SUFFIXES:
+            continue
+        try:
+            with Image.open(candidate) as opened:
+                opened.load()
+                width, height = opened.size
+        except (OSError, UnidentifiedImageError) as error:
+            raise ProjectStoreError(
+                f"image import cannot read source image: {candidate}"
+            ) from error
+        if width < 1 or height < 1:
+            raise ProjectStoreError(f"image import found invalid dimensions: {candidate}")
+        images.append((candidate.resolve(), width, height))
+    if not images:
+        raise ProjectStoreError(
+            "image import directory contains no supported top-level image files"
+        )
+    return images
+
+
+def _generated_image_pagexml(images: Sequence[tuple[Path, int, int]]) -> bytes:
+    root = ET.Element("PcGts")
+    metadata = ET.SubElement(root, "Metadata")
+    ET.SubElement(metadata, "Creator").text = "AKT Reader local image import"
+    for index, (image, width, height) in enumerate(images, start=1):
+        page = ET.SubElement(
+            root,
+            "Page",
+            {
+                "id": f"image-{index:04d}",
+                "imageFilename": image.name,
+                "imageWidth": str(width),
+                "imageHeight": str(height),
+            },
+        )
+        region = ET.SubElement(page, "TextRegion", {"id": "region-0001"})
+        ET.SubElement(
+            region,
+            "Coords",
+            {"points": f"0,0 {width},0 {width},{height} 0,{height}"},
+        )
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
+def _write_generated_image_pagexml(root: Path, payload: bytes) -> tuple[Path, str, bool]:
+    digest = hashlib.sha256(payload).hexdigest()
+    destination = root / "imports" / "generated" / f"image-import-{digest}.xml"
+    if destination.exists():
+        if not destination.is_file() or _sha256_file(destination) != digest:
+            raise ProjectStoreError(f"generated image PAGE XML collision: {destination}")
+        return destination, digest, False
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_write_bytes(destination, payload, replace_existing=False)
+    return destination, digest, True
+
+
+def import_images_into_project(
+    project: Path | str,
+    source_directory: Path | str,
+    *,
+    title: str | None = None,
+) -> dict[str, object]:
+    """Create an editable PAGE XML document from one local directory of page images."""
+
+    if title is not None and (not isinstance(title, str) or not title.strip()):
+        raise ProjectStoreError("image import title must be a nonblank string")
+    root = _required_project_root(project)
+    directory = _local_path(
+        source_directory,
+        role="image import directory",
+        must_exist=True,
+    )
+    if not directory.is_dir():
+        raise ProjectStoreError(f"image import source is not a directory: {directory}")
+    images = _image_import_inputs(directory)
+    source_path, generated_sha256, created = _write_generated_image_pagexml(
+        root,
+        _generated_image_pagexml(images),
+    )
+    try:
+        report = import_pagexml_into_project(root, source_path, image_root=directory)
+    except Exception:
+        if created:
+            try:
+                source_path.unlink()
+            except OSError:
+                pass
+        raise
+
+    requested_title = title.strip() if title is not None else directory.name
+    if not report["already_imported"] or title is not None:
+        update_project_document(
+            root,
+            manifest_sha256=str(report["manifest_sha256"]),
+            title=requested_title or f"Image import {generated_sha256[:12]}",
+        )
+    return {
+        **report,
+        "source_kind": "IMAGE_DIRECTORY",
+        "source_directory": str(directory),
+        "generated_pagexml": str(source_path),
+        "generated_pagexml_sha256": generated_sha256,
+        "input_image_count": len(images),
+        "network_required": False,
+    }
 
 
 def import_pagexml_into_project(
