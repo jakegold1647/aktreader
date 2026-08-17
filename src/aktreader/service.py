@@ -1756,6 +1756,25 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                     },
                 )
                 return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "artifacts"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "artifacts": list_authorized_project_artifacts(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
             prefix = "/api/jobs/"
             if path.startswith(prefix) and "/" not in path[len(prefix) :]:
                 account = self._account()
@@ -1796,6 +1815,22 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.CREATED, session)
                 return
             parts = path.split("/")
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "artifacts"
+            ):
+                if set(payload) != {"artifact_id"}:
+                    raise ServiceError("artifact attachment has invalid keys")
+                account = self._account()
+                attachment = attach_authorized_project_artifact(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    artifact_id=str(payload["artifact_id"]),
+                )
+                self._json(HTTPStatus.OK, attachment)
+                return
             if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
