@@ -324,6 +324,9 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "/transcriptions/undo" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
+        assert "Download transcript" in workbench
+        assert "Download CSV" in workbench
+        assert "transcriptions-csv" in workbench
         assert "Run local recognition" in workbench
         assert "Keyboard: J/↓ next line" in workbench
         assert "selectAdjacentLine" in workbench
@@ -568,6 +571,35 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
             if element.tag.rsplit("}", 1)[-1] == "RegionRefIndexed"
         ]
         assert exported_order == ["region-2", "region-1"]
+
+        transcript_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/export/transcript"
+        )
+        connection.request("GET", transcript_route, headers=authorization)
+        transcript_response = connection.getresponse()
+        exported_transcript = transcript_response.read()
+        assert transcript_response.status == 200
+        assert transcript_response.headers["Content-Type"].startswith("text/plain")
+        assert transcript_response.headers["Content-Disposition"] == (
+            f'attachment; filename="aktreader-{manifest_sha256[:12]}.txt"'
+        )
+        assert exported_transcript == b"reviewed text\n"
+
+        csv_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/export/transcriptions-csv"
+        )
+        connection.request("GET", csv_route, headers=authorization)
+        csv_response = connection.getresponse()
+        exported_csv = csv_response.read()
+        assert csv_response.status == 200
+        assert csv_response.headers["Content-Type"].startswith("text/csv")
+        assert csv_response.headers["Content-Disposition"] == (
+            f'attachment; filename="aktreader-{manifest_sha256[:12]}-lines.csv"'
+        )
+        assert exported_csv.startswith(
+            b"manifest_sha256,page_index,page_id,region_id,line_id,source_span_id,"
+        )
+        assert b"source text,reviewed text,1,editor" in exported_csv
 
         undo_payload = json.dumps(
             {
