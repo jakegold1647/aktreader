@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import shutil
 import sqlite3
 import tempfile
@@ -32,10 +33,24 @@ MAX_REQUEST_BYTES = 65_536
 MAX_BACKUP_FILES = 100_000
 MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
 _COPY_BUFFER_BYTES = 1024 * 1024
+PASSWORD_SCRYPT_N = 16_384
+PASSWORD_SCRYPT_R = 8
+PASSWORD_SCRYPT_P = 1
+SESSION_TTL_SECONDS = 8 * 60 * 60
+PROJECT_ROLES = ("VIEWER", "EDITOR", "OWNER")
+_ROLE_RANK = {role: index for index, role in enumerate(PROJECT_ROLES)}
 
 
 class ServiceError(ValueError):
     """Raised when a local self-hosted service contract is invalid."""
+
+
+class AuthenticationError(ServiceError):
+    """Raised when credentials or a local session cannot be authenticated."""
+
+
+class AuthorizationError(ServiceError):
+    """Raised when an authenticated account lacks a required project role."""
 
 
 def _timestamp() -> str:
@@ -108,6 +123,45 @@ def _initialize_database(path: Path) -> None:
             )
     finally:
         connection.close()
+    _migrate_service_database(path)
+
+
+def _migrate_service_database(path: Path) -> None:
+    """Add identity tables without changing the service workspace contract."""
+
+    connection = sqlite3.connect(path)
+    try:
+        with connection:
+            connection.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS service_accounts (
+                    account_id TEXT PRIMARY KEY,
+                    username TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                    password_salt BLOB NOT NULL,
+                    password_hash BLOB NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS service_project_roles (
+                    project_id TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK (role IN ('VIEWER', 'EDITOR', 'OWNER')),
+                    granted_at TEXT NOT NULL,
+                    PRIMARY KEY (project_id, account_id)
+                );
+                CREATE INDEX IF NOT EXISTS service_project_roles_account_project
+                    ON service_project_roles (account_id, project_id);
+                CREATE TABLE IF NOT EXISTS service_sessions (
+                    token_sha256 TEXT PRIMARY KEY,
+                    account_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS service_sessions_account_expiry
+                    ON service_sessions (account_id, expires_at);
+                """
+            )
+    finally:
+        connection.close()
 
 
 def _service_root(path: Path | str) -> Path:
@@ -130,6 +184,7 @@ def _service_root(path: Path | str) -> Path:
     for directory in (root / PROJECTS_DIRECTORY, root / BACKUPS_DIRECTORY):
         if not directory.is_dir() or directory.is_symlink():
             raise ServiceError(f"service workspace is missing managed {directory.name} storage")
+    _migrate_service_database(database_path)
     return root
 
 
