@@ -46,6 +46,21 @@ This first adapter intentionally does not claim that an arbitrary available mode
 nineteenth-century Congress-Poland handwriting. Model selection, evaluation, and future
 training require rights-cleared, human-reviewed data and clerk-year-separated evaluation.
 
+## Project-bound recognition
+
+For an imported AKT Reader document, run the same pinned configuration directly against the
+project instead of preparing a PAGE XML file and image directory yourself:
+
+    aktreader project-kraken-recognize E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --config E:\AKTREADER_LOCAL\kraken.config.json
+
+The command materializes a temporary PAGE XML input from the project's effective human text,
+line/region geometry, and reading order, then copies its checksum-verified image objects beside
+that input under safe generated names. It invokes the same local, pinned Kraken process and imports
+the PAGE XML result as an aligned `kraken` suggestion before removing the temporary workspace.
+
+The original source PAGE XML and image paths do not need to remain available after import, and the
+command does not expose a workspace path, upload a scan, download a model, or replace a human
+revision. The resulting suggestion appears in the local workbench for explicit human review.
 
 ## Importing suggestions into a project
 
