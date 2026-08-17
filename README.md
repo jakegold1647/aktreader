@@ -147,8 +147,8 @@ stable machine-readable report; a failed or skipped check makes the command exit
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-update-document`,
-`project-import-pagexml`, `project-import-images`, `project-import-htr-suggestions`,
-`project-export-pagexml`,
+`project-import-pagexml`, `project-import-images`, `project-import-pdf`,
+`project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
