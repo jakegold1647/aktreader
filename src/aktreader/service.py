@@ -28,6 +28,7 @@ from aktreader.project import (
     export_human_transcript,
     export_human_transcriptions_csv,
     inspect_project,
+    list_htr_suggestion_evaluations,
     list_project_activity,
     list_project_documents,
     load_project_page,
@@ -1868,6 +1869,32 @@ def list_authorized_project_activity(
     )
 
 
+
+def list_authorized_project_htr_evaluations(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+) -> list[dict[str, object]]:
+    """List current HTR quality reports for an authorized document viewer."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    reports = list_htr_suggestion_evaluations(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+    )
+    return [{key: value for key, value in report.items() if key != "project"} for report in reports]
+
+
+
 def load_authorized_project_layout(
     service_workspace: Path | str,
     project_id: str,
@@ -2427,6 +2454,27 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 return
             if (
+                len(parts) == 7
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "evaluations"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "evaluations": list_authorized_project_htr_evaluations(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                            manifest_sha256=parts[5],
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
                 len(parts) == 8
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "documents"
@@ -2926,6 +2974,9 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #recognition-suggestions { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #recognition-suggestions h2 { margin: 8px 0; }
 #suggestions { display: grid; gap: 8px; }
+#recognition-evaluation { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
+#recognition-evaluation h2 { margin: 8px 0; }
+#evaluation-list { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
 .suggestion { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 6px; padding: 10px; }
 .suggestion p { color: #475569; margin: 0 0 6px; }
 .suggestion pre { font: inherit; margin: 0 0 8px; overflow-wrap: anywhere; white-space: pre-wrap; }
@@ -3040,6 +3091,11 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
             human correction.</p>
           <div id="suggestions" aria-live="polite"></div>
         </section>
+        <section id="recognition-evaluation" aria-labelledby="evaluation-title">
+          <h2 id="evaluation-title">Recognition evaluation</h2>
+          <p>These metrics compare local suggestions with saved human corrections only.</p>
+          <ol id="evaluation-list" aria-live="polite"></ol>
+        </section>
         <section id="layout-editor" aria-labelledby="layout-title">
           <h2 id="layout-title">Layout</h2>
           <h3>Line geometry</h3>
@@ -3076,7 +3132,7 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
-  activity: [], members: [], accounts: [], artifacts: [], attachableArtifacts: [],
+  activity: [], evaluations: [], members: [], accounts: [], artifacts: [], attachableArtifacts: [],
   krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
@@ -3095,6 +3151,7 @@ const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
 const activityList = document.getElementById("activity-list");
+const evaluationList = document.getElementById("evaluation-list");
 const membership = document.getElementById("membership");
 const memberForm = document.getElementById("member-form");
 const memberAccount = document.getElementById("member-account");
@@ -3231,6 +3288,37 @@ function renderActivity() {
     activityList.append(item);
   });
 }
+
+function renderEvaluations() {
+  evaluationList.replaceChildren();
+  if (!state.evaluations.length) {
+    const note = document.createElement("li");
+    note.textContent = "No local recognition results are ready to evaluate.";
+    evaluationList.append(note);
+    return;
+  }
+  state.evaluations.forEach(evaluation => {
+    const item = document.createElement("li");
+    const fingerprint = evaluation.runtime_fingerprint
+      ? " · " + evaluation.runtime_fingerprint.slice(0, 12)
+      : "";
+    if (evaluation.status === "NO_EVALUABLE_HUMAN_REVISIONS") {
+      item.textContent = evaluation.engine + fingerprint +
+        " · no saved human corrections are available yet.";
+    } else {
+      const cer = evaluation.character_error_rate === null
+        ? "CER unavailable"
+        : "CER " + (evaluation.character_error_rate * 100).toFixed(2) + "%";
+      const wer = evaluation.word_error_rate === null
+        ? "WER unavailable"
+        : "WER " + (evaluation.word_error_rate * 100).toFixed(2) + "%";
+      item.textContent = evaluation.engine + fingerprint + " · " + cer + " · " + wer +
+        " · " + evaluation.evaluated_line_count + " reviewed line(s)";
+    }
+    evaluationList.append(item);
+  });
+}
+
 function renderMembership() {
   membership.classList.toggle("hidden", !isOwner());
   memberList.replaceChildren();
@@ -3667,11 +3755,16 @@ async function loadPage() {
     api(
       "/api/projects/" + encodeURIComponent(state.project.project_id) +
       "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/activity"
+    ),
+    api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/evaluations"
     )
   ]);
   state.page = responses[0].page;
   state.layout = responses[1].layout;
   state.activity = responses[2].activity.events;
+  state.evaluations = responses[3].evaluations;
   state.selected = state.page.lines.length ? state.page.lines[0].source_span_id : null;
   state.selectedRegion = state.layout.regions.length ? state.layout.regions[0].region_id : null;
   pageDetail.textContent = "Page " + (Number(pageSelect.value) + 1) + " · " +
@@ -3679,6 +3772,7 @@ async function loadPage() {
     state.layout.regions.length + " regions";
   renderLayout();
   renderActivity();
+  renderEvaluations();
   await loadImage();
   selectLine(state.selected);
   setExportDisabled(false);
@@ -3723,11 +3817,13 @@ async function loadProject() {
     state.page = null;
     state.layout = null;
     state.activity = [];
+    state.evaluations = [];
     state.members = [];
     state.accounts = [];
     state.artifacts = [];
     state.attachableArtifacts = [];
     renderActivity();
+    renderEvaluations();
     renderMembership();
     renderArtifacts();
     setExportDisabled(true);
@@ -3992,12 +4088,14 @@ document.getElementById("logout").addEventListener("click", () => {
   state.page = null;
   state.layout = null;
   state.activity = [];
+  state.evaluations = [];
   state.members = [];
   state.accounts = [];
   state.artifacts = [];
   state.attachableArtifacts = [];
   renderMembership();
   renderArtifacts();
+  renderEvaluations();
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;
