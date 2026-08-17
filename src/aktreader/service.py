@@ -25,6 +25,8 @@ from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.project import (
     ProjectStoreError,
     export_human_pagexml,
+    export_human_transcript,
+    export_human_transcriptions_csv,
     inspect_project,
     list_project_activity,
     list_project_documents,
@@ -1928,6 +1930,76 @@ def export_authorized_project_pagexml(
     return filename, payload
 
 
+def export_authorized_project_transcript(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+) -> tuple[str, bytes]:
+    """Render an authorized project's effective transcript as a download payload."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    canonical_manifest = _require_sha256(manifest_sha256, role="manifest_sha256")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    with tempfile.TemporaryDirectory(prefix="aktreader-transcript-", dir=root) as temporary:
+        output = Path(temporary) / "document.txt"
+        export_human_transcript(
+            _managed_project_path(root, canonical_id),
+            output,
+            manifest_sha256=canonical_manifest,
+        )
+        try:
+            payload = output.read_bytes()
+        except OSError as error:
+            raise ServiceError("generated transcript export is unreadable") from error
+    if len(payload) > MAX_EXPORT_RESPONSE_BYTES:
+        raise ServiceError("generated transcript export exceeds the response size limit")
+    filename = f"aktreader-{canonical_manifest[:12]}.txt"
+    return filename, payload
+
+
+def export_authorized_project_transcriptions_csv(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+) -> tuple[str, bytes]:
+    """Render an authorized project's effective line CSV as a download payload."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    canonical_manifest = _require_sha256(manifest_sha256, role="manifest_sha256")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    with tempfile.TemporaryDirectory(prefix="aktreader-csv-", dir=root) as temporary:
+        output = Path(temporary) / "document.csv"
+        export_human_transcriptions_csv(
+            _managed_project_path(root, canonical_id),
+            output,
+            manifest_sha256=canonical_manifest,
+        )
+        try:
+            payload = output.read_bytes()
+        except OSError as error:
+            raise ServiceError("generated transcription CSV export is unreadable") from error
+    if len(payload) > MAX_EXPORT_RESPONSE_BYTES:
+        raise ServiceError("generated transcription CSV export exceeds the response size limit")
+    filename = f"aktreader-{canonical_manifest[:12]}-lines.csv"
+    return filename, payload
+
+
 def revise_authorized_project_line(
     service_workspace: Path | str,
     project_id: str,
@@ -2312,6 +2384,46 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                         ),
                         "network_required": False,
                     },
+                )
+                return
+            if (
+                len(parts) == 8
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6:] == ["export", "transcript"]
+            ):
+                account = self._account()
+                filename, transcript = export_authorized_project_transcript(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                )
+                self._bytes(
+                    HTTPStatus.OK,
+                    "text/plain; charset=utf-8",
+                    transcript,
+                    download_name=filename,
+                )
+                return
+            if (
+                len(parts) == 8
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6:] == ["export", "transcriptions-csv"]
+            ):
+                account = self._account()
+                filename, transcription_csv = export_authorized_project_transcriptions_csv(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                )
+                self._bytes(
+                    HTTPStatus.OK,
+                    "text/csv; charset=utf-8",
+                    transcription_csv,
+                    download_name=filename,
                 )
                 return
             if (
@@ -2797,6 +2909,12 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
       <button id="download-pagexml" class="secondary" type="button" disabled>
         Download PAGE XML
       </button>
+      <button id="download-transcript" class="secondary" type="button" disabled>
+        Download transcript
+      </button>
+      <button id="download-transcriptions-csv" class="secondary" type="button" disabled>
+        Download CSV
+      </button>
       <button id="run-kraken" type="button" disabled>
         Run local recognition
       </button>
@@ -2924,11 +3042,18 @@ const saveRegion = document.getElementById("save-region");
 const readingOrder = document.getElementById("reading-order");
 const saveReadingOrder = document.getElementById("save-reading-order");
 const downloadPagexml = document.getElementById("download-pagexml");
+const downloadTranscript = document.getElementById("download-transcript");
+const downloadTranscriptionsCsv = document.getElementById("download-transcriptions-csv");
 const linePolygon = document.getElementById("line-polygon");
 const lineBaseline = document.getElementById("line-baseline");
 const saveLineGeometry = document.getElementById("save-line-geometry");
 const runKraken = document.getElementById("run-kraken");
 
+function setExportDisabled(disabled) {
+  [downloadPagexml, downloadTranscript, downloadTranscriptionsCsv].forEach(
+    control => { control.disabled = disabled; }
+  );
+}
 function setStatus(message) { status.textContent = message; }
 function apiHeaders(extra) {
   const headers = Object.assign({}, extra || {});
@@ -3392,7 +3517,7 @@ async function loadPage() {
   const doc = currentDocument();
   if (!doc || pageSelect.value === "") return;
   setStatus("Loading page…");
-  downloadPagexml.disabled = true;
+  setExportDisabled(true);
   const pagePath = "/api/projects/" + encodeURIComponent(state.project.project_id) +
     "/documents/" + encodeURIComponent(doc.manifest_sha256) +
     "/pages/" + encodeURIComponent(pageSelect.value);
@@ -3416,7 +3541,7 @@ async function loadPage() {
   renderActivity();
   await loadImage();
   selectLine(state.selected);
-  downloadPagexml.disabled = false;
+  setExportDisabled(false);
   updateRecognitionControl();
   setStatus("");
 }
@@ -3462,7 +3587,7 @@ async function loadProject() {
     state.accounts = [];
     renderActivity();
     renderMembership();
-    downloadPagexml.disabled = true;
+    setExportDisabled(true);
     updateRecognitionControl();
     lineList.replaceChildren();
     await loadMembership();
@@ -3645,35 +3770,54 @@ regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 saveRegion.addEventListener("click", () => saveRegionRevision());
 saveReadingOrder.addEventListener("click", () => saveReadingOrderRevision());
 runKraken.addEventListener("click", () => queueKrakenRecognition());
-downloadPagexml.addEventListener("click", async () => {
+async function downloadDocumentExport(exportName, filename, successMessage, control) {
   const doc = currentDocument();
   if (!doc || !state.project) return;
-  downloadPagexml.disabled = true;
+  control.disabled = true;
   try {
     const response = await fetch(
       "/api/projects/" + encodeURIComponent(state.project.project_id) +
-      "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/export/pagexml",
+      "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/export/" + exportName,
       { headers: apiHeaders() }
     );
     if (!response.ok) {
       const payload = await response.json();
-      throw new Error(payload.message || "Could not export PAGE XML");
+      throw new Error(payload.message || "Could not export document");
     }
     const objectUrl = URL.createObjectURL(await response.blob());
     const link = document.createElement("a");
     link.href = objectUrl;
-    link.download = "aktreader-export.page.xml";
+    link.download = filename;
     document.body.append(link);
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
-    setStatus("PAGE XML export downloaded.");
+    setStatus(successMessage);
   } catch (error) {
     setStatus(error.message);
   } finally {
-    downloadPagexml.disabled = !currentDocument();
+    control.disabled = !currentDocument();
   }
-});
+}
+downloadPagexml.addEventListener(
+  "click",
+  () => downloadDocumentExport(
+    "pagexml", "aktreader-export.page.xml", "PAGE XML export downloaded.", downloadPagexml
+  )
+);
+downloadTranscript.addEventListener(
+  "click",
+  () => downloadDocumentExport(
+    "transcript", "aktreader-export.txt", "Transcript export downloaded.", downloadTranscript
+  )
+);
+downloadTranscriptionsCsv.addEventListener(
+  "click",
+  () => downloadDocumentExport(
+    "transcriptions-csv", "aktreader-export-lines.csv", "CSV export downloaded.",
+    downloadTranscriptionsCsv
+  )
+);
 overlay.addEventListener("pointermove", event => {
   if (!state.drag || !state.layout) return;
   const point = pagePoint(event);
@@ -3710,7 +3854,7 @@ document.getElementById("logout").addEventListener("click", () => {
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;
-  downloadPagexml.disabled = true;
+  setExportDisabled(true);
   updateRecognitionControl();
   if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
   state.imageUrl = null;
