@@ -975,7 +975,9 @@ def test_service_model_releases_pin_queued_recognition_and_support_rollback(
 
     assert rolled_back["status"] == "ROLLED_BACK"
     assert history["active_model"]["artifact"]["artifact_id"] == first_artifact_id
-    assert history["active_model"]["prior_release_id"] == second_release["active_model"]["release_id"]
+    assert history["active_model"]["prior_release_id"] == (
+        second_release["active_model"]["release_id"]
+    )
     assert [release["action"] for release in history["releases"]] == [
         "ROLLED_BACK",
         "ACTIVATED",
