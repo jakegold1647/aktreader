@@ -172,6 +172,18 @@ def test_collection_exports_an_explicit_static_public_release(tmp_path: Path, ca
         raise AssertionError("public release must require explicit confirmation")
     assert not public_release.exists()
 
+    try:
+        export_public_collection(
+            collection,
+            project / "public-release",
+            license_id="CC-BY-4.0",
+            confirm_public=True,
+        )
+    except CollectionError as error:
+        assert "outside every indexed project" in str(error)
+    else:
+        raise AssertionError("public release must not modify an indexed project")
+
     report = export_public_collection(
         collection,
         public_release,
