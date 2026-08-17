@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import threading
 import time
 import xml.etree.ElementTree as ET
@@ -11,6 +12,9 @@ from pathlib import Path
 
 from PIL import Image
 
+from aktreader import kraken as kraken_module
+from aktreader.kraken import KrakenConfig, LocalKraken
+from aktreader.local_reader import PinnedArtifact, sha256_file
 from aktreader.project import create_project, import_pagexml_into_project, inspect_project
 from aktreader.service import (
     LOOPBACK_HOST,
@@ -590,6 +594,172 @@ def test_owner_can_attach_model_metadata_without_exposing_artifact_paths(
         assert artifacts_response.status == 200
         assert artifacts["artifacts"] == [registered["artifact"]]
         assert "relative_path" not in artifacts["artifacts"][0]
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def _editor_authorization(connection: HTTPConnection) -> dict[str, str]:
+    connection.request(
+        "POST",
+        "/api/session",
+        body=json.dumps(
+            {
+                "username": "editor",
+                "password": "a sufficiently long local editor password",
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+    response = connection.getresponse()
+    session = json.loads(response.read())
+    assert response.status == 201
+    return {"Authorization": f"Bearer {session['access_token']}"}
+
+
+def test_kraken_recognition_endpoint_requires_startup_configuration(
+    tmp_path: Path,
+) -> None:
+    workspace, project_id, manifest_sha256 = _reviewable_service(tmp_path)
+    server = create_self_hosted_service_server(workspace, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
+    try:
+        authorization = _editor_authorization(connection)
+        connection.request("GET", "/healthz")
+        health_response = connection.getresponse()
+        health = json.loads(health_response.read())
+        assert health_response.status == 200
+        assert health["kraken_recognition_enabled"] is False
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/recognitions/kraken",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kraken_config": "browser supplied paths are rejected",
+                }
+            ),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_response = connection.getresponse()
+        assert invalid_response.status == 400
+        assert "invalid keys" in json.loads(invalid_response.read())["message"]
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/recognitions/kraken",
+            body=json.dumps({"manifest_sha256": manifest_sha256}),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        unavailable_response = connection.getresponse()
+        assert unavailable_response.status == 400
+        assert "not configured" in json.loads(unavailable_response.read())["message"]
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_configured_kraken_recognition_job_imports_local_suggestions(
+    tmp_path: Path,
+    monkeypatch: object,
+) -> None:
+    workspace, project_id, manifest_sha256 = _reviewable_service(tmp_path)
+    executable = tmp_path / "kraken"
+    model = tmp_path / "serock.mlmodel"
+    executable.write_bytes(b"fake local kraken executable")
+    model.write_bytes(b"fake local kraken model")
+    kraken = LocalKraken(
+        KrakenConfig(
+            executable=PinnedArtifact(executable, sha256_file(executable)),
+            model=PinnedArtifact(model, sha256_file(model)),
+        )
+    )
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        source = Path(command[command.index("-i") + 1])
+        destination = Path(command[command.index("-i") + 2])
+        document = ET.parse(source)
+        for element in document.getroot().iter():
+            if element.tag.rsplit("}", 1)[-1] == "Unicode":
+                element.text = "recognized by configured local Kraken"
+        document.write(destination, encoding="utf-8", xml_declaration=True)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(kraken_module.subprocess, "run", fake_run)
+    server = create_self_hosted_service_server(workspace, port=0, kraken=kraken)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
+    try:
+        authorization = _editor_authorization(connection)
+        connection.request("GET", "/healthz")
+        health_response = connection.getresponse()
+        health = json.loads(health_response.read())
+        assert health_response.status == 200
+        assert health["kraken_recognition_enabled"] is True
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/recognitions/kraken",
+            body=json.dumps({"manifest_sha256": manifest_sha256}),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        queued_response = connection.getresponse()
+        queued = json.loads(queued_response.read())
+        assert queued_response.status == 202
+        assert queued["kind"] == "PROJECT_KRAKEN_RECOGNITION"
+
+        for _ in range(100):
+            job = get_service_job(workspace, str(queued["job_id"]))
+            if job["status"] in {"SUCCEEDED", "FAILED"}:
+                break
+            time.sleep(0.02)
+
+        assert job["status"] == "SUCCEEDED"
+        assert job["result"] == {
+            "project_id": project_id,
+            "manifest_sha256": manifest_sha256,
+            "result_pagexml_sha256": job["result"]["result_pagexml_sha256"],
+            "suggestion_count": 1,
+            "runtime_fingerprint": kraken.runtime_fingerprint,
+        }
+
+        connection.request(
+            "GET",
+            f"/api/jobs/{queued['job_id']}",
+            headers=authorization,
+        )
+        public_response = connection.getresponse()
+        public_job = json.loads(public_response.read())
+        assert public_response.status == 200
+        assert public_job["status"] == "SUCCEEDED"
+        assert public_job["result"]["runtime_fingerprint"] == kraken.runtime_fingerprint
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0",
+            headers=authorization,
+        )
+        page_response = connection.getresponse()
+        page = json.loads(page_response.read())["page"]
+        assert page_response.status == 200
+        assert page["lines"][0]["text"] == "source text"
+        assert page["lines"][0]["suggestions"] == [
+            {
+                "engine": "kraken",
+                "runtime_fingerprint": kraken.runtime_fingerprint,
+                "result_pagexml_sha256": job["result"]["result_pagexml_sha256"],
+                "text": "recognized by configured local Kraken",
+                "imported_at": page["lines"][0]["suggestions"][0]["imported_at"],
+            }
+        ]
     finally:
         connection.close()
         server.shutdown()
