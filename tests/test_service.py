@@ -629,7 +629,7 @@ def test_kraken_recognition_endpoint_requires_startup_configuration(
     connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
     try:
         authorization = _editor_authorization(connection)
-        connection.request("GET", "/healthz")
+        connection.request("GET", "/api/healthz")
         health_response = connection.getresponse()
         health = json.loads(health_response.read())
         assert health_response.status == 200
@@ -699,7 +699,7 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
     connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
     try:
         authorization = _editor_authorization(connection)
-        connection.request("GET", "/healthz")
+        connection.request("GET", "/api/healthz")
         health_response = connection.getresponse()
         health = json.loads(health_response.read())
         assert health_response.status == 200
