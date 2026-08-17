@@ -19,7 +19,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
-from aktreader.project import ProjectStoreError, inspect_project
+from aktreader.project import (
+    ProjectStoreError,
+    inspect_project,
+    list_project_documents,
+    load_project_page,
+    revise_line_transcription,
+)
 
 SERVICE_MANIFEST_NAME = "service.akt.json"
 SERVICE_DATABASE_NAME = "service.sqlite3"
@@ -1228,6 +1234,87 @@ class ServiceJobWorker:
                     status="FAILED",
                     error="local backup job failed; inspect the local service log",
                 )
+
+
+def list_authorized_project_documents(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List PAGE XML document records visible to one project viewer."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return list_project_documents(_managed_project_path(root, canonical_id))
+
+
+def load_authorized_project_page(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    page_index: int,
+) -> dict[str, object]:
+    """Load one revision-aware PAGE record without exposing a local image path."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    page = load_project_page(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+    )
+    return {key: value for key, value in page.items() if key != "image_path"}
+
+
+def revise_authorized_project_line(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    source_span_id: str,
+    text: str,
+    expected_revision: int,
+) -> dict[str, object]:
+    """Append one optimistic, role-checked human transcription revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = revise_line_transcription(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        text=text,
+        editor=str(account["username"]),
+        expected_revision=expected_revision,
+    )
+    return {
+        key: value
+        for key, value in revision.items()
+        if key != "project"
+    }
 
 
 def _public_job(report: dict[str, object]) -> dict[str, object]:
