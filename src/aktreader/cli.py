@@ -87,6 +87,7 @@ from aktreader.project import (
     export_review_package,
     grant_training_consent,
     import_htr_suggestions,
+    import_images_into_project,
     import_pagexml_into_project,
     import_review_package,
     inspect_project,
@@ -248,6 +249,25 @@ def build_parser() -> argparse.ArgumentParser:
         "--image-root",
         type=Path,
         help="local directory containing imageFilename paths (defaults to the XML directory)",
+    )
+
+    project_import_images = subparsers.add_parser(
+        "project-import-images",
+        help="create one local PAGE XML document from a directory of page images",
+    )
+    project_import_images.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_import_images.add_argument(
+        "source_directory",
+        type=Path,
+        help="local directory of top-level page images",
+    )
+    project_import_images.add_argument(
+        "--title",
+        help="optional document title (defaults to the image directory name)",
     )
 
     project_htr_suggestions = subparsers.add_parser(
@@ -1129,6 +1149,26 @@ def _command_project_import_pagexml(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_import_images(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    source_directory = local_input_path(
+        args.source_directory,
+        role="image import directory",
+    )
+    if not project.is_dir() or not source_directory.is_dir():
+        raise CliConfigurationError(
+            "image import requires an existing project and image directory"
+        )
+    _emit_json(
+        import_images_into_project(
+            project,
+            source_directory,
+            title=args.title,
+        )
+    )
+    return 0
+
+
 def _command_project_import_htr_suggestions(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -1978,6 +2018,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-list-documents": _command_project_list_documents,
         "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
+        "project-import-images": _command_project_import_images,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
