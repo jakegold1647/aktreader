@@ -205,3 +205,35 @@ training and atomically publishes stdout, stderr, and
 training-run receipt, model, test manifest, and option set. Kraken's human-readable CER/WER and
 confusion report is retained verbatim in the logs; AKT Reader does not invent a separate metrics
 schema for it.
+
+
+## Local service recognition queue
+
+A service owner can make the already-pinned local Kraken runner available to
+authorized editors as a durable loopback job. The browser never receives an
+executable path, model path, configuration file, command arguments, or output
+streams. It can queue recognition only for a document that is already in an
+authorized local project.
+
+Start the local service with an untracked checksum-pinned inference
+configuration:
+
+    aktreader service-serve E:\AKTREADER_SERVICE --kraken-config E:\AKTREADER_LOCAL\kraken.json
+
+The service validates the configuration and artifact checksums before opening
+its loopback listener. Its startup JSON and `GET /api/healthz` report
+`kraken_recognition_enabled`; without the flag, the usual review and backup
+features continue to work but recognition requests are rejected.
+
+An `EDITOR` or `OWNER` can submit only the project document's
+`manifest_sha256` to `POST /api/projects/<project-id>/recognitions/kraken`.
+The worker materializes the project's effective PAGE XML and managed image
+copies, invokes the configured local runner, then imports the result as
+reviewable HTR suggestions. It retains a durable job receipt containing the
+manifest, PAGE XML result checksum, suggestion count, and runtime fingerprint,
+but never local file paths or process output.
+
+Keep the same `--kraken-config` available when restarting a service that has
+pending recognition jobs. A restarted service without that configured runner
+will safely mark such a job failed rather than accepting a browser-supplied
+replacement.
