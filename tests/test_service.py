@@ -315,11 +315,12 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert page_response.status == 200
         assert "image_path" not in page
         assert page["lines"][0]["revision"] == 0
+        source_span_id = page["lines"][0]["source_span_id"]
 
         revision_payload = json.dumps(
             {
                 "manifest_sha256": manifest_sha256,
-                "source_span_id": "line-1",
+                "source_span_id": source_span_id,
                 "text": "reviewed text",
                 "expected_revision": 0,
             }
