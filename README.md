@@ -155,7 +155,7 @@ The CLI also provides `label-validate`, `collection-create`, `collection-add-pro
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
 `project-kraken-recognize`, `project-export-pagexml`, `project-export-transcript`,
-`project-export-transcriptions-csv`, `project-export-alto`, `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
+`project-export-transcriptions-csv`, `project-export-alto`, `project-export-pdf`, `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
 `project-resolve-review-proposal`, `project-revise-line-geometry`,
@@ -330,12 +330,17 @@ Exports must live outside the project and will not replace an existing file unle
 `--replace-existing` is explicit.
 
 For corrected text that needs to leave the workbench without scans or model proposals, export a
-plain UTF-8 transcript, a provenance-preserving CSV, or interoperable ALTO XML. All three use
-imported text until a reviewer has saved a human revision; they never promote HTR suggestions or
+plain UTF-8 transcript, a provenance-preserving CSV, interoperable ALTO XML, or a PDF presentation
+derivative. All four use imported text until a reviewer has saved a human revision; they never
+promote HTR suggestions or
 pending review proposals. The transcript keeps source line order and places a form-feed between
 pages. The CSV includes stable page/region/line identifiers, the imported text, effective text,
 revision number, and editor. The ALTO export applies current human text plus line and region
-geometry and reading-order revisions as source-pixel coordinates. None of these exports includes
+geometry and reading-order revisions as source-pixel coordinates. A PDF export is a rendered, image-only presentation derivative: it
+uses the current human text and line geometry but includes neither source scans nor a selectable
+text layer. Pair it with ALTO when searchable interchange is needed. The PDF uses a local
+Unicode-capable TrueType font; pass `--font C:\\fonts\\NotoSans-Regular.ttf` (or set
+`AKTREADER_PDF_FONT`) to pin the font for reproducible rendering. None of these exports includes
 project paths or source images.
 
 ```powershell
@@ -350,6 +355,10 @@ python -m aktreader project-export-transcriptions-csv serock.aktproj `
 python -m aktreader project-export-alto serock.aktproj `
   --manifest-sha256 <project-import-manifest-sha256> `
   --output serock-human.alto.xml
+
+python -m aktreader project-export-pdf serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --output serock-human.pdf
 ```
 
 ### Offline review exchange

@@ -89,6 +89,7 @@ from aktreader.project import (
     export_consented_training_pagexml,
     export_human_alto,
     export_human_pagexml,
+    export_human_pdf,
     export_human_transcript,
     export_human_transcriptions_csv,
     export_review_package,
@@ -527,6 +528,37 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing ALTO XML export",
+    )
+
+    project_export_pdf = subparsers.add_parser(
+        "project-export-pdf",
+        help="render current human text and layout as a local image-only PDF",
+    )
+    project_export_pdf.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_export_pdf.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_export_pdf.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new PDF export path outside the project",
+    )
+    project_export_pdf.add_argument(
+        "--font",
+        type=Path,
+        help="optional readable local TrueType font for reproducible PDF text rendering",
+    )
+    project_export_pdf.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing PDF export",
     )
 
     project_geometry = subparsers.add_parser(
@@ -1763,6 +1795,34 @@ def _command_project_export_alto(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def _command_project_export_pdf(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="PDF export")
+    if output.is_dir():
+        raise CliConfigurationError(f"PDF export is a directory: {output}")
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "PDF export already exists; pass --replace-existing to replace it atomically"
+        )
+    font_path = None
+    if args.font is not None:
+        font_path = local_input_path(args.font, role="PDF font")
+        if not font_path.is_file():
+            raise CliConfigurationError(f"PDF font is not a file: {font_path}")
+    report = export_human_pdf(
+        project,
+        output,
+        manifest_sha256=args.manifest_sha256,
+        replace_existing=args.replace_existing,
+        font_path=font_path,
+    )
+    _emit_json(report)
+    return 0
+
+
 def _command_project_revise_line_geometry(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     geometry_path = local_input_path(args.geometry, role="line geometry")
@@ -2743,6 +2803,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-export-transcript": _command_project_export_transcript,
         "project-export-transcriptions-csv": _command_project_export_transcriptions_csv,
         "project-export-alto": _command_project_export_alto,
+        "project-export-pdf": _command_project_export_pdf,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
         "project-revise-page-reading-order": _command_project_revise_page_reading_order,
         "project-revise-region-geometry": _command_project_revise_region_geometry,

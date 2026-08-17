@@ -9,6 +9,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import pypdfium2 as pdfium
 from PIL import Image
 
 import aktreader.kraken as kraken_module
@@ -23,6 +24,7 @@ from aktreader.project import (
     export_consented_training_pagexml,
     export_human_alto,
     export_human_pagexml,
+    export_human_pdf,
     export_human_transcript,
     export_human_transcriptions_csv,
     export_review_package,
@@ -1151,6 +1153,111 @@ def test_project_exports_current_human_content_and_layout_as_alto(
         namespace,
     ).attrib["CONTENT"] == "final human correction"
 
+
+
+def test_project_exports_current_human_content_as_image_only_pdf(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    recognized = source_root / "page.kraken.xml"
+    _write_pagexml(source, text="source transcript")
+    _write_pagexml(recognized, text="machine-only suggestion")
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="a" * 64,
+    )
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="final human correction",
+        editor="reviewer-1",
+    )
+    revise_line_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        polygon=[[1, 1], [39, 1], [39, 14], [1, 14]],
+        baseline=[[1, 12], [39, 12]],
+        editor="reviewer-1",
+    )
+    pdf_path = tmp_path / "serock-human.pdf"
+
+    report = export_human_pdf(
+        project,
+        pdf_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    pdf_bytes = pdf_path.read_bytes()
+    assert report["status"] == "SUCCEEDED"
+    assert report["source_pagexml_sha256"] == hashlib.sha256(source_bytes).hexdigest()
+    assert report["output_sha256"] == hashlib.sha256(pdf_bytes).hexdigest()
+    assert report["format"] == "PDF"
+    assert report["page_count"] == report["line_count"] == report["human_revision_count"] == 1
+    assert report["text_layer"] is False
+    assert report["source_scans_included"] is False
+    assert report["font_sha256"] is not None
+    assert report["network_required"] is False
+    assert pdf_bytes.startswith(b"%PDF")
+    assert b"source transcript" not in pdf_bytes
+    assert b"machine-only suggestion" not in pdf_bytes
+    assert str(source_root).encode() not in pdf_bytes
+    assert source.read_bytes() == source_bytes
+
+    with pdfium.PdfDocument(pdf_path) as document:
+        assert len(document) == 1
+        page = document[0]
+        try:
+            bitmap = page.render(scale=50)
+            try:
+                rendered = bitmap.to_pil().copy()
+            finally:
+                bitmap.close()
+        finally:
+            page.close()
+    try:
+        grayscale = rendered.convert("L")
+        try:
+            assert grayscale.getextrema()[0] < 255
+        finally:
+            grayscale.close()
+    finally:
+        rendered.close()
+
+    cli_path = tmp_path / "serock-cli.pdf"
+    exit_code = main(
+        [
+            "project-export-pdf",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--output",
+            str(cli_path),
+        ]
+    )
+    cli_report = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert cli_report["output"] == str(cli_path.resolve())
+    assert cli_report["text_layer"] is False
+    assert cli_path.read_bytes().startswith(b"%PDF")
 
 def test_project_alto_export_uses_current_region_reading_order(tmp_path: Path) -> None:
     source_root = tmp_path / "source"
