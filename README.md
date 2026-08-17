@@ -242,9 +242,10 @@ accounts and cannot bind to a LAN or public address, so it is not yet a shared d
 
 ### Loopback service workspace and backups
 
-A separate local service workspace can own copies of projects and run durable, checksum-verified
-backup jobs. It also binds only to `127.0.0.1`; it has no accounts, does not serve the editor, and
-must not be exposed through a reverse proxy or public address.
+A separate local service workspace can own copies of projects, run durable checksum-verified
+backup jobs, and enforce local password-protected project roles. It still binds only to
+`127.0.0.1`, does not serve the editor, and must not be exposed through a reverse proxy or
+public address.
 
 ```powershell
 python -m aktreader service-create service-data
