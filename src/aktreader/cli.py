@@ -48,6 +48,7 @@ from aktreader.cli_support import (
 from aktreader.collection import (
     add_project_to_collection,
     create_collection,
+    export_public_collection,
     inspect_collection,
     list_collection_documents,
     search_collection,
@@ -226,6 +227,27 @@ def build_parser() -> argparse.ArgumentParser:
     collection_search.add_argument("collection", type=Path)
     collection_search.add_argument("query")
     collection_search.add_argument("--limit", type=int, default=100)
+    collection_publish = subparsers.add_parser(
+        "collection-export-public",
+        help="write an explicit static public collection release",
+    )
+    collection_publish.add_argument("collection", type=Path)
+    collection_publish.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new static release directory outside the collection",
+    )
+    collection_publish.add_argument(
+        "--license-id",
+        required=True,
+        help="declared license for the public collection release",
+    )
+    collection_publish.add_argument(
+        "--confirm-public",
+        action="store_true",
+        help="confirm that the selected indexed text and metadata may be public",
+    )
 
     project_create = subparsers.add_parser(
         "project-create",
@@ -1417,6 +1439,23 @@ def _command_collection_list_documents(args: argparse.Namespace) -> int:
             limit=args.limit,
         )
     )
+    return 0
+
+
+def _command_collection_export_public(args: argparse.Namespace) -> int:
+    collection = local_input_path(args.collection, role="collection")
+    if not collection.is_dir():
+        raise CliConfigurationError(f"collection is not a directory: {collection}")
+    output = local_output_path(args.output, role="public collection destination")
+    if output.exists():
+        raise CliConfigurationError(f"public collection destination already exists: {output}")
+    report = export_public_collection(
+        collection,
+        output,
+        license_id=args.license_id,
+        confirm_public=args.confirm_public,
+    )
+    _emit_json(report)
     return 0
 
 
@@ -2628,6 +2667,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "collection-inspect": _command_collection_inspect,
         "collection-list-documents": _command_collection_list_documents,
         "collection-search": _command_collection_search,
+        "collection-export-public": _command_collection_export_public,
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
         "project-list-documents": _command_project_list_documents,
