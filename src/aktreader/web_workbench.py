@@ -402,6 +402,8 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
 .region-box { fill: rgba(37, 99, 235, .08); stroke: #2563eb; stroke-width: 2; cursor: pointer; }
 .region-box.selected { fill: rgba(37, 99, 235, .17); stroke-width: 3; }
+.region-handle { fill: #fff; stroke: #1d4ed8; stroke-width: 2; cursor: move;
+  touch-action: none; }
 .line-box { fill: rgba(245, 158, 11, .12); stroke: #d97706; stroke-width: 2; cursor: pointer; }
 .line-box.selected { fill: rgba(22, 163, 74, .16); stroke: #15803d; stroke-width: 3; }
 #line-list { display: grid; gap: 6px; max-height: 300px; overflow: auto; margin-bottom: 12px; }
@@ -452,7 +454,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 </main>
 <script>
 const state = {
-  document: null, page: null, lines: [], selected: null, selectedRegion: null, regionOrder: []
+  document: null, page: null, lines: [], selected: null, selectedRegion: null, regionOrder: [],
+  drag: null
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
@@ -469,6 +472,10 @@ const polygon = document.getElementById("polygon");
 const saveRegion = document.getElementById("save-region");
 const readingOrder = document.getElementById("reading-order");
 const saveOrder = document.getElementById("save-order");
+
+overlay.addEventListener("pointermove", movePolygonDrag);
+overlay.addEventListener("pointerup", finishPolygonDrag);
+overlay.addEventListener("pointercancel", finishPolygonDrag);
 
 async function api(path, options) {
   const response = await fetch(path, options);
@@ -536,6 +543,19 @@ function drawOverlay() {
     rectangle.addEventListener("click", () => selectLine(line.source_span_id));
     overlay.append(rectangle);
   });
+  const activeRegion = selectedRegion();
+  if (!activeRegion) return;
+  activeRegion.polygon.forEach((point, pointIndex) => {
+    const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
+    handle.setAttribute("r", "5"); handle.setAttribute("class", "region-handle");
+    handle.setAttribute("aria-label", "Drag region vertex " + (pointIndex + 1));
+    handle.addEventListener(
+      "pointerdown",
+      event => beginPolygonDrag(activeRegion.region_id, pointIndex, event)
+    );
+    overlay.append(handle);
+  });
 }
 function selectRegion(regionId) {
   state.selectedRegion = regionId;
@@ -545,6 +565,43 @@ function selectRegion(regionId) {
   polygon.value = region ? JSON.stringify(region.polygon) : "";
   regionSelect.value = regionId || "";
   drawOverlay();
+}
+
+function sourcePoint(event) {
+  if (!state.page) return null;
+  const rect = overlay.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
+  const x = Math.round((event.clientX - rect.left) * state.page.width_px / rect.width);
+  const y = Math.round((event.clientY - rect.top) * state.page.height_px / rect.height);
+  return [
+    Math.max(0, Math.min(state.page.width_px, x)),
+    Math.max(0, Math.min(state.page.height_px, y))
+  ];
+}
+
+function beginPolygonDrag(regionId, pointIndex, event) {
+  event.preventDefault(); event.stopPropagation();
+  selectRegion(regionId);
+  state.drag = { regionId: regionId, pointIndex: pointIndex };
+  overlay.setPointerCapture(event.pointerId);
+}
+
+function movePolygonDrag(event) {
+  if (!state.drag || !state.page) return;
+  const point = sourcePoint(event);
+  const region = state.page.regions.find(item => item.region_id === state.drag.regionId);
+  if (!point || !region) return;
+  region.polygon[state.drag.pointIndex] = point;
+  polygon.value = JSON.stringify(region.polygon);
+  drawOverlay();
+}
+
+function finishPolygonDrag(event) {
+  if (!state.drag) return;
+  state.drag = null;
+  if (overlay.hasPointerCapture(event.pointerId)) {
+    overlay.releasePointerCapture(event.pointerId);
+  }
 }
 
 function renderRegions() {

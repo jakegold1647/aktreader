@@ -25,6 +25,7 @@ Stop it with Ctrl+C.
   context for each line;
 - an editor that appends the same human transcription revisions as the
   desktop workbench;
+- direct on-canvas region-vertex dragging, with a source-pixel text fallback;
 - region-polygon and region-reading-order edits that append the same audited
   PAGE layout revisions as the local project commands; and
 - project state that remains content-addressed and local.
