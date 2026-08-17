@@ -349,7 +349,11 @@ def create_project_backup(
         "network_required": False,
     }
     backup_directory = root / BACKUPS_DIRECTORY / project_id
-    backup_directory.mkdir(parents=True, exist_ok=True)
+    if backup_directory.exists():
+        if backup_directory.is_symlink() or not backup_directory.is_dir():
+            raise ServiceError("managed backup storage contains an invalid entry")
+    else:
+        backup_directory.mkdir()
     destination = backup_directory / f"{snapshot_sha256}.aktbackup.zip"
     if destination.exists():
         verified = verify_project_backup(destination)
@@ -541,11 +545,25 @@ def restore_project_backup(
     try:
         with zipfile.ZipFile(backup_path) as archive:
             manifest = _read_backup_manifest(archive)
-            for entry in _validated_backup_entries(manifest):
+            entries = _validated_backup_entries(manifest)
+            if (
+                manifest["project_id"] != verified["project_id"]
+                or manifest["snapshot_sha256"] != verified["snapshot_sha256"]
+            ):
+                raise ServiceError("backup archive changed after verification")
+            for entry in entries:
+                member = archive.getinfo(str(entry["path"]))
+                if member.file_size != entry["size_bytes"]:
+                    raise ServiceError("backup archive changed after verification")
                 target = temporary.joinpath(*PurePosixPath(str(entry["path"])).parts)
                 target.parent.mkdir(parents=True, exist_ok=True)
-                with archive.open(str(entry["path"])) as source, target.open("xb") as output:
-                    shutil.copyfileobj(source, output, length=_COPY_BUFFER_BYTES)
+                digest = hashlib.sha256()
+                with archive.open(member) as source, target.open("xb") as output:
+                    while chunk := source.read(_COPY_BUFFER_BYTES):
+                        digest.update(chunk)
+                        output.write(chunk)
+                if digest.hexdigest() != entry["sha256"]:
+                    raise ServiceError("backup archive changed after verification")
         restored = inspect_project(temporary)
         if restored["project_id"] != verified["project_id"]:
             raise ServiceError("restored project identity does not match the backup")
