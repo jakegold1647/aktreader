@@ -882,7 +882,8 @@ def _render_pdf_pages(
                     finally:
                         page.close()
                     try:
-                        if rendered.width * rendered.height > MAX_PDF_RENDER_PIXELS:
+                        width_px, height_px = rendered.size
+                        if width_px * height_px > MAX_PDF_RENDER_PIXELS:
                             raise ProjectStoreError(
                                 f"PDF page {page_index + 1} exceeds the local render pixel limit"
                             )
@@ -896,8 +897,8 @@ def _render_pdf_pages(
                             "page_index": page_index,
                             "filename": filename,
                             "sha256": _sha256_file(output),
-                            "width_px": rendered.width,
-                            "height_px": rendered.height,
+                            "width_px": width_px,
+                            "height_px": height_px,
                         }
                     )
         except (OSError, pdfium.PdfiumError) as error:
