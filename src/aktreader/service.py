@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import shutil
 import sqlite3
 import tempfile
@@ -32,10 +33,24 @@ MAX_REQUEST_BYTES = 65_536
 MAX_BACKUP_FILES = 100_000
 MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
 _COPY_BUFFER_BYTES = 1024 * 1024
+PASSWORD_SCRYPT_N = 16_384
+PASSWORD_SCRYPT_R = 8
+PASSWORD_SCRYPT_P = 1
+SESSION_TTL_SECONDS = 8 * 60 * 60
+PROJECT_ROLES = ("VIEWER", "EDITOR", "OWNER")
+_ROLE_RANK = {role: index for index, role in enumerate(PROJECT_ROLES)}
 
 
 class ServiceError(ValueError):
     """Raised when a local self-hosted service contract is invalid."""
+
+
+class AuthenticationError(ServiceError):
+    """Raised when credentials or a local session cannot be authenticated."""
+
+
+class AuthorizationError(ServiceError):
+    """Raised when an authenticated account lacks a required project role."""
 
 
 def _timestamp() -> str:
@@ -108,6 +123,45 @@ def _initialize_database(path: Path) -> None:
             )
     finally:
         connection.close()
+    _migrate_service_database(path)
+
+
+def _migrate_service_database(path: Path) -> None:
+    """Add identity tables without changing the service workspace contract."""
+
+    connection = sqlite3.connect(path)
+    try:
+        with connection:
+            connection.executescript(
+                """
+                CREATE TABLE IF NOT EXISTS service_accounts (
+                    account_id TEXT PRIMARY KEY,
+                    username TEXT NOT NULL COLLATE NOCASE UNIQUE,
+                    password_salt BLOB NOT NULL,
+                    password_hash BLOB NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS service_project_roles (
+                    project_id TEXT NOT NULL,
+                    account_id TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK (role IN ('VIEWER', 'EDITOR', 'OWNER')),
+                    granted_at TEXT NOT NULL,
+                    PRIMARY KEY (project_id, account_id)
+                );
+                CREATE INDEX IF NOT EXISTS service_project_roles_account_project
+                    ON service_project_roles (account_id, project_id);
+                CREATE TABLE IF NOT EXISTS service_sessions (
+                    token_sha256 TEXT PRIMARY KEY,
+                    account_id TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS service_sessions_account_expiry
+                    ON service_sessions (account_id, expires_at);
+                """
+            )
+    finally:
+        connection.close()
 
 
 def _service_root(path: Path | str) -> Path:
@@ -130,6 +184,7 @@ def _service_root(path: Path | str) -> Path:
     for directory in (root / PROJECTS_DIRECTORY, root / BACKUPS_DIRECTORY):
         if not directory.is_dir() or directory.is_symlink():
             raise ServiceError(f"service workspace is missing managed {directory.name} storage")
+    _migrate_service_database(database_path)
     return root
 
 
@@ -216,6 +271,346 @@ def inspect_service_workspace(path: Path | str) -> dict[str, object]:
     }
 
 
+def _validated_username(value: object) -> str:
+    if not isinstance(value, str):
+        raise ServiceError("username must be a string")
+    username = value.strip().lower()
+    if not 3 <= len(username) <= 64:
+        raise ServiceError("username must contain 3 to 64 characters")
+    if any(character not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for character in username):
+        raise ServiceError(
+            "username may contain only lowercase letters, digits, dot, dash, and underscore"
+        )
+    return username
+
+
+def _password_digest(password: str, salt: bytes) -> bytes:
+    if not isinstance(password, str) or not 12 <= len(password) <= 512:
+        raise ServiceError("password must contain 12 to 512 characters")
+    return hashlib.scrypt(
+        password.encode("utf-8"),
+        salt=salt,
+        n=PASSWORD_SCRYPT_N,
+        r=PASSWORD_SCRYPT_R,
+        p=PASSWORD_SCRYPT_P,
+        dklen=32,
+    )
+
+
+def _account_by_username(root: Path, username: str) -> dict[str, object]:
+    connection = _connection(root)
+    try:
+        row = connection.execute(
+            """
+            SELECT account_id, username, password_salt, password_hash, created_at
+            FROM service_accounts WHERE username = ?
+            """,
+            (_validated_username(username),),
+        ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        raise ServiceError("local account was not found")
+    return {
+        "account_id": str(row["account_id"]),
+        "username": str(row["username"]),
+        "password_salt": bytes(row["password_salt"]),
+        "password_hash": bytes(row["password_hash"]),
+        "created_at": str(row["created_at"]),
+    }
+
+
+def _account_by_id(root: Path, account_id: str) -> dict[str, object]:
+    canonical_id = _require_uuid(account_id, role="account_id")
+    connection = _connection(root)
+    try:
+        row = connection.execute(
+            """
+            SELECT account_id, username, created_at
+            FROM service_accounts WHERE account_id = ?
+            """,
+            (canonical_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        raise AuthenticationError("authentication is required")
+    return {
+        "account_id": str(row["account_id"]),
+        "username": str(row["username"]),
+        "created_at": str(row["created_at"]),
+    }
+
+
+def create_local_account(
+    service_workspace: Path | str,
+    *,
+    username: str,
+    password: str,
+) -> dict[str, object]:
+    """Create one password-protected local account without exposing its secret."""
+
+    root = _service_root(service_workspace)
+    canonical_username = _validated_username(username)
+    salt = secrets.token_bytes(16)
+    digest = _password_digest(password, salt)
+    account_id = str(uuid.uuid4())
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO service_accounts
+                    (account_id, username, password_salt, password_hash, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (account_id, canonical_username, salt, digest, _timestamp()),
+            )
+    except sqlite3.IntegrityError as error:
+        raise ServiceError("username is already in use") from error
+    finally:
+        connection.close()
+    return {
+        "status": "CREATED",
+        "account_id": account_id,
+        "username": canonical_username,
+        "network_required": False,
+    }
+
+
+def list_local_accounts(service_workspace: Path | str) -> list[dict[str, object]]:
+    """List local account identities without returning password material."""
+
+    root = _service_root(service_workspace)
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT account_id, username, created_at
+            FROM service_accounts
+            ORDER BY username, account_id
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+    return [
+        {
+            "account_id": str(row["account_id"]),
+            "username": str(row["username"]),
+            "created_at": str(row["created_at"]),
+        }
+        for row in rows
+    ]
+
+
+def authenticate_local_account(
+    service_workspace: Path | str,
+    *,
+    username: str,
+    password: str,
+) -> dict[str, object]:
+    """Verify a local account password and return only its public identity."""
+
+    root = _service_root(service_workspace)
+    try:
+        account = _account_by_username(root, username)
+        candidate = _password_digest(password, bytes(account["password_salt"]))
+    except ServiceError as error:
+        raise AuthenticationError("sign-in failed") from error
+    if not secrets.compare_digest(candidate, bytes(account["password_hash"])):
+        raise AuthenticationError("sign-in failed")
+    return {
+        "account_id": account["account_id"],
+        "username": account["username"],
+        "created_at": account["created_at"],
+    }
+
+
+def create_service_session(
+    service_workspace: Path | str,
+    *,
+    username: str,
+    password: str,
+) -> dict[str, object]:
+    """Create one short-lived bearer session after verifying a local password."""
+
+    root = _service_root(service_workspace)
+    account = authenticate_local_account(root, username=username, password=password)
+    token = secrets.token_urlsafe(32)
+    expires_at = int(time.time()) + SESSION_TTL_SECONDS
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                "DELETE FROM service_sessions WHERE expires_at <= ?",
+                (int(time.time()),),
+            )
+            connection.execute(
+                """
+                INSERT INTO service_sessions
+                    (token_sha256, account_id, expires_at, created_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    hashlib.sha256(token.encode("utf-8")).hexdigest(),
+                    account["account_id"],
+                    expires_at,
+                    _timestamp(),
+                ),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "AUTHENTICATED",
+        "access_token": token,
+        "token_type": "Bearer",
+        "expires_at": expires_at,
+        "account": account,
+        "network_required": False,
+    }
+
+
+def authenticated_service_account(
+    service_workspace: Path | str,
+    authorization: object,
+) -> dict[str, object]:
+    """Resolve an unexpired Bearer session to a local account identity."""
+
+    root = _service_root(service_workspace)
+    if not isinstance(authorization, str) or not authorization.startswith("Bearer "):
+        raise AuthenticationError("authentication is required")
+    token = authorization.removeprefix("Bearer ")
+    if not token or any(character.isspace() for character in token):
+        raise AuthenticationError("authentication is required")
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                "DELETE FROM service_sessions WHERE expires_at <= ?",
+                (int(time.time()),),
+            )
+            row = connection.execute(
+                """
+                SELECT account_id FROM service_sessions
+                WHERE token_sha256 = ? AND expires_at > ?
+                """,
+                (hashlib.sha256(token.encode("utf-8")).hexdigest(), int(time.time())),
+            ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        raise AuthenticationError("authentication is required")
+    return _account_by_id(root, str(row["account_id"]))
+
+
+def _validated_project_role(value: object) -> str:
+    if not isinstance(value, str) or value not in PROJECT_ROLES:
+        raise ServiceError("project role must be VIEWER, EDITOR, or OWNER")
+    return value
+
+
+def _project_role(root: Path, project_id: str, account_id: str) -> str | None:
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    connection = _connection(root)
+    try:
+        row = connection.execute(
+            """
+            SELECT role FROM service_project_roles
+            WHERE project_id = ? AND account_id = ?
+            """,
+            (canonical_project_id, canonical_account_id),
+        ).fetchone()
+    finally:
+        connection.close()
+    return None if row is None else str(row["role"])
+
+
+def _require_project_role(
+    root: Path,
+    *,
+    project_id: str,
+    account_id: str,
+    minimum_role: str,
+) -> str:
+    role = _project_role(root, project_id, account_id)
+    if role is None or _ROLE_RANK[role] < _ROLE_RANK[minimum_role]:
+        raise AuthorizationError("account is not authorized for this project")
+    return role
+
+
+def grant_project_role(
+    service_workspace: Path | str,
+    *,
+    project_id: str,
+    username: str,
+    role: str,
+) -> dict[str, object]:
+    """Grant or replace one local account's role on a managed project."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    inspect_project(_managed_project_path(root, canonical_project_id))
+    account = _account_by_username(root, username)
+    canonical_role = _validated_project_role(role)
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO service_project_roles
+                    (project_id, account_id, role, granted_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(project_id, account_id)
+                DO UPDATE SET role = excluded.role, granted_at = excluded.granted_at
+                """,
+                (
+                    canonical_project_id,
+                    account["account_id"],
+                    canonical_role,
+                    _timestamp(),
+                ),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "GRANTED",
+        "project_id": canonical_project_id,
+        "account_id": account["account_id"],
+        "username": account["username"],
+        "role": canonical_role,
+        "network_required": False,
+    }
+
+
+def list_authorized_service_projects(
+    service_workspace: Path | str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List only the service projects visible to one authenticated local account."""
+
+    root = _service_root(service_workspace)
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    roles = _connection(root)
+    try:
+        role_rows = roles.execute(
+            """
+            SELECT project_id, role FROM service_project_roles
+            WHERE account_id = ?
+            """,
+            (canonical_account_id,),
+        ).fetchall()
+    finally:
+        roles.close()
+    roles_by_project = {str(row["project_id"]): str(row["role"]) for row in role_rows}
+    return [
+        {**project, "role": roles_by_project[str(project["project_id"])]}
+        for project in list_service_projects(root)
+        if str(project["project_id"]) in roles_by_project
+    ]
+
+
 def _safe_project_files(root: Path) -> Iterator[tuple[Path, str]]:
     for current_raw, directory_names, file_names in os.walk(root, followlinks=False):
         current = Path(current_raw)
@@ -247,6 +642,8 @@ def _managed_project_path(root: Path, project_id: str) -> Path:
 def add_project_to_service(
     service_workspace: Path | str,
     project: Path | str,
+    *,
+    owner_username: str | None = None,
 ) -> dict[str, object]:
     """Copy one validated local project into the service-owned workspace."""
 
@@ -255,6 +652,11 @@ def add_project_to_service(
     project_id = _require_uuid(report["project_id"], role="project project_id")
     source = Path(str(report["project"])).resolve()
     list(_safe_project_files(source))
+    owner = (
+        None
+        if owner_username is None
+        else _account_by_username(root, owner_username)
+    )
     destination = root / PROJECTS_DIRECTORY / f"{project_id}.aktproj"
     if destination.exists():
         raise ServiceError("service already manages this project_id")
@@ -268,12 +670,28 @@ def add_project_to_service(
         if managed_report["project_id"] != project_id:
             raise ServiceError("managed project identity changed during copy")
         os.replace(temporary, destination)
+        if owner is not None:
+            grant_project_role(
+                root,
+                project_id=project_id,
+                username=str(owner["username"]),
+                role="OWNER",
+            )
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
     return {
         "status": "ADDED",
         "project": _project_summary(inspect_project(destination)),
+        "owner": (
+            None
+            if owner is None
+            else {
+                "account_id": owner["account_id"],
+                "username": owner["username"],
+                "role": "OWNER",
+            }
+        ),
         "network_required": False,
     }
 
@@ -599,12 +1017,21 @@ def _recover_running_jobs(root: Path) -> None:
 def queue_project_backup(
     service_workspace: Path | str,
     project_id: str,
+    *,
+    account_id: str | None = None,
 ) -> dict[str, object]:
     """Persist a backup job for one managed project without starting network work."""
 
     root = _service_root(service_workspace)
     canonical_id = _require_uuid(project_id, role="project_id")
     inspect_project(_managed_project_path(root, canonical_id))
+    if account_id is not None:
+        _require_project_role(
+            root,
+            project_id=canonical_id,
+            account_id=account_id,
+            minimum_role="EDITOR",
+        )
     job_id = str(uuid.uuid4())
     now = _timestamp()
     connection = _connection(root)
@@ -665,6 +1092,25 @@ def get_service_job(service_workspace: Path | str, job_id: str) -> dict[str, obj
         "updated_at": row["updated_at"],
         "network_required": False,
     }
+
+
+def get_authorized_service_job(
+    service_workspace: Path | str,
+    job_id: str,
+    *,
+    account_id: str,
+) -> dict[str, object]:
+    """Read a persisted job only when the account can view its project."""
+
+    root = _service_root(service_workspace)
+    report = get_service_job(root, job_id)
+    _require_project_role(
+        root,
+        project_id=str(report["project_id"]),
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return report
 
 
 def _claim_next_job(root: Path) -> dict[str, object] | None:
@@ -846,6 +1292,12 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             raise ServiceError("query parameters are not supported")
         return unquote(parsed.path)
 
+    def _account(self) -> dict[str, object]:
+        return authenticated_service_account(
+            self.server.service_workspace,
+            self.headers.get("Authorization"),
+        )
+
     def do_GET(self) -> None:
         try:
             path = self._path()
@@ -863,21 +1315,34 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 return
             if path == "/api/projects":
+                account = self._account()
                 self._json(
                     HTTPStatus.OK,
                     {
                         "status": "READY",
-                        "projects": list_service_projects(self.server.service_workspace),
+                        "projects": list_authorized_service_projects(
+                            self.server.service_workspace,
+                            account_id=str(account["account_id"]),
+                        ),
                         "network_required": False,
                     },
                 )
                 return
             prefix = "/api/jobs/"
             if path.startswith(prefix) and "/" not in path[len(prefix) :]:
-                job = get_service_job(self.server.service_workspace, path[len(prefix) :])
+                account = self._account()
+                job = get_authorized_service_job(
+                    self.server.service_workspace,
+                    path[len(prefix) :],
+                    account_id=str(account["account_id"]),
+                )
                 self._json(HTTPStatus.OK, _public_job(job))
                 return
             self._error(HTTPStatus.NOT_FOUND, "route was not found")
+        except AuthenticationError:
+            self._error(HTTPStatus.UNAUTHORIZED, "authentication is required")
+        except AuthorizationError:
+            self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
         except ServiceError as error:
             status = (
                 HTTPStatus.NOT_FOUND
@@ -888,17 +1353,34 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         try:
-            if self._path() != "/api/jobs":
+            path = self._path()
+            payload = self._read_json()
+            if path == "/api/session":
+                if set(payload) != {"username", "password"}:
+                    raise ServiceError("sign-in requires username and password")
+                session = create_service_session(
+                    self.server.service_workspace,
+                    username=str(payload["username"]),
+                    password=str(payload["password"]),
+                )
+                self._json(HTTPStatus.CREATED, session)
+                return
+            if path != "/api/jobs":
                 self._error(HTTPStatus.NOT_FOUND, "route was not found")
                 return
-            payload = self._read_json()
             if set(payload) != {"kind", "project_id"} or payload["kind"] != "PROJECT_BACKUP":
                 raise ServiceError("request must be a PROJECT_BACKUP job with project_id")
+            account = self._account()
             job = queue_project_backup(
                 self.server.service_workspace,
                 _require_uuid(payload["project_id"], role="project_id"),
+                account_id=str(account["account_id"]),
             )
             self._json(HTTPStatus.ACCEPTED, job)
+        except AuthenticationError:
+            self._error(HTTPStatus.UNAUTHORIZED, "sign-in failed")
+        except AuthorizationError:
+            self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
         except ServiceError as error:
             self._error(HTTPStatus.BAD_REQUEST, str(error))
 

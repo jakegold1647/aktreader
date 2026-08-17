@@ -12,11 +12,15 @@ from aktreader.project import create_project, inspect_project
 from aktreader.service import (
     LOOPBACK_HOST,
     add_project_to_service,
+    create_local_account,
     create_project_backup,
     create_self_hosted_service_server,
+    create_service_session,
     create_service_workspace,
     get_service_job,
+    grant_project_role,
     inspect_service_workspace,
+    list_authorized_service_projects,
     list_service_projects,
     restore_project_backup,
     verify_project_backup,
@@ -56,6 +60,63 @@ def test_service_workspace_owns_a_copy_of_each_project(tmp_path: Path) -> None:
     assert managed.resolve() != project.resolve()
 
 
+def test_local_accounts_limit_project_visibility_and_create_sessions(
+    tmp_path: Path,
+) -> None:
+    workspace, _, project_id = _managed_project(tmp_path)
+    owner = create_local_account(
+        workspace,
+        username="owner",
+        password="a sufficiently long local owner password",
+    )
+    viewer = create_local_account(
+        workspace,
+        username="viewer",
+        password="a sufficiently long local viewer password",
+    )
+    grant_project_role(
+        workspace,
+        project_id=project_id,
+        username="owner",
+        role="OWNER",
+    )
+
+    assert list_authorized_service_projects(
+        workspace,
+        account_id=str(owner["account_id"]),
+    ) == [
+        {
+            "project_id": project_id,
+            "name": "Serock civil register",
+            "object_count": 0,
+            "document_count": 0,
+            "page_count": 0,
+            "line_count": 0,
+            "role": "OWNER",
+        }
+    ]
+    assert list_authorized_service_projects(
+        workspace,
+        account_id=str(viewer["account_id"]),
+    ) == []
+
+    grant_project_role(
+        workspace,
+        project_id=project_id,
+        username="viewer",
+        role="VIEWER",
+    )
+    session = create_service_session(
+        workspace,
+        username="owner",
+        password="a sufficiently long local owner password",
+    )
+
+    assert session["status"] == "AUTHENTICATED"
+    assert session["account"]["account_id"] == owner["account_id"]
+    assert session["access_token"]
+
+
 def test_project_backup_is_deterministic_verified_and_restorable(tmp_path: Path) -> None:
     workspace, _, project_id = _managed_project(tmp_path)
 
@@ -75,6 +136,17 @@ def test_project_backup_is_deterministic_verified_and_restorable(tmp_path: Path)
 
 def test_loopback_service_queues_and_completes_a_backup_job(tmp_path: Path) -> None:
     workspace, _, project_id = _managed_project(tmp_path)
+    create_local_account(
+        workspace,
+        username="owner",
+        password="a sufficiently long local owner password",
+    )
+    grant_project_role(
+        workspace,
+        project_id=project_id,
+        username="owner",
+        role="OWNER",
+    )
     server = create_self_hosted_service_server(workspace, port=0)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -87,12 +159,40 @@ def test_loopback_service_queues_and_completes_a_backup_job(tmp_path: Path) -> N
         assert health["status"] == "READY"
         assert health["network_required"] is False
 
+        connection.request("GET", "/api/projects")
+        anonymous_response = connection.getresponse()
+        assert anonymous_response.status == 401
+        anonymous_response.read()
+
+        session_payload = json.dumps(
+            {
+                "username": "owner",
+                "password": "a sufficiently long local owner password",
+            }
+        )
+        connection.request(
+            "POST",
+            "/api/session",
+            body=session_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        session_response = connection.getresponse()
+        session = json.loads(session_response.read())
+        assert session_response.status == 201
+        authorization = {"Authorization": f"Bearer {session['access_token']}"}
+
+        connection.request("GET", "/api/projects", headers=authorization)
+        projects_response = connection.getresponse()
+        projects = json.loads(projects_response.read())
+        assert projects_response.status == 200
+        assert projects["projects"][0]["role"] == "OWNER"
+
         payload = json.dumps({"kind": "PROJECT_BACKUP", "project_id": project_id})
         connection.request(
             "POST",
             "/api/jobs",
             body=payload,
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", **authorization},
         )
         queued_response = connection.getresponse()
         queued = json.loads(queued_response.read())
@@ -109,7 +209,11 @@ def test_loopback_service_queues_and_completes_a_backup_job(tmp_path: Path) -> N
         assert job["status"] == "SUCCEEDED"
         assert job["result"]["project_id"] == project_id
 
-        connection.request("GET", f"/api/jobs/{queued['job_id']}")
+        connection.request(
+            "GET",
+            f"/api/jobs/{queued['job_id']}",
+            headers=authorization,
+        )
         job_response = connection.getresponse()
         public_job = json.loads(job_response.read())
         assert job_response.status == 200
