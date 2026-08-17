@@ -96,14 +96,14 @@ def _create_document_index(connection: sqlite3.Connection) -> None:
 def _create_saved_search_index(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
-        CREATE TABLE saved_searches (
+        CREATE TABLE IF NOT EXISTS saved_searches (
             search_id TEXT PRIMARY KEY,
             name TEXT NOT NULL COLLATE NOCASE UNIQUE,
             query TEXT NOT NULL,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL
         );
-        CREATE INDEX saved_searches_updated_at
+        CREATE INDEX IF NOT EXISTS saved_searches_updated_at
             ON saved_searches(updated_at DESC, search_id);
         """
     )
