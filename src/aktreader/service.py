@@ -1672,17 +1672,44 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         """Keep local service request details out of stdout and CI logs."""
 
-    def _headers(self, status: HTTPStatus, content_type: str) -> None:
+    def _headers(
+        self,
+        status: HTTPStatus,
+        content_type: str,
+        *,
+        content_security_policy: str = "default-src 'none'",
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Security-Policy", "default-src 'none'")
+        self.send_header("Content-Security-Policy", content_security_policy)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
 
     def _json(self, status: HTTPStatus, payload: object) -> None:
         body = (_canonical_json(payload) + "\n").encode("utf-8")
         self._headers(status, "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _bytes(self, status: HTTPStatus, media_type: str, payload: bytes) -> None:
+        self._headers(status, media_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _html(self, payload: str) -> None:
+        body = payload.encode("utf-8")
+        self._headers(
+            HTTPStatus.OK,
+            "text/html; charset=utf-8",
+            content_security_policy=(
+                "default-src 'self'; base-uri 'none'; connect-src 'self'; "
+                "frame-ancestors 'none'; img-src 'self' blob:; "
+                "script-src 'unsafe-inline'; style-src 'unsafe-inline'"
+            ),
+        )
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -1723,6 +1750,9 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         try:
             path = self._path()
+            if path == "/":
+                self._html(SERVICE_WORKBENCH_HTML)
+                return
             if path == "/api/healthz":
                 report = inspect_service_workspace(self.server.service_workspace)
                 self._json(
@@ -1795,6 +1825,27 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                         "network_required": False,
                     },
                 )
+                return
+            if (
+                len(parts) == 9
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "pages"
+                and parts[8] == "image"
+            ):
+                try:
+                    page_index = int(parts[7])
+                except ValueError as error:
+                    raise ServiceError("page index must be an integer") from error
+                account = self._account()
+                media_type, image = load_authorized_project_image(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                    page_index=page_index,
+                )
+                self._bytes(HTTPStatus.OK, media_type, image)
                 return
             if (
                 len(parts) == 5
