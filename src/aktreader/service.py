@@ -34,11 +34,15 @@ BACKUP_MANIFEST_NAME = "backup.aktreader.json"
 BACKUP_CONTRACT = {"name": "aktreader-project-backup", "version": "1.0.0"}
 PROJECTS_DIRECTORY = "projects"
 BACKUPS_DIRECTORY = "backups"
+ARTIFACTS_DIRECTORY = "artifacts"
 LOOPBACK_HOST = "127.0.0.1"
 MAX_REQUEST_BYTES = 65_536
 MAX_BACKUP_FILES = 100_000
 MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
+MAX_ARTIFACT_NAME_LENGTH = 160
+MAX_ARTIFACT_DESCRIPTION_LENGTH = 4_000
 _COPY_BUFFER_BYTES = 1024 * 1024
+ARTIFACT_KINDS = ("MODEL", "DATASET")
 PASSWORD_SCRYPT_N = 16_384
 PASSWORD_SCRYPT_R = 8
 PASSWORD_SCRYPT_P = 1
@@ -164,6 +168,27 @@ def _migrate_service_database(path: Path) -> None:
                 );
                 CREATE INDEX IF NOT EXISTS service_sessions_account_expiry
                     ON service_sessions (account_id, expires_at);
+                CREATE TABLE IF NOT EXISTS service_artifacts (
+                    artifact_id TEXT PRIMARY KEY,
+                    kind TEXT NOT NULL CHECK (kind IN ('MODEL', 'DATASET')),
+                    name TEXT NOT NULL,
+                    license_id TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    sha256 TEXT NOT NULL,
+                    size_bytes INTEGER NOT NULL,
+                    relative_path TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS service_artifacts_kind_created
+                    ON service_artifacts (kind, created_at, artifact_id);
+                CREATE TABLE IF NOT EXISTS service_project_artifacts (
+                    project_id TEXT NOT NULL,
+                    artifact_id TEXT NOT NULL,
+                    attached_at TEXT NOT NULL,
+                    PRIMARY KEY (project_id, artifact_id)
+                );
+                CREATE INDEX IF NOT EXISTS service_project_artifacts_artifact
+                    ON service_project_artifacts (artifact_id, project_id);
                 """
             )
     finally:
@@ -187,7 +212,11 @@ def _service_root(path: Path | str) -> Path:
     _require_uuid(manifest.get("service_id"), role="service workspace service_id")
     if manifest.get("network_required") is not False:
         raise ServiceError("service workspace must declare network_required false")
-    for directory in (root / PROJECTS_DIRECTORY, root / BACKUPS_DIRECTORY):
+    for directory in (
+        root / PROJECTS_DIRECTORY,
+        root / BACKUPS_DIRECTORY,
+        root / ARTIFACTS_DIRECTORY,
+    ):
         if not directory.is_dir() or directory.is_symlink():
             raise ServiceError(f"service workspace is missing managed {directory.name} storage")
     _migrate_service_database(database_path)
@@ -218,12 +247,14 @@ def create_service_workspace(path: Path | str) -> dict[str, object]:
             "database": SERVICE_DATABASE_NAME,
             "projects": PROJECTS_DIRECTORY,
             "backups": BACKUPS_DIRECTORY,
+            "artifacts": ARTIFACTS_DIRECTORY,
         },
         "network_required": False,
     }
     try:
         (temporary / PROJECTS_DIRECTORY).mkdir()
         (temporary / BACKUPS_DIRECTORY).mkdir()
+        (temporary / ARTIFACTS_DIRECTORY).mkdir()
         (temporary / SERVICE_MANIFEST_NAME).write_text(
             _canonical_json(manifest) + "\n",
             encoding="utf-8",
