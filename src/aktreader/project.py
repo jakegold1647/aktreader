@@ -3724,6 +3724,14 @@ def load_project_page_layout(
         "network_required": False,
     }
 
+def _validated_expected_revision(value: object) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ProjectStoreError("expected_revision must be a non-negative integer")
+    return value
+
+
 def revise_line_geometry(
     project: Path | str,
     *,
@@ -3732,6 +3740,7 @@ def revise_line_geometry(
     polygon: Sequence[Sequence[int]],
     baseline: Sequence[Sequence[int]] | None,
     editor: str,
+    expected_revision: int | None = None,
 ) -> dict[str, object]:
     """Append an audited local line geometry revision without altering source XML."""
 
@@ -3740,11 +3749,13 @@ def revise_line_geometry(
         raise ProjectStoreError("source_span_id must be a nonblank string")
     if not isinstance(editor, str) or not editor.strip():
         raise ProjectStoreError("geometry editor must be a nonblank string")
+    expected_revision = _validated_expected_revision(expected_revision)
     root = _required_project_root(project)
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         connection.execute("PRAGMA foreign_keys = ON")
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 """
                 SELECT lines.locator_json, pages.width_px, pages.height_px
@@ -3801,6 +3812,13 @@ def revise_line_geometry(
                 current_revision = int(latest[0])
                 prior_polygon = json.loads(latest[1])
                 prior_baseline = json.loads(latest[2]) if latest[2] is not None else None
+            if (
+                expected_revision is not None
+                and current_revision != expected_revision
+            ):
+                raise ProjectStoreError(
+                    "line geometry revision conflict; reload the current page"
+                )
             if (
                 _canonical_json(prior_polygon) == _canonical_json(revised_polygon)
                 and _canonical_json(prior_baseline) == _canonical_json(revised_baseline)
@@ -3952,6 +3970,7 @@ def revise_page_reading_order(
     page_index: int,
     region_ids: Sequence[str],
     editor: str,
+    expected_revision: int | None = None,
 ) -> dict[str, object]:
     """Append an audited page-region order revision without altering source XML."""
 
@@ -3960,11 +3979,13 @@ def revise_page_reading_order(
         raise ProjectStoreError("page_index must be a non-negative integer")
     if not isinstance(editor, str) or not editor.strip():
         raise ProjectStoreError("reading-order editor must be a nonblank string")
+    expected_revision = _validated_expected_revision(expected_revision)
     root = _required_project_root(project)
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         connection.execute("PRAGMA foreign_keys = ON")
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
             source_region_ids = _stored_page_region_order(
                 root,
                 connection,
@@ -4007,6 +4028,13 @@ def revise_page_reading_order(
                 prior_region_ids = _validated_region_order(
                     prior_region_ids,
                     expected_region_ids=source_region_ids,
+                )
+            if (
+                expected_revision is not None
+                and current_revision != expected_revision
+            ):
+                raise ProjectStoreError(
+                    "reading-order revision conflict; reload the current page"
                 )
             if _canonical_json(prior_region_ids) == _canonical_json(revised_region_ids):
                 return {
@@ -4112,6 +4140,7 @@ def revise_region_geometry(
     region_id: str,
     polygon: Sequence[Sequence[int]],
     editor: str,
+    expected_revision: int | None = None,
 ) -> dict[str, object]:
     """Append an audited local TextRegion polygon revision without altering source XML."""
 
@@ -4126,11 +4155,13 @@ def revise_region_geometry(
         raise ProjectStoreError("region_id must be a nonblank exact PAGE XML region ID")
     if not isinstance(editor, str) or not editor.strip():
         raise ProjectStoreError("region geometry editor must be a nonblank string")
+    expected_revision = _validated_expected_revision(expected_revision)
     root = _required_project_root(project)
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         connection.execute("PRAGMA foreign_keys = ON")
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
             page = connection.execute(
                 """
                 SELECT width_px, height_px
@@ -4187,6 +4218,13 @@ def revise_region_geometry(
                     width=width,
                     height=height,
                     allow_none=False,
+                )
+            if (
+                expected_revision is not None
+                and current_revision != expected_revision
+            ):
+                raise ProjectStoreError(
+                    "region geometry revision conflict; reload the current page"
                 )
             if _canonical_json(prior_polygon) == _canonical_json(revised_polygon):
                 return {
