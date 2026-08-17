@@ -20,7 +20,6 @@ from aktreader.service import (
     create_service_workspace,
 )
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
