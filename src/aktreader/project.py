@@ -2452,7 +2452,7 @@ def evaluate_htr_suggestions(
         connection.close()
 
     human_revision_count = len(rows)
-    suggestion_count = sum(row[0] is not None for row in rows)
+    suggestion_count = sum(row[2] is not None for row in rows)
     evaluated_pairs: list[tuple[str, str]] = []
     human_revision_set: list[dict[str, object]] = []
     for source_span_id, revision, suggested_text, revised_text in rows:
