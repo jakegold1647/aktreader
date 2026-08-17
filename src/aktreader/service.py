@@ -21,6 +21,7 @@ from urllib.parse import unquote, urlparse
 
 from PIL import Image
 
+from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.project import (
     ProjectStoreError,
     export_human_pagexml,
@@ -32,6 +33,7 @@ from aktreader.project import (
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
+    recognize_project_with_kraken,
 )
 
 SERVICE_MANIFEST_NAME = "service.akt.json"
@@ -1379,6 +1381,62 @@ def queue_project_backup(
     }
 
 
+def queue_project_kraken_recognition(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    kraken: LocalKraken | None,
+) -> dict[str, object]:
+    """Persist one editor-authorized run of the owner's pinned Kraken adapter."""
+
+    if kraken is None:
+        raise ServiceError("local Kraken recognition is not configured for this service")
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    canonical_manifest = _require_sha256(manifest_sha256, role="manifest_sha256")
+    inspect_project(_managed_project_path(root, canonical_id))
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    job_id = str(uuid.uuid4())
+    now = _timestamp()
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO service_jobs
+                    (job_id, kind, payload_json, status, result_json, error, created_at, updated_at)
+                VALUES (?, 'PROJECT_KRAKEN_RECOGNITION', ?, 'PENDING', NULL, NULL, ?, ?)
+                """,
+                (
+                    job_id,
+                    _canonical_json(
+                        {
+                            "project_id": canonical_id,
+                            "manifest_sha256": canonical_manifest,
+                        }
+                    ),
+                    now,
+                    now,
+                ),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "QUEUED",
+        "job_id": job_id,
+        "kind": "PROJECT_KRAKEN_RECOGNITION",
+        "project_id": canonical_id,
+        "network_required": False,
+    }
+
+
 def get_service_job(service_workspace: Path | str, job_id: str) -> dict[str, object]:
     """Read one persisted job using a canonical job identifier."""
 
@@ -1498,8 +1556,14 @@ def _finish_job(
 class ServiceJobWorker:
     """Single-process durable worker for explicit local service jobs."""
 
-    def __init__(self, service_workspace: Path | str) -> None:
+    def __init__(
+        self,
+        service_workspace: Path | str,
+        *,
+        kraken: LocalKraken | None = None,
+    ) -> None:
         self._root = _service_root(service_workspace)
+        self._kraken = kraken
         self._stop_event = threading.Event()
         self._thread = threading.Thread(
             target=self._run,
@@ -1523,28 +1587,54 @@ class ServiceJobWorker:
                 self._stop_event.wait(0.1)
                 continue
             try:
-                if job["kind"] != "PROJECT_BACKUP":
-                    raise ServiceError("service worker received an unsupported job")
                 payload = job["payload"]
                 if not isinstance(payload, dict):
                     raise ServiceError("service job payload is invalid")
-                backup = create_project_backup(self._root, str(payload["project_id"]))
+                if job["kind"] == "PROJECT_BACKUP":
+                    backup = create_project_backup(self._root, str(payload["project_id"]))
+                    result = {
+                        "project_id": backup["project_id"],
+                        "backup_id": backup["backup_id"],
+                        "file_count": backup["file_count"],
+                    }
+                elif job["kind"] == "PROJECT_KRAKEN_RECOGNITION":
+                    if self._kraken is None:
+                        raise ServiceError(
+                            "local Kraken recognition is not configured for this service"
+                        )
+                    recognition = recognize_project_with_kraken(
+                        _managed_project_path(self._root, str(payload["project_id"])),
+                        manifest_sha256=str(payload["manifest_sha256"]),
+                        kraken=self._kraken,
+                    )
+                    result = {
+                        "project_id": payload["project_id"],
+                        "manifest_sha256": recognition["manifest_sha256"],
+                        "result_pagexml_sha256": recognition["result_pagexml_sha256"],
+                        "suggestion_count": recognition["suggestion_count"],
+                        "runtime_fingerprint": recognition["runtime_fingerprint"],
+                    }
+                else:
+                    raise ServiceError("service worker received an unsupported job")
                 _finish_job(
                     self._root,
                     str(job["job_id"]),
                     status="SUCCEEDED",
-                    result={
-                        "project_id": backup["project_id"],
-                        "backup_id": backup["backup_id"],
-                        "file_count": backup["file_count"],
-                    },
+                    result=result,
                 )
-            except (OSError, ProjectStoreError, ServiceError, TypeError, ValueError):
+            except (
+                KrakenError,
+                OSError,
+                ProjectStoreError,
+                ServiceError,
+                TypeError,
+                ValueError,
+            ):
                 _finish_job(
                     self._root,
                     str(job["job_id"]),
                     status="FAILED",
-                    error="local backup job failed; inspect the local service log",
+                    error="local service job failed; inspect the local service log",
                 )
 
 
@@ -1837,7 +1927,7 @@ def _public_job(report: dict[str, object]) -> dict[str, object]:
         "project_id": report["project_id"],
         "status": report["status"],
         "result": report["result"],
-        "error": None if report["error"] is None else "local backup job failed",
+        "error": None if report["error"] is None else "local service job failed",
         "created_at": report["created_at"],
         "updated_at": report["updated_at"],
         "network_required": False,
@@ -1952,6 +2042,7 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                         "service_id": report["service_id"],
                         "project_count": report["project_count"],
                         "job_counts": report["job_counts"],
+                        "kraken_recognition_enabled": self.server.kraken is not None,
                         "network_required": False,
                     },
                 )
@@ -2263,6 +2354,23 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 self._json(HTTPStatus.OK, revision)
                 return
+            if (
+                len(parts) == 6
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4:] == ["recognitions", "kraken"]
+            ):
+                if set(payload) != {"manifest_sha256"}:
+                    raise ServiceError("Kraken recognition request has invalid keys")
+                account = self._account()
+                job = queue_project_kraken_recognition(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    kraken=self.server.kraken,
+                )
+                self._json(HTTPStatus.ACCEPTED, job)
+                return
             if path != "/api/jobs":
                 self._error(HTTPStatus.NOT_FOUND, "route was not found")
                 return
@@ -2295,9 +2403,16 @@ class SelfHostedServiceServer(ThreadingHTTPServer):
 
     allow_reuse_address = True
 
-    def __init__(self, service_workspace: Path | str, *, port: int) -> None:
+    def __init__(
+        self,
+        service_workspace: Path | str,
+        *,
+        port: int,
+        kraken: LocalKraken | None = None,
+    ) -> None:
         self.service_workspace = _service_root(service_workspace)
-        self.worker = ServiceJobWorker(self.service_workspace)
+        self.kraken = kraken
+        self.worker = ServiceJobWorker(self.service_workspace, kraken=kraken)
         super().__init__((LOOPBACK_HOST, port), _ServiceRequestHandler)
         self.worker.start()
 
@@ -3007,9 +3122,12 @@ def create_self_hosted_service_server(
     service_workspace: Path | str,
     *,
     port: int = 8780,
+    kraken: LocalKraken | None = None,
 ) -> SelfHostedServiceServer:
     """Create a loopback-only service server without starting its request loop."""
 
     if isinstance(port, bool) or not isinstance(port, int) or not 0 <= port <= 65535:
         raise ServiceError("port must be an integer from 0 to 65535")
-    return SelfHostedServiceServer(service_workspace, port=port)
+    if kraken is not None and not isinstance(kraken, LocalKraken):
+        raise ServiceError("kraken runner must be a LocalKraken instance")
+    return SelfHostedServiceServer(service_workspace, port=port, kraken=kraken)
