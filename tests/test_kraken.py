@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from PIL import Image
 
 import aktreader.kraken as kraken_module
 from aktreader.cli_support import CliConfigurationError, load_kraken_config
@@ -95,6 +96,36 @@ def test_recognition_uses_only_pinned_local_paths_and_atomic_pagexml_output(
     assert result.output_sha256 == sha256_file(output)
     assert result.runtime_fingerprint
     assert result.fingerprint_manifest["output_sha256"] == result.output_sha256
+
+
+def test_baseline_segmentation_uses_only_pinned_local_runtime(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    config = _config(tmp_path)
+    source = tmp_path / "input.png"
+    Image.new("L", (40, 30), color=255).save(source)
+    output = tmp_path / "layout.page.xml"
+    captured: dict[str, Any] = {}
+    _mock_success(monkeypatch, captured)
+
+    result = LocalKraken(config).segment_image(source, output)
+
+    command = captured["command"]
+    kwargs = captured["kwargs"]
+    assert command[0] == str(config.executable.path)
+    assert command[command.index("-x")] == "-x"
+    assert command[command.index("-i") + 1] == str(source)
+    assert command[command.index("segment") + 1] == "-bl"
+    assert command[command.index("-d") + 1] == "horizontal-lr"
+    assert "-f" not in command
+    assert "-m" not in command
+    assert kwargs["shell"] is False
+    assert kwargs["stdin"] is subprocess.DEVNULL
+    assert "OPENAI_API_KEY" not in kwargs["env"]
+    assert output.read_bytes() == _pagexml("Гольдштейн")
+    assert result.source_sha256 == sha256_file(source)
+    assert result.output_sha256 == sha256_file(output)
+    assert result.runtime_fingerprint == LocalKraken(config).runtime_fingerprint
 
 
 def test_recognition_refuses_changed_artifacts_and_existing_output(tmp_path: Path) -> None:
