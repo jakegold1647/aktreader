@@ -291,9 +291,10 @@ accounts and cannot bind to a LAN or public address, so it is not yet a shared d
 ### Loopback service workspace and backups
 
 A separate local service workspace can own copies of projects, run durable checksum-verified
-backup jobs, enforce local password-protected project roles, provide role-checked document
-review and optimistic transcription updates, track attached model/dataset artifacts by hash, and
-serve an authenticated collaborative browser workbench. It binds only to `127.0.0.1` on the host and must not be exposed through a reverse proxy or
+backup jobs, enforce local password-protected project roles, issue recipient-bound, time-limited
+local invitation codes for existing accounts, provide role-checked document review and optimistic
+transcription updates, track attached model/dataset artifacts by hash, and serve an authenticated
+collaborative browser workbench. It binds only to `127.0.0.1` on the host and must not be exposed through a reverse proxy or
 public address.
 
 ```powershell
