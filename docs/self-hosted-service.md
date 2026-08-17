@@ -1,13 +1,14 @@
 # Self-hosted service foundation
 
 The AKT Reader service foundation manages copies of local `.aktproj` projects, durable
-backup jobs, and verified backup restore. It is deliberately a single-machine boundary:
-the service binds only to `127.0.0.1`, has no accounts, and does not make the browser
-workbench available on a LAN or public address.
+backup jobs, verified backup restore, and password-protected local accounts with per-project
+roles. It is deliberately a single-machine boundary: the service binds only to
+`127.0.0.1` and does not make the browser workbench available on a LAN or public address.
 
-This is infrastructure for a future shared deployment, not that deployment. Do not put
-this process behind a reverse proxy or expose its port until authentication, authorization,
-audit policy, and multi-user editing controls have been added and reviewed.
+This is infrastructure for a future shared deployment, not that deployment. The service has
+local authentication and role checks for its project and job API, but it does not yet offer
+shared browser editing, external identity, password recovery, audit policy, or multi-user
+conflict controls. Do not put it behind a reverse proxy or expose its port.
 
 ## Create and populate a workspace
 
@@ -23,6 +24,32 @@ The service does not operate on the original project path. It validates the proj
 copies it to `service-data/projects/<project-id>.aktproj`, so backups have one managed
 local storage boundary. The CLI returns project IDs, counts, and local paths; the HTTP
 API intentionally omits source and archive filesystem paths.
+
+## Local identities and access
+
+Create local accounts before assigning project access. Password input comes from a UTF-8 local
+file so the CLI never prints it or places it in command history; remove that file immediately
+after use.
+
+```powershell
+python -m aktreader service-user-create service-data `
+  --username owner `
+  --password-file owner-password.txt
+python -m aktreader service-add-project service-data serock.aktproj --owner owner
+python -m aktreader service-grant-role service-data `
+  --project-id <project-id> `
+  --username reviewer `
+  --role VIEWER
+```
+
+Accounts use a salted local `scrypt` password verifier. The service stores only the verifier,
+and creates short-lived bearer sessions only through `POST /api/session`. `/api/projects`,
+`/api/jobs/<job-id>`, and backup-job creation require a valid session and a matching project
+role: `VIEWER` can view, `EDITOR` can queue backups, and `OWNER` has both capabilities.
+
+Account creation and role assignment are local CLI administration actions, not public HTTP
+endpoints. An existing service workspace is migrated in place on first use; its existing
+projects remain inaccessible to HTTP sessions until an administrator grants a role.
 
 ## Run and back up
 
