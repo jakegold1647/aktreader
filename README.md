@@ -32,8 +32,9 @@ New to the project? Start with the [AKT Reader glossary](docs/GLOSSARY.md) for t
 - A content-pinned local Kraken adapter that recognizes existing PAGE XML and returns a new PAGE XML result without a server, download, or package dependency.
 - Strict label validation, original-script grounding, typed absence states, consensus, human
   adjudication packets, resumable batch execution, privacy preflight, and SerockBench metrics.
-- A local PAGE XML import foundation that hashes supplied page images and preserves page, region,
-  line, polygon, baseline, reading-order, and transcription provenance in a deterministic manifest.
+- A local PAGE XML and image-directory import foundation that hashes supplied page images and
+  preserves page, region, line, polygon, baseline, reading-order, and transcription provenance
+  in a deterministic manifest.
 - An experimental local `.aktproj` store with a SQLite index and content-addressed copies of
   PAGE XML and page images; no server, account, or network connection is involved.
 - A 36-record evaluation corpus, frozen prompts and schemas, provenance manifests, and a
@@ -145,7 +146,8 @@ stable machine-readable report; a failed or skipped check makes the command exit
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-update-document`,
-`project-import-pagexml`, `project-import-htr-suggestions`, `project-export-pagexml`,
+`project-import-pagexml`, `project-import-images`, `project-import-htr-suggestions`,
+`project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
@@ -194,6 +196,19 @@ python -m aktreader project-create serock.aktproj --name "Serock births"
 python -m aktreader project-import-pagexml serock.aktproj page.xml --image-root .
 python -m aktreader project-inspect serock.aktproj
 ```
+
+For scans that have not been segmented yet, import one directory of top-level image files. AKT Reader
+creates and retains a deterministic PAGE XML source with one editable full-page TextRegion per scan,
+then copies the images into the same content-addressed project store.
+
+```powershell
+python -m aktreader project-import-images serock.aktproj serock-scans `
+  --title "Serock births, 1890"
+```
+
+The first image-import slice accepts Pillow-readable image formats only; it does not convert PDFs
+yet. That boundary is deliberate so the source image pixels and generated PAGE XML remain
+reproducible without adding a renderer or network service.
 
 Projects are intentionally local-only and contain no training consent. Importing source material
 does not make it training data or publishable data.
