@@ -1,0 +1,8 @@
+services:
+  aktreader:
+    build: .
+    command: ["service-serve", "/data", "--port", "8780"]
+    ports:
+      - "127.0.0.1:8780:8780"
+    volumes:
+      - "./service-data:/data"
