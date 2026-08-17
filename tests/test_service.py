@@ -334,6 +334,9 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "openSearchResult" in workbench
         assert "/activity" in workbench
         assert "Project members" in workbench
+        assert "Local invitations" in workbench
+        assert "Accept invitation" in workbench
+        assert "/invitations" in workbench
         assert "/members" in workbench
         assert "Undo latest correction" in workbench
         assert "/transcriptions/undo" in workbench
@@ -1349,6 +1352,174 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
         assert len(receipt["report_sha256"]) == 64
         assert "project" not in receipt["report"]
         assert b"recognized by configured local Kraken" not in receipt_bytes
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+
+def test_owner_can_issue_recipient_bound_local_project_invitations(tmp_path: Path) -> None:
+    workspace, project_id, _ = _reviewable_service(tmp_path)
+    create_local_account(
+        workspace,
+        username="reviewer",
+        password="a sufficiently long local reviewer password",
+    )
+    create_local_account(
+        workspace,
+        username="outsider",
+        password="a sufficiently long local outsider password",
+    )
+    server = create_self_hosted_service_server(workspace, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
+    try:
+        def sign_in(username: str, password: str) -> dict[str, str]:
+            connection.request(
+                "POST",
+                "/api/session",
+                body=json.dumps({"username": username, "password": password}),
+                headers={"Content-Type": "application/json"},
+            )
+            response = connection.getresponse()
+            payload = json.loads(response.read())
+            assert response.status == 201
+            return {"Authorization": f"Bearer {payload['access_token']}"}
+
+        owner_headers = sign_in(
+            "editor",
+            "a sufficiently long local editor password",
+        )
+        reviewer_headers = sign_in(
+            "reviewer",
+            "a sufficiently long local reviewer password",
+        )
+        outsider_headers = sign_in(
+            "outsider",
+            "a sufficiently long local outsider password",
+        )
+        invitation_route = f"/api/projects/{project_id}/invitations"
+        connection.request(
+            "POST",
+            invitation_route,
+            body=json.dumps({"username": "reviewer", "role": "EDITOR"}),
+            headers={"Content-Type": "application/json", **owner_headers},
+        )
+        created_response = connection.getresponse()
+        created = json.loads(created_response.read())
+        assert created_response.status == 201
+        assert created["status"] == "INVITED"
+        assert created["invitation"]["invited_username"] == "reviewer"
+        assert created["invitation"]["role"] == "EDITOR"
+        assert created["invite_code"]
+        invitation_id = created["invitation"]["invitation_id"]
+
+        connection.request("GET", invitation_route, headers=owner_headers)
+        owner_list_response = connection.getresponse()
+        owner_list = json.loads(owner_list_response.read())
+        assert owner_list_response.status == 200
+        assert owner_list["invitations"][0]["status"] == "PENDING"
+        assert "invite_code" not in owner_list["invitations"][0]
+
+        connection.request("GET", "/api/invitations", headers=outsider_headers)
+        outsider_list_response = connection.getresponse()
+        outsider_list = json.loads(outsider_list_response.read())
+        assert outsider_list_response.status == 200
+        assert outsider_list["invitations"] == []
+
+        connection.request("GET", "/api/invitations", headers=reviewer_headers)
+        reviewer_list_response = connection.getresponse()
+        reviewer_list = json.loads(reviewer_list_response.read())
+        assert reviewer_list_response.status == 200
+        assert reviewer_list["invitations"] == [
+            {
+                "created_at": created["invitation"]["created_at"],
+                "created_by_username": "editor",
+                "expires_at": created["invitation"]["expires_at"],
+                "invitation_id": invitation_id,
+                "network_required": False,
+                "project_id": project_id,
+                "project_name": "Shared register",
+                "role": "EDITOR",
+                "status": "PENDING",
+            }
+        ]
+
+        accept_route = f"/api/invitations/{invitation_id}/accept"
+        connection.request(
+            "POST",
+            accept_route,
+            body=json.dumps({"invite_code": "not-the-issued-code"}),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        wrong_code_response = connection.getresponse()
+        assert wrong_code_response.status == 400
+        assert "code" in json.loads(wrong_code_response.read())["message"]
+
+        connection.request(
+            "POST",
+            accept_route,
+            body=json.dumps({"invite_code": created["invite_code"]}),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        accepted_response = connection.getresponse()
+        accepted = json.loads(accepted_response.read())
+        assert accepted_response.status == 200
+        assert accepted["status"] == "ACCEPTED"
+        assert accepted["project_id"] == project_id
+        assert accepted["role"] == "EDITOR"
+
+        connection.request("GET", "/api/projects", headers=reviewer_headers)
+        reviewer_projects_response = connection.getresponse()
+        reviewer_projects = json.loads(reviewer_projects_response.read())
+        assert reviewer_projects_response.status == 200
+        assert reviewer_projects["projects"][0]["project_id"] == project_id
+        assert reviewer_projects["projects"][0]["role"] == "EDITOR"
+
+        connection.request(
+            "POST",
+            accept_route,
+            body=json.dumps({"invite_code": created["invite_code"]}),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        reused_response = connection.getresponse()
+        assert reused_response.status == 400
+        assert "no longer pending" in json.loads(reused_response.read())["message"]
+
+        connection.request("GET", invitation_route, headers=reviewer_headers)
+        reviewer_owner_list_response = connection.getresponse()
+        assert reviewer_owner_list_response.status == 403
+        reviewer_owner_list_response.read()
+
+        connection.request(
+            "POST",
+            invitation_route,
+            body=json.dumps({"username": "outsider", "role": "VIEWER"}),
+            headers={"Content-Type": "application/json", **owner_headers},
+        )
+        revocable_response = connection.getresponse()
+        revocable = json.loads(revocable_response.read())
+        assert revocable_response.status == 201
+        revoke_route = invitation_route + "/" + revocable["invitation"]["invitation_id"] + "/revoke"
+        connection.request(
+            "POST",
+            revoke_route,
+            body=json.dumps({}),
+            headers={"Content-Type": "application/json", **owner_headers},
+        )
+        revoke_response = connection.getresponse()
+        revoked = json.loads(revoke_response.read())
+        assert revoke_response.status == 200
+        assert revoked["status"] == "REVOKED"
+
+        connection.request("GET", "/api/invitations", headers=outsider_headers)
+        revoked_list_response = connection.getresponse()
+        revoked_list = json.loads(revoked_list_response.read())
+        assert revoked_list_response.status == 200
+        assert revoked_list["invitations"] == []
     finally:
         connection.close()
         server.shutdown()

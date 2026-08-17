@@ -78,6 +78,7 @@ PASSWORD_SCRYPT_N = 16_384
 PASSWORD_SCRYPT_R = 8
 PASSWORD_SCRYPT_P = 1
 SESSION_TTL_SECONDS = 8 * 60 * 60
+INVITATION_TTL_SECONDS = 7 * 24 * 60 * 60
 PROJECT_ROLES = ("VIEWER", "EDITOR", "OWNER")
 _ROLE_RANK = {role: index for index, role in enumerate(PROJECT_ROLES)}
 _REVISION_CONFLICT_MESSAGES = frozenset(
@@ -199,6 +200,23 @@ def _migrate_service_database(path: Path) -> None:
                 );
                 CREATE INDEX IF NOT EXISTS service_project_roles_account_project
                     ON service_project_roles (account_id, project_id);
+                CREATE TABLE IF NOT EXISTS service_project_invitations (
+                    invitation_id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    invited_account_id TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK (role IN ('VIEWER', 'EDITOR', 'OWNER')),
+                    code_sha256 TEXT NOT NULL,
+                    created_by_account_id TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    accepted_at TEXT,
+                    revoked_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS service_project_invitations_target_pending
+                    ON service_project_invitations
+                    (invited_account_id, expires_at, invitation_id);
+                CREATE INDEX IF NOT EXISTS service_project_invitations_project_created
+                    ON service_project_invitations (project_id, created_at, invitation_id);
                 CREATE TABLE IF NOT EXISTS service_sessions (
                     token_sha256 TEXT PRIMARY KEY,
                     account_id TEXT NOT NULL,
@@ -820,6 +838,336 @@ def grant_authorized_project_role(
         username=username,
         role=role,
     )
+
+
+def _invitation_status(row: sqlite3.Row) -> str:
+    if row["accepted_at"] is not None:
+        return "ACCEPTED"
+    if row["revoked_at"] is not None:
+        return "REVOKED"
+    if int(row["expires_at"]) <= int(time.time()):
+        return "EXPIRED"
+    return "PENDING"
+
+
+def _invitation_report(row: sqlite3.Row) -> dict[str, object]:
+    report: dict[str, object] = {
+        "invitation_id": str(row["invitation_id"]),
+        "project_id": str(row["project_id"]),
+        "role": str(row["role"]),
+        "created_at": str(row["created_at"]),
+        "expires_at": int(row["expires_at"]),
+        "status": _invitation_status(row),
+        "network_required": False,
+    }
+    if "invited_username" in row.keys():
+        report["invited_username"] = str(row["invited_username"])
+    if "created_by_username" in row.keys():
+        report["created_by_username"] = str(row["created_by_username"])
+    if "project_name" in row.keys():
+        report["project_name"] = str(row["project_name"])
+    if row["accepted_at"] is not None:
+        report["accepted_at"] = str(row["accepted_at"])
+    if row["revoked_at"] is not None:
+        report["revoked_at"] = str(row["revoked_at"])
+    return report
+
+
+def create_authorized_project_invitation(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    username: str,
+    role: str,
+) -> dict[str, object]:
+    """Create one short-lived, recipient-bound local invitation without sending it."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=canonical_account_id,
+        minimum_role="OWNER",
+    )
+    _managed_project_path(root, canonical_project_id)
+    target = _account_by_username(root, username)
+    if str(target["account_id"]) == canonical_account_id:
+        raise ServiceError("owners cannot invite themselves to a project")
+    if _project_role(root, canonical_project_id, str(target["account_id"])) is not None:
+        raise ServiceError("local account is already a project member")
+    canonical_role = _validated_project_role(role)
+    invitation_id = str(uuid.uuid4())
+    invite_code = secrets.token_urlsafe(24)
+    created_at = _timestamp()
+    expires_at = int(time.time()) + INVITATION_TTL_SECONDS
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute(
+                """
+                UPDATE service_project_invitations
+                SET revoked_at = ?
+                WHERE project_id = ? AND invited_account_id = ?
+                  AND accepted_at IS NULL AND revoked_at IS NULL
+                """,
+                (created_at, canonical_project_id, target["account_id"]),
+            )
+            connection.execute(
+                """
+                INSERT INTO service_project_invitations
+                    (invitation_id, project_id, invited_account_id, role, code_sha256,
+                     created_by_account_id, created_at, expires_at, accepted_at, revoked_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL)
+                """,
+                (
+                    invitation_id,
+                    canonical_project_id,
+                    target["account_id"],
+                    canonical_role,
+                    hashlib.sha256(invite_code.encode("utf-8")).hexdigest(),
+                    canonical_account_id,
+                    created_at,
+                    expires_at,
+                ),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "INVITED",
+        "invitation": {
+            "invitation_id": invitation_id,
+            "project_id": canonical_project_id,
+            "invited_username": target["username"],
+            "role": canonical_role,
+            "created_at": created_at,
+            "expires_at": expires_at,
+            "status": "PENDING",
+            "network_required": False,
+        },
+        "invite_code": invite_code,
+        "network_required": False,
+    }
+
+
+def list_authorized_project_invitations(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List invitation metadata for a project owner; invitation codes are never returned."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT invitations.invitation_id, invitations.project_id, invitations.role,
+                   invitations.created_at, invitations.expires_at, invitations.accepted_at,
+                   invitations.revoked_at, invited.username AS invited_username,
+                   creator.username AS created_by_username
+            FROM service_project_invitations AS invitations
+            JOIN service_accounts AS invited
+                ON invited.account_id = invitations.invited_account_id
+            JOIN service_accounts AS creator
+                ON creator.account_id = invitations.created_by_account_id
+            WHERE invitations.project_id = ?
+            ORDER BY invitations.created_at DESC, invitations.invitation_id DESC
+            """,
+            (canonical_project_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+    return [_invitation_report(row) for row in rows]
+
+
+def list_pending_service_invitations(
+    service_workspace: Path | str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List only the signed-in account's unexpired local project invitations."""
+
+    root = _service_root(service_workspace)
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT invitations.invitation_id, invitations.project_id, invitations.role,
+                   invitations.created_at, invitations.expires_at, invitations.accepted_at,
+                   invitations.revoked_at, creator.username AS created_by_username
+            FROM service_project_invitations AS invitations
+            JOIN service_accounts AS creator
+                ON creator.account_id = invitations.created_by_account_id
+            WHERE invitations.invited_account_id = ?
+              AND invitations.accepted_at IS NULL
+              AND invitations.revoked_at IS NULL
+              AND invitations.expires_at > ?
+            ORDER BY invitations.expires_at, invitations.invitation_id
+            """,
+            (canonical_account_id, int(time.time())),
+        ).fetchall()
+    finally:
+        connection.close()
+    project_names = {
+        str(project["project_id"]): str(project["name"])
+        for project in list_service_projects(root)
+    }
+    reports = []
+    for row in rows:
+        report = _invitation_report(row)
+        project_name = project_names.get(str(row["project_id"]))
+        if project_name is not None:
+            report["project_name"] = project_name
+            reports.append(report)
+    return reports
+
+
+def accept_service_project_invitation(
+    service_workspace: Path | str,
+    invitation_id: str,
+    *,
+    account_id: str,
+    invite_code: object,
+) -> dict[str, object]:
+    """Accept one recipient-bound invitation exactly once and grant its recorded role."""
+
+    root = _service_root(service_workspace)
+    canonical_invitation_id = _require_uuid(invitation_id, role="invitation_id")
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    if not isinstance(invite_code, str) or not 16 <= len(invite_code) <= 256:
+        raise ServiceError("invitation code is invalid")
+    code_sha256 = hashlib.sha256(invite_code.encode("utf-8")).hexdigest()
+    accepted_at = _timestamp()
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            invitation = connection.execute(
+                """
+                SELECT invitation_id, project_id, invited_account_id, role, code_sha256,
+                       expires_at, accepted_at, revoked_at
+                FROM service_project_invitations
+                WHERE invitation_id = ?
+                """,
+                (canonical_invitation_id,),
+            ).fetchone()
+            if invitation is None:
+                raise ServiceError("project invitation was not found")
+            if str(invitation["invited_account_id"]) != canonical_account_id:
+                raise AuthorizationError("account is not authorized for this invitation")
+            if invitation["accepted_at"] is not None or invitation["revoked_at"] is not None:
+                raise ServiceError("project invitation is no longer pending")
+            if int(invitation["expires_at"]) <= int(time.time()):
+                raise ServiceError("project invitation has expired")
+            if not secrets.compare_digest(str(invitation["code_sha256"]), code_sha256):
+                raise ServiceError("invitation code is invalid")
+            existing_role = connection.execute(
+                """
+                SELECT role FROM service_project_roles
+                WHERE project_id = ? AND account_id = ?
+                """,
+                (invitation["project_id"], canonical_account_id),
+            ).fetchone()
+            if existing_role is not None:
+                raise ServiceError("local account is already a project member")
+            connection.execute(
+                """
+                INSERT INTO service_project_roles
+                    (project_id, account_id, role, granted_at)
+                VALUES (?, ?, ?, ?)
+                """,
+                (
+                    invitation["project_id"],
+                    canonical_account_id,
+                    invitation["role"],
+                    accepted_at,
+                ),
+            )
+            connection.execute(
+                """
+                UPDATE service_project_invitations
+                SET accepted_at = ?
+                WHERE invitation_id = ?
+                """,
+                (accepted_at, canonical_invitation_id),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "ACCEPTED",
+        "invitation_id": canonical_invitation_id,
+        "project_id": str(invitation["project_id"]),
+        "role": str(invitation["role"]),
+        "accepted_at": accepted_at,
+        "network_required": False,
+    }
+
+
+def revoke_authorized_project_invitation(
+    service_workspace: Path | str,
+    project_id: str,
+    invitation_id: str,
+    *,
+    account_id: str,
+) -> dict[str, object]:
+    """Revoke one pending invitation before the recipient accepts it."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    canonical_invitation_id = _require_uuid(invitation_id, role="invitation_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    revoked_at = _timestamp()
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            invitation = connection.execute(
+                """
+                SELECT project_id, accepted_at, revoked_at
+                FROM service_project_invitations
+                WHERE invitation_id = ?
+                """,
+                (canonical_invitation_id,),
+            ).fetchone()
+            if invitation is None or str(invitation["project_id"]) != canonical_project_id:
+                raise ServiceError("project invitation was not found")
+            if invitation["accepted_at"] is not None or invitation["revoked_at"] is not None:
+                raise ServiceError("project invitation is no longer pending")
+            connection.execute(
+                """
+                UPDATE service_project_invitations
+                SET revoked_at = ?
+                WHERE invitation_id = ?
+                """,
+                (revoked_at, canonical_invitation_id),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "REVOKED",
+        "invitation_id": canonical_invitation_id,
+        "project_id": canonical_project_id,
+        "revoked_at": revoked_at,
+        "network_required": False,
+    }
 
 
 def _validated_artifact_kind(value: object) -> str:
@@ -3132,6 +3480,39 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "invitations"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "invitations": list_authorized_project_invitations(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if path == "/api/invitations":
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "invitations": list_pending_service_invitations(
+                            self.server.service_workspace,
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "documents"
             ):
                 account = self._account()
@@ -3473,6 +3854,56 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                     role=str(payload["role"]),
                 )
                 self._json(HTTPStatus.OK, membership)
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "invitations"
+            ):
+                if set(payload) != {"username", "role"}:
+                    raise ServiceError("project invitation has invalid keys")
+                account = self._account()
+                invitation = create_authorized_project_invitation(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    username=str(payload["username"]),
+                    role=str(payload["role"]),
+                )
+                self._json(HTTPStatus.CREATED, invitation)
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "invitations"]
+                and parts[4] == "accept"
+            ):
+                if set(payload) != {"invite_code"}:
+                    raise ServiceError("project invitation acceptance has invalid keys")
+                account = self._account()
+                accepted = accept_service_project_invitation(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    invite_code=payload["invite_code"],
+                )
+                self._json(HTTPStatus.OK, accepted)
+                return
+            if (
+                len(parts) == 7
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "invitations"
+                and parts[6] == "revoke"
+            ):
+                if payload:
+                    raise ServiceError("project invitation revoke has invalid keys")
+                account = self._account()
+                revoked = revoke_authorized_project_invitation(
+                    self.server.service_workspace,
+                    parts[3],
+                    parts[5],
+                    account_id=str(account["account_id"]),
+                )
+                self._json(HTTPStatus.OK, revoked)
                 return
             if (
                 len(parts) == 6
@@ -3853,6 +4284,37 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
             <button id="save-member" type="submit">Save project role</button>
           </form>
           <ul id="member-list" aria-live="polite"></ul>
+          <section id="project-invitations" aria-labelledby="project-invitations-title">
+            <h3 id="project-invitations-title">Local invitations</h3>
+            <p>Create a time-limited code for an existing local account. Share the code with the
+              named recipient through a channel appropriate to this trusted machine.</p>
+            <form id="invite-form">
+              <label>Account <select id="invite-account" required></select></label>
+              <label>Role
+                <select id="invite-role">
+                  <option value="VIEWER">Viewer</option>
+                  <option value="EDITOR">Editor</option>
+                  <option value="OWNER">Owner</option>
+                </select>
+              </label>
+              <button id="create-invitation" type="submit">Create invitation</button>
+            </form>
+            <p id="invite-code" role="status" aria-live="polite"></p>
+            <ul id="project-invitation-list" aria-live="polite"></ul>
+          </section>
+        </section>
+        <section id="invitations" aria-labelledby="invitations-title">
+          <h2 id="invitations-title">Your project invitations</h2>
+          <p>Choose an invitation addressed to your signed-in account, then enter the code supplied
+            by its owner. The service does not send email or expose the invitation beyond
+            loopback.</p>
+          <form id="accept-invitation-form">
+            <label>Invitation <select id="incoming-invitation" required></select></label>
+            <label>Invitation code <input id="incoming-invitation-code" required
+              autocomplete="off"></label>
+            <button id="accept-invitation" type="submit">Accept invitation</button>
+          </form>
+          <ul id="incoming-invitation-list" aria-live="polite"></ul>
         </section>
         <section id="artifacts" aria-labelledby="artifacts-title">
           <h2 id="artifacts-title">Attached models and datasets</h2>
@@ -3912,8 +4374,9 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
-  activity: [], evaluations: [], members: [], accounts: [], artifacts: [], attachableArtifacts: [],
-  searchResults: [], searchTruncated: false, krakenRecognitionEnabled: false
+  activity: [], evaluations: [], members: [], accounts: [], projectInvitations: [],
+  invitations: [], artifacts: [], attachableArtifacts: [], searchResults: [],
+  searchTruncated: false, krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -3942,6 +4405,17 @@ const memberForm = document.getElementById("member-form");
 const memberAccount = document.getElementById("member-account");
 const memberRole = document.getElementById("member-role");
 const memberList = document.getElementById("member-list");
+const inviteForm = document.getElementById("invite-form");
+const inviteAccount = document.getElementById("invite-account");
+const inviteRole = document.getElementById("invite-role");
+const createInvitation = document.getElementById("create-invitation");
+const inviteCode = document.getElementById("invite-code");
+const projectInvitationList = document.getElementById("project-invitation-list");
+const acceptInvitationForm = document.getElementById("accept-invitation-form");
+const incomingInvitation = document.getElementById("incoming-invitation");
+const incomingInvitationCode = document.getElementById("incoming-invitation-code");
+const acceptInvitation = document.getElementById("accept-invitation");
+const incomingInvitationList = document.getElementById("incoming-invitation-list");
 const artifactList = document.getElementById("artifact-list");
 const artifactForm = document.getElementById("artifact-form");
 const artifactSelect = document.getElementById("artifact-select");
@@ -4210,11 +4684,70 @@ async function downloadEvaluationReceipt(evaluation, control) {
   }
 }
 
+function renderProjectInvitations() {
+  inviteAccount.replaceChildren();
+  projectInvitationList.replaceChildren();
+  inviteCode.textContent = "";
+  if (!isOwner()) return;
+  const memberNames = new Set(state.members.map(member => member.username));
+  state.accounts
+    .filter(account => account.username !== state.account.username &&
+      !memberNames.has(account.username))
+    .forEach(account => option(inviteAccount, account.username, account.username));
+  if (!state.projectInvitations.length) {
+    const note = document.createElement("li");
+    note.textContent = "No local invitations have been created for this project.";
+    projectInvitationList.append(note);
+  } else {
+    state.projectInvitations.forEach(invitation => {
+      const item = document.createElement("li");
+      item.textContent = invitation.invited_username + " · " + invitation.role + " · " +
+        invitation.status + " · expires " + new Date(invitation.expires_at * 1000).toISOString();
+      if (invitation.status === "PENDING") {
+        const revoke = document.createElement("button");
+        revoke.type = "button";
+        revoke.className = "secondary";
+        revoke.textContent = "Revoke";
+        revoke.addEventListener("click", () => revokeProjectInvitation(invitation.invitation_id));
+        item.append(" ", revoke);
+      }
+      projectInvitationList.append(item);
+    });
+  }
+  createInvitation.disabled = !inviteAccount.value;
+}
+function renderIncomingInvitations() {
+  incomingInvitation.replaceChildren();
+  incomingInvitationList.replaceChildren();
+  if (!state.invitations.length) {
+    const note = document.createElement("li");
+    note.textContent = "No pending project invitations for this local account.";
+    incomingInvitationList.append(note);
+  } else {
+    state.invitations.forEach(invitation => {
+      option(
+        incomingInvitation,
+        invitation.invitation_id,
+        invitation.project_name + " · " + invitation.role + " · from " +
+          invitation.created_by_username
+      );
+      const item = document.createElement("li");
+      item.textContent = invitation.project_name + " · " + invitation.role + " · from " +
+        invitation.created_by_username + " · expires " +
+        new Date(invitation.expires_at * 1000).toISOString();
+      incomingInvitationList.append(item);
+    });
+  }
+  acceptInvitation.disabled = !incomingInvitation.value;
+}
 function renderMembership() {
   membership.classList.toggle("hidden", !isOwner());
   memberList.replaceChildren();
   memberAccount.replaceChildren();
-  if (!isOwner()) return;
+  if (!isOwner()) {
+    renderProjectInvitations();
+    return;
+  }
   state.accounts
     .filter(account => account.username !== state.account.username)
     .forEach(account => option(memberAccount, account.username, account.username));
@@ -4226,19 +4759,29 @@ function renderMembership() {
     memberList.append(item);
   });
   saveMember.disabled = !memberAccount.value;
+  renderProjectInvitations();
 }
 async function loadMembership() {
   if (!isOwner()) {
     state.members = [];
     state.accounts = [];
+    state.projectInvitations = [];
     renderMembership();
     return;
   }
   const base = "/api/projects/" + encodeURIComponent(state.project.project_id);
-  const responses = await Promise.all([api(base + "/members"), api(base + "/accounts")]);
+  const responses = await Promise.all([
+    api(base + "/members"), api(base + "/accounts"), api(base + "/invitations")
+  ]);
   state.members = responses[0].members;
   state.accounts = responses[1].accounts;
+  state.projectInvitations = responses[2].invitations;
   renderMembership();
+}
+async function loadIncomingInvitations() {
+  const payload = await api("/api/invitations");
+  state.invitations = payload.invitations;
+  renderIncomingInvitations();
 }
 
 function renderArtifacts() {
@@ -4714,6 +5257,7 @@ async function loadProject() {
     state.evaluations = [];
     state.members = [];
     state.accounts = [];
+    state.projectInvitations = [];
     state.artifacts = [];
     state.attachableArtifacts = [];
     renderActivity();
@@ -4728,6 +5272,69 @@ async function loadProject() {
     return;
   }
   await Promise.all([loadDocument(), loadMembership(), loadArtifacts()]);
+}
+async function createProjectInvitation(event) {
+  event.preventDefault();
+  if (!isOwner() || !inviteAccount.value) return;
+  createInvitation.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/invitations",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: inviteAccount.value, role: inviteRole.value })
+      }
+    );
+    await loadMembership();
+    inviteCode.textContent = "Invitation for " + payload.invitation.invited_username +
+      ": " + payload.invite_code + ". Copy this code now; it is not stored or shown again.";
+    setStatus("Local invitation created.");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    createInvitation.disabled = !isOwner() || !inviteAccount.value;
+  }
+}
+async function revokeProjectInvitation(invitationId) {
+  if (!isOwner()) return;
+  try {
+    await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/invitations/" +
+      encodeURIComponent(invitationId) + "/revoke",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({})
+      }
+    );
+    await loadMembership();
+    setStatus("Local invitation revoked.");
+  } catch (error) {
+    setStatus(error.message);
+  }
+}
+async function acceptIncomingInvitation(event) {
+  event.preventDefault();
+  if (!incomingInvitation.value || !incomingInvitationCode.value) return;
+  acceptInvitation.disabled = true;
+  try {
+    const payload = await api(
+      "/api/invitations/" + encodeURIComponent(incomingInvitation.value) + "/accept",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invite_code: incomingInvitationCode.value })
+      }
+    );
+    incomingInvitationCode.value = "";
+    await Promise.all([loadProjects(), loadIncomingInvitations()]);
+    setStatus("Invitation accepted; you are now a " + payload.role + " on this project.");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    acceptInvitation.disabled = !incomingInvitation.value;
+  }
 }
 async function saveMemberRole(event) {
   event.preventDefault();
@@ -4849,7 +5456,7 @@ loginForm.addEventListener("submit", async event => {
     workspace.classList.remove("hidden");
     const health = await api("/api/healthz");
     state.krakenRecognitionEnabled = health.kraken_recognition_enabled === true;
-    await loadProjects();
+    await Promise.all([loadProjects(), loadIncomingInvitations()]);
     loginStatus.textContent = "";
   } catch (error) {
     loginStatus.textContent = error.message;
@@ -4863,6 +5470,8 @@ documentSelect.addEventListener(
 );
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 memberForm.addEventListener("submit", event => saveMemberRole(event));
+inviteForm.addEventListener("submit", event => createProjectInvitation(event));
+acceptInvitationForm.addEventListener("submit", event => acceptIncomingInvitation(event));
 artifactForm.addEventListener("submit", event => attachArtifact(event));
 searchForm.addEventListener("submit", event => runProjectSearch(event));
 document.addEventListener("keydown", event => {
@@ -4986,6 +5595,8 @@ document.getElementById("logout").addEventListener("click", () => {
   state.evaluations = [];
   state.members = [];
   state.accounts = [];
+  state.projectInvitations = [];
+  state.invitations = [];
   state.artifacts = [];
   state.attachableArtifacts = [];
   renderMembership();
