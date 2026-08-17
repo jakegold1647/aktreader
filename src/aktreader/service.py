@@ -2463,7 +2463,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .line.selected { outline: 3px solid #15803d; }
 textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 100%; }
 .actions { align-items: center; display: flex; gap: 8px; margin-top: 8px; }
-#status, #detail { color: #475569; white-space: pre-wrap; }
+#status, #detail, #review-shortcuts { color: #475569; white-space: pre-wrap; }
+#review-shortcuts { font-size: .9rem; margin: 10px 0 0; }
 #recognition-suggestions { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #recognition-suggestions h2 { margin: 8px 0; }
 #suggestions { display: grid; gap: 8px; }
@@ -2536,6 +2537,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <button id="save" type="button" disabled>Save correction</button>
           <span id="role"></span>
         </div>
+        <p id="review-shortcuts">Keyboard: J/↓ next line · K/↑ previous line ·
+          Ctrl/⌘+Enter saves a reviewed correction (editors and owners).</p>
         <section id="recognition-suggestions" aria-labelledby="suggestions-title">
           <h2 id="suggestions-title">Recognition suggestions</h2>
           <p>Copy a local model suggestion into the editor, then review and save it as a
@@ -2797,6 +2800,12 @@ function selectLine(sourceSpanId) {
   renderSuggestions();
   renderLines();
   drawOverlay();
+}
+function selectAdjacentLine(offset) {
+  if (!state.page || !state.page.lines.length) return;
+  const index = state.page.lines.findIndex(line => line.source_span_id === state.selected);
+  const targetIndex = Math.max(0, Math.min(state.page.lines.length - 1, index + offset));
+  selectLine(state.page.lines[targetIndex].source_span_id);
 }
 function renderReadingOrder() {
   readingOrder.replaceChildren();
@@ -3128,6 +3137,39 @@ documentSelect.addEventListener(
   "change", () => loadDocument().catch(error => setStatus(error.message))
 );
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
+document.addEventListener("keydown", event => {
+  if (event.defaultPrevented) return;
+  if (
+    (event.ctrlKey || event.metaKey) &&
+    event.key === "Enter" &&
+    event.target === text &&
+    !save.disabled
+  ) {
+    event.preventDefault();
+    saveRevision();
+    return;
+  }
+  const target = event.target;
+  const tagName = target && target.tagName;
+  if (
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    tagName === "INPUT" ||
+    tagName === "TEXTAREA" ||
+    tagName === "SELECT" ||
+    (target && target.isContentEditable)
+  ) {
+    return;
+  }
+  const key = event.key.toLowerCase();
+  const offset = key === "j" || event.key === "ArrowDown"
+    ? 1
+    : (key === "k" || event.key === "ArrowUp" ? -1 : 0);
+  if (!offset) return;
+  event.preventDefault();
+  selectAdjacentLine(offset);
+});
 save.addEventListener("click", () => saveRevision());
 saveLineGeometry.addEventListener("click", () => saveLineGeometryRevision());
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
