@@ -1070,7 +1070,6 @@ def list_authorized_attachable_project_artifacts(
     ]
 
 
-
 def attach_authorized_project_artifact(
     service_workspace: Path | str,
     project_id: str,
@@ -3034,7 +3033,6 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
             </label>
             <button id="save-artifact" type="submit">Attach artifact</button>
           </form>
-        </section>
         </section>
         <section id="recognition-suggestions" aria-labelledby="suggestions-title">
           <h2 id="suggestions-title">Recognition suggestions</h2>
