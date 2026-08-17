@@ -240,6 +240,21 @@ changes. It has no
 accounts and cannot bind to a LAN or public address, so it is not yet a shared deployment. See
 [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).
 
+### Loopback service workspace and backups
+
+A separate local service workspace can own copies of projects and run durable, checksum-verified
+backup jobs. It also binds only to `127.0.0.1`; it has no accounts, does not serve the editor, and
+must not be exposed through a reverse proxy or public address.
+
+```powershell
+python -m aktreader service-create service-data
+python -m aktreader service-add-project service-data serock.aktproj
+python -m aktreader service-serve service-data
+```
+
+See [the self-hosted service foundation](docs/self-hosted-service.md) for the managed-storage,
+backup verification, restore, and loopback-only Compose boundary.
+
 ### Local transcription workbench
 
 Open an imported project in a local desktop window to choose a named document, page through only
