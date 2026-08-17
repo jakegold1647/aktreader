@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+import xml.etree.ElementTree as ET
 from http.client import HTTPConnection
 from pathlib import Path
 
@@ -289,6 +290,7 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "AKT Reader collaborative workbench" in workbench
         assert "Save region outline" in workbench
         assert "Save reading order" in workbench
+        assert "Download PAGE XML" in workbench
         assert "Content-Security-Policy" in workbench_response.headers
 
         image_route = (
@@ -485,6 +487,29 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         conflict = json.loads(conflict_response.read())
         assert conflict_response.status == 409
         assert "conflict" in conflict["message"]
+
+        export_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/export/pagexml"
+        )
+        connection.request("GET", export_route, headers=authorization)
+        export_response = connection.getresponse()
+        exported_pagexml = export_response.read()
+        assert export_response.status == 200
+        assert export_response.headers["Content-Type"].startswith(
+            "application/vnd.prima.page+xml"
+        )
+        assert export_response.headers["Content-Disposition"] == (
+            f'attachment; filename="aktreader-{manifest_sha256[:12]}.page.xml"'
+        )
+        assert b"reviewed text" in exported_pagexml
+        assert b'points="0,0 19,0 19,19 0,19"' in exported_pagexml
+        exported = ET.fromstring(exported_pagexml)
+        exported_order = [
+            element.get("regionRef")
+            for element in exported.iter()
+            if element.tag.rsplit("}", 1)[-1] == "RegionRefIndexed"
+        ]
+        assert exported_order == ["region-2", "region-1"]
     finally:
         connection.close()
         server.shutdown()

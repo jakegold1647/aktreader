@@ -23,6 +23,7 @@ from PIL import Image
 
 from aktreader.project import (
     ProjectStoreError,
+    export_human_pagexml,
     inspect_project,
     list_project_documents,
     load_project_page,
@@ -48,6 +49,7 @@ MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
 MAX_ARTIFACT_NAME_LENGTH = 160
 MAX_ARTIFACT_DESCRIPTION_LENGTH = 4_000
 MAX_IMAGE_RESPONSE_BYTES = 100 * 1024 * 1024
+MAX_EXPORT_RESPONSE_BYTES = 100 * 1024 * 1024
 _COPY_BUFFER_BYTES = 1024 * 1024
 ARTIFACT_KINDS = ("MODEL", "DATASET")
 PASSWORD_SCRYPT_N = 16_384
@@ -1656,6 +1658,42 @@ def load_authorized_project_image(
     return media_type, payload
 
 
+
+def export_authorized_project_pagexml(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+) -> tuple[str, bytes]:
+    """Render an authorized project's effective PAGE XML as a download payload."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    canonical_manifest = _require_sha256(manifest_sha256, role="manifest_sha256")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    with tempfile.TemporaryDirectory(prefix="aktreader-pagexml-", dir=root) as temporary:
+        output = Path(temporary) / "document.page.xml"
+        export_human_pagexml(
+            _managed_project_path(root, canonical_id),
+            output,
+            manifest_sha256=canonical_manifest,
+        )
+        try:
+            payload = output.read_bytes()
+        except OSError as error:
+            raise ServiceError("generated PAGE XML export is unreadable") from error
+    if len(payload) > MAX_EXPORT_RESPONSE_BYTES:
+        raise ServiceError("generated PAGE XML export exceeds the response size limit")
+    filename = f"aktreader-{canonical_manifest[:12]}.page.xml"
+    return filename, payload
+
+
 def revise_authorized_project_line(
     service_workspace: Path | str,
     project_id: str,
@@ -1833,8 +1871,20 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _bytes(self, status: HTTPStatus, media_type: str, payload: bytes) -> None:
+    def _bytes(
+        self,
+        status: HTTPStatus,
+        media_type: str,
+        payload: bytes,
+        *,
+        download_name: str | None = None,
+    ) -> None:
         self._headers(status, media_type)
+        if download_name is not None:
+            self.send_header(
+                "Content-Disposition",
+                f'attachment; filename="{download_name}"',
+            )
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -1938,6 +1988,26 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                         ),
                         "network_required": False,
                     },
+                )
+                return
+            if (
+                len(parts) == 8
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6:] == ["export", "pagexml"]
+            ):
+                account = self._account()
+                filename, pagexml = export_authorized_project_pagexml(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                )
+                self._bytes(
+                    HTTPStatus.OK,
+                    "application/vnd.prima.page+xml; charset=utf-8",
+                    pagexml,
+                    download_name=filename,
                 )
                 return
             if (
@@ -2311,6 +2381,9 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
   <section id="workspace" class="hidden">
     <div class="actions">
       <strong id="identity"></strong>
+      <button id="download-pagexml" class="secondary" type="button" disabled>
+        Download PAGE XML
+      </button>
       <button id="logout" class="secondary" type="button">Sign out</button>
       <span id="status" role="status" aria-live="polite"></span>
     </div>
@@ -2385,6 +2458,7 @@ const polygon = document.getElementById("region-polygon");
 const saveRegion = document.getElementById("save-region");
 const readingOrder = document.getElementById("reading-order");
 const saveReadingOrder = document.getElementById("save-reading-order");
+const downloadPagexml = document.getElementById("download-pagexml");
 
 function setStatus(message) { status.textContent = message; }
 function apiHeaders(extra) {
@@ -2639,6 +2713,7 @@ async function loadPage() {
   const doc = currentDocument();
   if (!doc || pageSelect.value === "") return;
   setStatus("Loading page…");
+  downloadPagexml.disabled = true;
   const pagePath = "/api/projects/" + encodeURIComponent(state.project.project_id) +
     "/documents/" + encodeURIComponent(doc.manifest_sha256) +
     "/pages/" + encodeURIComponent(pageSelect.value);
@@ -2653,6 +2728,7 @@ async function loadPage() {
   renderLayout();
   await loadImage();
   selectLine(state.selected);
+  downloadPagexml.disabled = false;
   setStatus("");
 }
 async function loadDocument() {
@@ -2691,6 +2767,8 @@ async function loadProject() {
   ));
   if (!state.documents.length) {
     state.page = null;
+    state.layout = null;
+    downloadPagexml.disabled = true;
     lineList.replaceChildren();
     setStatus("This project has no imported PAGE XML documents.");
     return;
@@ -2757,6 +2835,35 @@ save.addEventListener("click", () => saveRevision());
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 saveRegion.addEventListener("click", () => saveRegionRevision());
 saveReadingOrder.addEventListener("click", () => saveReadingOrderRevision());
+downloadPagexml.addEventListener("click", async () => {
+  const doc = currentDocument();
+  if (!doc || !state.project) return;
+  downloadPagexml.disabled = true;
+  try {
+    const response = await fetch(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/export/pagexml",
+      { headers: apiHeaders() }
+    );
+    if (!response.ok) {
+      const payload = await response.json();
+      throw new Error(payload.message || "Could not export PAGE XML");
+    }
+    const objectUrl = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = "aktreader-export.page.xml";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    setStatus("PAGE XML export downloaded.");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    downloadPagexml.disabled = !currentDocument();
+  }
+});
 overlay.addEventListener("pointermove", event => {
   if (!state.drag) return;
   const region = state.layout && state.layout.regions.find(
@@ -2780,6 +2887,7 @@ document.getElementById("logout").addEventListener("click", () => {
   state.layout = null;
   state.selectedRegion = null;
   state.drag = null;
+  downloadPagexml.disabled = true;
   if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
   state.imageUrl = null;
   image.removeAttribute("src");

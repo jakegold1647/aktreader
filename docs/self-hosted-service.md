@@ -162,6 +162,20 @@ the API but do not yet have a dedicated browser control.
 
 The workbench does not provide simultaneous multi-pointer editing, comments, or presence tracking.
 
+## Download revision-applied PAGE XML
+
+A signed-in `VIEWER` (or higher role) can download the current effective PAGE XML document:
+
+```text
+GET /api/projects/<project-id>/documents/<manifest-sha256>/export/pagexml
+```
+
+The response is an attachment generated inside the service workspace. It applies the latest human
+transcription, line-geometry, region-geometry, and reading-order revisions to a fresh PAGE XML
+file while leaving the imported source object and append-only revision history intact. It never
+accepts an output path from the browser or exposes the managed workspace path. The workbench's
+**Download PAGE XML** button uses this endpoint with its in-memory bearer token.
+
 ## Run and back up
 
 Start the service only on the local machine:
