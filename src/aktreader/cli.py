@@ -105,14 +105,17 @@ from aktreader.prompt import verify_reader_prompt
 from aktreader.service import (
     ServiceError,
     add_project_to_service,
+    attach_service_artifact,
     create_local_account,
     create_self_hosted_service_server,
     create_service_workspace,
     grant_project_role,
     inspect_service_workspace,
     list_local_accounts,
+    list_service_artifacts,
     list_service_projects,
     queue_project_backup,
+    register_service_artifact,
     restore_project_backup,
     verify_project_backup,
 )
@@ -772,6 +775,68 @@ def build_parser() -> argparse.ArgumentParser:
         help="list projects owned by a local service workspace",
     )
     service_projects.add_argument("workspace", type=Path, help="local service directory")
+
+    service_artifact_register = subparsers.add_parser(
+        "service-artifact-register",
+        help="copy one local model or dataset artifact into managed storage",
+    )
+    service_artifact_register.add_argument(
+        "workspace",
+        type=Path,
+        help="local service directory",
+    )
+    service_artifact_register.add_argument(
+        "source",
+        type=Path,
+        help="local regular model or dataset artifact file",
+    )
+    service_artifact_register.add_argument(
+        "--kind",
+        required=True,
+        choices=("MODEL", "DATASET"),
+        help="artifact kind",
+    )
+    service_artifact_register.add_argument(
+        "--name",
+        required=True,
+        help="human-readable artifact name",
+    )
+    service_artifact_register.add_argument(
+        "--license-id",
+        required=True,
+        help="declared license identifier, such as Apache-2.0",
+    )
+    service_artifact_register.add_argument(
+        "--description",
+        default="",
+        help="optional local artifact description",
+    )
+
+    service_artifacts = subparsers.add_parser(
+        "service-list-artifacts",
+        help="list locally registered model and dataset metadata",
+    )
+    service_artifacts.add_argument("workspace", type=Path, help="local service directory")
+
+    service_attach_artifact = subparsers.add_parser(
+        "service-project-attach-artifact",
+        help="attach a registered model or dataset to a managed project",
+    )
+    service_attach_artifact.add_argument(
+        "workspace",
+        type=Path,
+        help="local service directory",
+    )
+    service_attach_artifact.add_argument(
+        "--project-id",
+        required=True,
+        help="managed project UUID",
+    )
+    service_attach_artifact.add_argument(
+        "--artifact-id",
+        required=True,
+        help="registered artifact UUID",
+    )
 
     service_queue = subparsers.add_parser(
         "service-queue-backup",
@@ -1715,6 +1780,48 @@ def _command_service_list_projects(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_service_artifact_register(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    source = local_input_path(args.source, role="artifact source")
+    if not source.is_file():
+        raise CliConfigurationError("artifact source is not a regular file")
+    _emit_json(
+        register_service_artifact(
+            workspace,
+            source,
+            kind=args.kind,
+            name=args.name,
+            license_id=args.license_id,
+            description=args.description,
+        )
+    )
+    return 0
+
+
+def _command_service_list_artifacts(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        {
+            "status": "READY",
+            "artifacts": list_service_artifacts(workspace),
+            "network_required": False,
+        }
+    )
+    return 0
+
+
+def _command_service_project_attach_artifact(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        attach_service_artifact(
+            workspace,
+            project_id=args.project_id,
+            artifact_id=args.artifact_id,
+        )
+    )
+    return 0
+
+
 def _command_service_queue_backup(args: argparse.Namespace) -> int:
     workspace = local_input_path(args.workspace, role="service workspace")
     _emit_json(queue_project_backup(workspace, args.project_id))
@@ -2299,6 +2406,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "service-grant-role": _command_service_grant_role,
         "service-add-project": _command_service_add_project,
         "service-list-projects": _command_service_list_projects,
+        "service-artifact-register": _command_service_artifact_register,
+        "service-list-artifacts": _command_service_list_artifacts,
+        "service-project-attach-artifact": _command_service_project_attach_artifact,
         "service-queue-backup": _command_service_queue_backup,
         "service-backup-verify": _command_service_backup_verify,
         "service-backup-restore": _command_service_backup_restore,

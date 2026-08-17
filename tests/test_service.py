@@ -24,6 +24,7 @@ from aktreader.service import (
     inspect_service_workspace,
     list_authorized_service_projects,
     list_service_projects,
+    register_service_artifact,
     restore_project_backup,
     verify_project_backup,
 )
@@ -349,6 +350,71 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         conflict = json.loads(conflict_response.read())
         assert conflict_response.status == 409
         assert "conflict" in conflict["message"]
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_owner_can_attach_model_metadata_without_exposing_artifact_paths(
+    tmp_path: Path,
+) -> None:
+    workspace, project_id, _ = _reviewable_service(tmp_path)
+    source = tmp_path / "register-model.bin"
+    source.write_bytes(b"local model artifact")
+    registered = register_service_artifact(
+        workspace,
+        source,
+        kind="MODEL",
+        name="Serock baseline",
+        license_id="Apache-2.0",
+        description="A local test model",
+    )
+    artifact_id = str(registered["artifact"]["artifact_id"])
+
+    server = create_self_hosted_service_server(workspace, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
+    try:
+        session_payload = json.dumps(
+            {
+                "username": "editor",
+                "password": "a sufficiently long local editor password",
+            }
+        )
+        connection.request(
+            "POST",
+            "/api/session",
+            body=session_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        session = json.loads(connection.getresponse().read())
+        authorization = {"Authorization": f"Bearer {session['access_token']}"}
+
+        attachment_payload = json.dumps({"artifact_id": artifact_id})
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/artifacts",
+            body=attachment_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        attachment_response = connection.getresponse()
+        attachment = json.loads(attachment_response.read())
+        assert attachment_response.status == 200
+        assert attachment["artifact"]["sha256"] == registered["artifact"]["sha256"]
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/artifacts",
+            headers=authorization,
+        )
+        artifacts_response = connection.getresponse()
+        artifacts = json.loads(artifacts_response.read())
+        assert artifacts_response.status == 200
+        assert artifacts["artifacts"] == [registered["artifact"]]
+        assert "relative_path" not in artifacts["artifacts"][0]
     finally:
         connection.close()
         server.shutdown()
