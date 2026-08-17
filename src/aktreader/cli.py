@@ -51,6 +51,9 @@ from aktreader.collection import (
     export_public_collection,
     inspect_collection,
     list_collection_documents,
+    list_collection_saved_searches,
+    run_collection_saved_search,
+    save_collection_search,
     search_collection,
 )
 from aktreader.comparison import compare_reader_labels, render_disagreements_csv
@@ -227,6 +230,25 @@ def build_parser() -> argparse.ArgumentParser:
     collection_search.add_argument("collection", type=Path)
     collection_search.add_argument("query")
     collection_search.add_argument("--limit", type=int, default=100)
+    collection_save_search = subparsers.add_parser(
+        "collection-save-search",
+        help="create or update one private named collection search",
+    )
+    collection_save_search.add_argument("collection", type=Path)
+    collection_save_search.add_argument("--name", required=True)
+    collection_save_search.add_argument("--query", required=True)
+    collection_saved_searches = subparsers.add_parser(
+        "collection-list-saved-searches",
+        help="list private named collection searches",
+    )
+    collection_saved_searches.add_argument("collection", type=Path)
+    collection_run_search = subparsers.add_parser(
+        "collection-run-saved-search",
+        help="run one private named collection search",
+    )
+    collection_run_search.add_argument("collection", type=Path)
+    collection_run_search.add_argument("--search-id", required=True)
+    collection_run_search.add_argument("--limit", type=int, default=100)
     collection_publish = subparsers.add_parser(
         "collection-export-public",
         help="write an explicit static public collection release",
@@ -1436,6 +1458,42 @@ def _command_collection_list_documents(args: argparse.Namespace) -> int:
         list_collection_documents(
             args.collection,
             query=args.query,
+            limit=args.limit,
+        )
+    )
+    return 0
+
+
+def _command_collection_save_search(args: argparse.Namespace) -> int:
+    collection = local_input_path(args.collection, role="collection")
+    if not collection.is_dir():
+        raise CliConfigurationError(f"collection is not a directory: {collection}")
+    _emit_json(
+        save_collection_search(
+            collection,
+            name=args.name,
+            query=args.query,
+        )
+    )
+    return 0
+
+
+def _command_collection_list_saved_searches(args: argparse.Namespace) -> int:
+    collection = local_input_path(args.collection, role="collection")
+    if not collection.is_dir():
+        raise CliConfigurationError(f"collection is not a directory: {collection}")
+    _emit_json(list_collection_saved_searches(collection))
+    return 0
+
+
+def _command_collection_run_saved_search(args: argparse.Namespace) -> int:
+    collection = local_input_path(args.collection, role="collection")
+    if not collection.is_dir():
+        raise CliConfigurationError(f"collection is not a directory: {collection}")
+    _emit_json(
+        run_collection_saved_search(
+            collection,
+            search_id=args.search_id,
             limit=args.limit,
         )
     )
@@ -2667,6 +2725,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "collection-inspect": _command_collection_inspect,
         "collection-list-documents": _command_collection_list_documents,
         "collection-search": _command_collection_search,
+        "collection-save-search": _command_collection_save_search,
+        "collection-list-saved-searches": _command_collection_list_saved_searches,
+        "collection-run-saved-search": _command_collection_run_saved_search,
         "collection-export-public": _command_collection_export_public,
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
