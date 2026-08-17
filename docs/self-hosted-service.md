@@ -5,10 +5,12 @@ backup jobs, verified backup restore, and password-protected local accounts with
 roles. It is deliberately a single-machine boundary: the service binds only to
 `127.0.0.1` and does not make the browser workbench available on a LAN or public address.
 
-This is infrastructure for a future shared deployment, not that deployment. The service has
-local authentication and role checks for its project and job API, but it does not yet offer
-shared browser editing, external identity, password recovery, audit policy, or multi-user
-conflict controls. Do not put it behind a reverse proxy or expose its port.
+This is local collaborative review on one machine, not a production network deployment.
+Authenticated owners, editors, and viewers can use the loopback workbench; text and layout saves
+use optimistic revision checks, so stale writes return a conflict for the reviewer to reload. It
+does not offer LAN/public hosting, external identity, invitations or password recovery, a complete
+activity/audit policy, cross-device synchronization, or deployment hardening. Do not put it behind
+a reverse proxy or expose its port.
 
 ## Create and populate a workspace
 
@@ -45,7 +47,9 @@ python -m aktreader service-grant-role service-data `
 Accounts use a salted local `scrypt` password verifier. The service stores only the verifier,
 and creates short-lived bearer sessions only through `POST /api/session`. `/api/projects`,
 `/api/jobs/<job-id>`, and backup-job creation require a valid session and a matching project
-role: `VIEWER` can view, `EDITOR` can queue backups, and `OWNER` has both capabilities.
+role: `VIEWER` can inspect documents, revisions, layout, and recognition suggestions;
+`EDITOR` can save text and layout corrections and queue backups or configured local recognition;
+and `OWNER` has those capabilities plus local role administration.
 
 Account creation and role assignment are local CLI administration actions, not public HTTP
 endpoints. An existing service workspace is migrated in place on first use; its existing
@@ -125,6 +129,12 @@ Every save includes the line revision that was displayed. If another correction 
 workbench shows the service's conflict message and reloads the current page instead of overwriting
 it. The source PAGE XML and image object remain immutable; only an append-only human revision is
 created.
+
+When the service is started with `--kraken-config`, editors and owners can queue local
+recognition for the selected document. The resulting proposals appear beside the selected line.
+**Use suggestion** copies a proposal into the transcription editor only; the reviewer must inspect
+it and explicitly save to create a new human revision. Viewers can inspect proposals but cannot
+apply or save them.
 
 The workbench is a single service UI on loopback only. It is not a LAN/public deployment, does not
 persist credentials in browser storage, and does not yet include presence indicators, comments,
