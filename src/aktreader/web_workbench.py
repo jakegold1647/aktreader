@@ -21,7 +21,10 @@ from aktreader.project import (
     list_project_documents,
     list_project_pages,
     load_project_page,
+    load_project_page_layout,
     revise_line_transcription,
+    revise_page_reading_order,
+    revise_region_geometry,
 )
 
 LOOPBACK_HOST = "127.0.0.1"
@@ -145,10 +148,16 @@ def _document_pages(project: Path, manifest_sha256: str) -> dict[str, object]:
 
 def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[str, object]:
     manifest_sha256 = _require_manifest_sha256(manifest_sha256)
+    page_index = _require_page_index(page_index)
     page = load_project_page(
         project,
         manifest_sha256=manifest_sha256,
-        page_index=_require_page_index(page_index),
+        page_index=page_index,
+    )
+    layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
     )
     safe_fields = {
         "manifest_sha256": manifest_sha256,
@@ -158,6 +167,8 @@ def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[
         "width_px": page["width_px"],
         "height_px": page["height_px"],
         "lines": page["lines"],
+        "regions": layout["regions"],
+        "reading_order": layout["reading_order"],
         "image_url": f"/api/image?{_page_query(manifest_sha256, page_index)}",
         "network_required": False,
     }
@@ -209,6 +220,39 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
         editor=editor,
     )
 
+
+
+def _region_geometry_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("region geometry request must be a JSON object")
+    expected = {"manifest_sha256", "page_index", "region_id", "polygon", "editor"}
+    if set(payload) != expected:
+        raise WebWorkbenchError(
+            "region geometry request has invalid keys"
+        )
+    return revise_region_geometry(
+        project,
+        manifest_sha256=_require_manifest_sha256(payload["manifest_sha256"]),
+        page_index=_require_page_index(payload["page_index"]),
+        region_id=payload["region_id"],
+        polygon=payload["polygon"],
+        editor=payload["editor"],
+    )
+
+
+def _reading_order_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("reading-order request must be a JSON object")
+    expected = {"manifest_sha256", "page_index", "region_ids", "editor"}
+    if set(payload) != expected:
+        raise WebWorkbenchError("reading-order request has invalid keys")
+    return revise_page_reading_order(
+        project,
+        manifest_sha256=_require_manifest_sha256(payload["manifest_sha256"]),
+        page_index=_require_page_index(payload["page_index"]),
+        region_ids=payload["region_ids"],
+        editor=payload["editor"],
+    )
 
 def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
     class ProjectHandler(BaseHTTPRequestHandler):
@@ -302,10 +346,17 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
         def do_POST(self) -> None:
             parsed = urlparse(self.path)
             try:
-                if parsed.path != "/api/transcriptions":
+                payload = self._request_json()
+                if parsed.path == "/api/transcriptions":
+                    response = _revision_payload(project, payload)
+                elif parsed.path == "/api/region-geometry":
+                    response = _region_geometry_payload(project, payload)
+                elif parsed.path == "/api/reading-order":
+                    response = _reading_order_payload(project, payload)
+                else:
                     self._error(HTTPStatus.NOT_FOUND, "route was not found")
                     return
-                self._json(HTTPStatus.OK, _revision_payload(project, self._request_json()))
+                self._json(HTTPStatus.OK, response)
             except (ProjectStoreError, WebWorkbenchError) as error:
                 self._error(HTTPStatus.BAD_REQUEST, str(error))
 
@@ -349,6 +400,8 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 .scan { position: relative; display: inline-block; max-width: 100%; background: #18212f; }
 #image { display: block; max-width: 100%; height: auto; }
 #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+.region-box { fill: rgba(37, 99, 235, .08); stroke: #2563eb; stroke-width: 2; cursor: pointer; }
+.region-box.selected { fill: rgba(37, 99, 235, .17); stroke-width: 3; }
 .line-box { fill: rgba(245, 158, 11, .12); stroke: #d97706; stroke-width: 2; cursor: pointer; }
 .line-box.selected { fill: rgba(22, 163, 74, .16); stroke: #15803d; stroke-width: 3; }
 #line-list { display: grid; gap: 6px; max-height: 300px; overflow: auto; margin-bottom: 12px; }
@@ -384,10 +437,23 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   <label>Transcription <textarea id="text" disabled></textarea></label>
   <div class="actions"><button id="save" disabled>Save human revision</button>
     <span id="status"></span></div>
+  <details open>
+    <summary>PAGE layout</summary>
+    <label>Region <select id="region"></select></label>
+    <label>Polygon (source pixels)
+      <textarea id="polygon" disabled></textarea>
+    </label>
+    <div class="actions"><button id="save-region" disabled>Save region geometry</button></div>
+    <p><strong>Reading order</strong></p>
+    <div id="reading-order"></div>
+    <div class="actions"><button id="save-order" disabled>Save reading order</button></div>
+  </details>
 </aside>
 </main>
 <script>
-const state = { document: null, page: null, lines: [], selected: null };
+const state = {
+  document: null, page: null, lines: [], selected: null, selectedRegion: null, regionOrder: []
+};
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
 const image = document.getElementById("image");
@@ -398,6 +464,11 @@ const editor = document.getElementById("editor");
 const save = document.getElementById("save");
 const detail = document.getElementById("detail");
 const status = document.getElementById("status");
+const regionSelect = document.getElementById("region");
+const polygon = document.getElementById("polygon");
+const saveRegion = document.getElementById("save-region");
+const readingOrder = document.getElementById("reading-order");
+const saveOrder = document.getElementById("save-order");
 
 async function api(path, options) {
   const response = await fetch(path, options);
@@ -411,6 +482,9 @@ function option(select, value, label) {
 }
 function setStatus(message) { status.textContent = message; }
 function selectedLine() { return state.lines.find(line => line.source_span_id === state.selected); }
+function selectedRegion() {
+  return state.page && state.page.regions.find(region => region.region_id === state.selectedRegion);
+}
 function selectLine(sourceSpanId) {
   state.selected = sourceSpanId;
   const line = selectedLine();
@@ -442,6 +516,15 @@ function drawOverlay() {
   overlay.replaceChildren();
   if (!state.page) return;
   overlay.setAttribute("viewBox", "0 0 " + state.page.width_px + " " + state.page.height_px);
+  state.page.regions.forEach(region => {
+    const shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    shape.setAttribute("points", region.polygon.map(point => point.join(",")).join(" "));
+    shape.setAttribute(
+      "class", "region-box" + (region.region_id === state.selectedRegion ? " selected" : "")
+    );
+    shape.addEventListener("click", () => selectRegion(region.region_id));
+    overlay.append(shape);
+  });
   state.lines.forEach(line => {
     const box = line.bbox;
     const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -454,13 +537,62 @@ function drawOverlay() {
     overlay.append(rectangle);
   });
 }
+function selectRegion(regionId) {
+  state.selectedRegion = regionId;
+  const region = selectedRegion();
+  polygon.disabled = !region;
+  saveRegion.disabled = !region;
+  polygon.value = region ? JSON.stringify(region.polygon) : "";
+  regionSelect.value = regionId || "";
+  drawOverlay();
+}
+
+function renderRegions() {
+  regionSelect.replaceChildren();
+  if (!state.page) return;
+  state.page.regions.forEach(region => {
+    option(regionSelect, region.region_id, region.region_id + " · revision " + region.revision);
+  });
+  selectRegion(state.selectedRegion || state.page.regions[0]?.region_id);
+}
+
+function renderReadingOrder() {
+  readingOrder.replaceChildren();
+  state.regionOrder.forEach((regionId, index) => {
+    const row = document.createElement("div");
+    row.textContent = (index + 1) + ". " + regionId + " ";
+    const up = document.createElement("button");
+    up.textContent = "↑";
+    up.disabled = index === 0;
+    up.addEventListener("click", () => moveRegion(index, -1));
+    const down = document.createElement("button");
+    down.textContent = "↓";
+    down.disabled = index === state.regionOrder.length - 1;
+    down.addEventListener("click", () => moveRegion(index, 1));
+    row.append(up, down);
+    readingOrder.append(row);
+  });
+  saveOrder.disabled = state.regionOrder.length === 0;
+}
+
+function moveRegion(index, offset) {
+  const target = index + offset;
+  if (target < 0 || target >= state.regionOrder.length) return;
+  [state.regionOrder[index], state.regionOrder[target]] = [
+    state.regionOrder[target], state.regionOrder[index]
+  ];
+  renderReadingOrder();
+}
+
 async function loadPage() {
   setStatus("");
   state.page = await api(pageSelect.value);
   state.lines = state.page.lines;
   state.selected = state.lines.length ? state.lines[0].source_span_id : null;
+  state.selectedRegion = state.page.regions.length ? state.page.regions[0].region_id : null;
+  state.regionOrder = [...state.page.reading_order.region_ids];
   image.src = state.page.image_url;
-  renderLines(); drawOverlay();
+  renderLines(); renderRegions(); renderReadingOrder(); drawOverlay();
   selectLine(state.selected);
 }
 async function loadDocument() {
@@ -489,6 +621,7 @@ async function boot() {
 documentSelect.addEventListener("change", () =>
   loadDocument().catch(error => setStatus(error.message)));
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
+regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 save.addEventListener("click", async () => {
   const line = selectedLine(); if (!line) return;
   try {
@@ -507,6 +640,45 @@ save.addEventListener("click", async () => {
       ? "No change to save."
       : "Saved human revision " + result.revision + ".");
     await loadPage();
+  } catch (error) { setStatus(error.message); }
+});
+saveRegion.addEventListener("click", async () => {
+  const region = selectedRegion();
+  if (!region) return;
+  try {
+    const revisedPolygon = JSON.parse(polygon.value);
+    setStatus("Saving region geometry…");
+    await api("/api/region-geometry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        manifest_sha256: state.page.manifest_sha256,
+        page_index: state.page.page_index,
+        region_id: region.region_id,
+        polygon: revisedPolygon,
+        editor: editor.value
+      })
+    });
+    await loadPage();
+    selectRegion(region.region_id);
+    setStatus("Saved region geometry.");
+  } catch (error) { setStatus(error.message); }
+});
+saveOrder.addEventListener("click", async () => {
+  try {
+    setStatus("Saving reading order…");
+    await api("/api/reading-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        manifest_sha256: state.page.manifest_sha256,
+        page_index: state.page.page_index,
+        region_ids: state.regionOrder,
+        editor: editor.value
+      })
+    });
+    await loadPage();
+    setStatus("Saved reading order.");
   } catch (error) { setStatus(error.message); }
 });
 boot();
