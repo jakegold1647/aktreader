@@ -39,6 +39,7 @@ from aktreader.project import (
     revise_page_reading_order,
     revise_region_geometry,
     revoke_training_consent,
+    segment_project_with_kraken,
     training_readiness,
     update_project_document,
 )
@@ -499,6 +500,96 @@ def test_project_runs_pinned_kraken_from_its_own_materialized_images(
         page_index=0,
     )["lines"][0]["suggestions"][0]
     assert suggestion["text"] == "Александръ"
+
+
+def test_project_derives_editable_kraken_layout_without_mutating_source(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source_root = tmp_path / "unsegmented-images"
+    source_root.mkdir()
+    _write_image(source_root / "folio-01.png")
+    _write_image(source_root / "folio-02.png")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_images_into_project(project, source_root, title="Raw folios")
+
+    executable = tmp_path / "kraken.exe"
+    model = tmp_path / "register.safetensors"
+    executable.write_bytes(b"pinned local kraken executable")
+    model.write_bytes(b"pinned local recognition model")
+    kraken = LocalKraken(
+        KrakenConfig(
+            executable=PinnedArtifact(executable, sha256_file(executable)),
+            model=PinnedArtifact(model, sha256_file(model)),
+            timeout_seconds=60,
+        )
+    )
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        source = Path(command[command.index("-i") + 1])
+        output = Path(command[command.index("-i") + 2])
+        index = int(source.stem.rsplit("-", 1)[-1])
+        output.write_text(
+            f"""<PcGts>
+  <Page id="segmented-{index}" imageFilename="{source.name}" imageWidth="40" imageHeight="30">
+    <TextRegion id="region-{index}">
+      <Coords points="0,0 40,0 40,30 0,30"/>
+      <TextLine id="line-{index}">
+        <Coords points="2,2 38,2 38,12 2,12"/>
+        <Baseline points="2,10 38,10"/>
+        <TextEquiv><Unicode></Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(command, 0, "local stdout", "local stderr")
+
+    monkeypatch.setattr(kraken_module.subprocess, "run", fake_run)
+
+    report = segment_project_with_kraken(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        kraken=kraken,
+    )
+
+    assert report["status"] == "SUCCEEDED"
+    assert report["source_manifest_sha256"] == imported["manifest_sha256"]
+    assert report["manifest_sha256"] != imported["manifest_sha256"]
+    assert report["page_count"] == 2
+    assert report["region_count"] == 2
+    assert report["line_count"] == 2
+    assert report["runtime_fingerprint"] == kraken.runtime_fingerprint
+    assert len(report["pages"]) == 2
+    assert report["document"]["title"] == "Raw folios — Kraken layout"
+    assert report["document"]["tags"] == ["kraken-layout"]
+    assert imported["manifest_sha256"] in report["document"]["notes"]
+    assert str(source_root) not in report["document"]["notes"]
+
+    source_document = next(
+        item
+        for item in list_project_documents(project)
+        if item["manifest_sha256"] == imported["manifest_sha256"]
+    )
+    assert source_document["line_count"] == 0
+    derived_page = load_project_page(
+        project,
+        manifest_sha256=report["manifest_sha256"],
+        page_index=1,
+    )
+    assert derived_page["page_id"] == "segmented-1"
+    assert derived_page["lines"][0]["line_id"] == "line-1"
+    assert derived_page["lines"][0]["suggestions"] == []
+    assert len(commands) == 2
+    for command in commands:
+        assert command[command.index("segment") + 1] == "-bl"
+        assert "-m" not in command
+        assert all("http://" not in item and "https://" not in item for item in command)
 
 
 def test_project_keeps_htr_suggestions_separate_from_human_revisions(tmp_path: Path) -> None:
