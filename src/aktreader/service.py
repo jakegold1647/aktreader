@@ -29,11 +29,11 @@ from aktreader.project import (
     list_project_documents,
     load_project_page,
     load_project_page_layout,
+    recognize_project_with_kraken,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
-    recognize_project_with_kraken,
 )
 
 SERVICE_MANIFEST_NAME = "service.akt.json"
