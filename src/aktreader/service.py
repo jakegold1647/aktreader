@@ -26,7 +26,11 @@ from aktreader.project import (
     inspect_project,
     list_project_documents,
     load_project_page,
+    load_project_page_layout,
+    revise_line_geometry,
     revise_line_transcription,
+    revise_page_reading_order,
+    revise_region_geometry,
 )
 
 SERVICE_MANIFEST_NAME = "service.akt.json"
@@ -52,6 +56,14 @@ PASSWORD_SCRYPT_P = 1
 SESSION_TTL_SECONDS = 8 * 60 * 60
 PROJECT_ROLES = ("VIEWER", "EDITOR", "OWNER")
 _ROLE_RANK = {role: index for index, role in enumerate(PROJECT_ROLES)}
+_REVISION_CONFLICT_MESSAGES = frozenset(
+    {
+        "transcription revision conflict; reload the current line",
+        "line geometry revision conflict; reload the current page",
+        "region geometry revision conflict; reload the current page",
+        "reading-order revision conflict; reload the current page",
+    }
+)
 
 
 class ServiceError(ValueError):
@@ -1578,6 +1590,31 @@ def load_authorized_project_page(
     )
     return {key: value for key, value in page.items() if key != "image_path"}
 
+def load_authorized_project_layout(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    page_index: int,
+) -> dict[str, object]:
+    """Load revision-aware layout without disclosing a managed project path."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    layout = load_project_page_layout(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+    )
+    return {key: value for key, value in layout.items() if key != "project"}
+
 
 def load_authorized_project_image(
     service_workspace: Path | str,
@@ -1653,6 +1690,106 @@ def revise_authorized_project_line(
         for key, value in revision.items()
         if key != "project"
     }
+
+def revise_authorized_project_line_geometry(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    source_span_id: str,
+    polygon: object,
+    baseline: object,
+    expected_revision: object,
+) -> dict[str, object]:
+    """Append one optimistic, role-checked line-geometry revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = revise_line_geometry(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        polygon=polygon,
+        baseline=baseline,
+        editor=str(account["username"]),
+        expected_revision=expected_revision,
+    )
+    return {key: value for key, value in revision.items() if key != "project"}
+
+
+def revise_authorized_project_region_geometry(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    page_index: object,
+    region_id: str,
+    polygon: object,
+    expected_revision: object,
+) -> dict[str, object]:
+    """Append one optimistic, role-checked region-geometry revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = revise_region_geometry(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+        region_id=region_id,
+        polygon=polygon,
+        editor=str(account["username"]),
+        expected_revision=expected_revision,
+    )
+    return {key: value for key, value in revision.items() if key != "project"}
+
+
+def revise_authorized_project_reading_order(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    page_index: object,
+    region_ids: object,
+    expected_revision: object,
+) -> dict[str, object]:
+    """Append one optimistic, role-checked page reading-order revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = revise_page_reading_order(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+        region_ids=region_ids,
+        editor=str(account["username"]),
+        expected_revision=expected_revision,
+    )
+    return {key: value for key, value in revision.items() if key != "project"}
+
 
 
 def _public_job(report: dict[str, object]) -> dict[str, object]:
@@ -1834,6 +1971,33 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "documents"
                 and parts[6] == "pages"
+                and parts[8] == "layout"
+            ):
+                try:
+                    page_index = int(parts[7])
+                except ValueError as error:
+                    raise ServiceError("page index must be an integer") from error
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "layout": load_authorized_project_layout(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                            manifest_sha256=parts[5],
+                            page_index=page_index,
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 9
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "pages"
                 and parts[8] == "image"
             ):
                 try:
@@ -1950,6 +2114,85 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 self._json(HTTPStatus.OK, revision)
                 return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "line-geometry"
+            ):
+                required = {
+                    "manifest_sha256",
+                    "source_span_id",
+                    "polygon",
+                    "baseline",
+                    "expected_revision",
+                }
+                if set(payload) != required:
+                    raise ServiceError("line geometry update has invalid keys")
+                account = self._account()
+                revision = revise_authorized_project_line_geometry(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    source_span_id=str(payload["source_span_id"]),
+                    polygon=payload["polygon"],
+                    baseline=payload["baseline"],
+                    expected_revision=payload["expected_revision"],
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "region-geometry"
+            ):
+                required = {
+                    "manifest_sha256",
+                    "page_index",
+                    "region_id",
+                    "polygon",
+                    "expected_revision",
+                }
+                if set(payload) != required:
+                    raise ServiceError("region geometry update has invalid keys")
+                account = self._account()
+                revision = revise_authorized_project_region_geometry(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    page_index=payload["page_index"],
+                    region_id=str(payload["region_id"]),
+                    polygon=payload["polygon"],
+                    expected_revision=payload["expected_revision"],
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "reading-order"
+            ):
+                required = {
+                    "manifest_sha256",
+                    "page_index",
+                    "region_ids",
+                    "expected_revision",
+                }
+                if set(payload) != required:
+                    raise ServiceError("reading-order update has invalid keys")
+                account = self._account()
+                revision = revise_authorized_project_reading_order(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    page_index=payload["page_index"],
+                    region_ids=payload["region_ids"],
+                    expected_revision=payload["expected_revision"],
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
             if path != "/api/jobs":
                 self._error(HTTPStatus.NOT_FOUND, "route was not found")
                 return
@@ -1969,7 +2212,7 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
         except ProjectStoreError as error:
             status = (
                 HTTPStatus.CONFLICT
-                if str(error) == "transcription revision conflict; reload the current line"
+                if str(error) in _REVISION_CONFLICT_MESSAGES
                 else HTTPStatus.BAD_REQUEST
             )
             self._error(status, str(error))
