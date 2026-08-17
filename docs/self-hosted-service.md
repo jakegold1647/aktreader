@@ -152,6 +152,13 @@ recognition for the selected document. The resulting proposals appear beside the
 it and explicitly save to create a new human revision. Viewers can inspect proposals but cannot
 apply or save them.
 
+The **Recognition evaluation** panel reads
+`GET /api/projects/<project-id>/documents/<manifest-sha256>/evaluations`. It recalculates CER,
+WER, exact-line coverage, and line counts against the latest saved human corrections each time the
+page reloads. With no saved human correction it reports that the result is not evaluable; it never
+treats imported source text, a suggestion, or a pending review proposal as ground truth. The endpoint
+does not persist a metric, promote a model, or change a transcription.
+
 The workbench is a single service UI on loopback only. It is not a LAN/public deployment, does not
 persist credentials in browser storage, and does not yet include presence indicators, comments,
 or shared cursors.
