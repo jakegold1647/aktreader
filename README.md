@@ -148,7 +148,8 @@ stable machine-readable report; a failed or skipped check makes the command exit
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
-`project-import-htr-suggestions`, `project-export-pagexml`,
+`project-import-htr-suggestions`, `project-kraken-segment`,
+`project-kraken-recognize`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
@@ -206,6 +207,23 @@ then copies the images into the same content-addressed project store.
 python -m aktreader project-import-images serock.aktproj serock-scans `
   --title "Serock births, 1890"
 ```
+
+Use a separately provisioned, checksum-pinned local Kraken runtime to derive a new editable
+layout document before text recognition. The raw image import remains immutable; the derivative
+carries regions, lines, baselines, and reading order for visual correction.
+
+```powershell
+python -m aktreader project-kraken-segment serock.aktproj `
+  --manifest-sha256 <image-import-manifest-sha256> `
+  --config E:\AKTREADER_LOCAL\kraken.config.json
+
+python -m aktreader project-kraken-recognize serock.aktproj `
+  --manifest-sha256 <kraken-layout-manifest-sha256> `
+  --config E:\AKTREADER_LOCAL\kraken.config.json
+```
+
+See [local Kraken layout and recognition](docs/local-kraken.md) for the local-only pinning,
+validation, and review boundary.
 
 For local PDFs, render into the same editable PAGE workflow with a fixed, recorded DPI. The original
 PDF is copied into the project by SHA-256, while a receipt pins its renderer version and every

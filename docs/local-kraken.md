@@ -1,9 +1,9 @@
-# Local Kraken PageXML recognition
+# Local Kraken PAGE XML recognition and layout
 
-AKT Reader can invoke an owner-provisioned local Kraken executable to recognize a
-pre-segmented PAGE XML document. This is an interoperability adapter, not a bundled
-Kraken installation: the application downloads no executable, model, or data and never
-starts a server.
+AKT Reader can invoke an owner-provisioned local Kraken executable to derive baseline
+layout from project images and recognize pre-segmented PAGE XML documents. This is an
+interoperability adapter, not a bundled Kraken installation: the application downloads no
+executable, model, or data and never starts a server.
 
 ## What this adapter preserves
 
@@ -29,8 +29,31 @@ untracked local path and replace both paths and placeholder hashes.
     aktreader kraken-inspect --config E:\AKTREADER_LOCAL\kraken.config.json
 
 kraken-inspect checks only local file existence and checksums; it does not execute Kraken.
-The configuration accepts only cpu, mps, or cuda:N devices and a documented precision option.
-URLs, UNC paths, endpoint fields, and credential fields are rejected.
+The configuration accepts only cpu, mps, or cuda:N devices, documented precision options, and
+an optional `inference.text_direction` (`horizontal-lr` by default). URLs, UNC paths, endpoint
+fields, and credential fields are rejected.
+
+## Project-bound baseline layout
+
+Image and PDF imports initially preserve the source pages without inventing lines. Derive a new
+editable layout document before recognition:
+
+    aktreader project-kraken-segment E:\AKTREADER_PROJECTS\serock.aktproj --manifest-sha256 <image-or-pdf-import-manifest-sha256> --config E:\AKTREADER_LOCAL\kraken.config.json
+
+This runs the documented local Kraken baseline segmenter (`-x … segment -bl`) once per
+checksum-verified project image. It writes a separate PAGE XML import with regions, lines,
+baselines, and reading order; the original image/PDF import is never changed. The new document is
+tagged `kraken-layout`, records the source manifest and runtime fingerprint in its local notes, and
+is ready for visual correction and recognition.
+
+The supplied recognition model is checked as part of the common pinned runtime but is not passed
+to the layout command; Kraken's baseline model comes with the exact, checksum-pinned executable.
+Use the derived document manifest in the next recognition command:
+
+    aktreader project-kraken-recognize E:\AKTREADER_PROJECTS\serock.aktproj --manifest-sha256 <kraken-layout-manifest-sha256> --config E:\AKTREADER_LOCAL\kraken.config.json
+
+A blank or unusual page can legitimately yield no text lines. Inspect and correct the resulting
+layout in the workbench before recognizing it or treating it as training material.
 
 ## Recognition
 
