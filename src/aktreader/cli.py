@@ -102,9 +102,6 @@ from aktreader.project import (
     update_project_document,
 )
 from aktreader.prompt import verify_reader_prompt
-from aktreader.validators.dates import validate_dates
-from aktreader.validators.formula import validate_formula_positions
-from aktreader.verification import CHECK_NAMES, verify_application_checkout
 from aktreader.service import (
     ServiceError,
     add_project_to_service,
@@ -116,6 +113,9 @@ from aktreader.service import (
     restore_project_backup,
     verify_project_backup,
 )
+from aktreader.validators.dates import validate_dates
+from aktreader.validators.formula import validate_formula_positions
+from aktreader.verification import CHECK_NAMES, verify_application_checkout
 from aktreader.web_workbench import create_self_hosted_workbench_server
 from aktreader.workbench import launch_workbench
 
