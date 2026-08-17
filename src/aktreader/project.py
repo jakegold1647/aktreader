@@ -36,6 +36,7 @@ PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
 PROJECT_DATABASE_VERSION = 10
+ALTO_XML_NAMESPACE = "http://www.loc.gov/standards/alto/ns-v4#"
 
 
 class ProjectStoreError(ValueError):
@@ -2361,6 +2362,298 @@ def export_human_transcriptions_csv(
         "line_count": len(rows),
         "human_revision_count": sum(int(row["revision"]) > 0 for row in rows),
         "columns": fieldnames,
+        "network_required": False,
+    }
+
+
+def _alto_tag(name: str) -> str:
+    return f"{{{ALTO_XML_NAMESPACE}}}{name}"
+
+
+def _alto_identifier(kind: str, value: str) -> str:
+    digest = hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return f"{kind}-{digest}"
+
+
+def _alto_bbox_attributes(points: list[list[int]]) -> dict[str, str]:
+    bbox = _geometry_bbox(points)
+    return {
+        "HPOS": str(bbox["x"]),
+        "VPOS": str(bbox["y"]),
+        "WIDTH": str(bbox["width"]),
+        "HEIGHT": str(bbox["height"]),
+    }
+
+
+def export_human_alto(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    replace_existing: bool = False,
+) -> dict[str, object]:
+    """Export current human text and layout as a local ALTO XML derivative.
+
+    The ALTO 4 document uses source-pixel coordinates. It applies the latest
+    human transcription, line-geometry, region-geometry, and reading-order
+    revisions, but deliberately excludes source image paths, HTR suggestions,
+    pending review proposals, and editor identities.
+    """
+
+    output_path, source_sha256, rows = _human_transcription_export_context(
+        project,
+        output,
+        manifest_sha256=manifest_sha256,
+        replace_existing=replace_existing,
+        output_role="ALTO XML export",
+    )
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        page_rows = connection.execute(
+            """
+            SELECT page_index, page_id, width_px, height_px
+            FROM pages
+            WHERE manifest_sha256 = ?
+            ORDER BY page_index
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project pages for ALTO export: {error}") from error
+    finally:
+        connection.close()
+
+    pages: list[tuple[int, str, int, int]] = []
+    for page_index, page_id, width, height in page_rows:
+        if (
+            not isinstance(page_index, int)
+            or page_index < 0
+            or not isinstance(page_id, str)
+            or not page_id.strip()
+            or not isinstance(width, int)
+            or width < 1
+            or not isinstance(height, int)
+            or height < 1
+        ):
+            raise ProjectStoreError("project contains an invalid ALTO export page")
+        pages.append((page_index, page_id, width, height))
+
+    rows_by_page: dict[int, dict[str, dict[str, int | str]]] = {}
+    for row in rows:
+        page_index = row["page_index"]
+        source_span_id = row["source_span_id"]
+        if not isinstance(page_index, int) or not isinstance(source_span_id, str):
+            raise ProjectStoreError("project contains an invalid ALTO export line")
+        page_rows_by_span = rows_by_page.setdefault(page_index, {})
+        if source_span_id in page_rows_by_span:
+            raise ProjectStoreError("project contains duplicate ALTO export line identities")
+        page_rows_by_span[source_span_id] = row
+
+    ET.register_namespace("", ALTO_XML_NAMESPACE)
+    document = ET.Element(_alto_tag("alto"))
+    description = ET.SubElement(document, _alto_tag("Description"))
+    ET.SubElement(description, _alto_tag("MeasurementUnit")).text = "pixel"
+    layout_root = ET.SubElement(document, _alto_tag("Layout"))
+
+    exported_line_count = 0
+    for page_index, page_id, width, height in pages:
+        page = load_project_page(
+            root,
+            manifest_sha256=manifest_sha256,
+            page_index=page_index,
+        )
+        page_layout = load_project_page_layout(
+            root,
+            manifest_sha256=manifest_sha256,
+            page_index=page_index,
+        )
+        if (
+            page.get("page_id") != page_id
+            or page.get("width_px") != width
+            or page.get("height_px") != height
+            or not isinstance(page.get("lines"), list)
+            or not isinstance(page_layout.get("lines"), list)
+            or not isinstance(page_layout.get("regions"), list)
+            or not isinstance(page_layout.get("reading_order"), dict)
+        ):
+            raise ProjectStoreError("project page changed while preparing the ALTO export")
+
+        alto_page = ET.SubElement(
+            layout_root,
+            _alto_tag("Page"),
+            {
+                "ID": _alto_identifier("page", f"{manifest_sha256}:{page_index}:{page_id}"),
+                "PHYSICAL_IMG_NR": str(page_index + 1),
+                "WIDTH": str(width),
+                "HEIGHT": str(height),
+            },
+        )
+        print_space = ET.SubElement(
+            alto_page,
+            _alto_tag("PrintSpace"),
+            {"HPOS": "0", "VPOS": "0", "WIDTH": str(width), "HEIGHT": str(height)},
+        )
+
+        geometry_by_span: dict[str, list[list[int]]] = {}
+        for line in page_layout["lines"]:
+            if (
+                not isinstance(line, dict)
+                or not isinstance(line.get("source_span_id"), str)
+                or not isinstance(line.get("polygon"), list)
+            ):
+                raise ProjectStoreError("project contains an invalid ALTO line geometry")
+            source_span_id = line["source_span_id"]
+            if source_span_id in geometry_by_span:
+                raise ProjectStoreError("project contains duplicate ALTO line geometry")
+            geometry_by_span[source_span_id] = line["polygon"]
+
+        region_polygons: dict[str, list[list[int]]] = {}
+        for region in page_layout["regions"]:
+            if (
+                not isinstance(region, dict)
+                or not isinstance(region.get("region_id"), str)
+                or not isinstance(region.get("polygon"), list)
+            ):
+                raise ProjectStoreError("project contains an invalid ALTO region geometry")
+            region_id = region["region_id"]
+            if region_id in region_polygons:
+                raise ProjectStoreError("project contains duplicate ALTO region geometry")
+            region_polygons[region_id] = region["polygon"]
+
+        records_by_span = rows_by_page.get(page_index, {}).copy()
+        lines_by_region: dict[str | None, list[dict[str, object]]] = {}
+        for line in page["lines"]:
+            if not isinstance(line, dict):
+                raise ProjectStoreError("project contains an invalid ALTO page line")
+            source_span_id = line.get("source_span_id")
+            region_id = line.get("region_id")
+            if (
+                not isinstance(source_span_id, str)
+                or (region_id is not None and not isinstance(region_id, str))
+            ):
+                raise ProjectStoreError("project contains an invalid ALTO page line")
+            record = records_by_span.pop(source_span_id, None)
+            polygon = geometry_by_span.pop(source_span_id, None)
+            if record is None or polygon is None:
+                raise ProjectStoreError(
+                    "project text or geometry no longer matches its ALTO export line"
+                )
+            lines_by_region.setdefault(region_id, []).append(
+                {
+                    "source_span_id": source_span_id,
+                    "polygon": polygon,
+                    "text": record["text"],
+                }
+            )
+        if records_by_span or geometry_by_span:
+            raise ProjectStoreError("project has an ALTO export line outside its source page")
+
+        reading_order = page_layout["reading_order"].get("region_ids")
+        if (
+            not isinstance(reading_order, list)
+            or any(not isinstance(region_id, str) for region_id in reading_order)
+        ):
+            raise ProjectStoreError("project contains an invalid ALTO reading order")
+
+        def append_text_block(
+            *,
+            block_key: str,
+            block_polygon: list[list[int]],
+            lines: list[dict[str, object]],
+        ) -> None:
+            block = ET.SubElement(
+                print_space,
+                _alto_tag("TextBlock"),
+                {
+                    "ID": _alto_identifier(
+                        "block",
+                        f"{manifest_sha256}:{page_index}:{block_key}",
+                    ),
+                    **_alto_bbox_attributes(block_polygon),
+                },
+            )
+            for line in lines:
+                source_span_id = line["source_span_id"]
+                polygon = line["polygon"]
+                text = line["text"]
+                if (
+                    not isinstance(source_span_id, str)
+                    or not isinstance(polygon, list)
+                    or not isinstance(text, str)
+                ):
+                    raise ProjectStoreError("project contains an invalid ALTO text line")
+                text_line = ET.SubElement(
+                    block,
+                    _alto_tag("TextLine"),
+                    {
+                        "ID": _alto_identifier(
+                            "line",
+                            f"{manifest_sha256}:{page_index}:{source_span_id}",
+                        ),
+                        **_alto_bbox_attributes(polygon),
+                    },
+                )
+                if text:
+                    ET.SubElement(
+                        text_line,
+                        _alto_tag("String"),
+                        {
+                            "ID": _alto_identifier(
+                                "string",
+                                f"{manifest_sha256}:{page_index}:{source_span_id}",
+                            ),
+                            "CONTENT": text,
+                            **_alto_bbox_attributes(polygon),
+                        },
+                    )
+
+        for region_id in reading_order:
+            lines = lines_by_region.pop(region_id, [])
+            if not lines:
+                continue
+            polygon = region_polygons.get(region_id)
+            if polygon is None:
+                raise ProjectStoreError("project ALTO reading order refers to an unknown region")
+            append_text_block(
+                block_key=region_id,
+                block_polygon=polygon,
+                lines=lines,
+            )
+            exported_line_count += len(lines)
+
+        unassigned_lines = lines_by_region.pop(None, [])
+        if unassigned_lines:
+            append_text_block(
+                block_key="unassigned",
+                block_polygon=[
+                    point
+                    for line in unassigned_lines
+                    if isinstance(line.get("polygon"), list)
+                    for point in line["polygon"]
+                    if isinstance(point, list)
+                ],
+                lines=unassigned_lines,
+            )
+            exported_line_count += len(unassigned_lines)
+        if lines_by_region:
+            raise ProjectStoreError("project has ALTO lines outside its current reading order")
+
+    if exported_line_count != len(rows):
+        raise ProjectStoreError("project ALTO export line count is incomplete")
+    rendered = ET.tostring(document, encoding="utf-8", xml_declaration=True)
+    _atomic_write_bytes(output_path, rendered, replace_existing=replace_existing)
+    return {
+        "status": "SUCCEEDED",
+        "project": str(root),
+        "manifest_sha256": manifest_sha256,
+        "source_pagexml_sha256": source_sha256,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(rendered).hexdigest(),
+        "alto_namespace": ALTO_XML_NAMESPACE,
+        "page_count": len(pages),
+        "line_count": exported_line_count,
+        "human_revision_count": sum(int(row["revision"]) > 0 for row in rows),
         "network_required": False,
     }
 

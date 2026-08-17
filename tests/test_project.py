@@ -21,6 +21,7 @@ from aktreader.project import (
     create_project,
     evaluate_htr_suggestions,
     export_consented_training_pagexml,
+    export_human_alto,
     export_human_pagexml,
     export_human_transcript,
     export_human_transcriptions_csv,
@@ -1046,6 +1047,144 @@ def test_project_exports_effective_human_transcriptions_as_text_and_csv(
     assert list(csv.DictReader(cli_csv.open(encoding="utf-8", newline="")))[0]["text"] == (
         "final human correction"
     )
+
+
+def test_project_exports_current_human_content_and_layout_as_alto(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source, text="source line")
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="final human correction",
+        editor="reviewer-1",
+    )
+    revise_line_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        polygon=[[1, 1], [39, 1], [39, 14], [1, 14]],
+        baseline=[[1, 12], [39, 12]],
+        editor="reviewer-1",
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_id="region-1",
+        polygon=[[0, 0], [40, 0], [40, 29], [0, 29]],
+        editor="reviewer-1",
+    )
+    alto_path = tmp_path / "serock.alto.xml"
+
+    report = export_human_alto(
+        project,
+        alto_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert report["status"] == "SUCCEEDED"
+    assert report["source_pagexml_sha256"] == hashlib.sha256(source_bytes).hexdigest()
+    assert report["output_sha256"] == hashlib.sha256(alto_path.read_bytes()).hexdigest()
+    assert report["page_count"] == report["line_count"] == report["human_revision_count"] == 1
+    assert report["network_required"] is False
+    assert source.read_bytes() == source_bytes
+    namespace = {"alto": "http://www.loc.gov/standards/alto/ns-v4#"}
+    alto = ET.fromstring(alto_path.read_bytes())
+    page = alto.find("./alto:Layout/alto:Page", namespace)
+    block = alto.find("./alto:Layout/alto:Page/alto:PrintSpace/alto:TextBlock", namespace)
+    text_line = alto.find(
+        "./alto:Layout/alto:Page/alto:PrintSpace/alto:TextBlock/alto:TextLine",
+        namespace,
+    )
+    text = alto.find(
+        "./alto:Layout/alto:Page/alto:PrintSpace/alto:TextBlock/alto:TextLine/alto:String",
+        namespace,
+    )
+
+    assert page is not None
+    assert page.attrib["PHYSICAL_IMG_NR"] == "1"
+    assert page.attrib["WIDTH"] == "40"
+    assert page.attrib["HEIGHT"] == "30"
+    assert block is not None
+    assert block.attrib["HEIGHT"] == "29"
+    assert text_line is not None
+    assert {
+        key: text_line.attrib[key]
+        for key in ("HPOS", "VPOS", "WIDTH", "HEIGHT")
+    } == {"HPOS": "1", "VPOS": "1", "WIDTH": "38", "HEIGHT": "13"}
+    assert text is not None
+    assert text.attrib["CONTENT"] == "final human correction"
+
+    cli_path = tmp_path / "serock-cli.alto.xml"
+    exit_code = main(
+        [
+            "project-export-alto",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--output",
+            str(cli_path),
+        ]
+    )
+    cli_report = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert cli_report["output"] == str(cli_path.resolve())
+    assert ET.fromstring(cli_path.read_bytes()).find(
+        ".//alto:String",
+        namespace,
+    ).attrib["CONTENT"] == "final human correction"
+
+
+def test_project_alto_export_uses_current_region_reading_order(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    revise_page_reading_order(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="layout-reviewer",
+    )
+    alto_path = tmp_path / "serock-reading-order.alto.xml"
+
+    export_human_alto(
+        project,
+        alto_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    namespace = {"alto": "http://www.loc.gov/standards/alto/ns-v4#"}
+    alto = ET.fromstring(alto_path.read_bytes())
+    assert [
+        string.attrib["CONTENT"]
+        for string in alto.findall(
+            "./alto:Layout/alto:Page/alto:PrintSpace/alto:TextBlock/alto:TextLine/alto:String",
+            namespace,
+        )
+    ] == ["second", "first"]
 
 
 def test_project_export_can_add_text_equiv_for_previously_blank_line(tmp_path: Path) -> None:
