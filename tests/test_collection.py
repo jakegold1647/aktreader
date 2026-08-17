@@ -14,6 +14,9 @@ from aktreader.collection import (
     export_public_collection,
     inspect_collection,
     list_collection_documents,
+    list_collection_saved_searches,
+    run_collection_saved_search,
+    save_collection_search,
     search_collection,
 )
 from aktreader.project import (
@@ -76,6 +79,70 @@ def test_collection_indexes_and_refreshes_effective_project_text(tmp_path: Path)
     assert search_collection(collection, "alexander")["match_count"] == 0
     refreshed = search_collection(collection, "corrected")
     assert refreshed["matches"][0]["revision"] == 1
+
+
+def test_collection_saves_updates_lists_and_runs_private_search(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    source = _source(source_root)
+    project = tmp_path / "register.aktproj"
+    collection = tmp_path / "registers.aktcollection"
+    create_project(project, name="Serock births")
+    import_pagexml_into_project(project, source)
+    create_collection(collection, name="Serock collection")
+    add_project_to_collection(collection, project)
+
+    created = save_collection_search(
+        collection,
+        name="Alexander records",
+        query="alexander",
+    )
+    listed = list_collection_saved_searches(collection)
+    updated = save_collection_search(
+        collection,
+        name="alexander records",
+        query="record",
+    )
+    run = run_collection_saved_search(
+        collection,
+        search_id=created["search_id"],
+    )
+
+    assert created["status"] == "CREATED"
+    assert listed["search_count"] == 1
+    assert listed["searches"][0]["query"] == "alexander"
+    assert updated["status"] == "UPDATED"
+    assert updated["search_id"] == created["search_id"]
+    assert run["saved_search"]["name"] == "alexander records"
+    assert run["query"] == "record"
+    assert run["match_count"] == 1
+    assert run["network_required"] is False
+
+    assert main(
+        [
+            "collection-save-search",
+            str(collection),
+            "--name",
+            "CLI search",
+            "--query",
+            "record",
+        ]
+    ) == 0
+    cli_saved = json.loads(capsys.readouterr().out)
+    assert main(
+        [
+            "collection-run-saved-search",
+            str(collection),
+            "--search-id",
+            cli_saved["search_id"],
+        ]
+    ) == 0
+    cli_run = json.loads(capsys.readouterr().out)
+    assert cli_run["saved_search"]["name"] == "CLI search"
+    assert cli_run["match_count"] == 1
 
 
 def test_collection_migrates_v1_without_losing_text_search(tmp_path: Path) -> None:
