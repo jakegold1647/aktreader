@@ -128,6 +128,7 @@ from aktreader.service import (
     list_service_project_model_releases,
     list_service_projects,
     queue_project_backup,
+    queue_service_project_kraken_training,
     register_service_artifact,
     restore_project_backup,
     rollback_service_project_model,
@@ -1096,6 +1097,46 @@ def build_parser() -> argparse.ArgumentParser:
         "--release-id",
         required=True,
         help="prior model release UUID",
+    )
+
+    service_training = subparsers.add_parser(
+        "service-queue-kraken-training",
+        help="snapshot and queue one consent-checked local CPU/GPU Kraken training run",
+    )
+    service_training.add_argument("workspace", type=Path, help="local service directory")
+    service_training.add_argument("--project-id", required=True, help="managed project UUID")
+    service_training.add_argument(
+        "--config",
+        required=True,
+        type=Path,
+        help="local checksum-pinned Kraken training configuration",
+    )
+    service_training.add_argument(
+        "--plan",
+        required=True,
+        type=Path,
+        help="local consented HTR corpus plan",
+    )
+    service_training.add_argument(
+        "--corpus-directory",
+        required=True,
+        type=Path,
+        help="local inspected HTR training corpus directory",
+    )
+    service_training.add_argument(
+        "--model-name",
+        required=True,
+        help="name to register for every produced model checkpoint",
+    )
+    service_training.add_argument(
+        "--model-license-id",
+        required=True,
+        help="declared license identifier for the produced weights",
+    )
+    service_training.add_argument(
+        "--model-description",
+        default="",
+        help="optional description attached to the produced model artifact",
     )
 
     service_queue = subparsers.add_parser(
@@ -2307,6 +2348,30 @@ def _command_service_project_rollback_model(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_service_queue_kraken_training(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    config = local_input_path(args.config, role="Kraken training configuration")
+    plan = local_input_path(args.plan, role="HTR training corpus plan")
+    corpus = local_input_path(args.corpus_directory, role="HTR training corpus directory")
+    if not config.is_file() or not plan.is_file() or not corpus.is_dir():
+        raise CliConfigurationError(
+            "Kraken training requires local configuration, plan, and corpus directory"
+        )
+    _emit_json(
+        queue_service_project_kraken_training(
+            workspace,
+            project_id=args.project_id,
+            config_path=config,
+            plan_path=plan,
+            corpus_directory=corpus,
+            model_name=args.model_name,
+            model_license_id=args.model_license_id,
+            model_description=args.model_description,
+        )
+    )
+    return 0
+
+
 def _command_service_queue_backup(args: argparse.Namespace) -> int:
     workspace = local_input_path(args.workspace, role="service workspace")
     _emit_json(queue_project_backup(workspace, args.project_id))
@@ -2923,6 +2988,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "service-project-activate-model": _command_service_project_activate_model,
         "service-project-model-history": _command_service_project_model_history,
         "service-project-rollback-model": _command_service_project_rollback_model,
+        "service-queue-kraken-training": _command_service_queue_kraken_training,
         "service-queue-backup": _command_service_queue_backup,
         "service-backup-verify": _command_service_backup_verify,
         "service-backup-restore": _command_service_backup_restore,
