@@ -185,19 +185,26 @@ overwriting another editor's revision.
 
 The workbench does not provide simultaneous multi-pointer editing, comments, or presence tracking.
 
-## Download revision-applied PAGE XML
+## Download revision-applied exports
 
-A signed-in `VIEWER` (or higher role) can download the current effective PAGE XML document:
+A signed-in `VIEWER` (or higher role) can download the current effective document in three forms:
 
 ```text
 GET /api/projects/<project-id>/documents/<manifest-sha256>/export/pagexml
+GET /api/projects/<project-id>/documents/<manifest-sha256>/export/transcript
+GET /api/projects/<project-id>/documents/<manifest-sha256>/export/transcriptions-csv
 ```
 
-The response is an attachment generated inside the service workspace. It applies the latest human
-transcription, line-geometry, region-geometry, and reading-order revisions to a fresh PAGE XML
-file while leaving the imported source object and append-only revision history intact. It never
-accepts an output path from the browser or exposes the managed workspace path. The workbench's
-**Download PAGE XML** button uses this endpoint with its in-memory bearer token.
+The PAGE XML response applies the latest human transcription, line-geometry, region-geometry,
+and reading-order revisions to a fresh PAGE XML file. The transcript keeps source line order with
+a form-feed between pages. The CSV retains stable page/region/line identifiers, imported text,
+effective text, revision number, and editor.
+
+All three responses are generated inside the service workspace and never accept a browser-supplied
+output path or disclose managed filesystem paths. Text and CSV exports use imported text or the
+latest saved human revision only: they do not apply HTR suggestions or pending offline-review
+proposals. The workbench provides **Download PAGE XML**, **Download transcript**, and **Download
+CSV** buttons using the in-memory bearer token.
 
 ## Run and back up
 
