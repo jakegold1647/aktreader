@@ -262,6 +262,9 @@ def _service_root(path: Path | str) -> Path:
     _require_uuid(manifest.get("service_id"), role="service workspace service_id")
     if manifest.get("network_required") is not False:
         raise ServiceError("service workspace must declare network_required false")
+    training_directory = root / TRAINING_DIRECTORY
+    if not training_directory.exists():
+        training_directory.mkdir()
     for directory in (
         root / PROJECTS_DIRECTORY,
         root / BACKUPS_DIRECTORY,
