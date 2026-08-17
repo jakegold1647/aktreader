@@ -2643,7 +2643,7 @@ def search_project_transcriptions(
     normalized_query = query.strip()
     if len(normalized_query) > 200:
         raise ProjectStoreError("search query exceeds the length limit")
-    if field not in {"text", "title", "tag"}:
+    if not isinstance(field, str) or field not in {"text", "title", "tag"}:
         raise ProjectStoreError("search field must be text, title, or tag")
     if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 100:
         raise ProjectStoreError("search limit must be an integer from 1 to 100")
