@@ -648,6 +648,270 @@ def list_authorized_service_projects(
     ]
 
 
+def _validated_artifact_kind(value: object) -> str:
+    if not isinstance(value, str) or value not in ARTIFACT_KINDS:
+        raise ServiceError("artifact kind must be MODEL or DATASET")
+    return value
+
+
+def _validated_artifact_name(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ServiceError("artifact name must be a nonblank string")
+    name = value.strip()
+    if len(name) > MAX_ARTIFACT_NAME_LENGTH:
+        raise ServiceError("artifact name exceeds the length limit")
+    return name
+
+
+def _validated_license_id(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ServiceError("artifact license_id must be a nonblank string")
+    license_id = value.strip()
+    if len(license_id) > 128 or any(character.isspace() for character in license_id):
+        raise ServiceError("artifact license_id is invalid")
+    return license_id
+
+
+def _validated_artifact_description(value: object) -> str:
+    if not isinstance(value, str):
+        raise ServiceError("artifact description must be a string")
+    if len(value) > MAX_ARTIFACT_DESCRIPTION_LENGTH:
+        raise ServiceError("artifact description exceeds the length limit")
+    return value
+
+
+def _artifact_report(row: sqlite3.Row) -> dict[str, object]:
+    return {
+        "artifact_id": str(row["artifact_id"]),
+        "kind": str(row["kind"]),
+        "name": str(row["name"]),
+        "license_id": str(row["license_id"]),
+        "description": str(row["description"]),
+        "sha256": str(row["sha256"]),
+        "size_bytes": int(row["size_bytes"]),
+        "created_at": str(row["created_at"]),
+    }
+
+
+def _artifact_by_id(root: Path, artifact_id: str) -> sqlite3.Row:
+    canonical_id = _require_uuid(artifact_id, role="artifact_id")
+    connection = _connection(root)
+    try:
+        row = connection.execute(
+            """
+            SELECT artifact_id, kind, name, license_id, description, sha256,
+                   size_bytes, relative_path, created_at
+            FROM service_artifacts
+            WHERE artifact_id = ?
+            """,
+            (canonical_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        raise ServiceError("service artifact was not found")
+    return row
+
+
+def register_service_artifact(
+    service_workspace: Path | str,
+    source: Path | str,
+    *,
+    kind: str,
+    name: str,
+    license_id: str,
+    description: str = "",
+) -> dict[str, object]:
+    """Copy one local model or dataset artifact into content-addressed storage."""
+
+    root = _service_root(service_workspace)
+    source_path = _local_path(source, role="artifact source", must_exist=True)
+    if source_path.is_symlink() or not source_path.is_file():
+        raise ServiceError("artifact source must be a regular local file")
+    canonical_kind = _validated_artifact_kind(kind)
+    canonical_name = _validated_artifact_name(name)
+    canonical_license_id = _validated_license_id(license_id)
+    canonical_description = _validated_artifact_description(description)
+
+    object_root = root / ARTIFACTS_DIRECTORY / "sha256"
+    object_root.mkdir(exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(prefix=".artifact.", dir=object_root)
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    digest = hashlib.sha256()
+    size_bytes = 0
+    try:
+        with source_path.open("rb") as input_file, temporary.open("wb") as output_file:
+            while chunk := input_file.read(_COPY_BUFFER_BYTES):
+                digest.update(chunk)
+                size_bytes += len(chunk)
+                output_file.write(chunk)
+        sha256 = digest.hexdigest()
+        destination_directory = object_root / sha256[:2]
+        destination_directory.mkdir(exist_ok=True)
+        destination = destination_directory / sha256
+        if destination.exists():
+            if destination.is_symlink() or not destination.is_file():
+                raise ServiceError("managed artifact storage contains an invalid entry")
+            if destination.stat().st_size != size_bytes or _sha256_file(destination) != sha256:
+                raise ServiceError("managed artifact storage hash does not match its path")
+            temporary.unlink()
+        else:
+            os.replace(temporary, destination)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+
+    artifact_id = str(uuid.uuid4())
+    relative_path = destination.relative_to(root / ARTIFACTS_DIRECTORY).as_posix()
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO service_artifacts
+                    (artifact_id, kind, name, license_id, description, sha256,
+                     size_bytes, relative_path, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    artifact_id,
+                    canonical_kind,
+                    canonical_name,
+                    canonical_license_id,
+                    canonical_description,
+                    sha256,
+                    size_bytes,
+                    relative_path,
+                    _timestamp(),
+                ),
+            )
+            row = connection.execute(
+                """
+                SELECT artifact_id, kind, name, license_id, description, sha256,
+                       size_bytes, created_at
+                FROM service_artifacts
+                WHERE artifact_id = ?
+                """,
+                (artifact_id,),
+            ).fetchone()
+    finally:
+        connection.close()
+    if row is None:
+        raise ServiceError("registered artifact could not be read")
+    return {"status": "REGISTERED", "artifact": _artifact_report(row), "network_required": False}
+
+
+def list_service_artifacts(service_workspace: Path | str) -> list[dict[str, object]]:
+    """List registered model and dataset metadata without local storage paths."""
+
+    root = _service_root(service_workspace)
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT artifact_id, kind, name, license_id, description, sha256,
+                   size_bytes, created_at
+            FROM service_artifacts
+            ORDER BY created_at, artifact_id
+            """
+        ).fetchall()
+    finally:
+        connection.close()
+    return [_artifact_report(row) for row in rows]
+
+
+def attach_service_artifact(
+    service_workspace: Path | str,
+    *,
+    project_id: str,
+    artifact_id: str,
+) -> dict[str, object]:
+    """Attach an already registered model or dataset to one managed project."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    inspect_project(_managed_project_path(root, canonical_project_id))
+    artifact = _artifact_by_id(root, artifact_id)
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT OR IGNORE INTO service_project_artifacts
+                    (project_id, artifact_id, attached_at)
+                VALUES (?, ?, ?)
+                """,
+                (canonical_project_id, artifact["artifact_id"], _timestamp()),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "ATTACHED",
+        "project_id": canonical_project_id,
+        "artifact": _artifact_report(artifact),
+        "network_required": False,
+    }
+
+
+def list_authorized_project_artifacts(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List model and dataset metadata visible to an authorized project viewer."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT artifact_id, kind, name, license_id, description, sha256,
+                   size_bytes, created_at
+            FROM service_artifacts
+            JOIN service_project_artifacts USING (artifact_id)
+            WHERE service_project_artifacts.project_id = ?
+            ORDER BY service_project_artifacts.attached_at, artifact_id
+            """,
+            (canonical_project_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+    return [_artifact_report(row) for row in rows]
+
+
+def attach_authorized_project_artifact(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    artifact_id: str,
+) -> dict[str, object]:
+    """Attach an artifact only when the authenticated account owns the project."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    return attach_service_artifact(
+        root,
+        project_id=canonical_project_id,
+        artifact_id=artifact_id,
+    )
+
+
 def _safe_project_files(root: Path) -> Iterator[tuple[Path, str]]:
     for current_raw, directory_names, file_names in os.walk(root, followlinks=False):
         current = Path(current_raw)
