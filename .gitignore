@@ -50,3 +50,9 @@ human_check/*.html
 # Build-coordination scratch; not part of the published record.
 coordination/
 AGENTS.md
+
+
+# Self-hosted Compose state and one-off local imports
+service-data/
+projects-to-import/
+*-password.txt
