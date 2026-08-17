@@ -59,6 +59,9 @@ def _reviewable_service(tmp_path: Path) -> tuple[Path, str, str]:
         <TextEquiv><Unicode>source text</Unicode></TextEquiv>
       </TextLine>
     </TextRegion>
+    <TextRegion id="region-2">
+      <Coords points="0,10 20,10 20,20 0,20"/>
+    </TextRegion>
   </Page>
 </PcGts>
 """,
@@ -332,6 +335,114 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "image_path" not in page
         assert page["lines"][0]["revision"] == 0
         source_span_id = page["lines"][0]["source_span_id"]
+
+        layout_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0/layout"
+        )
+        connection.request("GET", layout_route, headers=authorization)
+        layout_response = connection.getresponse()
+        layout = json.loads(layout_response.read())["layout"]
+        assert layout_response.status == 200
+        assert layout["reading_order"] == {
+            "revision": 0,
+            "region_ids": ["region-1", "region-2"],
+        }
+        assert layout["regions"][0]["revision"] == 0
+
+        line_geometry_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "polygon": [[1, 1], [18, 1], [18, 9], [1, 9]],
+                "baseline": None,
+                "expected_revision": 0,
+            }
+        )
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/line-geometry",
+            body=line_geometry_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        line_geometry_response = connection.getresponse()
+        line_geometry = json.loads(line_geometry_response.read())
+        assert line_geometry_response.status == 200
+        assert line_geometry["status"] == "SAVED"
+        assert line_geometry["revision"] == 1
+        assert "project" not in line_geometry
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/line-geometry",
+            body=line_geometry_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        line_geometry_conflict_response = connection.getresponse()
+        assert line_geometry_conflict_response.status == 409
+        assert "conflict" in json.loads(line_geometry_conflict_response.read())["message"]
+
+        region_geometry_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "page_index": 0,
+                "region_id": "region-1",
+                "polygon": [[0, 0], [19, 0], [19, 19], [0, 19]],
+                "expected_revision": 0,
+            }
+        )
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/region-geometry",
+            body=region_geometry_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        region_geometry_response = connection.getresponse()
+        region_geometry = json.loads(region_geometry_response.read())
+        assert region_geometry_response.status == 200
+        assert region_geometry["status"] == "SAVED"
+        assert region_geometry["revision"] == 1
+        assert "project" not in region_geometry
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/region-geometry",
+            body=region_geometry_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        region_geometry_conflict_response = connection.getresponse()
+        assert region_geometry_conflict_response.status == 409
+        assert "conflict" in json.loads(region_geometry_conflict_response.read())["message"]
+
+        reading_order_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "page_index": 0,
+                "region_ids": ["region-2", "region-1"],
+                "expected_revision": 0,
+            }
+        )
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/reading-order",
+            body=reading_order_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        reading_order_response = connection.getresponse()
+        reading_order = json.loads(reading_order_response.read())
+        assert reading_order_response.status == 200
+        assert reading_order["status"] == "SAVED"
+        assert reading_order["revision"] == 1
+        assert "project" not in reading_order
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/reading-order",
+            body=reading_order_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        reading_order_conflict_response = connection.getresponse()
+        assert reading_order_conflict_response.status == 409
+        assert "conflict" in json.loads(reading_order_conflict_response.read())["message"]
 
         connection.request("GET", image_route, headers=authorization)
         image_response = connection.getresponse()
