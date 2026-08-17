@@ -224,6 +224,13 @@ def create_service_workspace(path: Path | str) -> dict[str, object]:
         )
         _initialize_database(temporary / SERVICE_DATABASE_NAME)
         os.replace(temporary, destination)
+        if owner is not None:
+            grant_project_role(
+                root,
+                project_id=project_id,
+                username=str(owner["username"]),
+                role="OWNER",
+            )
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
@@ -640,6 +647,8 @@ def _managed_project_path(root: Path, project_id: str) -> Path:
 def add_project_to_service(
     service_workspace: Path | str,
     project: Path | str,
+    *,
+    owner_username: str | None = None,
 ) -> dict[str, object]:
     """Copy one validated local project into the service-owned workspace."""
 
@@ -648,6 +657,11 @@ def add_project_to_service(
     project_id = _require_uuid(report["project_id"], role="project project_id")
     source = Path(str(report["project"])).resolve()
     list(_safe_project_files(source))
+    owner = (
+        None
+        if owner_username is None
+        else _account_by_username(root, owner_username)
+    )
     destination = root / PROJECTS_DIRECTORY / f"{project_id}.aktproj"
     if destination.exists():
         raise ServiceError("service already manages this project_id")
@@ -667,6 +681,15 @@ def add_project_to_service(
     return {
         "status": "ADDED",
         "project": _project_summary(inspect_project(destination)),
+        "owner": (
+            None
+            if owner is None
+            else {
+                "account_id": owner["account_id"],
+                "username": owner["username"],
+                "role": "OWNER",
+            }
+        ),
         "network_required": False,
     }
 
@@ -992,12 +1015,21 @@ def _recover_running_jobs(root: Path) -> None:
 def queue_project_backup(
     service_workspace: Path | str,
     project_id: str,
+    *,
+    account_id: str | None = None,
 ) -> dict[str, object]:
     """Persist a backup job for one managed project without starting network work."""
 
     root = _service_root(service_workspace)
     canonical_id = _require_uuid(project_id, role="project_id")
     inspect_project(_managed_project_path(root, canonical_id))
+    if account_id is not None:
+        _require_project_role(
+            root,
+            project_id=canonical_id,
+            account_id=account_id,
+            minimum_role="EDITOR",
+        )
     job_id = str(uuid.uuid4())
     now = _timestamp()
     connection = _connection(root)
@@ -1058,6 +1090,25 @@ def get_service_job(service_workspace: Path | str, job_id: str) -> dict[str, obj
         "updated_at": row["updated_at"],
         "network_required": False,
     }
+
+
+def get_authorized_service_job(
+    service_workspace: Path | str,
+    job_id: str,
+    *,
+    account_id: str,
+) -> dict[str, object]:
+    """Read a persisted job only when the account can view its project."""
+
+    root = _service_root(service_workspace)
+    report = get_service_job(root, job_id)
+    _require_project_role(
+        root,
+        project_id=str(report["project_id"]),
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return report
 
 
 def _claim_next_job(root: Path) -> dict[str, object] | None:
