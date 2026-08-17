@@ -149,8 +149,8 @@ The CLI also provides `label-validate`, `collection-create`, `collection-add-pro
 `project-list-documents`, `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
-`project-kraken-recognize`, `project-export-pagexml`,
-`project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
+`project-kraken-recognize`, `project-export-pagexml`, `project-export-transcript`,
+`project-export-transcriptions-csv`, `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
 `project-resolve-review-proposal`, `project-revise-line-geometry`,
@@ -299,6 +299,23 @@ python -m aktreader project-export-pagexml serock.aktproj `
 
 Exports must live outside the project and will not replace an existing file unless
 `--replace-existing` is explicit.
+
+For corrected text that needs to leave the workbench without scans or model proposals, export a
+plain UTF-8 transcript or a provenance-preserving CSV. Both use imported text until a reviewer has
+saved a human revision; they never promote HTR suggestions or pending review proposals. The
+transcript keeps source line order and places a form-feed between pages. The CSV includes stable
+page/region/line identifiers, the imported text, effective text, revision number, and editor—without
+project paths or source images.
+
+```powershell
+python -m aktreader project-export-transcript serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --output serock-human.txt
+
+python -m aktreader project-export-transcriptions-csv serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --output serock-human-lines.csv
+```
 
 ### Offline review exchange
 
