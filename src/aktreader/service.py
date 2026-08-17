@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import mimetypes
 import os
 import secrets
 import shutil
@@ -19,6 +18,8 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
+
+from PIL import Image
 
 from aktreader.project import (
     ProjectStoreError,
@@ -1607,13 +1608,15 @@ def load_authorized_project_image(
         raise ServiceError("managed project image is invalid")
     if image.stat().st_size > MAX_IMAGE_RESPONSE_BYTES:
         raise ServiceError("managed project image exceeds the response size limit")
-    media_type = mimetypes.guess_type(image.name)[0]
-    if media_type is None or not media_type.startswith("image/"):
-        raise ServiceError("managed project image has an unsupported media type")
     try:
-        return media_type, image.read_bytes()
+        with Image.open(image) as opened:
+            media_type = Image.MIME.get(opened.format or "", "application/octet-stream")
+        payload = image.read_bytes()
     except OSError as error:
         raise ServiceError("managed project image is unreadable") from error
+    if not media_type.startswith("image/"):
+        raise ServiceError("managed project image has an unsupported media type")
+    return media_type, payload
 
 
 def revise_authorized_project_line(
