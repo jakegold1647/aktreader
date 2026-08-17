@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 import uuid
@@ -22,6 +24,10 @@ COLLECTION_CONTRACT = {"name": "aktreader-collection", "version": "1.0.0"}
 COLLECTION_MANIFEST_NAME = "collection.akt.json"
 COLLECTION_DATABASE_NAME = "collection.sqlite3"
 COLLECTION_DATABASE_VERSION = 2
+PUBLIC_COLLECTION_CONTRACT = {
+    "name": "aktreader-public-collection",
+    "version": "1.0.0",
+}
 
 
 class CollectionError(ValueError):
@@ -383,6 +389,283 @@ def inspect_collection(path: Path | str) -> dict[str, object]:
         "project_count": project_count,
         "document_count": document_count,
         "indexed_line_count": indexed_line_count,
+        "network_required": False,
+    }
+
+
+def _public_uuid_segment(value: object, *, role: str) -> str:
+    if not isinstance(value, str):
+        raise CollectionError(f"public {role} is invalid")
+    try:
+        return str(uuid.UUID(value))
+    except ValueError as error:
+        raise CollectionError(f"public {role} is invalid") from error
+
+
+def export_public_collection(
+    collection: Path | str,
+    output: Path | str,
+    *,
+    license_id: str,
+    confirm_public: bool = False,
+) -> dict[str, object]:
+    """Write an explicit, static, read-only collection release.
+
+    The output is designed for static hosting. It is not served by the loopback
+    workbench and is created only after the operator confirms that the selected
+    indexed text and metadata may be public under the declared license.
+    """
+
+    if confirm_public is not True:
+        raise CollectionError("public collection export requires confirm_public=True")
+    if not isinstance(license_id, str) or not license_id.strip():
+        raise CollectionError("public collection export requires a nonblank license_id")
+    root = _required_collection_root(collection)
+    destination = _local_path(output, role="public collection destination", must_exist=False)
+    if destination.exists():
+        raise CollectionError(
+            f"public collection destination already exists: {destination}"
+        )
+    if not destination.parent.is_dir():
+        raise CollectionError(
+            f"public collection destination parent does not exist: {destination.parent}"
+        )
+    if destination == root or root in destination.parents:
+        raise CollectionError(
+            "public collection export must be outside the local collection"
+        )
+
+    manifest = _read_manifest(root)
+    collection_id = _public_uuid_segment(manifest.get("collection_id"), role="collection ID")
+    collection_name = manifest.get("name")
+    if not isinstance(collection_name, str) or not collection_name.strip():
+        raise CollectionError("collection manifest has an invalid name")
+
+    connection = sqlite3.connect(root / COLLECTION_DATABASE_NAME)
+    try:
+        document_rows = connection.execute(
+            """
+            SELECT
+                document_index.project_id, projects.project_name,
+                document_index.manifest_sha256, document_index.document_id,
+                document_index.title, document_index.tags_json,
+                document_index.page_count, document_index.region_count,
+                document_index.line_count, document_index.source_pagexml_sha256
+            FROM document_index
+            JOIN projects ON projects.project_id = document_index.project_id
+            ORDER BY projects.project_name, document_index.title,
+                     document_index.manifest_sha256
+            """
+        ).fetchall()
+        line_rows = connection.execute(
+            """
+            SELECT
+                project_id, manifest_sha256, page_index, page_id,
+                source_span_id, region_id, line_id, text, revision
+            FROM text_index
+            ORDER BY project_id, manifest_sha256, page_index, source_span_id
+            """
+        ).fetchall()
+        member_project_paths = connection.execute(
+            "SELECT project_path FROM projects ORDER BY project_id"
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise CollectionError(f"cannot read local collection for public export: {error}") from error
+    finally:
+        connection.close()
+
+    for (member_project_path,) in member_project_paths:
+        if not isinstance(member_project_path, str):
+            raise CollectionError("local collection has an invalid member project path")
+        member_path = Path(member_project_path).resolve()
+        if destination == member_path or member_path in destination.parents:
+            raise CollectionError(
+                "public collection export must be outside every indexed project"
+            )
+
+    lines_by_document: dict[tuple[str, str], list[tuple[object, ...]]] = {}
+    for row in line_rows:
+        (
+            project_id,
+            manifest_sha256,
+            page_index,
+            page_id,
+            source_span_id,
+            region_id,
+            line_id,
+            text,
+            revision,
+        ) = row
+        if (
+            not isinstance(project_id, str)
+            or not isinstance(manifest_sha256, str)
+            or not isinstance(page_index, int)
+            or page_index < 0
+            or not isinstance(page_id, str)
+            or not isinstance(source_span_id, str)
+            or (region_id is not None and not isinstance(region_id, str))
+            or not isinstance(line_id, str)
+            or not isinstance(text, str)
+            or not isinstance(revision, int)
+            or revision < 0
+        ):
+            raise CollectionError("local collection contains an invalid public line")
+        lines_by_document.setdefault((project_id, manifest_sha256), []).append(row)
+
+    temporary = Path(tempfile.mkdtemp(prefix=f".{destination.name}.", dir=destination.parent))
+    try:
+        documents_directory = temporary / "documents"
+        documents_directory.mkdir()
+        published_documents: list[dict[str, object]] = []
+        published_line_count = 0
+        for row in document_rows:
+            (
+                project_id,
+                project_name,
+                manifest_sha256,
+                document_id,
+                title,
+                tags_json,
+                page_count,
+                region_count,
+                line_count,
+                source_pagexml_sha256,
+            ) = row
+            public_project_id = _public_uuid_segment(project_id, role="project ID")
+            public_document_id = _public_uuid_segment(document_id, role="document ID")
+            if (
+                not isinstance(project_name, str)
+                or not project_name.strip()
+                or not isinstance(manifest_sha256, str)
+                or len(manifest_sha256) != 64
+                or not isinstance(title, str)
+                or not isinstance(page_count, int)
+                or page_count < 0
+                or not isinstance(region_count, int)
+                or region_count < 0
+                or not isinstance(line_count, int)
+                or line_count < 0
+                or not isinstance(source_pagexml_sha256, str)
+                or len(source_pagexml_sha256) != 64
+            ):
+                raise CollectionError("local collection contains an invalid public document")
+            tags = _decode_tags(tags_json)
+            document_lines = lines_by_document.pop((project_id, manifest_sha256), [])
+            pages: list[dict[str, object]] = []
+            current_page_index: int | None = None
+            current_page: dict[str, object] | None = None
+            for line in document_lines:
+                (
+                    _,
+                    _,
+                    page_index,
+                    page_id,
+                    source_span_id,
+                    region_id,
+                    line_id,
+                    text,
+                    revision,
+                ) = line
+                if current_page_index != page_index:
+                    current_page = {
+                        "page_index": page_index,
+                        "page_id": page_id,
+                        "lines": [],
+                    }
+                    pages.append(current_page)
+                    current_page_index = page_index
+                elif current_page is None or current_page.get("page_id") != page_id:
+                    raise CollectionError(
+                        "local collection has inconsistent public page identities"
+                    )
+                lines = current_page["lines"]
+                if not isinstance(lines, list):
+                    raise CollectionError("local collection has invalid public page lines")
+                lines.append(
+                    {
+                        "source_span_id": source_span_id,
+                        "region_id": region_id,
+                        "line_id": line_id,
+                        "text": text,
+                        "revision": revision,
+                    }
+                )
+
+            relative_url = (
+                f"documents/{public_project_id}/{public_document_id}.json"
+            )
+            document_path = temporary / relative_url
+            document_path.parent.mkdir()
+            document_payload = {
+                "contract": PUBLIC_COLLECTION_CONTRACT,
+                "collection_id": collection_id,
+                "license_id": license_id.strip(),
+                "project_id": public_project_id,
+                "project_name": project_name,
+                "manifest_sha256": manifest_sha256,
+                "document_id": public_document_id,
+                "title": title,
+                "tags": tags,
+                "page_count": page_count,
+                "region_count": region_count,
+                "line_count": line_count,
+                "source_pagexml_sha256": source_pagexml_sha256,
+                "pages": pages,
+                "network_required": False,
+            }
+            _atomic_write_json(document_path, document_payload)
+            published_documents.append(
+                {
+                    "url": relative_url,
+                    "sha256": hashlib.sha256(document_path.read_bytes()).hexdigest(),
+                    "project_id": public_project_id,
+                    "project_name": project_name,
+                    "document_id": public_document_id,
+                    "title": title,
+                    "tags": tags,
+                    "page_count": page_count,
+                    "region_count": region_count,
+                    "line_count": line_count,
+                    "source_pagexml_sha256": source_pagexml_sha256,
+                }
+            )
+            published_line_count += len(document_lines)
+        if lines_by_document:
+            raise CollectionError(
+                "local collection has indexed public text without document metadata"
+            )
+
+        index_path = temporary / "index.json"
+        _atomic_write_json(
+            index_path,
+            {
+                "contract": PUBLIC_COLLECTION_CONTRACT,
+                "collection_id": collection_id,
+                "name": collection_name,
+                "license_id": license_id.strip(),
+                "document_count": len(published_documents),
+                "indexed_line_count": published_line_count,
+                "documents": published_documents,
+                "network_required": False,
+            },
+        )
+        os.replace(temporary, destination)
+    except Exception:
+        if temporary.exists():
+            shutil.rmtree(temporary)
+        raise
+
+    index_path = destination / "index.json"
+    return {
+        "status": "PUBLISHED",
+        "collection": str(root),
+        "output": str(destination),
+        "index_url": "index.json",
+        "index_sha256": hashlib.sha256(index_path.read_bytes()).hexdigest(),
+        "collection_id": collection_id,
+        "license_id": license_id.strip(),
+        "document_count": len(published_documents),
+        "indexed_line_count": published_line_count,
         "network_required": False,
     }
 

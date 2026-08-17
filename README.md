@@ -150,7 +150,7 @@ holdout separation.
 It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
-The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `project-create`,\n`project-inspect`,
+The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
@@ -191,6 +191,20 @@ python -m aktreader collection-search registers.aktcollection "Aleksander"
 `collection-list-documents` searches only locally indexed document metadata. Run
 `collection-add-project` again after editing a project's transcription or document metadata to refresh
 its index.
+
+To create a static, read-only release for a separate public web host, export the selected collection
+explicitly. This writes `index.json` plus stable document URLs under `documents/<project-id>/<document-id>.json`;
+the loopback service does not serve it. `--confirm-public` and a declared license are mandatory because the
+release contains the indexed human-visible text and selected document metadata. It excludes filesystem paths and
+private document notes. Review the release before uploading or sharing it, because copied public data cannot be
+recalled from third-party hosts.
+
+```powershell
+python -m aktreader collection-export-public registers.aktcollection `
+  --output public-registers `
+  --license-id CC-BY-4.0 `
+  --confirm-public
+```
 
 ### Local projects
 
