@@ -18,6 +18,7 @@ from aktreader.project import (
     export_review_package,
     grant_training_consent,
     import_htr_suggestions,
+    import_images_into_project,
     import_pagexml_into_project,
     import_review_package,
     inspect_project,
@@ -163,6 +164,89 @@ def test_project_import_copies_hashed_pagexml_images_and_lines(tmp_path: Path) -
     assert report_after_repeat["pagexml_import_count"] == 1
     assert report_after_repeat["page_count"] == 1
     assert report_after_repeat["line_count"] == 1
+
+
+def test_project_imports_an_image_directory_as_editable_pagexml(tmp_path: Path) -> None:
+    source_directory = tmp_path / "scans"
+    source_directory.mkdir()
+    _write_image(source_directory / "001.png")
+    Image.new("L", (20, 10), color=240).save(source_directory / "002.png")
+    (source_directory / "readme.txt").write_text("not an image", encoding="utf-8")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    imported = import_images_into_project(
+        project,
+        source_directory,
+        title="Serock birth register",
+    )
+
+    manifest = json.loads(Path(imported["manifest"]).read_text(encoding="utf-8"))
+    pages = list_project_pages(project)
+    document = list_project_documents(project)[0]
+    first_page = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )
+
+    assert imported["status"] == "SUCCEEDED"
+    assert imported["source_kind"] == "IMAGE_DIRECTORY"
+    assert imported["input_image_count"] == 2
+    assert imported["page_count"] == 2
+    assert imported["region_count"] == 2
+    assert imported["line_count"] == 0
+    assert Path(imported["generated_pagexml"]).is_file()
+    assert Path(imported["generated_pagexml"]).is_relative_to(project)
+    assert manifest["source"]["path"] == imported["generated_pagexml"]
+    assert [page["page_id"] for page in manifest["pages"]] == [
+        "image-0001",
+        "image-0002",
+    ]
+    assert manifest["pages"][0]["regions"][0]["polygon"] == [
+        [0, 0],
+        [40, 0],
+        [40, 30],
+        [0, 30],
+    ]
+    assert manifest["pages"][1]["regions"][0]["polygon"] == [
+        [0, 0],
+        [20, 0],
+        [20, 10],
+        [0, 10],
+    ]
+    assert len(pages) == 2
+    assert document["title"] == "Serock birth register"
+    assert first_page["lines"] == []
+
+    repeated = import_images_into_project(project, source_directory)
+
+    assert repeated["already_imported"] is True
+    assert list_project_documents(project)[0]["title"] == "Serock birth register"
+
+
+def test_project_image_import_cli_creates_a_document(tmp_path: Path, capsys) -> None:
+    source_directory = tmp_path / "scans"
+    source_directory.mkdir()
+    _write_image(source_directory / "page.png")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    exit_code = main(
+        [
+            "project-import-images",
+            str(project),
+            str(source_directory),
+            "--title",
+            "Imported scans",
+        ]
+    )
+    report = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert report["source_kind"] == "IMAGE_DIRECTORY"
+    assert report["page_count"] == 1
+    assert list_project_documents(project)[0]["title"] == "Imported scans"
 
 
 
