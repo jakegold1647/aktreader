@@ -2464,6 +2464,12 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 100%; }
 .actions { align-items: center; display: flex; gap: 8px; margin-top: 8px; }
 #status, #detail { color: #475569; white-space: pre-wrap; }
+#recognition-suggestions { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
+#recognition-suggestions h2 { margin: 8px 0; }
+#suggestions { display: grid; gap: 8px; }
+.suggestion { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 6px; padding: 10px; }
+.suggestion p { color: #475569; margin: 0 0 6px; }
+.suggestion pre { font: inherit; margin: 0 0 8px; overflow-wrap: anywhere; white-space: pre-wrap; }
 #layout-editor { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #layout-editor h2, #layout-editor h3 { margin: 8px 0; }
 #region-polygon, #line-polygon, #line-baseline { min-height: 92px; }
@@ -2530,6 +2536,11 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <button id="save" type="button" disabled>Save correction</button>
           <span id="role"></span>
         </div>
+        <section id="recognition-suggestions" aria-labelledby="suggestions-title">
+          <h2 id="suggestions-title">Recognition suggestions</h2>
+          <p>Copy a local model suggestion into the editor, then review and save it as a human correction.</p>
+          <div id="suggestions" aria-live="polite"></div>
+        </section>
         <section id="layout-editor" aria-labelledby="layout-title">
           <h2 id="layout-title">Layout</h2>
           <h3>Line geometry</h3>
@@ -2584,6 +2595,7 @@ const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
 const detail = document.getElementById("detail");
+const suggestions = document.getElementById("suggestions");
 const text = document.getElementById("text");
 const save = document.getElementById("save");
 const role = document.getElementById("role");
@@ -2652,6 +2664,44 @@ function renderLines() {
     button.textContent = line.line_id + " · revision " + line.revision + " · " + (line.text || "∅");
     button.addEventListener("click", () => selectLine(line.source_span_id));
     lineList.append(button);
+  });
+}
+function renderSuggestions() {
+  suggestions.replaceChildren();
+  const line = selectedLine();
+  if (!line) return;
+  const proposals = Array.isArray(line.suggestions) ? line.suggestions : [];
+  if (!proposals.length) {
+    const note = document.createElement("p");
+    note.textContent = "No local recognition suggestions for this line.";
+    suggestions.append(note);
+    return;
+  }
+  proposals.forEach(suggestion => {
+    const card = document.createElement("article");
+    card.className = "suggestion";
+    const provenance = document.createElement("p");
+    const engine = String(suggestion.engine || "Local recognition");
+    const fingerprint = suggestion.runtime_fingerprint
+      ? " · " + String(suggestion.runtime_fingerprint).slice(0, 12)
+      : "";
+    provenance.textContent = engine + fingerprint;
+    const proposedText = document.createElement("pre");
+    proposedText.textContent = suggestion.text || "∅";
+    const apply = document.createElement("button");
+    apply.type = "button";
+    apply.textContent = "Use suggestion";
+    apply.disabled = !canEdit();
+    apply.title = canEdit()
+      ? "Copy this proposal into the editor. Save separately to create a human revision."
+      : "Only editors and owners can copy a recognition suggestion into the editor.";
+    apply.addEventListener("click", () => {
+      text.value = suggestion.text || "";
+      text.focus();
+      setStatus("Suggestion copied into the editor. Review it before saving.");
+    });
+    card.append(provenance, proposedText, apply);
+    suggestions.append(card);
   });
 }
 function drawOverlay() {
@@ -2743,6 +2793,7 @@ function selectLine(sourceSpanId) {
     (geometry ? "\\nCurrent geometry revision: " + geometry.revision : "") +
     (canEdit() ? "" : "\\nYour VIEWER role can inspect but not save corrections.")
   ) : "Choose a line to review its transcription.";
+  renderSuggestions();
   renderLines();
   drawOverlay();
 }
