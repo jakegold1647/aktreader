@@ -89,6 +89,7 @@ from aktreader.project import (
     import_htr_suggestions,
     import_images_into_project,
     import_pagexml_into_project,
+    import_pdf_into_project,
     import_review_package,
     inspect_project,
     list_project_documents,
@@ -268,6 +269,27 @@ def build_parser() -> argparse.ArgumentParser:
     project_import_images.add_argument(
         "--title",
         help="optional document title (defaults to the image directory name)",
+    )
+
+    project_import_pdf = subparsers.add_parser(
+        "project-import-pdf",
+        help="render one local PDF into an editable PAGE XML document",
+    )
+    project_import_pdf.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_import_pdf.add_argument("source", type=Path, help="local PDF source")
+    project_import_pdf.add_argument(
+        "--dpi",
+        type=int,
+        default=300,
+        help="local render DPI from 72 to 600 (default: 300)",
+    )
+    project_import_pdf.add_argument(
+        "--title",
+        help="optional document title (defaults to the PDF filename)",
     )
 
     project_htr_suggestions = subparsers.add_parser(
@@ -1169,6 +1191,22 @@ def _command_project_import_images(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_import_pdf(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    source = local_input_path(args.source, role="PDF source")
+    if not project.is_dir() or not source.is_file():
+        raise CliConfigurationError("PDF import requires an existing project and PDF source")
+    _emit_json(
+        import_pdf_into_project(
+            project,
+            source,
+            dpi=args.dpi,
+            title=args.title,
+        )
+    )
+    return 0
+
+
 def _command_project_import_htr_suggestions(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -2019,6 +2057,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-images": _command_project_import_images,
+        "project-import-pdf": _command_project_import_pdf,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
         "project-export-pagexml": _command_project_export_pagexml,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
