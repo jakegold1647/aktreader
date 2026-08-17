@@ -268,6 +268,38 @@ def test_project_create_runs_with_sockets_disabled(
     assert (project / "project.akt.json").is_file()
 
 
+def test_project_pdf_import_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source = tmp_path / "scan.pdf"
+    image = Image.new("L", (20, 20), color=255)
+    try:
+        image.save(source, "PDF", resolution=72)
+    finally:
+        image.close()
+    project = tmp_path / "register.aktproj"
+
+    assert main(["project-create", str(project), "--name", "Serock births"]) == 0
+    capsys.readouterr()
+    exit_code = main(
+        [
+            "project-import-pdf",
+            str(project),
+            str(source),
+            "--dpi",
+            "144",
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["source_kind"] == "PDF"
+    assert payload["network_required"] is False
+    assert Path(payload["pdf_receipt"]).is_file()
+
+
 def test_kraken_inspect_runs_with_sockets_disabled(
     sockets_disabled: None,
     tmp_path: Path,
