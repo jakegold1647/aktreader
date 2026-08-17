@@ -2275,6 +2275,16 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 100%; }
 .actions { align-items: center; display: flex; gap: 8px; margin-top: 8px; }
 #status, #detail { color: #475569; white-space: pre-wrap; }
+#layout-editor { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
+#layout-editor h2, #layout-editor h3 { margin: 8px 0; }
+#region-polygon { min-height: 92px; }
+#reading-order { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.order-row { align-items: center; display: flex; gap: 6px; }
+.order-row span { flex: 1; overflow-wrap: anywhere; }
+.order-row button { padding: 4px 8px; }
+.region-shape { cursor: pointer; fill: rgba(37, 99, 235, .10); stroke: #2563eb; stroke-width: 2; }
+.region-shape.selected { fill: rgba(21, 128, 61, .16); stroke: #15803d; stroke-width: 3; }
+.vertex { cursor: grab; fill: #15803d; stroke: #fff; stroke-width: 1.5; }
 #login { margin: 48px auto; max-width: 430px; }
 #login form { display: grid; gap: 12px; }
 .hidden { display: none !important; }
@@ -2314,7 +2324,7 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
         <p id="page-detail">Choose a project.</p>
         <div id="scan">
           <img id="image" alt="Selected source page">
-          <svg id="overlay" aria-label="PAGE XML line bounds"></svg>
+          <svg id="overlay" aria-label="PAGE XML layout"></svg>
         </div>
       </section>
       <aside class="panel">
@@ -2325,6 +2335,21 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <button id="save" type="button" disabled>Save correction</button>
           <span id="role"></span>
         </div>
+        <section id="layout-editor" aria-labelledby="layout-title">
+          <h2 id="layout-title">Layout</h2>
+          <label>Region <select id="region"></select></label>
+          <label>Region polygon (JSON)
+            <textarea id="region-polygon" disabled></textarea>
+          </label>
+          <div class="actions">
+            <button id="save-region" type="button" disabled>Save region outline</button>
+          </div>
+          <h3>Reading order</h3>
+          <ol id="reading-order" aria-label="Region reading order"></ol>
+          <div class="actions">
+            <button id="save-reading-order" type="button" disabled>Save reading order</button>
+          </div>
+        </section>
       </aside>
     </div>
   </section>
@@ -2332,8 +2357,10 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 <script>
 "use strict";
 
-const state = { token: null, account: null, projects: [], project: null, documents: [], page: null,
-  selected: null, imageUrl: null };
+const state = {
+  token: null, account: null, projects: [], project: null, documents: [], page: null,
+  layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null
+};
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
 const loginForm = document.getElementById("login-form");
@@ -2353,6 +2380,11 @@ const detail = document.getElementById("detail");
 const text = document.getElementById("text");
 const save = document.getElementById("save");
 const role = document.getElementById("role");
+const regionSelect = document.getElementById("region");
+const polygon = document.getElementById("region-polygon");
+const saveRegion = document.getElementById("save-region");
+const readingOrder = document.getElementById("reading-order");
+const saveReadingOrder = document.getElementById("save-reading-order");
 
 function setStatus(message) { status.textContent = message; }
 function apiHeaders(extra) {
@@ -2380,6 +2412,9 @@ function currentDocument() {
 function selectedLine() {
   return state.page && state.page.lines.find(item => item.source_span_id === state.selected);
 }
+function selectedRegion() {
+  return state.layout && state.layout.regions.find(item => item.region_id === state.selectedRegion);
+}
 function canEdit() {
   return state.project && (state.project.role === "EDITOR" || state.project.role === "OWNER");
 }
@@ -2399,6 +2434,18 @@ function drawOverlay() {
   overlay.replaceChildren();
   if (!state.page) return;
   overlay.setAttribute("viewBox", "0 0 " + state.page.width_px + " " + state.page.height_px);
+  const selected = selectedRegion();
+  if (state.layout) {
+    state.layout.regions.forEach(region => {
+      const shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      shape.setAttribute("points", region.polygon.map(point => point.join(",")).join(" "));
+      shape.setAttribute("class", "region-shape" + (
+        region.region_id === state.selectedRegion ? " selected" : ""
+      ));
+      shape.addEventListener("click", () => selectRegion(region.region_id));
+      overlay.append(shape);
+    });
+  }
   state.page.lines.forEach(line => {
     const box = line.bbox;
     const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -2412,6 +2459,23 @@ function drawOverlay() {
     rectangle.addEventListener("click", () => selectLine(line.source_span_id));
     overlay.append(rectangle);
   });
+  if (selected) {
+    selected.polygon.forEach((point, index) => {
+      const vertex = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      vertex.setAttribute("cx", point[0]);
+      vertex.setAttribute("cy", point[1]);
+      vertex.setAttribute("r", "4");
+      vertex.setAttribute("class", "vertex");
+      if (canEdit()) {
+        vertex.addEventListener("pointerdown", event => {
+          event.preventDefault();
+          state.drag = { regionId: selected.region_id, pointIndex: index };
+          overlay.setPointerCapture(event.pointerId);
+        });
+      }
+      overlay.append(vertex);
+    });
+  }
 }
 function selectLine(sourceSpanId) {
   state.selected = sourceSpanId;
@@ -2425,6 +2489,134 @@ function selectLine(sourceSpanId) {
   ) : "Choose a line to review its transcription.";
   renderLines();
   drawOverlay();
+}
+function renderReadingOrder() {
+  readingOrder.replaceChildren();
+  if (!state.layout) return;
+  state.layout.reading_order.region_ids.forEach((regionId, index) => {
+    const item = document.createElement("li");
+    item.className = "order-row";
+    const name = document.createElement("span");
+    name.textContent = (index + 1) + ". " + regionId;
+    item.append(name);
+    for (const direction of [-1, 1]) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "secondary";
+      button.textContent = direction < 0 ? "Up" : "Down";
+      button.disabled = !canEdit() || index + direction < 0 ||
+        index + direction >= state.layout.reading_order.region_ids.length;
+      button.addEventListener("click", () => moveRegion(regionId, direction));
+      item.append(button);
+    }
+    readingOrder.append(item);
+  });
+  saveReadingOrder.disabled = !canEdit() || !state.layout;
+}
+function renderLayout() {
+  regionSelect.replaceChildren();
+  if (!state.layout) return;
+  state.layout.regions.forEach(region => option(
+    regionSelect, region.region_id, region.region_id + " · revision " + region.revision
+  ));
+  if (!state.layout.regions.some(region => region.region_id === state.selectedRegion)) {
+    state.selectedRegion = state.layout.regions.length ? state.layout.regions[0].region_id : null;
+  }
+  selectRegion(state.selectedRegion);
+}
+function selectRegion(regionId) {
+  state.selectedRegion = regionId;
+  if (regionId) regionSelect.value = regionId;
+  const region = selectedRegion();
+  polygon.value = region ? JSON.stringify(region.polygon) : "";
+  polygon.disabled = !region || !canEdit();
+  saveRegion.disabled = !region || !canEdit();
+  renderReadingOrder();
+  drawOverlay();
+}
+function moveRegion(regionId, direction) {
+  if (!state.layout || !canEdit()) return;
+  const regionIds = state.layout.reading_order.region_ids;
+  const index = regionIds.indexOf(regionId);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= regionIds.length) return;
+  [regionIds[index], regionIds[target]] = [regionIds[target], regionIds[index]];
+  renderReadingOrder();
+}
+function pagePoint(event) {
+  const matrix = overlay.getScreenCTM();
+  if (!matrix || !state.page) return null;
+  const point = overlay.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  const local = point.matrixTransform(matrix.inverse());
+  return [
+    Math.max(0, Math.min(state.page.width_px, Math.round(local.x))),
+    Math.max(0, Math.min(state.page.height_px, Math.round(local.y)))
+  ];
+}
+async function saveRegionRevision() {
+  const region = selectedRegion();
+  const doc = currentDocument();
+  if (!region || !doc || !canEdit()) return;
+  let revisedPolygon;
+  try {
+    revisedPolygon = JSON.parse(polygon.value);
+  } catch (error) {
+    setStatus("Region polygon must be valid JSON.");
+    return;
+  }
+  saveRegion.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/region-geometry",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          page_index: Number(pageSelect.value),
+          region_id: region.region_id,
+          polygon: revisedPolygon,
+          expected_revision: region.revision
+        })
+      }
+    );
+    setStatus(payload.status === "SAVED" ? "Region outline saved." : "No change was needed.");
+    await loadPage();
+  } catch (error) {
+    setStatus(error.message);
+    await loadPage();
+  } finally {
+    saveRegion.disabled = !canEdit();
+  }
+}
+async function saveReadingOrderRevision() {
+  const doc = currentDocument();
+  if (!state.layout || !doc || !canEdit()) return;
+  saveReadingOrder.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/reading-order",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          page_index: Number(pageSelect.value),
+          region_ids: state.layout.reading_order.region_ids,
+          expected_revision: state.layout.reading_order.revision
+        })
+      }
+    );
+    setStatus(payload.status === "SAVED" ? "Reading order saved." : "No change was needed.");
+    await loadPage();
+  } catch (error) {
+    setStatus(error.message);
+    await loadPage();
+  } finally {
+    saveReadingOrder.disabled = !canEdit();
+  }
 }
 async function loadImage() {
   const doc = currentDocument();
@@ -2447,15 +2639,18 @@ async function loadPage() {
   const doc = currentDocument();
   if (!doc || pageSelect.value === "") return;
   setStatus("Loading page…");
-  const payload = await api(
-    "/api/projects/" + encodeURIComponent(state.project.project_id) +
+  const pagePath = "/api/projects/" + encodeURIComponent(state.project.project_id) +
     "/documents/" + encodeURIComponent(doc.manifest_sha256) +
-    "/pages/" + encodeURIComponent(pageSelect.value)
-  );
-  state.page = payload.page;
+    "/pages/" + encodeURIComponent(pageSelect.value);
+  const responses = await Promise.all([api(pagePath), api(pagePath + "/layout")]);
+  state.page = responses[0].page;
+  state.layout = responses[1].layout;
   state.selected = state.page.lines.length ? state.page.lines[0].source_span_id : null;
+  state.selectedRegion = state.layout.regions.length ? state.layout.regions[0].region_id : null;
   pageDetail.textContent = "Page " + (Number(pageSelect.value) + 1) + " · " +
-    state.page.page_id + " · " + state.page.lines.length + " lines";
+    state.page.page_id + " · " + state.page.lines.length + " lines · " +
+    state.layout.regions.length + " regions";
+  renderLayout();
   await loadImage();
   selectLine(state.selected);
   setStatus("");
@@ -2559,6 +2754,22 @@ documentSelect.addEventListener(
 );
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 save.addEventListener("click", () => saveRevision());
+regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
+saveRegion.addEventListener("click", () => saveRegionRevision());
+saveReadingOrder.addEventListener("click", () => saveReadingOrderRevision());
+overlay.addEventListener("pointermove", event => {
+  if (!state.drag) return;
+  const region = state.layout && state.layout.regions.find(
+    item => item.region_id === state.drag.regionId
+  );
+  const point = pagePoint(event);
+  if (!region || !point) return;
+  region.polygon[state.drag.pointIndex] = point;
+  polygon.value = JSON.stringify(region.polygon);
+  drawOverlay();
+});
+overlay.addEventListener("pointerup", () => { state.drag = null; });
+overlay.addEventListener("pointercancel", () => { state.drag = null; });
 document.getElementById("logout").addEventListener("click", () => {
   state.token = null;
   state.account = null;
@@ -2566,6 +2777,9 @@ document.getElementById("logout").addEventListener("click", () => {
   state.project = null;
   state.documents = [];
   state.page = null;
+  state.layout = null;
+  state.selectedRegion = null;
+  state.drag = null;
   if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
   state.imageUrl = null;
   image.removeAttribute("src");
