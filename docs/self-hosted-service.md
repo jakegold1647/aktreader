@@ -146,6 +146,18 @@ source page. It reports the editor, revision, and timestamp but never exposes hi
 local filesystem path. The source PAGE XML and image object remain immutable; only append-only
 human revisions are created.
 
+**Search project** is available to every signed-in project viewer. It sends a bounded query to:
+
+```text
+POST /api/projects/<project-id>/search
+{"query": "goldstein", "field": "text"}
+```
+
+The field is one of `text`, `title`, or `tag`. The service searches the current effective
+human-visible line text, returns at most 50 matching line records, and lets the workbench jump to
+the matched page and line. It is scoped to the authenticated project, does not make an index public,
+does not search local filesystem paths, and includes no raw image data.
+
 When the service is started with `--kraken-config`, editors and owners can queue local
 recognition for the selected document. The resulting proposals appear beside the selected line.
 **Use suggestion** copies a proposal into the transcription editor only; the reviewer must inspect

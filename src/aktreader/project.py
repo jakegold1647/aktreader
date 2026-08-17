@@ -2628,6 +2628,135 @@ def list_project_documents(path: Path | str) -> list[dict[str, object]]:
     return [_document_record(row) for row in rows]
 
 
+
+def search_project_transcriptions(
+    path: Path | str,
+    *,
+    query: str,
+    field: str = "text",
+    limit: int = 50,
+) -> dict[str, object]:
+    """Search effective local transcription lines by text, document title, or tag."""
+
+    if not isinstance(query, str) or not query.strip():
+        raise ProjectStoreError("search query must be a nonblank string")
+    normalized_query = query.strip()
+    if len(normalized_query) > 200:
+        raise ProjectStoreError("search query exceeds the length limit")
+    if not isinstance(field, str) or field not in {"text", "title", "tag"}:
+        raise ProjectStoreError("search field must be text, title, or tag")
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 100:
+        raise ProjectStoreError("search limit must be an integer from 1 to 100")
+
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                documents.manifest_sha256,
+                documents.document_id,
+                documents.title,
+                documents.tags_json,
+                lines.page_index,
+                lines.page_id,
+                lines.region_id,
+                lines.line_id,
+                lines.source_span_id,
+                COALESCE(latest.revised_text, lines.text_equiv, ''),
+                COALESCE(latest.revision, 0)
+            FROM documents
+            JOIN lines ON lines.manifest_sha256 = documents.manifest_sha256
+            LEFT JOIN transcription_revisions AS latest
+                ON latest.manifest_sha256 = lines.manifest_sha256
+               AND latest.source_span_id = lines.source_span_id
+               AND latest.revision = (
+                    SELECT MAX(previous.revision)
+                    FROM transcription_revisions AS previous
+                    WHERE previous.manifest_sha256 = lines.manifest_sha256
+                      AND previous.source_span_id = lines.source_span_id
+               )
+            ORDER BY documents.created_at, lines.page_index, lines.rowid
+            """
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot search project transcriptions: {error}") from error
+    finally:
+        connection.close()
+
+    needle = normalized_query.casefold()
+    results: list[dict[str, object]] = []
+    truncated = False
+    for (
+        manifest_sha256,
+        document_id,
+        title,
+        tags_json,
+        page_index,
+        page_id,
+        region_id,
+        line_id,
+        source_span_id,
+        text,
+        revision,
+    ) in rows:
+        try:
+            tags = json.loads(tags_json)
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError("stored document tags are unreadable") from error
+        if (
+            not isinstance(manifest_sha256, str)
+            or not isinstance(document_id, str)
+            or not isinstance(title, str)
+            or not isinstance(tags, list)
+            or any(not isinstance(tag, str) for tag in tags)
+            or not isinstance(page_index, int)
+            or page_index < 0
+            or not isinstance(page_id, str)
+            or not isinstance(region_id, str | type(None))
+            or not isinstance(line_id, str)
+            or not isinstance(source_span_id, str)
+            or not isinstance(text, str)
+            or not isinstance(revision, int)
+            or revision < 0
+        ):
+            raise ProjectStoreError("project contains an invalid transcription search row")
+        searchable = {
+            "text": text,
+            "title": title,
+            "tag": "\n".join(tags),
+        }[field]
+        if needle not in searchable.casefold():
+            continue
+        result = {
+            "manifest_sha256": manifest_sha256,
+            "document_id": document_id,
+            "title": title,
+            "tags": tags,
+            "page_index": page_index,
+            "page_id": page_id,
+            "region_id": region_id,
+            "line_id": line_id,
+            "source_span_id": source_span_id,
+            "text": text,
+            "revision": revision,
+        }
+        if len(results) == limit:
+            truncated = True
+            break
+        results.append(result)
+    return {
+        "status": "READY",
+        "query": normalized_query,
+        "field": field,
+        "limit": limit,
+        "result_count": len(results),
+        "truncated": truncated,
+        "results": results,
+        "network_required": False,
+    }
+
+
 def _validated_document_tags(tags: Sequence[str]) -> list[str]:
     if isinstance(tags, (str, bytes)) or not isinstance(tags, Sequence):
         raise ProjectStoreError("document tags must be a sequence of nonblank strings")
