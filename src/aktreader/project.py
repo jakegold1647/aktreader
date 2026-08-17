@@ -2508,6 +2508,50 @@ def evaluate_htr_suggestions(
     }
 
 
+
+def list_htr_suggestion_evaluations(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+) -> list[dict[str, object]]:
+    """Return current human-vs-HTR evaluation reports for one imported document.
+
+    Reports are calculated from the latest saved human revisions at read time.
+    This function does not mark suggestions as accepted, mutate any model
+    output, or persist a derived metric as a new source of truth.
+    """
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        runs = connection.execute(
+            """
+            SELECT output_sha256, imported_at
+            FROM htr_runs
+            WHERE manifest_sha256 = ?
+            ORDER BY imported_at DESC, output_sha256
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot list imported HTR results: {error}") from error
+    finally:
+        connection.close()
+
+    evaluations: list[dict[str, object]] = []
+    for output_sha256, imported_at in runs:
+        if not isinstance(imported_at, str):
+            raise ProjectStoreError("stored HTR result import time is invalid")
+        report = evaluate_htr_suggestions(
+            root,
+            manifest_sha256=manifest_sha256,
+            result_pagexml_sha256=output_sha256,
+        )
+        evaluations.append({**report, "imported_at": imported_at})
+    return evaluations
+
+
 def _document_record(row: tuple[object, ...]) -> dict[str, object]:
     try:
         tags = json.loads(row[3])
