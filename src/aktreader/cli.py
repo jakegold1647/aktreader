@@ -887,6 +887,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=8780,
         help="loopback TCP port from 0 to 65535 (default: 8780)",
     )
+    service_serve.add_argument(
+        "--kraken-config",
+        type=Path,
+        help=(
+            "optional local checksum-pinned Kraken configuration loaded by the "
+            "service owner at startup"
+        ),
+    )
 
     pagexml = subparsers.add_parser(
         "pagexml-import",
@@ -1877,13 +1885,19 @@ def _command_service_backup_restore(args: argparse.Namespace) -> int:
 
 def _command_service_serve(args: argparse.Namespace) -> int:
     workspace = local_input_path(args.workspace, role="service workspace")
-    server = create_self_hosted_service_server(workspace, port=args.port)
+    kraken = (
+        None
+        if args.kraken_config is None
+        else LocalKraken(load_kraken_config(args.kraken_config))
+    )
+    server = create_self_hosted_service_server(workspace, port=args.port, kraken=kraken)
     _emit_json(
         {
             "status": "SERVING",
             "service_workspace": str(workspace),
             "url": server.url,
             "bind_address": "127.0.0.1",
+            "kraken_recognition_enabled": kraken is not None,
             "network_required": False,
         }
     )
