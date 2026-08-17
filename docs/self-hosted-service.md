@@ -127,11 +127,13 @@ python -m aktreader service-queue-kraken-training service-data `
   --model-description "First consented local training run"
 ```
 
-Queueing verifies the trainer executable pin and current corpus consent, then copies the config, plan,
-and regular corpus files into `service-data/training/<job-id>/`. The worker rechecks that snapshot
-and current consent immediately before calling `ketos`; it receives the config's explicit CPU/GPU
-device setting and never downloads a model or contacts a hosted trainer. Mutating the original local
-paths after queueing cannot change the queued inputs.
+Queueing verifies the trainer executable pin and current corpus consent, then copies the config and
+regular corpus files into `service-data/training/<job-id>/`. The corpus plan remains at its original
+local path because it may use relative project paths; its exact SHA-256 is pinned in the job. The
+worker rechecks the copied inputs, the pinned plan bytes, and current consent immediately before
+calling `ketos`; it receives the config's explicit CPU/GPU device setting and never downloads a
+model or contacts a hosted trainer. Changing or removing the original plan fails the job rather than
+changing its inputs, and mutations to the original config or corpus cannot affect the queued snapshot.
 
 A successful run keeps its receipt and logs in the service-owned job directory. Each generated
 `.safetensors` file is content-addressed into the model registry and attached to the selected project,
