@@ -2422,7 +2422,11 @@ def evaluate_htr_suggestions(
         ).fetchone()[0]
         rows = connection.execute(
             """
-            SELECT htr_suggestions.suggested_text, transcription_revisions.revised_text
+            SELECT
+                lines.source_span_id,
+                transcription_revisions.revision,
+                htr_suggestions.suggested_text,
+                transcription_revisions.revised_text
             FROM lines
             JOIN transcription_revisions
                 ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
@@ -2450,14 +2454,33 @@ def evaluate_htr_suggestions(
     human_revision_count = len(rows)
     suggestion_count = sum(row[0] is not None for row in rows)
     evaluated_pairs: list[tuple[str, str]] = []
-    for suggested_text, revised_text in rows:
+    human_revision_set: list[dict[str, object]] = []
+    for source_span_id, revision, suggested_text, revised_text in rows:
+        if (
+            not isinstance(source_span_id, str)
+            or not source_span_id.strip()
+            or not isinstance(revision, int)
+            or revision < 1
+            or not isinstance(revised_text, str)
+        ):
+            raise ProjectStoreError("stored human revision is invalid")
+        human_revision_set.append(
+            {
+                "source_span_id": source_span_id,
+                "revision": revision,
+                "revised_text_sha256": _revision_text_sha256(revised_text),
+            }
+        )
         if suggested_text is None:
             continue
-        if not isinstance(suggested_text, str) or not isinstance(revised_text, str):
-            raise ProjectStoreError("stored HTR suggestion or human revision is invalid")
+        if not isinstance(suggested_text, str):
+            raise ProjectStoreError("stored HTR suggestion is invalid")
         evaluated_pairs.append(
             (_normalize_htr_text(revised_text), _normalize_htr_text(suggested_text))
         )
+    human_revision_set_sha256 = hashlib.sha256(
+        _canonical_json(human_revision_set).encode("utf-8")
+    ).hexdigest()
 
     reference_char_count = sum(len(reference) for reference, _ in evaluated_pairs)
     hypothesis_char_count = sum(len(hypothesis) for _, hypothesis in evaluated_pairs)
@@ -2485,6 +2508,7 @@ def evaluate_htr_suggestions(
         "source_line_count": source_line_count,
         "run_line_count": run[2],
         "human_revision_count": human_revision_count,
+        "human_revision_set_sha256": human_revision_set_sha256,
         "suggestion_count_for_human_revisions": suggestion_count,
         "evaluated_line_count": evaluated_line_count,
         "normalization": "UNICODE_NFC_EXACT_WHITESPACE",
