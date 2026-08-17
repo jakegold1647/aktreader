@@ -36,6 +36,7 @@ from aktreader.project import (
     load_project_page_layout,
     recognize_project_with_kraken,
     revise_line_geometry,
+    search_project_transcriptions,
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
@@ -1901,6 +1902,32 @@ def list_authorized_project_htr_evaluations(
 
 
 
+def search_authorized_project_transcriptions(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    query: str,
+    field: str,
+) -> dict[str, object]:
+    """Search effective transcription lines for an authorized project viewer."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return search_project_transcriptions(
+        _managed_project_path(root, canonical_id),
+        query=query,
+        field=field,
+    )
+
+
+
 def export_authorized_project_htr_evaluation_receipt(
     service_workspace: Path | str,
     project_id: str,
@@ -2765,6 +2792,23 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "search"
+            ):
+                if set(payload) != {"query", "field"}:
+                    raise ServiceError("project search has invalid keys")
+                account = self._account()
+                report = search_authorized_project_transcriptions(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    query=payload["query"],
+                    field=payload["field"],
+                )
+                self._json(HTTPStatus.OK, report)
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "artifacts"
             ):
                 if set(payload) != {"artifact_id"}:
@@ -3040,6 +3084,11 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #review-shortcuts { font-size: .9rem; margin: 10px 0 0; }
 #project-activity { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #project-activity h2 { margin: 8px 0; }
+#project-search { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
+#project-search h2 { margin: 8px 0; }
+#search-results { display: grid; gap: 6px; list-style: none; margin: 8px 0 0; max-height: 220px;
+  overflow: auto; padding: 0; }
+.search-result { background: #fff; color: #18212f; text-align: left; }
 #activity-list { display: grid; gap: 6px; list-style: none; margin: 0; max-height: 220px;
   overflow: auto; padding: 0; }
 .activity { background: #fff; color: #18212f; text-align: left; }
@@ -3135,6 +3184,22 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <h2 id="activity-title">Recent project activity</h2>
           <ol id="activity-list" aria-live="polite"></ol>
         </section>
+        <section id="project-search" aria-labelledby="search-title">
+          <h2 id="search-title">Search project</h2>
+          <p>Search the current human-visible transcriptions, document titles, or tags.</p>
+          <form id="search-form" class="controls">
+            <label>Field
+              <select id="search-field">
+                <option value="text">Transcription</option>
+                <option value="title">Document title</option>
+                <option value="tag">Tag</option>
+              </select>
+            </label>
+            <label>Query <input id="search-query" maxlength="200" required></label>
+            <button id="search-submit" type="submit">Search</button>
+          </form>
+          <ol id="search-results" aria-live="polite"></ol>
+        </section>
         <section id="membership" class="hidden" aria-labelledby="membership-title">
           <h2 id="membership-title">Project members</h2>
           <form id="member-form">
@@ -3209,7 +3274,7 @@ const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
   activity: [], evaluations: [], members: [], accounts: [], artifacts: [], attachableArtifacts: [],
-  krakenRecognitionEnabled: false
+  searchResults: [], searchTruncated: false, krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -3227,6 +3292,11 @@ const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
 const activityList = document.getElementById("activity-list");
+const searchForm = document.getElementById("search-form");
+const searchField = document.getElementById("search-field");
+const searchQuery = document.getElementById("search-query");
+const searchSubmit = document.getElementById("search-submit");
+const searchResults = document.getElementById("search-results");
 const evaluationList = document.getElementById("evaluation-list");
 const membership = document.getElementById("membership");
 const memberForm = document.getElementById("member-form");
@@ -3363,6 +3433,75 @@ function renderActivity() {
     item.append(button);
     activityList.append(item);
   });
+}
+
+function renderSearchResults() {
+  searchResults.replaceChildren();
+  if (!state.searchResults.length) {
+    const note = document.createElement("li");
+    note.textContent = "No current search results.";
+    searchResults.append(note);
+    return;
+  }
+  state.searchResults.forEach(result => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "search-result";
+    button.textContent = result.title + " · page " + (Number(result.page_index) + 1) +
+      " · " + result.line_id + " · " + (result.text || "∅");
+    button.addEventListener("click", () => {
+      openSearchResult(result).catch(error => setStatus(error.message));
+    });
+    item.append(button);
+    searchResults.append(item);
+  });
+  if (state.searchTruncated) {
+    const note = document.createElement("li");
+    note.textContent = "Showing the first 50 matches. Refine the query to narrow it.";
+    searchResults.append(note);
+  }
+}
+async function runProjectSearch(event) {
+  event.preventDefault();
+  const query = searchQuery.value.trim();
+  if (!state.project || !query) {
+    setStatus("Enter a search query.");
+    return;
+  }
+  searchSubmit.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/search",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, field: searchField.value })
+      }
+    );
+    state.searchResults = payload.results;
+    state.searchTruncated = payload.truncated;
+    renderSearchResults();
+    setStatus(payload.result_count + " search result" +
+      (payload.result_count === 1 ? "." : "s."));
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    searchSubmit.disabled = false;
+  }
+}
+async function openSearchResult(result) {
+  if (!state.project) return;
+  if (documentSelect.value !== result.manifest_sha256) {
+    documentSelect.value = result.manifest_sha256;
+    await loadDocument();
+  }
+  if (pageSelect.value !== String(result.page_index)) {
+    pageSelect.value = String(result.page_index);
+    await loadPage();
+  }
+  selectLine(result.source_span_id);
+  setStatus("Opened search result.");
 }
 
 function renderEvaluations() {
@@ -3916,6 +4055,9 @@ async function loadProjects() {
 }
 async function loadProject() {
   state.project = state.projects.find(item => item.project_id === projectSelect.value);
+  state.searchResults = [];
+  state.searchTruncated = false;
+  renderSearchResults();
   role.textContent = state.project ? "Role: " + state.project.role : "";
   documentSelect.replaceChildren();
   const payload = await api(
@@ -4083,6 +4225,7 @@ documentSelect.addEventListener(
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 memberForm.addEventListener("submit", event => saveMemberRole(event));
 artifactForm.addEventListener("submit", event => attachArtifact(event));
+searchForm.addEventListener("submit", event => runProjectSearch(event));
 document.addEventListener("keydown", event => {
   if (event.defaultPrevented) return;
   if (
