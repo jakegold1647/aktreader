@@ -8,8 +8,10 @@ from PIL import Image
 
 from aktreader.cli import main
 from aktreader.collection import (
+    CollectionError,
     add_project_to_collection,
     create_collection,
+    export_public_collection,
     inspect_collection,
     list_collection_documents,
     search_collection,
@@ -128,6 +130,96 @@ def test_collection_discovers_document_metadata(tmp_path: Path) -> None:
     assert discovered["documents"][0]["tags"] == ["births", "Serock"]
     assert discovered["documents"][0]["page_count"] == 1
     assert discovered["documents"][0]["line_count"] == 1
+
+
+def test_collection_exports_an_explicit_static_public_release(tmp_path: Path, capsys) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    source = _source(source_root)
+    project = tmp_path / "register.aktproj"
+    collection = tmp_path / "registers.aktcollection"
+    public_release = tmp_path / "public-registers"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        title="Serock births, 1831",
+        tags=["births", "Serock"],
+        notes="Private cataloguing note",
+    )
+    create_collection(collection, name="Serock collection")
+    add_project_to_collection(collection, project)
+    match = search_collection(collection, "alexander")["matches"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=match["source_span_id"],
+        text="Aleksander public correction",
+        editor="reviewer-1",
+    )
+    add_project_to_collection(collection, project)
+
+    try:
+        export_public_collection(
+            collection,
+            public_release,
+            license_id="CC-BY-4.0",
+        )
+    except CollectionError as error:
+        assert "confirm_public" in str(error)
+    else:
+        raise AssertionError("public release must require explicit confirmation")
+    assert not public_release.exists()
+
+    report = export_public_collection(
+        collection,
+        public_release,
+        license_id="CC-BY-4.0",
+        confirm_public=True,
+    )
+    index = json.loads((public_release / "index.json").read_text(encoding="utf-8"))
+    document_url = index["documents"][0]["url"]
+    document = json.loads((public_release / document_url).read_text(encoding="utf-8"))
+
+    assert report["status"] == "PUBLISHED"
+    assert report["index_url"] == "index.json"
+    assert index["contract"]["name"] == "aktreader-public-collection"
+    assert index["license_id"] == "CC-BY-4.0"
+    assert document_url.startswith("documents/")
+    assert document_url.endswith(".json")
+    assert index["documents"][0]["title"] == "Serock births, 1831"
+    assert "notes" not in index["documents"][0]
+    assert "project_path" not in index["documents"][0]
+    assert "Private cataloguing note" not in json.dumps(index)
+    assert str(project) not in json.dumps(index)
+    assert document["pages"][0]["lines"] == [
+        {
+            "line_id": "line-1",
+            "region_id": "region-1",
+            "revision": 1,
+            "source_span_id": match["source_span_id"],
+            "text": "Aleksander public correction",
+        }
+    ]
+    assert "notes" not in document
+    assert "project_path" not in document
+
+    cli_release = tmp_path / "cli-public-registers"
+    assert main(
+        [
+            "collection-export-public",
+            str(collection),
+            "--output",
+            str(cli_release),
+            "--license-id",
+            "CC-BY-4.0",
+            "--confirm-public",
+        ]
+    ) == 0
+    cli_report = json.loads(capsys.readouterr().out)
+    assert cli_report["output"] == str(cli_release.resolve())
+    assert (cli_release / "index.json").is_file()
 
 
 def test_collection_cli_creates_indexes_and_searches(tmp_path: Path, capsys) -> None:
