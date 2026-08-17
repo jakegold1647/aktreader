@@ -224,13 +224,6 @@ def create_service_workspace(path: Path | str) -> dict[str, object]:
         )
         _initialize_database(temporary / SERVICE_DATABASE_NAME)
         os.replace(temporary, destination)
-        if owner is not None:
-            grant_project_role(
-                root,
-                project_id=project_id,
-                username=str(owner["username"]),
-                role="OWNER",
-            )
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
@@ -285,7 +278,9 @@ def _validated_username(value: object) -> str:
     if not 3 <= len(username) <= 64:
         raise ServiceError("username must contain 3 to 64 characters")
     if any(character not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for character in username):
-        raise ServiceError("username may contain only lowercase letters, digits, dot, dash, and underscore")
+        raise ServiceError(
+            "username may contain only lowercase letters, digits, dot, dash, and underscore"
+        )
     return username
 
 
@@ -675,6 +670,13 @@ def add_project_to_service(
         if managed_report["project_id"] != project_id:
             raise ServiceError("managed project identity changed during copy")
         os.replace(temporary, destination)
+        if owner is not None:
+            grant_project_role(
+                root,
+                project_id=project_id,
+                username=str(owner["username"]),
+                role="OWNER",
+            )
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
