@@ -1030,6 +1030,47 @@ def list_authorized_project_artifacts(
     return [_artifact_report(row) for row in rows]
 
 
+
+def list_authorized_attachable_project_artifacts(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List registry metadata an owner may attach to one managed project."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    inspect_project(_managed_project_path(root, canonical_project_id))
+    connection = _connection(root)
+    try:
+        attached_ids = {
+            str(row["artifact_id"])
+            for row in connection.execute(
+                """
+                SELECT artifact_id
+                FROM service_project_artifacts
+                WHERE project_id = ?
+                """,
+                (canonical_project_id,),
+            ).fetchall()
+        }
+    finally:
+        connection.close()
+    return [
+        artifact
+        for artifact in list_service_artifacts(root)
+        if str(artifact["artifact_id"]) not in attached_ids
+    ]
+
+
+
 def attach_authorized_project_artifact(
     service_workspace: Path | str,
     project_id: str,
@@ -2523,6 +2564,25 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "available-artifacts"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "artifacts": list_authorized_attachable_project_artifacts(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "artifacts"
             ):
                 account = self._account()
@@ -2964,6 +3024,18 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           </form>
           <ul id="member-list" aria-live="polite"></ul>
         </section>
+        <section id="artifacts" aria-labelledby="artifacts-title">
+          <h2 id="artifacts-title">Attached models and datasets</h2>
+          <p>Metadata is shown for provenance. Artifact files are never served to the browser.</p>
+          <ul id="artifact-list" aria-live="polite"></ul>
+          <form id="artifact-form" class="hidden">
+            <label>Attach registered artifact
+              <select id="artifact-select" required></select>
+            </label>
+            <button id="save-artifact" type="submit">Attach artifact</button>
+          </form>
+        </section>
+        </section>
         <section id="recognition-suggestions" aria-labelledby="suggestions-title">
           <h2 id="suggestions-title">Recognition suggestions</h2>
           <p>Copy a local model suggestion into the editor, then review and save it as a
@@ -3006,7 +3078,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
-  activity: [], members: [], accounts: [], krakenRecognitionEnabled: false
+  activity: [], members: [], accounts: [], artifacts: [], attachableArtifacts: [],
+  krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -3029,6 +3102,10 @@ const memberForm = document.getElementById("member-form");
 const memberAccount = document.getElementById("member-account");
 const memberRole = document.getElementById("member-role");
 const memberList = document.getElementById("member-list");
+const artifactList = document.getElementById("artifact-list");
+const artifactForm = document.getElementById("artifact-form");
+const artifactSelect = document.getElementById("artifact-select");
+const saveArtifact = document.getElementById("save-artifact");
 const saveMember = document.getElementById("save-member");
 const detail = document.getElementById("detail");
 const suggestions = document.getElementById("suggestions");
@@ -3186,6 +3263,71 @@ async function loadMembership() {
   state.accounts = responses[1].accounts;
   renderMembership();
 }
+
+function renderArtifacts() {
+  artifactList.replaceChildren();
+  if (!state.artifacts.length) {
+    const note = document.createElement("li");
+    note.textContent = "No model or dataset artifacts are attached to this project.";
+    artifactList.append(note);
+  } else {
+    state.artifacts.forEach(artifact => {
+      const item = document.createElement("li");
+      item.textContent = artifact.kind + " · " + artifact.name + " · " +
+        artifact.license_id + " · SHA-256 " + artifact.sha256.slice(0, 12);
+      artifactList.append(item);
+    });
+  }
+  artifactForm.classList.toggle("hidden", !isOwner());
+  artifactSelect.replaceChildren();
+  if (!isOwner()) return;
+  state.attachableArtifacts.forEach(artifact => option(
+    artifactSelect,
+    artifact.artifact_id,
+    artifact.kind + " · " + artifact.name + " · " + artifact.sha256.slice(0, 12)
+  ));
+  saveArtifact.disabled = !artifactSelect.value;
+}
+async function loadArtifacts() {
+  if (!state.project) {
+    state.artifacts = [];
+    state.attachableArtifacts = [];
+    renderArtifacts();
+    return;
+  }
+  const base = "/api/projects/" + encodeURIComponent(state.project.project_id);
+  const attached = await api(base + "/artifacts");
+  state.artifacts = attached.artifacts;
+  if (isOwner()) {
+    const available = await api(base + "/available-artifacts");
+    state.attachableArtifacts = available.artifacts;
+  } else {
+    state.attachableArtifacts = [];
+  }
+  renderArtifacts();
+}
+async function attachArtifact(event) {
+  event.preventDefault();
+  if (!isOwner() || !artifactSelect.value) return;
+  saveArtifact.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/artifacts",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ artifact_id: artifactSelect.value })
+      }
+    );
+    await loadArtifacts();
+    setStatus(payload.artifact.name + " is now attached to this project.");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    saveArtifact.disabled = !artifactSelect.value;
+  }
+}
+
 function renderSuggestions() {
   suggestions.replaceChildren();
   const line = selectedLine();
@@ -3594,7 +3736,7 @@ async function loadProject() {
     setStatus("This project has no imported PAGE XML documents.");
     return;
   }
-  await Promise.all([loadDocument(), loadMembership()]);
+  await Promise.all([loadDocument(), loadMembership(), loadArtifacts()]);
 }
 async function saveMemberRole(event) {
   event.preventDefault();
@@ -3730,6 +3872,7 @@ documentSelect.addEventListener(
 );
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 memberForm.addEventListener("submit", event => saveMemberRole(event));
+artifactForm.addEventListener("submit", event => attachArtifact(event));
 document.addEventListener("keydown", event => {
   if (event.defaultPrevented) return;
   if (
@@ -3850,7 +3993,10 @@ document.getElementById("logout").addEventListener("click", () => {
   state.activity = [];
   state.members = [];
   state.accounts = [];
+  state.artifacts = [];
+  state.attachableArtifacts = [];
   renderMembership();
+  renderArtifacts();
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;
