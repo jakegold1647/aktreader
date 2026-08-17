@@ -2503,6 +2503,9 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
       <button id="download-pagexml" class="secondary" type="button" disabled>
         Download PAGE XML
       </button>
+      <button id="run-kraken" type="button" disabled>
+        Run local recognition
+      </button>
       <button id="logout" class="secondary" type="button">Sign out</button>
       <span id="status" role="status" aria-live="polite"></span>
     </div>
@@ -2562,7 +2565,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 
 const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
-  layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null
+  layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
+  krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -2592,6 +2596,7 @@ const downloadPagexml = document.getElementById("download-pagexml");
 const linePolygon = document.getElementById("line-polygon");
 const lineBaseline = document.getElementById("line-baseline");
 const saveLineGeometry = document.getElementById("save-line-geometry");
+const runKraken = document.getElementById("run-kraken");
 
 function setStatus(message) { status.textContent = message; }
 function apiHeaders(extra) {
@@ -2628,6 +2633,14 @@ function selectedLineGeometry() {
 }
 function canEdit() {
   return state.project && (state.project.role === "EDITOR" || state.project.role === "OWNER");
+}
+function updateRecognitionControl() {
+  const available = state.krakenRecognitionEnabled && canEdit() && currentDocument();
+  runKraken.disabled = !available;
+  runKraken.title = state.krakenRecognitionEnabled
+    ? (canEdit() ? "Queue recognition for the selected document." :
+      "Only editors and owners can queue local recognition.")
+    : "Local recognition is not configured for this service.";
 }
 function renderLines() {
   lineList.replaceChildren();
@@ -2937,6 +2950,7 @@ async function loadPage() {
   await loadImage();
   selectLine(state.selected);
   downloadPagexml.disabled = false;
+  updateRecognitionControl();
   setStatus("");
 }
 async function loadDocument() {
@@ -2977,11 +2991,32 @@ async function loadProject() {
     state.page = null;
     state.layout = null;
     downloadPagexml.disabled = true;
+    updateRecognitionControl();
     lineList.replaceChildren();
     setStatus("This project has no imported PAGE XML documents.");
     return;
   }
   await loadDocument();
+}
+async function queueKrakenRecognition() {
+  const doc = currentDocument();
+  if (!doc || !state.project || !canEdit() || !state.krakenRecognitionEnabled) return;
+  runKraken.disabled = true;
+  try {
+    const queued = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/recognitions/kraken",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manifest_sha256: doc.manifest_sha256 })
+      }
+    );
+    setStatus("Local recognition queued (job " + queued.job_id.slice(0, 8) + ").");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    updateRecognitionControl();
+  }
 }
 async function saveRevision() {
   const line = selectedLine();
@@ -3026,6 +3061,8 @@ loginForm.addEventListener("submit", async event => {
     identity.textContent = "Signed in as " + state.account.username;
     login.classList.add("hidden");
     workspace.classList.remove("hidden");
+    const health = await api("/api/healthz");
+    state.krakenRecognitionEnabled = health.kraken_recognition_enabled === true;
     await loadProjects();
     loginStatus.textContent = "";
   } catch (error) {
@@ -3044,6 +3081,7 @@ saveLineGeometry.addEventListener("click", () => saveLineGeometryRevision());
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 saveRegion.addEventListener("click", () => saveRegionRevision());
 saveReadingOrder.addEventListener("click", () => saveReadingOrderRevision());
+runKraken.addEventListener("click", () => queueKrakenRecognition());
 downloadPagexml.addEventListener("click", async () => {
   const doc = currentDocument();
   if (!doc || !state.project) return;
@@ -3104,7 +3142,9 @@ document.getElementById("logout").addEventListener("click", () => {
   state.layout = null;
   state.selectedRegion = null;
   state.drag = null;
+  state.krakenRecognitionEnabled = false;
   downloadPagexml.disabled = true;
+  updateRecognitionControl();
   if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
   state.imageUrl = null;
   image.removeAttribute("src");
