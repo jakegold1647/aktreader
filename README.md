@@ -330,8 +330,9 @@ Exports must live outside the project and will not replace an existing file unle
 `--replace-existing` is explicit.
 
 For corrected text that needs to leave the workbench without scans or model proposals, export a
-plain UTF-8 transcript, a provenance-preserving CSV, or interoperable ALTO XML. All three use
-imported text until a reviewer has saved a human revision; they never promote HTR suggestions or
+plain UTF-8 transcript, a provenance-preserving CSV, interoperable ALTO XML, or a PDF presentation
+derivative. All four use imported text until a reviewer has saved a human revision; they never
+promote HTR suggestions or
 pending review proposals. The transcript keeps source line order and places a form-feed between
 pages. The CSV includes stable page/region/line identifiers, the imported text, effective text,
 revision number, and editor. The ALTO export applies current human text plus line and region
