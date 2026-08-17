@@ -921,12 +921,12 @@ def test_service_training_job_snapshots_inputs_and_registers_output(
     (corpus / "source.txt").write_text("original corpus", encoding="utf-8")
     inspected = {
         "corpus_manifest_sha256": "a" * 64,
-        "source_plan_sha256": "b" * 64,
+        "source_plan_sha256": sha256_file(plan),
     }
     observed: dict[str, Path] = {}
 
     class _Config:
-        config_sha256 = "c" * 64
+        config_sha256 = sha256_file(config)
 
     def fake_inspect(plan_path: Path, corpus_path: Path) -> dict[str, object]:
         assert plan_path.is_file()
@@ -1000,7 +1000,7 @@ def test_service_training_job_snapshots_inputs_and_registers_output(
     assert observed["plan"] == plan
     assert observed["corpus"] != corpus
     assert job["result"]["corpus_manifest_sha256"] == "a" * 64
-    assert job["result"]["source_plan_sha256"] == "b" * 64
+    assert job["result"]["source_plan_sha256"] == sha256_file(plan)
     assert job["result"]["training_receipt_sha256"] == "d" * 64
     registered_models = job["result"]["registered_models"]
     assert len(registered_models) == 1
