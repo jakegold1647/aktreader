@@ -23,7 +23,7 @@ from aktreader.project import (
 COLLECTION_CONTRACT = {"name": "aktreader-collection", "version": "1.0.0"}
 COLLECTION_MANIFEST_NAME = "collection.akt.json"
 COLLECTION_DATABASE_NAME = "collection.sqlite3"
-COLLECTION_DATABASE_VERSION = 2
+COLLECTION_DATABASE_VERSION = 3
 PUBLIC_COLLECTION_CONTRACT = {
     "name": "aktreader-public-collection",
     "version": "1.0.0",
@@ -93,6 +93,22 @@ def _create_document_index(connection: sqlite3.Connection) -> None:
     )
 
 
+def _create_saved_search_index(connection: sqlite3.Connection) -> None:
+    connection.executescript(
+        """
+        CREATE TABLE saved_searches (
+            search_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+            query TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        CREATE INDEX saved_searches_updated_at
+            ON saved_searches(updated_at DESC, search_id);
+        """
+    )
+
+
 def _migrate_database(path: Path) -> None:
     connection = sqlite3.connect(path)
     try:
@@ -103,8 +119,13 @@ def _migrate_database(path: Path) -> None:
         with connection:
             if version == 1:
                 _create_document_index(connection)
+                connection.execute("PRAGMA user_version = 2")
+                version = 2
+            if version == 2:
+                _create_saved_search_index(connection)
                 connection.execute(f"PRAGMA user_version = {COLLECTION_DATABASE_VERSION}")
-            elif version != COLLECTION_DATABASE_VERSION:
+                version = COLLECTION_DATABASE_VERSION
+            if version != COLLECTION_DATABASE_VERSION:
                 raise CollectionError(
                     f"collection database has unsupported schema version {version}"
                 )
@@ -173,6 +194,7 @@ def _initialize_database(path: Path) -> None:
                 """
             )
             _create_document_index(connection)
+            _create_saved_search_index(connection)
     finally:
         connection.close()
 
@@ -390,6 +412,190 @@ def inspect_collection(path: Path | str) -> dict[str, object]:
         "document_count": document_count,
         "indexed_line_count": indexed_line_count,
         "network_required": False,
+    }
+
+
+def _saved_search_name(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise CollectionError("saved search name must be a nonblank string")
+    normalized = value.strip()
+    if len(normalized) > 120:
+        raise CollectionError("saved search name exceeds the length limit")
+    return normalized
+
+
+def _saved_search_query(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise CollectionError("saved search query must be a nonblank string")
+    normalized = value.strip()
+    if len(normalized) > 200:
+        raise CollectionError("saved search query exceeds the length limit")
+    return normalized
+
+
+def _saved_search_id(value: object) -> str:
+    if not isinstance(value, str):
+        raise CollectionError("saved search ID must be a UUID")
+    try:
+        return str(uuid.UUID(value))
+    except ValueError as error:
+        raise CollectionError("saved search ID must be a UUID") from error
+
+
+def save_collection_search(
+    collection: Path | str,
+    *,
+    name: str,
+    query: str,
+) -> dict[str, object]:
+    """Create or update one private, named collection text search."""
+
+    normalized_name = _saved_search_name(name)
+    normalized_query = _saved_search_query(query)
+    root = _required_collection_root(collection)
+    connection = sqlite3.connect(root / COLLECTION_DATABASE_NAME)
+    try:
+        with connection:
+            existing = connection.execute(
+                """
+                SELECT search_id, created_at
+                FROM saved_searches
+                WHERE name = ? COLLATE NOCASE
+                """,
+                (normalized_name,),
+            ).fetchone()
+            now = _timestamp()
+            if existing is None:
+                search_id = str(uuid.uuid4())
+                connection.execute(
+                    """
+                    INSERT INTO saved_searches (
+                        search_id, name, query, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (search_id, normalized_name, normalized_query, now, now),
+                )
+                created_at = now
+                status = "CREATED"
+            else:
+                search_id, created_at = existing
+                if not isinstance(search_id, str) or not isinstance(created_at, str):
+                    raise CollectionError("local collection has an invalid saved search")
+                connection.execute(
+                    """
+                    UPDATE saved_searches
+                    SET name = ?, query = ?, updated_at = ?
+                    WHERE search_id = ?
+                    """,
+                    (normalized_name, normalized_query, now, search_id),
+                )
+                status = "UPDATED"
+    except sqlite3.Error as error:
+        raise CollectionError(f"cannot save collection search: {error}") from error
+    finally:
+        connection.close()
+    return {
+        "status": status,
+        "collection": str(root),
+        "search_id": search_id,
+        "name": normalized_name,
+        "query": normalized_query,
+        "created_at": created_at,
+        "updated_at": now,
+        "network_required": False,
+    }
+
+
+def list_collection_saved_searches(path: Path | str) -> dict[str, object]:
+    """List private saved collection searches without evaluating them."""
+
+    root = _required_collection_root(path)
+    connection = sqlite3.connect(root / COLLECTION_DATABASE_NAME)
+    try:
+        rows = connection.execute(
+            """
+            SELECT search_id, name, query, created_at, updated_at
+            FROM saved_searches
+            ORDER BY updated_at DESC, search_id
+            """
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise CollectionError(f"cannot list saved collection searches: {error}") from error
+    finally:
+        connection.close()
+
+    searches: list[dict[str, str]] = []
+    for search_id, name, query, created_at, updated_at in rows:
+        if (
+            not isinstance(name, str)
+            or not isinstance(query, str)
+            or not isinstance(created_at, str)
+            or not isinstance(updated_at, str)
+        ):
+            raise CollectionError("local collection has an invalid saved search")
+        searches.append(
+            {
+                "search_id": _saved_search_id(search_id),
+                "name": name,
+                "query": query,
+                "created_at": created_at,
+                "updated_at": updated_at,
+            }
+        )
+    return {
+        "status": "READY",
+        "collection": str(root),
+        "search_count": len(searches),
+        "searches": searches,
+        "network_required": False,
+    }
+
+
+def run_collection_saved_search(
+    collection: Path | str,
+    *,
+    search_id: str,
+    limit: int = 100,
+) -> dict[str, object]:
+    """Evaluate one private saved search against the current local index."""
+
+    canonical_search_id = _saved_search_id(search_id)
+    root = _required_collection_root(collection)
+    connection = sqlite3.connect(root / COLLECTION_DATABASE_NAME)
+    try:
+        row = connection.execute(
+            """
+            SELECT name, query, created_at, updated_at
+            FROM saved_searches
+            WHERE search_id = ?
+            """,
+            (canonical_search_id,),
+        ).fetchone()
+    except sqlite3.Error as error:
+        raise CollectionError(f"cannot load saved collection search: {error}") from error
+    finally:
+        connection.close()
+    if row is None:
+        raise CollectionError("saved collection search was not found")
+    name, query, created_at, updated_at = row
+    if (
+        not isinstance(name, str)
+        or not isinstance(query, str)
+        or not isinstance(created_at, str)
+        or not isinstance(updated_at, str)
+    ):
+        raise CollectionError("local collection has an invalid saved search")
+    report = search_collection(root, query, limit=limit)
+    return {
+        **report,
+        "saved_search": {
+            "search_id": canonical_search_id,
+            "name": name,
+            "query": query,
+            "created_at": created_at,
+            "updated_at": updated_at,
+        },
     }
 
 
