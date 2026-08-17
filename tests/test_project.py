@@ -1068,6 +1068,7 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     assert report["engine"] == "kraken"
     assert report["source_line_count"] == report["run_line_count"] == 1
     assert report["human_revision_count"] == report["evaluated_line_count"] == 1
+    assert len(report["human_revision_set_sha256"]) == 64
     assert report["suggestion_count_for_human_revisions"] == 1
     assert report["normalization"] == "UNICODE_NFC_EXACT_WHITESPACE"
     assert report["reference_character_count"] == report["hypothesis_character_count"] == 3
@@ -1088,6 +1089,7 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     assert evaluations[0]["result_pagexml_sha256"] == htr["result_pagexml_sha256"]
     assert evaluations[0]["engine"] == "kraken"
     assert evaluations[0]["character_error_rate"] == 1 / 3
+    assert evaluations[0]["human_revision_set_sha256"] == report["human_revision_set_sha256"]
     assert isinstance(evaluations[0]["imported_at"], str)
 
 
