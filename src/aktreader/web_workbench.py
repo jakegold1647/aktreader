@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from http import HTTPStatus
+from io import BytesIO
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse
@@ -29,6 +30,7 @@ from aktreader.project import (
 
 LOOPBACK_HOST = "127.0.0.1"
 MAX_REQUEST_BYTES = 65536
+THUMBNAIL_MAX_SIZE = (240, 180)
 
 
 class WebWorkbenchError(ValueError):
@@ -139,6 +141,9 @@ def _document_pages(project: Path, manifest_sha256: str) -> dict[str, object]:
                 "width_px": page["width_px"],
                 "height_px": page["height_px"],
                 "page_url": f"/api/page?{_page_query(manifest_sha256, int(page['page_index']))}",
+                "thumbnail_url": (
+                    f"/api/thumbnail?{_page_query(manifest_sha256, int(page['page_index']))}"
+                ),
             }
             for page in pages
         ],
@@ -192,6 +197,33 @@ def _image_payload(project: Path, manifest_sha256: str, page_index: int) -> tupl
     except OSError as error:
         raise WebWorkbenchError("project image format is unreadable") from error
     return media_type, image
+
+
+def _thumbnail_payload(
+    project: Path,
+    manifest_sha256: str,
+    page_index: int,
+) -> tuple[str, bytes]:
+    page = load_project_page(
+        project,
+        manifest_sha256=_require_manifest_sha256(manifest_sha256),
+        page_index=_require_page_index(page_index),
+    )
+    image_path = Path(str(page["image_path"]))
+    try:
+        with Image.open(image_path) as opened:
+            thumbnail = opened.convert("RGB")
+    except OSError as error:
+        raise WebWorkbenchError("project image format is unreadable") from error
+    try:
+        thumbnail.thumbnail(THUMBNAIL_MAX_SIZE, Image.Resampling.LANCZOS)
+        buffer = BytesIO()
+        thumbnail.save(buffer, format="PNG", optimize=False)
+        return "image/png", buffer.getvalue()
+    except OSError as error:
+        raise WebWorkbenchError("project thumbnail cannot be rendered") from error
+    finally:
+        thumbnail.close()
 
 
 def _revision_payload(project: Path, payload: object) -> dict[str, object]:
@@ -338,6 +370,13 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                         _require_page_index(_query_value(query, "page_index")),
                     )
                     self._bytes(HTTPStatus.OK, media_type, image)
+                elif parsed.path == "/api/thumbnail":
+                    media_type, image = _thumbnail_payload(
+                        project,
+                        _query_value(query, "manifest_sha256"),
+                        _require_page_index(_query_value(query, "page_index")),
+                    )
+                    self._bytes(HTTPStatus.OK, media_type, image)
                 else:
                     self._error(HTTPStatus.NOT_FOUND, "route was not found")
             except (ProjectStoreError, WebWorkbenchError) as error:
@@ -393,6 +432,11 @@ main { display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
   gap: 16px; padding: 16px; }
 .panel { background: white; border: 1px solid #d9e1ea; border-radius: 8px; padding: 14px; }
 .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+#page-thumbnails { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; }
+.page-thumb { background: #e2e8f0; border: 2px solid transparent; color: #18212f;
+  display: grid; gap: 3px; min-width: 96px; padding: 4px; text-align: center; }
+.page-thumb.selected { border-color: #0f766e; }
+.page-thumb img { display: block; height: 72px; object-fit: contain; width: 96px; }
 label { display: grid; gap: 4px; font-size: .85rem; font-weight: 650; }
 select, input, textarea, button { font: inherit; }
 select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
@@ -429,6 +473,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     <label>Document <select id="document"></select></label>
     <label>Page <select id="page"></select></label>
   </div>
+  <div id="page-thumbnails" aria-label="Page thumbnails"></div>
   <div class="scan"><img id="image" alt="Selected source page">
     <svg id="overlay" aria-label="PAGE XML line bounds"></svg></div>
 </section>
@@ -454,11 +499,12 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 </main>
 <script>
 const state = {
-  document: null, page: null, lines: [], selected: null, selectedRegion: null, regionOrder: [],
-  drag: null
+  document: null, page: null, pages: [], lines: [], selected: null, selectedRegion: null,
+  regionOrder: [], drag: null
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
+const pageThumbnails = document.getElementById("page-thumbnails");
 const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
@@ -509,6 +555,26 @@ function selectLine(sourceSpanId) {
     ].join("\n");
   }
 }
+function renderPageThumbnails() {
+  pageThumbnails.replaceChildren();
+  state.pages.forEach((page, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "page-thumb" + (page.page_url === pageSelect.value ? " selected" : "");
+    const preview = document.createElement("img");
+    preview.src = page.thumbnail_url;
+    preview.alt = "Page " + (index + 1) + ": " + page.page_id;
+    const label = document.createElement("small");
+    label.textContent = "Page " + (index + 1);
+    button.append(preview, label);
+    button.addEventListener("click", () => {
+      pageSelect.value = page.page_url;
+      loadPage().catch(error => setStatus(error.message));
+    });
+    pageThumbnails.append(button);
+  });
+}
+
 function renderLines() {
   lineList.replaceChildren();
   state.lines.forEach(line => {
@@ -649,7 +715,7 @@ async function loadPage() {
   state.selectedRegion = state.page.regions.length ? state.page.regions[0].region_id : null;
   state.regionOrder = [...state.page.reading_order.region_ids];
   image.src = state.page.image_url;
-  renderLines(); renderRegions(); renderReadingOrder(); drawOverlay();
+  renderPageThumbnails(); renderLines(); renderRegions(); renderReadingOrder(); drawOverlay();
   selectLine(state.selected);
 }
 async function loadDocument() {
@@ -657,10 +723,12 @@ async function loadDocument() {
     "/api/pages?manifest_sha256=" + encodeURIComponent(documentSelect.value)
   );
   pageSelect.replaceChildren();
+  state.pages = response.pages;
   response.pages.forEach((page, index) => {
     option(pageSelect, page.page_url,
       (index + 1) + " of " + response.pages.length + ". " + page.page_id);
   });
+  renderPageThumbnails();
   if (response.pages.length) await loadPage();
 }
 async function boot() {
