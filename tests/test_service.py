@@ -316,6 +316,8 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "AKT Reader collaborative workbench" in workbench
         assert "Save region outline" in workbench
         assert "Save line outline" in workbench
+        assert "Recent project activity" in workbench
+        assert "/activity" in workbench
         assert "Undo latest correction" in workbench
         assert "/transcriptions/undo" in workbench
         assert "Save reading order" in workbench
@@ -597,6 +599,27 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert undone_page_response.status == 200
         assert undone_page["lines"][0]["text"] == page["lines"][0]["text"]
         assert undone_page["lines"][0]["revision"] == 2
+
+        activity_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/activity"
+        )
+        connection.request("GET", activity_route, headers=authorization)
+        activity_response = connection.getresponse()
+        activity = json.loads(activity_response.read())["activity"]
+        assert activity_response.status == 200
+        assert activity["manifest_sha256"] == manifest_sha256
+        assert activity["network_required"] is False
+        assert len(activity["events"]) == 5
+        assert {event["kind"] for event in activity["events"]} == {
+            "TRANSCRIPTION",
+            "LINE_GEOMETRY",
+            "REGION_GEOMETRY",
+            "READING_ORDER",
+        }
+        assert all("project" not in event for event in activity["events"])
+        assert all("prior_text" not in event for event in activity["events"])
+        assert all("revised_text" not in event for event in activity["events"])
+        assert all(event["editor"] == "editor" for event in activity["events"])
 
         connection.request(
             "POST",

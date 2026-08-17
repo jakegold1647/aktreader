@@ -2805,6 +2805,125 @@ def undo_line_transcription(
     return result
 
 
+def list_project_activity(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    limit: int = 100,
+) -> dict[str, object]:
+    """List bounded, content-free revision activity for one imported document."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if (
+        isinstance(limit, bool)
+        or not isinstance(limit, int)
+        or not 1 <= limit <= 500
+    ):
+        raise ProjectStoreError("activity limit must be an integer from 1 to 500")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                kind,
+                page_index,
+                source_span_id,
+                line_id,
+                region_id,
+                revision,
+                editor,
+                created_at
+            FROM (
+                SELECT
+                    'TRANSCRIPTION' AS kind,
+                    lines.page_index,
+                    lines.source_span_id,
+                    lines.line_id,
+                    lines.region_id,
+                    transcription_revisions.revision,
+                    transcription_revisions.editor,
+                    transcription_revisions.created_at
+                FROM transcription_revisions
+                JOIN lines
+                    ON lines.manifest_sha256 = transcription_revisions.manifest_sha256
+                   AND lines.source_span_id = transcription_revisions.source_span_id
+                WHERE transcription_revisions.manifest_sha256 = ?
+                UNION ALL
+                SELECT
+                    'LINE_GEOMETRY' AS kind,
+                    lines.page_index,
+                    lines.source_span_id,
+                    lines.line_id,
+                    lines.region_id,
+                    line_geometry_revisions.revision,
+                    line_geometry_revisions.editor,
+                    line_geometry_revisions.created_at
+                FROM line_geometry_revisions
+                JOIN lines
+                    ON lines.manifest_sha256 = line_geometry_revisions.manifest_sha256
+                   AND lines.source_span_id = line_geometry_revisions.source_span_id
+                WHERE line_geometry_revisions.manifest_sha256 = ?
+                UNION ALL
+                SELECT
+                    'REGION_GEOMETRY' AS kind,
+                    region_geometry_revisions.page_index,
+                    NULL AS source_span_id,
+                    NULL AS line_id,
+                    region_geometry_revisions.region_id,
+                    region_geometry_revisions.revision,
+                    region_geometry_revisions.editor,
+                    region_geometry_revisions.created_at
+                FROM region_geometry_revisions
+                WHERE region_geometry_revisions.manifest_sha256 = ?
+                UNION ALL
+                SELECT
+                    'READING_ORDER' AS kind,
+                    page_reading_order_revisions.page_index,
+                    NULL AS source_span_id,
+                    NULL AS line_id,
+                    NULL AS region_id,
+                    page_reading_order_revisions.revision,
+                    page_reading_order_revisions.editor,
+                    page_reading_order_revisions.created_at
+                FROM page_reading_order_revisions
+                WHERE page_reading_order_revisions.manifest_sha256 = ?
+            )
+            ORDER BY created_at DESC, kind ASC, page_index ASC, revision DESC
+            LIMIT ?
+            """,
+            (
+                manifest_sha256,
+                manifest_sha256,
+                manifest_sha256,
+                manifest_sha256,
+                limit,
+            ),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project activity: {error}") from error
+    finally:
+        connection.close()
+    events = [
+        {
+            "kind": row[0],
+            "page_index": int(row[1]),
+            "source_span_id": row[2],
+            "line_id": row[3],
+            "region_id": row[4],
+            "revision": int(row[5]),
+            "editor": row[6],
+            "created_at": row[7],
+        }
+        for row in rows
+    ]
+    return {
+        "manifest_sha256": manifest_sha256,
+        "events": events,
+        "network_required": False,
+    }
+
+
 def _latest_human_revisions(
     connection: sqlite3.Connection,
     *,

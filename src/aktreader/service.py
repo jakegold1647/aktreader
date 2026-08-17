@@ -26,6 +26,7 @@ from aktreader.project import (
     ProjectStoreError,
     export_human_pagexml,
     inspect_project,
+    list_project_activity,
     list_project_documents,
     load_project_page,
     load_project_page_layout,
@@ -1684,6 +1685,29 @@ def load_authorized_project_page(
     )
     return {key: value for key, value in page.items() if key != "image_path"}
 
+def list_authorized_project_activity(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+) -> dict[str, object]:
+    """List document activity for an authorized viewer without exposing local paths."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return list_project_activity(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+    )
+
+
 def load_authorized_project_layout(
     service_workspace: Path | str,
     project_id: str,
@@ -2114,6 +2138,27 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 return
             if (
+                len(parts) == 7
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "activity"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "activity": list_authorized_project_activity(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                            manifest_sha256=parts[5],
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
                 len(parts) == 8
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "documents"
@@ -2525,6 +2570,11 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 .actions { align-items: center; display: flex; gap: 8px; margin-top: 8px; }
 #status, #detail, #review-shortcuts { color: #475569; white-space: pre-wrap; }
 #review-shortcuts { font-size: .9rem; margin: 10px 0 0; }
+#project-activity { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
+#project-activity h2 { margin: 8px 0; }
+#activity-list { display: grid; gap: 6px; list-style: none; margin: 0; max-height: 220px;
+  overflow: auto; padding: 0; }
+.activity { background: #fff; color: #18212f; text-align: left; }
 #recognition-suggestions { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #recognition-suggestions h2 { margin: 8px 0; }
 #suggestions { display: grid; gap: 8px; }
@@ -2600,6 +2650,10 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
         </div>
         <p id="review-shortcuts">Keyboard: J/↓ next line · K/↑ previous line ·
           Ctrl/⌘+Enter saves a reviewed correction (editors and owners).</p>
+        <section id="project-activity" aria-labelledby="activity-title">
+          <h2 id="activity-title">Recent project activity</h2>
+          <ol id="activity-list" aria-live="polite"></ol>
+        </section>
         <section id="recognition-suggestions" aria-labelledby="suggestions-title">
           <h2 id="suggestions-title">Recognition suggestions</h2>
           <p>Copy a local model suggestion into the editor, then review and save it as a
@@ -2642,7 +2696,7 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
-  krakenRecognitionEnabled: false
+  activity: [], krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -2659,6 +2713,7 @@ const pageDetail = document.getElementById("page-detail");
 const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
+const activityList = document.getElementById("activity-list");
 const detail = document.getElementById("detail");
 const suggestions = document.getElementById("suggestions");
 const text = document.getElementById("text");
@@ -2730,6 +2785,49 @@ function renderLines() {
     button.textContent = line.line_id + " · revision " + line.revision + " · " + (line.text || "∅");
     button.addEventListener("click", () => selectLine(line.source_span_id));
     lineList.append(button);
+  });
+}
+function renderActivity() {
+  activityList.replaceChildren();
+  if (!state.activity.length) {
+    const note = document.createElement("li");
+    note.textContent = "No human revision activity for this document yet.";
+    activityList.append(note);
+    return;
+  }
+  const names = {
+    TRANSCRIPTION: "transcription",
+    LINE_GEOMETRY: "line outline",
+    REGION_GEOMETRY: "region outline",
+    READING_ORDER: "reading order"
+  };
+  state.activity.forEach(event => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "activity";
+    const scope = event.line_id
+      ? "line " + event.line_id
+      : (event.region_id
+        ? "region " + event.region_id
+        : "page " + (Number(event.page_index) + 1));
+    button.textContent = event.created_at + " · " + event.editor + " · " +
+      (names[event.kind] || event.kind) + " · " + scope +
+      " · revision " + event.revision;
+    button.addEventListener("click", async () => {
+      if (String(event.page_index) !== pageSelect.value) {
+        pageSelect.value = String(event.page_index);
+        try {
+          await loadPage();
+        } catch (error) {
+          setStatus(error.message);
+          return;
+        }
+      }
+      if (event.source_span_id) selectLine(event.source_span_id);
+    });
+    item.append(button);
+    activityList.append(item);
   });
 }
 function renderSuggestions() {
@@ -3067,15 +3165,24 @@ async function loadPage() {
   const pagePath = "/api/projects/" + encodeURIComponent(state.project.project_id) +
     "/documents/" + encodeURIComponent(doc.manifest_sha256) +
     "/pages/" + encodeURIComponent(pageSelect.value);
-  const responses = await Promise.all([api(pagePath), api(pagePath + "/layout")]);
+  const responses = await Promise.all([
+    api(pagePath),
+    api(pagePath + "/layout"),
+    api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/activity"
+    )
+  ]);
   state.page = responses[0].page;
   state.layout = responses[1].layout;
+  state.activity = responses[2].activity.events;
   state.selected = state.page.lines.length ? state.page.lines[0].source_span_id : null;
   state.selectedRegion = state.layout.regions.length ? state.layout.regions[0].region_id : null;
   pageDetail.textContent = "Page " + (Number(pageSelect.value) + 1) + " · " +
     state.page.page_id + " · " + state.page.lines.length + " lines · " +
     state.layout.regions.length + " regions";
   renderLayout();
+  renderActivity();
   await loadImage();
   selectLine(state.selected);
   downloadPagexml.disabled = false;
@@ -3119,6 +3226,8 @@ async function loadProject() {
   if (!state.documents.length) {
     state.page = null;
     state.layout = null;
+    state.activity = [];
+    renderActivity();
     downloadPagexml.disabled = true;
     updateRecognitionControl();
     lineList.replaceChildren();
@@ -3334,6 +3443,7 @@ document.getElementById("logout").addEventListener("click", () => {
   state.documents = [];
   state.page = null;
   state.layout = null;
+  state.activity = [];
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;
