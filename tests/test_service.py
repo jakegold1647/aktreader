@@ -289,6 +289,7 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert workbench_response.status == 200
         assert "AKT Reader collaborative workbench" in workbench
         assert "Save region outline" in workbench
+        assert "Save line outline" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
         assert "Content-Security-Policy" in workbench_response.headers
@@ -352,6 +353,8 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
             "region_ids": ["region-1", "region-2"],
         }
         assert layout["regions"][0]["revision"] == 0
+        assert layout["lines"][0]["source_span_id"] == source_span_id
+        assert layout["lines"][0]["revision"] == 0
 
         line_geometry_payload = json.dumps(
             {
@@ -374,6 +377,18 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert line_geometry["status"] == "SAVED"
         assert line_geometry["revision"] == 1
         assert "project" not in line_geometry
+
+        connection.request("GET", layout_route, headers=authorization)
+        revised_layout_response = connection.getresponse()
+        revised_layout = json.loads(revised_layout_response.read())["layout"]
+        assert revised_layout_response.status == 200
+        assert revised_layout["lines"][0] == {
+            "source_span_id": source_span_id,
+            "line_id": "line-1",
+            "polygon": [[1, 1], [18, 1], [18, 9], [1, 9]],
+            "baseline": None,
+            "revision": 1,
+        }
 
         connection.request(
             "POST",
