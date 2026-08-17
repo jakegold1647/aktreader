@@ -296,6 +296,10 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "Save line outline" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
+        assert "Run local recognition" in workbench
+        assert "/api/healthz" in workbench
+        assert "/recognitions/kraken" in workbench
+        assert "kraken_config" not in workbench
         assert "Content-Security-Policy" in workbench_response.headers
 
         image_route = (
