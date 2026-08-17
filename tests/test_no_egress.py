@@ -84,8 +84,8 @@ LOOPBACK_ONLY_IMPORTS: dict[str, frozenset[str]] = {
 }
 
 # The reviewed local-only runtime dependency set (see dependency-licenses.json
-# for the full transitive license inventory). Neither package opens sockets.
-REVIEWED_RUNTIME_DEPENDENCIES = ["jsonschema", "pillow"]
+# for the full transitive license inventory). None of these packages opens sockets.
+REVIEWED_RUNTIME_DEPENDENCIES = ["jsonschema", "pillow", "pypdfium2"]
 
 
 def _imported_names(tree: ast.Module) -> list[tuple[int, str]]:
