@@ -25,7 +25,7 @@ from aktreader.service import (
 
 def _managed_project(tmp_path: Path) -> tuple[Path, Path, str]:
     project = tmp_path / "register.aktproj"
-    created = create_project(project, name="Serock civil register")
+    create_project(project, name="Serock civil register")
     workspace = tmp_path / "service"
     create_service_workspace(workspace)
     added = add_project_to_service(workspace, project)
