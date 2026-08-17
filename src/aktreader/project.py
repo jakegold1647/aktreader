@@ -1551,6 +1551,123 @@ def _materialize_project_pagexml_for_kraken(
     document.write(output, encoding="utf-8", xml_declaration=True)
 
 
+def segment_project_with_kraken(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    kraken: LocalKraken,
+    title: str | None = None,
+) -> dict[str, object]:
+    """Create a new, provenance-linked PAGE XML layout document from project images.
+
+    The imported source document remains immutable. Each managed page image is copied into a
+    temporary local workspace, segmented by the configured Kraken baseline model, and combined
+    into a new local PAGE XML import for visual correction and subsequent recognition.
+    """
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if title is not None and (not isinstance(title, str) or not title.strip()):
+        raise ProjectStoreError("layout document title must be a nonblank string")
+    root = _required_project_root(project)
+    if not isinstance(kraken, LocalKraken):
+        raise ProjectStoreError("kraken runner must be a LocalKraken instance")
+    source_document = next(
+        (
+            document
+            for document in list_project_documents(root)
+            if document["manifest_sha256"] == manifest_sha256
+        ),
+        None,
+    )
+    if source_document is None:
+        raise ProjectStoreError("project document was not found for Kraken layout")
+    page_count = source_document["page_count"]
+    if not isinstance(page_count, int) or page_count < 1:
+        raise ProjectStoreError("project document has an invalid page count")
+
+    with tempfile.TemporaryDirectory(
+        prefix=".aktreader-project-kraken-layout-",
+        dir=root.parent,
+    ) as temporary:
+        workspace = Path(temporary)
+        combined_root = ET.Element("PcGts")
+        metadata = ET.SubElement(combined_root, "Metadata")
+        ET.SubElement(metadata, "Creator").text = "AKT Reader local Kraken baseline segmentation"
+        results = []
+        for page_index in range(page_count):
+            page_record = load_project_page(
+                root,
+                manifest_sha256=manifest_sha256,
+                page_index=page_index,
+            )
+            image = Path(str(page_record["image_path"])).resolve()
+            if root not in image.parents or image.is_symlink() or not image.is_file():
+                raise ProjectStoreError("project image is invalid for local Kraken layout")
+            suffix = image.suffix.lower()
+            if not suffix:
+                raise ProjectStoreError("project image has no file extension for local Kraken layout")
+            materialized_image = workspace / f"page-{page_index:04d}{suffix}"
+            shutil.copyfile(image, materialized_image)
+            segmented = workspace / f"page-{page_index:04d}.page.xml"
+            result = kraken.segment_image(materialized_image, segmented)
+            try:
+                segmented_document = ET.parse(segmented)
+            except (OSError, ET.ParseError) as error:
+                raise ProjectStoreError("cannot parse local Kraken PAGE XML layout") from error
+            pages = [
+                element
+                for element in segmented_document.iter()
+                if element.tag.rsplit("}", 1)[-1] == "Page"
+            ]
+            if len(pages) != 1:
+                raise ProjectStoreError(
+                    "local Kraken PAGE XML layout must contain exactly one page per image"
+                )
+            pages[0].set("imageFilename", materialized_image.name)
+            combined_root.append(pages[0])
+            results.append(
+                {
+                    "page_index": page_index,
+                    "input_image_sha256": result.source_sha256,
+                    "layout_pagexml_sha256": result.output_sha256,
+                }
+            )
+        combined = workspace / "kraken-layout.page.xml"
+        ET.ElementTree(combined_root).write(combined, encoding="utf-8", xml_declaration=True)
+        imported = import_pagexml_into_project(root, combined, image_root=workspace)
+
+    source_tags = source_document["tags"]
+    if not isinstance(source_tags, list) or not all(isinstance(tag, str) for tag in source_tags):
+        raise ProjectStoreError("project document has invalid tags")
+    derived_title = title.strip() if title is not None else f"{source_document['title']} — Kraken layout"
+    derived_tags = list(dict.fromkeys([*source_tags, "kraken-layout"]))
+    derived_notes = (
+        f"Derived from document manifest {manifest_sha256} with local Kraken baseline "
+        f"segmentation runtime {kraken.runtime_fingerprint}."
+    )
+    document = update_project_document(
+        root,
+        manifest_sha256=str(imported["manifest_sha256"]),
+        title=derived_title,
+        tags=derived_tags,
+        notes=derived_notes,
+    )
+    return {
+        "status": "SUCCEEDED",
+        "source_manifest_sha256": manifest_sha256,
+        "manifest_sha256": imported["manifest_sha256"],
+        "document_id": imported["document_id"],
+        "page_count": imported["page_count"],
+        "region_count": imported["region_count"],
+        "line_count": imported["line_count"],
+        "already_imported": imported["already_imported"],
+        "runtime_fingerprint": kraken.runtime_fingerprint,
+        "pages": results,
+        "document": document,
+        "network_required": False,
+    }
+
+
 def recognize_project_with_kraken(
     project: Path | str,
     *,
