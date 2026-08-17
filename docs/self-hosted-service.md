@@ -133,8 +133,11 @@ neither the API nor the page exposes a local filesystem path. `VIEWER` accounts 
 Every save includes the line revision that was displayed. If another correction landed first, the
 workbench shows the service's conflict message and reloads the current page instead of overwriting
 it. **Undo latest correction** appends a new revision containing the prior text; it never deletes
-the original correction and also rejects a stale revision. The source PAGE XML and image object
-remain immutable; only append-only human revisions are created.
+the original correction and also rejects a stale revision. The activity panel lets any authorized
+viewer browse those transcription, line, region, and reading-order revisions and jump to their
+source page. It reports the editor, revision, and timestamp but never exposes historical text or a
+local filesystem path. The source PAGE XML and image object remain immutable; only append-only
+human revisions are created.
 
 When the service is started with `--kraken-config`, editors and owners can queue local
 recognition for the selected document. The resulting proposals appear beside the selected line.
