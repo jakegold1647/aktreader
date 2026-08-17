@@ -16,7 +16,6 @@ from collections.abc import Iterator
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
-from typing import Any
 from urllib.parse import unquote, urlparse
 
 from aktreader.project import ProjectStoreError, inspect_project
@@ -782,7 +781,7 @@ def _public_job(report: dict[str, object]) -> dict[str, object]:
 
 
 class _ServiceRequestHandler(BaseHTTPRequestHandler):
-    server: "SelfHostedServiceServer"
+    server: SelfHostedServiceServer
 
     def log_message(self, format: str, *args: object) -> None:
         """Keep local service request details out of stdout and CI logs."""
