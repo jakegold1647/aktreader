@@ -1104,6 +1104,13 @@ def test_project_htr_evaluation_keeps_missing_suggestions_out_of_coverage(
     recognized = source_root / "page.kraken.xml"
     _write_pagexml(source, text="source text")
     _write_pagexml(recognized, text="")
+    recognized.write_text(
+        recognized.read_text(encoding="utf-8").replace(
+            "<TextEquiv><Unicode></Unicode></TextEquiv>",
+            "",
+        ),
+        encoding="utf-8",
+    )
     project = tmp_path / "register.aktproj"
     create_project(project, name="Serock births")
     imported = import_pagexml_into_project(project, source)
