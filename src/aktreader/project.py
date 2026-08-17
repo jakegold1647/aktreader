@@ -7,7 +7,9 @@ manifests.  It never opens a port, resolves a remote URI, or downloads a model.
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import json
 import math
 import os
@@ -2139,6 +2141,224 @@ def export_human_pagexml(
         "line_geometry_revision_count": len(geometries),
         "page_reading_order_revision_count": len(reading_orders),
         "region_geometry_revision_count": len(region_geometries),
+        "network_required": False,
+    }
+
+
+
+def _human_transcription_export_context(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    replace_existing: bool,
+    output_role: str,
+) -> tuple[Path, str, list[dict[str, int | str]]]:
+    """Validate one safe, local transcription export and load effective line text."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(replace_existing, bool):
+        raise ProjectStoreError("replace_existing must be a boolean")
+    root = _required_project_root(project)
+    output_path = _local_path(output, role=output_role, must_exist=False)
+    if not output_path.parent.is_dir():
+        raise ProjectStoreError(f"{output_role} parent does not exist: {output_path.parent}")
+    if output_path == root or root in output_path.parents:
+        raise ProjectStoreError(
+            f"{output_role} must be outside the project so project objects stay immutable"
+        )
+
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        source = connection.execute(
+            """
+            SELECT pagexml_imports.pagexml_sha256, source_objects.relative_path
+            FROM pagexml_imports
+            JOIN source_objects ON source_objects.sha256 = pagexml_imports.pagexml_sha256
+            WHERE pagexml_imports.manifest_sha256 = ?
+            """,
+            (manifest_sha256,),
+        ).fetchone()
+        if source is None:
+            raise ProjectStoreError("project PAGE XML import was not found")
+        rows = connection.execute(
+            """
+            SELECT
+                lines.page_index,
+                lines.page_id,
+                lines.region_id,
+                lines.line_id,
+                lines.source_span_id,
+                COALESCE(lines.text_equiv, ''),
+                COALESCE(latest.revised_text, lines.text_equiv, ''),
+                COALESCE(latest.revision, 0),
+                COALESCE(latest.editor, '')
+            FROM lines
+            LEFT JOIN transcription_revisions AS latest
+                ON latest.manifest_sha256 = lines.manifest_sha256
+               AND latest.source_span_id = lines.source_span_id
+               AND latest.revision = (
+                    SELECT MAX(previous.revision)
+                    FROM transcription_revisions AS previous
+                    WHERE previous.manifest_sha256 = lines.manifest_sha256
+                      AND previous.source_span_id = lines.source_span_id
+               )
+            WHERE lines.manifest_sha256 = ?
+            ORDER BY lines.page_index, lines.rowid
+            """,
+            (manifest_sha256,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project transcriptions for export: {error}") from error
+    finally:
+        connection.close()
+
+    source_sha256, source_relative_path = source
+    source_path = root / source_relative_path
+    if not source_path.is_file() or _sha256_file(source_path) != source_sha256:
+        raise ProjectStoreError("project PAGE XML source object is missing or checksum-mismatched")
+
+    records: list[dict[str, int | str]] = []
+    for (
+        page_index,
+        page_id,
+        region_id,
+        line_id,
+        source_span_id,
+        source_text,
+        text,
+        revision,
+        editor,
+    ) in rows:
+        if (
+            not isinstance(page_index, int)
+            or page_index < 0
+            or not isinstance(page_id, str)
+            or not page_id.strip()
+            or (region_id is not None and not isinstance(region_id, str))
+            or not isinstance(line_id, str)
+            or not line_id.strip()
+            or not isinstance(source_span_id, str)
+            or not source_span_id.strip()
+            or not isinstance(source_text, str)
+            or not isinstance(text, str)
+            or not isinstance(revision, int)
+            or revision < 0
+            or not isinstance(editor, str)
+        ):
+            raise ProjectStoreError("project contains an invalid stored transcription export row")
+        records.append(
+            {
+                "page_index": page_index,
+                "page_id": page_id,
+                "region_id": region_id or "",
+                "line_id": line_id,
+                "source_span_id": source_span_id,
+                "source_text": source_text,
+                "text": text,
+                "revision": revision,
+                "editor": editor,
+            }
+        )
+    return output_path, source_sha256, records
+
+
+def export_human_transcript(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    replace_existing: bool = False,
+) -> dict[str, object]:
+    """Export effective imported/human text as a local UTF-8 transcript.
+
+    Each PAGE XML line is written in source order. A form-feed line separates
+    pages. Imported HTR proposals and pending offline-review proposals are
+    deliberately excluded; only source text or the latest saved human revision
+    is emitted.
+    """
+
+    output_path, source_sha256, rows = _human_transcription_export_context(
+        project,
+        output,
+        manifest_sha256=manifest_sha256,
+        replace_existing=replace_existing,
+        output_role="transcript export",
+    )
+    rendered_lines: list[str] = []
+    previous_page_index: int | None = None
+    for row in rows:
+        page_index = int(row["page_index"])
+        if previous_page_index is not None and page_index != previous_page_index:
+            rendered_lines.append("\f")
+        rendered_lines.append(str(row["text"]))
+        previous_page_index = page_index
+    rendered = ("\n".join(rendered_lines) + ("\n" if rendered_lines else "")).encode("utf-8")
+    _atomic_write_bytes(output_path, rendered, replace_existing=replace_existing)
+    return {
+        "status": "SUCCEEDED",
+        "project": str(_required_project_root(project)),
+        "manifest_sha256": manifest_sha256,
+        "source_pagexml_sha256": source_sha256,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(rendered).hexdigest(),
+        "line_count": len(rows),
+        "human_revision_count": sum(int(row["revision"]) > 0 for row in rows),
+        "page_separator": "U+000C FORM FEED",
+        "network_required": False,
+    }
+
+
+def export_human_transcriptions_csv(
+    project: Path | str,
+    output: Path | str,
+    *,
+    manifest_sha256: str,
+    replace_existing: bool = False,
+) -> dict[str, object]:
+    """Export effective imported/human line text as an interoperable local CSV.
+
+    The CSV preserves imported line identity, source text, and the latest saved
+    human revision metadata. It intentionally does not expose HTR suggestions,
+    pending offline-review proposals, project paths, or source images.
+    """
+
+    output_path, source_sha256, rows = _human_transcription_export_context(
+        project,
+        output,
+        manifest_sha256=manifest_sha256,
+        replace_existing=replace_existing,
+        output_role="transcription CSV export",
+    )
+    fieldnames = [
+        "manifest_sha256",
+        "page_index",
+        "page_id",
+        "region_id",
+        "line_id",
+        "source_span_id",
+        "source_text",
+        "text",
+        "revision",
+        "editor",
+    ]
+    stream = io.StringIO(newline="")
+    writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
+    writer.writeheader()
+    for row in rows:
+        writer.writerow({"manifest_sha256": manifest_sha256, **row})
+    rendered = stream.getvalue().encode("utf-8")
+    _atomic_write_bytes(output_path, rendered, replace_existing=replace_existing)
+    return {
+        "status": "SUCCEEDED",
+        "project": str(_required_project_root(project)),
+        "manifest_sha256": manifest_sha256,
+        "source_pagexml_sha256": source_sha256,
+        "output": str(output_path),
+        "output_sha256": hashlib.sha256(rendered).hexdigest(),
+        "line_count": len(rows),
+        "human_revision_count": sum(int(row["revision"]) > 0 for row in rows),
+        "columns": fieldnames,
         "network_required": False,
     }
 
