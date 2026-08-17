@@ -105,6 +105,7 @@ from aktreader.project import (
 )
 from aktreader.prompt import verify_reader_prompt
 from aktreader.service import (
+    LOOPBACK_HOST,
     ServiceError,
     add_project_to_service,
     attach_service_artifact,
@@ -912,6 +913,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=8780,
         help="loopback TCP port from 0 to 65535 (default: 8780)",
+    )
+    service_serve.add_argument(
+        "--container-listen",
+        action="store_true",
+        help=(
+            "bind to the container interface; use only with a host-loopback Docker "
+            "port mapping"
+        ),
     )
     service_serve.add_argument(
         "--kraken-config",
@@ -1933,13 +1942,23 @@ def _command_service_serve(args: argparse.Namespace) -> int:
         if args.kraken_config is None
         else LocalKraken(load_kraken_config(args.kraken_config))
     )
-    server = create_self_hosted_service_server(workspace, port=args.port, kraken=kraken)
+    bind_address = "0.0.0.0" if args.container_listen else LOOPBACK_HOST
+    server = create_self_hosted_service_server(
+        workspace,
+        host=bind_address,
+        port=args.port,
+        kraken=kraken,
+    )
     _emit_json(
         {
             "status": "SERVING",
             "service_workspace": str(workspace),
-            "url": server.url,
-            "bind_address": "127.0.0.1",
+            "url": (
+                f"http://{LOOPBACK_HOST}:{server.server_port}"
+                if args.container_listen
+                else server.url
+            ),
+            "bind_address": bind_address,
             "kraken_recognition_enabled": kraken is not None,
             "network_required": False,
         }
