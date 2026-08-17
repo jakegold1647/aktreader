@@ -867,7 +867,9 @@ def _render_pdf_pages(
                     )
                 for page_index in range(page_count):
                     page_width, page_height = document.get_page_size(page_index)
-                    estimated_pixels = math.ceil(page_width * scale) * math.ceil(page_height * scale)
+                    estimated_width = math.ceil(page_width * scale)
+                    estimated_height = math.ceil(page_height * scale)
+                    estimated_pixels = estimated_width * estimated_height
                     if estimated_pixels > MAX_PDF_RENDER_PIXELS:
                         raise ProjectStoreError(
                             f"PDF page {page_index + 1} exceeds the local render pixel limit"
