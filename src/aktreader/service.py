@@ -3873,9 +3873,9 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.CREATED, invitation)
                 return
             if (
-                len(parts) == 6
+                len(parts) == 5
                 and parts[:3] == ["", "api", "invitations"]
-                and parts[5] == "accept"
+                and parts[4] == "accept"
             ):
                 if set(payload) != {"invite_code"}:
                     raise ServiceError("project invitation acceptance has invalid keys")
