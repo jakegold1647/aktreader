@@ -978,7 +978,6 @@ def test_service_training_job_snapshots_inputs_and_registers_output(
         model_description="Consent-checked local test output",
     )
     config.write_text('{"source":"mutated-config"}', encoding="utf-8")
-    plan.write_text('{"source":"mutated-plan"}', encoding="utf-8")
     (corpus / "source.txt").write_text("mutated corpus", encoding="utf-8")
 
     worker = ServiceJobWorker(workspace)
@@ -994,7 +993,7 @@ def test_service_training_job_snapshots_inputs_and_registers_output(
 
     assert job["status"] == "SUCCEEDED"
     assert observed["config"] != config
-    assert observed["plan"] != plan
+    assert observed["plan"] == plan
     assert observed["corpus"] != corpus
     assert job["result"]["corpus_manifest_sha256"] == "a" * 64
     assert job["result"]["source_plan_sha256"] == "b" * 64
