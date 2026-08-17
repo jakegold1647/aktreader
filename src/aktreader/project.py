@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -22,6 +23,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import pypdfium2 as pdfium
 from PIL import Image, UnidentifiedImageError
 
 from aktreader.pagexml import import_pagexml
@@ -801,6 +803,272 @@ def import_images_into_project(
         "generated_pagexml": str(source_path),
         "generated_pagexml_sha256": generated_sha256,
         "input_image_count": len(images),
+        "network_required": False,
+    }
+
+
+MIN_PDF_RENDER_DPI = 72
+MAX_PDF_RENDER_DPI = 600
+MAX_PDF_PAGE_COUNT = 500
+MAX_PDF_RENDER_PIXELS = 50_000_000
+
+
+def _require_pdf_render_dpi(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ProjectStoreError("PDF render DPI must be an integer")
+    if not MIN_PDF_RENDER_DPI <= value <= MAX_PDF_RENDER_DPI:
+        raise ProjectStoreError(
+            f"PDF render DPI must be from {MIN_PDF_RENDER_DPI} to {MAX_PDF_RENDER_DPI}"
+        )
+    return value
+
+
+def _pdfium_version() -> str:
+    value = getattr(getattr(pdfium, "PYPDFIUM_INFO", None), "version", None)
+    if not isinstance(value, str) or not value:
+        raise ProjectStoreError("local PDF renderer does not expose a version")
+    return value
+
+
+def _verify_render_directory(
+    directory: Path,
+    pages: Sequence[dict[str, object]],
+) -> None:
+    expected_names = {str(page["filename"]) for page in pages}
+    observed_names = {child.name for child in directory.iterdir() if child.is_file()}
+    if observed_names != expected_names:
+        raise ProjectStoreError("existing PDF render directory has unexpected files")
+    for page in pages:
+        candidate = directory / str(page["filename"])
+        if _sha256_file(candidate) != page["sha256"]:
+            raise ProjectStoreError("existing PDF render directory failed checksum verification")
+
+
+def _render_pdf_pages(
+    root: Path,
+    source: Path,
+    *,
+    dpi: int,
+) -> tuple[Path, str, list[dict[str, object]], str]:
+    pdf_sha256 = _sha256_file(source)
+    renderer_version = _pdfium_version()
+    scale = dpi / 72
+    temporary_parent = root / "imports" / "pdf-renders"
+    temporary_parent.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix=".render-", dir=temporary_parent))
+    try:
+        pages: list[dict[str, object]] = []
+        try:
+            with pdfium.PdfDocument(source) as document:
+                page_count = len(document)
+                if not 1 <= page_count <= MAX_PDF_PAGE_COUNT:
+                    raise ProjectStoreError(
+                        f"PDF page count must be from 1 to {MAX_PDF_PAGE_COUNT}"
+                    )
+                for page_index in range(page_count):
+                    page_width, page_height = document.get_page_size(page_index)
+                    estimated_width = math.ceil(page_width * scale)
+                    estimated_height = math.ceil(page_height * scale)
+                    estimated_pixels = estimated_width * estimated_height
+                    if estimated_pixels > MAX_PDF_RENDER_PIXELS:
+                        raise ProjectStoreError(
+                            f"PDF page {page_index + 1} exceeds the local render pixel limit"
+                        )
+                    page = document[page_index]
+                    try:
+                        bitmap = page.render(scale=scale, rev_byteorder=True)
+                        try:
+                            rendered = bitmap.to_pil().copy()
+                        finally:
+                            bitmap.close()
+                    finally:
+                        page.close()
+                    try:
+                        width_px, height_px = rendered.size
+                        if width_px * height_px > MAX_PDF_RENDER_PIXELS:
+                            raise ProjectStoreError(
+                                f"PDF page {page_index + 1} exceeds the local render pixel limit"
+                            )
+                        filename = f"page-{page_index + 1:04d}.png"
+                        output = temporary / filename
+                        rendered.save(output, format="PNG", optimize=False)
+                    finally:
+                        rendered.close()
+                    pages.append(
+                        {
+                            "page_index": page_index,
+                            "filename": filename,
+                            "sha256": _sha256_file(output),
+                            "width_px": width_px,
+                            "height_px": height_px,
+                        }
+                    )
+        except (OSError, pdfium.PdfiumError) as error:
+            raise ProjectStoreError(f"cannot render local PDF: {source}") from error
+
+        render_sha256 = hashlib.sha256(_canonical_json(pages).encode()).hexdigest()
+        renderer_key = re.sub(r"[^A-Za-z0-9._-]+", "_", renderer_version)
+        destination = (
+            temporary_parent
+            / pdf_sha256
+            / f"pypdfium2-{renderer_key}-{dpi}dpi-{render_sha256[:16]}"
+        )
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if destination.exists():
+            if not destination.is_dir():
+                raise ProjectStoreError("PDF render destination is not a directory")
+            _verify_render_directory(destination, pages)
+            shutil.rmtree(temporary)
+        else:
+            os.replace(temporary, destination)
+        return destination, renderer_version, pages, pdf_sha256
+    except Exception:
+        if temporary.exists():
+            shutil.rmtree(temporary, ignore_errors=True)
+        raise
+
+
+def _store_pdf_import_receipt(
+    root: Path,
+    *,
+    source: Path,
+    source_sha256: str,
+    render_directory: Path,
+    renderer_version: str,
+    dpi: int,
+    rendered_pages: Sequence[dict[str, object]],
+    report: dict[str, object],
+) -> tuple[Path, str]:
+    stored_pdf = _store_object(
+        root,
+        source,
+        digest=source_sha256,
+        object_kind="pdf",
+    )
+    imported_at = _timestamp()
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        with connection:
+            _insert_object(
+                connection,
+                digest=source_sha256,
+                object_kind="pdf",
+                source=source,
+                relative_path=stored_pdf,
+                imported_at=imported_at,
+            )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot store PDF source object: {error}") from error
+    finally:
+        connection.close()
+
+    manifest_path = Path(str(report["manifest"]))
+    try:
+        generated = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ProjectStoreError("generated image document manifest is unreadable") from error
+    imported_pages = generated.get("pages")
+    if not isinstance(imported_pages, list) or len(imported_pages) != len(rendered_pages):
+        raise ProjectStoreError("generated image document manifest has an invalid page count")
+    receipt_pages = []
+    for rendered, imported in zip(rendered_pages, imported_pages, strict=True):
+        image = imported.get("image") if isinstance(imported, dict) else None
+        if not isinstance(image, dict) or image.get("sha256") != rendered["sha256"]:
+            raise ProjectStoreError("generated image document manifest changed during PDF import")
+        receipt_pages.append(
+            {
+                **rendered,
+                "stored_object": image.get("stored_object"),
+            }
+        )
+
+    manifest_sha256 = str(report["manifest_sha256"])
+    payload = {
+        "contract": {"name": "aktreader-pdf-import", "version": "1.0.0"},
+        "manifest_sha256": manifest_sha256,
+        "source": {
+            "format": "PDF",
+            "path": str(source),
+            "sha256": source_sha256,
+            "size_bytes": source.stat().st_size,
+            "stored_object": stored_pdf,
+        },
+        "renderer": {
+            "name": "pypdfium2",
+            "version": renderer_version,
+            "dpi": dpi,
+        },
+        "render_directory": str(render_directory),
+        "pages": receipt_pages,
+        "network_required": False,
+    }
+    receipt_relative = Path("imports") / "pdf" / f"{manifest_sha256}.json"
+    receipt_path = root / receipt_relative
+    if receipt_path.exists():
+        try:
+            existing = json.loads(receipt_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ProjectStoreError("existing PDF import receipt is unreadable") from error
+        if _canonical_json(existing) != _canonical_json(payload):
+            raise ProjectStoreError("existing PDF import receipt conflicts with this import")
+    else:
+        _atomic_write_json(receipt_path, payload)
+    return receipt_path, stored_pdf
+
+
+def import_pdf_into_project(
+    project: Path | str,
+    source: Path | str,
+    *,
+    dpi: int = 300,
+    title: str | None = None,
+) -> dict[str, object]:
+    """Render one local PDF into an editable, content-addressed PAGE document."""
+
+    if title is not None and (not isinstance(title, str) or not title.strip()):
+        raise ProjectStoreError("PDF import title must be a nonblank string")
+    dpi = _require_pdf_render_dpi(dpi)
+    root = _required_project_root(project)
+    pdf_path = _local_path(source, role="PDF source", must_exist=True)
+    if not pdf_path.is_file() or pdf_path.suffix.lower() != ".pdf":
+        raise ProjectStoreError("PDF import source must be a local .pdf file")
+    render_directory, renderer_version, rendered_pages, rendered_source_sha256 = _render_pdf_pages(
+        root,
+        pdf_path,
+        dpi=dpi,
+    )
+    report = import_images_into_project(root, render_directory, title=title)
+    if not report["already_imported"] and title is None:
+        update_project_document(
+            root,
+            manifest_sha256=str(report["manifest_sha256"]),
+            title=pdf_path.stem,
+        )
+    source_sha256 = _sha256_file(pdf_path)
+    if source_sha256 != rendered_source_sha256:
+        raise ProjectStoreError("PDF source changed while it was being rendered")
+    receipt_path, stored_pdf = _store_pdf_import_receipt(
+        root,
+        source=pdf_path,
+        source_sha256=source_sha256,
+        render_directory=render_directory,
+        renderer_version=renderer_version,
+        dpi=dpi,
+        rendered_pages=rendered_pages,
+        report=report,
+    )
+    return {
+        **report,
+        "source_kind": "PDF",
+        "source_pdf": str(pdf_path),
+        "source_pdf_sha256": source_sha256,
+        "source_pdf_stored_object": stored_pdf,
+        "pdf_receipt": str(receipt_path),
+        "renderer": {
+            "name": "pypdfium2",
+            "version": renderer_version,
+            "dpi": dpi,
+        },
         "network_required": False,
     }
 

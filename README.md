@@ -88,8 +88,9 @@ is: none.
 - The same file re-runs representative CLI paths (`doctor`, `prompt-verify`, `compare`, `eval`) with
   socket creation disabled; any attempt to open a socket fails the run. This includes
   `pagexml-import`.
-- Runtime dependencies are `jsonschema` and `pillow` only; the full reviewed license inventory
-  (14 packages, including transitive) is `dependency-licenses.json`.
+- Runtime dependencies are `jsonschema`, `pillow`, and `pypdfium2`; the reviewed Python-package
+  license inventory (16 packages, including transitive) is `dependency-licenses.json`. PDFium wheel
+  redistributions must retain their bundled third-party notices.
 - The only external processes the package starts are content-pinned local reader and Kraken
   subprocesses. They receive only local paths and a credential-free, offline environment. Owner-side
   acquisition scripts under `tools/` do use the network and are documented in "Owner-only open
@@ -146,8 +147,8 @@ stable machine-readable report; a failed or skipped check makes the command exit
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-update-document`,
-`project-import-pagexml`, `project-import-images`, `project-import-htr-suggestions`,
-`project-export-pagexml`,
+`project-import-pagexml`, `project-import-images`, `project-import-pdf`,
+`project-import-htr-suggestions`, `project-export-pagexml`,
 `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
@@ -206,9 +207,18 @@ python -m aktreader project-import-images serock.aktproj serock-scans `
   --title "Serock births, 1890"
 ```
 
-The first image-import slice accepts Pillow-readable image formats only; it does not convert PDFs
-yet. That boundary is deliberate so the source image pixels and generated PAGE XML remain
-reproducible without adding a renderer or network service.
+For local PDFs, render into the same editable PAGE workflow with a fixed, recorded DPI. The original
+PDF is copied into the project by SHA-256, while a receipt pins its renderer version and every
+rendered page object.
+
+```powershell
+python -m aktreader project-import-pdf serock.aktproj serock-births.pdf `
+  --dpi 300 --title "Serock births, 1890"
+```
+
+PDF rendering is local-only through pypdfium2/PDFium. Imports reject remote paths, encrypted or
+unreadable documents, more than 500 pages, DPI outside 72–600, and pages above the 50-million-pixel
+safety limit; they do not extract text or call a remote OCR service.
 
 Projects are intentionally local-only and contain no training consent. Importing source material
 does not make it training data or publishable data.

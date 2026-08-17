@@ -20,6 +20,7 @@ from aktreader.project import (
     import_htr_suggestions,
     import_images_into_project,
     import_pagexml_into_project,
+    import_pdf_into_project,
     import_review_package,
     inspect_project,
     list_project_documents,
@@ -38,6 +39,16 @@ from aktreader.project import (
 
 def _write_image(path: Path) -> None:
     Image.new("L", (40, 30), color=255).save(path)
+
+
+def _write_pdf(path: Path) -> None:
+    first = Image.new("L", (40, 30), color=255)
+    second = Image.new("L", (20, 10), color=230)
+    try:
+        first.save(path, "PDF", resolution=72, save_all=True, append_images=[second])
+    finally:
+        first.close()
+        second.close()
 
 
 def _write_pagexml(path: Path, *, text: str = "Александр") -> None:
@@ -247,6 +258,74 @@ def test_project_image_import_cli_creates_a_document(tmp_path: Path, capsys) -> 
     assert report["source_kind"] == "IMAGE_DIRECTORY"
     assert report["page_count"] == 1
     assert list_project_documents(project)[0]["title"] == "Imported scans"
+
+
+def test_project_imports_a_pdf_as_editable_pagexml_with_a_source_receipt(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "serock-births.pdf"
+    _write_pdf(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    imported = import_pdf_into_project(project, source, dpi=144)
+
+    manifest = json.loads(Path(imported["manifest"]).read_text(encoding="utf-8"))
+    receipt = json.loads(Path(imported["pdf_receipt"]).read_text(encoding="utf-8"))
+    stored_pdf = project / imported["source_pdf_stored_object"]
+    document = list_project_documents(project)[0]
+    first_page = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )
+
+    assert imported["status"] == "SUCCEEDED"
+    assert imported["source_kind"] == "PDF"
+    assert imported["page_count"] == 2
+    assert imported["region_count"] == 2
+    assert imported["line_count"] == 0
+    assert imported["renderer"]["dpi"] == 144
+    assert stored_pdf.read_bytes() == source.read_bytes()
+    assert receipt["source"]["sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert receipt["source"]["stored_object"] == imported["source_pdf_stored_object"]
+    assert receipt["renderer"] == imported["renderer"]
+    assert len(receipt["pages"]) == 2
+    assert Path(receipt["render_directory"]).is_dir()
+    assert len(manifest["pages"]) == 2
+    assert all(page["regions"][0]["region_id"] == "region-0001" for page in manifest["pages"])
+    assert first_page["lines"] == []
+    assert document["title"] == "serock-births"
+
+    repeated = import_pdf_into_project(project, source, dpi=144)
+
+    assert repeated["already_imported"] is True
+    assert repeated["pdf_receipt"] == imported["pdf_receipt"]
+
+
+def test_project_pdf_import_cli_creates_a_page_document(tmp_path: Path, capsys) -> None:
+    source = tmp_path / "scans.pdf"
+    _write_pdf(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+
+    exit_code = main(
+        [
+            "project-import-pdf",
+            str(project),
+            str(source),
+            "--dpi",
+            "144",
+            "--title",
+            "Serock PDF scans",
+        ]
+    )
+    report = json.loads(capsys.readouterr().out)
+
+    assert exit_code == 0
+    assert report["source_kind"] == "PDF"
+    assert report["page_count"] == 2
+    assert list_project_documents(project)[0]["title"] == "Serock PDF scans"
 
 
 

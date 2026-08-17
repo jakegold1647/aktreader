@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "reviewed_on": "2026-07-28",
+  "reviewed_on": "2026-08-17",
   "policy": {
     "allowed_spdx": [
       "Apache-2.0",
@@ -13,16 +13,46 @@
     "copyleft_runtime_dependency_allowed": false
   },
   "declared_dependencies": {
-    "runtime": ["jsonschema", "pillow"],
-    "development": ["hypothesis", "pytest", "ruff"],
-    "build": ["setuptools"]
+    "runtime": [
+      "jsonschema",
+      "pillow",
+      "pypdfium2"
+    ],
+    "development": [
+      "hypothesis",
+      "pytest",
+      "ruff"
+    ],
+    "build": [
+      "setuptools"
+    ]
   },
   "reviewed_packages": [
-    {"name": "attrs", "relationship": "jsonschema transitive", "spdx": "MIT"},
-    {"name": "colorama", "relationship": "pytest Windows transitive", "spdx": "BSD-3-Clause"},
-    {"name": "hypothesis", "relationship": "direct development", "spdx": "MPL-2.0"},
-    {"name": "iniconfig", "relationship": "pytest transitive", "spdx": "MIT"},
-    {"name": "jsonschema", "relationship": "direct runtime", "spdx": "MIT"},
+    {
+      "name": "attrs",
+      "relationship": "jsonschema transitive",
+      "spdx": "MIT"
+    },
+    {
+      "name": "colorama",
+      "relationship": "pytest Windows transitive",
+      "spdx": "BSD-3-Clause"
+    },
+    {
+      "name": "hypothesis",
+      "relationship": "direct development",
+      "spdx": "MPL-2.0"
+    },
+    {
+      "name": "iniconfig",
+      "relationship": "pytest transitive",
+      "spdx": "MIT"
+    },
+    {
+      "name": "jsonschema",
+      "relationship": "direct runtime",
+      "spdx": "MIT"
+    },
     {
       "name": "jsonschema-specifications",
       "relationship": "jsonschema transitive",
@@ -33,15 +63,52 @@
       "relationship": "pytest transitive",
       "spdx": "Apache-2.0"
     },
-    {"name": "pillow", "relationship": "direct runtime", "spdx": "MIT-CMU"},
-    {"name": "pluggy", "relationship": "pytest transitive", "spdx": "MIT"},
-    {"name": "pygments", "relationship": "pytest transitive", "spdx": "BSD-2-Clause"},
-    {"name": "pytest", "relationship": "direct development", "spdx": "MIT"},
-    {"name": "referencing", "relationship": "jsonschema transitive", "spdx": "MIT"},
-    {"name": "rpds-py", "relationship": "jsonschema transitive", "spdx": "MIT"},
-    {"name": "ruff", "relationship": "direct development; standalone binary", "spdx": "MIT"},
-    {"name": "setuptools", "relationship": "direct build", "spdx": "MIT"}
+    {
+      "name": "pillow",
+      "relationship": "direct runtime",
+      "spdx": "MIT-CMU"
+    },
+    {
+      "name": "pypdfium2",
+      "relationship": "direct runtime; local PDF rendering",
+      "spdx": "Apache-2.0"
+    },
+    {
+      "name": "pluggy",
+      "relationship": "pytest transitive",
+      "spdx": "MIT"
+    },
+    {
+      "name": "pygments",
+      "relationship": "pytest transitive",
+      "spdx": "BSD-2-Clause"
+    },
+    {
+      "name": "pytest",
+      "relationship": "direct development",
+      "spdx": "MIT"
+    },
+    {
+      "name": "referencing",
+      "relationship": "jsonschema transitive",
+      "spdx": "MIT"
+    },
+    {
+      "name": "rpds-py",
+      "relationship": "jsonschema transitive",
+      "spdx": "MIT"
+    },
+    {
+      "name": "ruff",
+      "relationship": "direct development; standalone binary",
+      "spdx": "MIT"
+    },
+    {
+      "name": "setuptools",
+      "relationship": "direct build",
+      "spdx": "MIT"
+    }
   ],
   "decision": "PASS",
-  "note": "The project itself remains unlicensed until Jake chooses AGPL or MIT. Dependency compatibility does not grant a project license."
+  "note": "AKT Reader is MIT-licensed. The pypdfium2 wheel bundles PDFium; retain the wheel's bundled third-party notices when redistributing a binary environment."
 }
