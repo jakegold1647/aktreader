@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import mimetypes
 import os
 import secrets
 import shutil
@@ -41,6 +42,7 @@ MAX_BACKUP_FILES = 100_000
 MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
 MAX_ARTIFACT_NAME_LENGTH = 160
 MAX_ARTIFACT_DESCRIPTION_LENGTH = 4_000
+MAX_IMAGE_RESPONSE_BYTES = 100 * 1024 * 1024
 _COPY_BUFFER_BYTES = 1024 * 1024
 ARTIFACT_KINDS = ("MODEL", "DATASET")
 PASSWORD_SCRYPT_N = 16_384
@@ -1574,6 +1576,44 @@ def load_authorized_project_page(
         page_index=page_index,
     )
     return {key: value for key, value in page.items() if key != "image_path"}
+
+
+def load_authorized_project_image(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    page_index: int,
+) -> tuple[str, bytes]:
+    """Read one project image only after viewer authorization and path containment checks."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    project = _managed_project_path(root, canonical_id)
+    page = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+    )
+    image = Path(str(page["image_path"])).resolve()
+    if project not in image.parents or image.is_symlink() or not image.is_file():
+        raise ServiceError("managed project image is invalid")
+    if image.stat().st_size > MAX_IMAGE_RESPONSE_BYTES:
+        raise ServiceError("managed project image exceeds the response size limit")
+    media_type = mimetypes.guess_type(image.name)[0]
+    if media_type is None or not media_type.startswith("image/"):
+        raise ServiceError("managed project image has an unsupported media type")
+    try:
+        return media_type, image.read_bytes()
+    except OSError as error:
+        raise ServiceError("managed project image is unreadable") from error
 
 
 def revise_authorized_project_line(
