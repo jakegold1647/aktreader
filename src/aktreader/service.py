@@ -19,6 +19,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
+from PIL import Image
+
 from aktreader.project import (
     ProjectStoreError,
     inspect_project,
@@ -41,6 +43,7 @@ MAX_BACKUP_FILES = 100_000
 MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
 MAX_ARTIFACT_NAME_LENGTH = 160
 MAX_ARTIFACT_DESCRIPTION_LENGTH = 4_000
+MAX_IMAGE_RESPONSE_BYTES = 100 * 1024 * 1024
 _COPY_BUFFER_BYTES = 1024 * 1024
 ARTIFACT_KINDS = ("MODEL", "DATASET")
 PASSWORD_SCRYPT_N = 16_384
@@ -1576,6 +1579,46 @@ def load_authorized_project_page(
     return {key: value for key, value in page.items() if key != "image_path"}
 
 
+def load_authorized_project_image(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    page_index: int,
+) -> tuple[str, bytes]:
+    """Read one project image only after viewer authorization and path containment checks."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    project = _managed_project_path(root, canonical_id)
+    page = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+    )
+    image = Path(str(page["image_path"])).resolve()
+    if project not in image.parents or image.is_symlink() or not image.is_file():
+        raise ServiceError("managed project image is invalid")
+    if image.stat().st_size > MAX_IMAGE_RESPONSE_BYTES:
+        raise ServiceError("managed project image exceeds the response size limit")
+    try:
+        with Image.open(image) as opened:
+            media_type = Image.MIME.get(opened.format or "", "application/octet-stream")
+        payload = image.read_bytes()
+    except OSError as error:
+        raise ServiceError("managed project image is unreadable") from error
+    if not media_type.startswith("image/"):
+        raise ServiceError("managed project image has an unsupported media type")
+    return media_type, payload
+
+
 def revise_authorized_project_line(
     service_workspace: Path | str,
     project_id: str,
@@ -1632,17 +1675,44 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:
         """Keep local service request details out of stdout and CI logs."""
 
-    def _headers(self, status: HTTPStatus, content_type: str) -> None:
+    def _headers(
+        self,
+        status: HTTPStatus,
+        content_type: str,
+        *,
+        content_security_policy: str = "default-src 'none'",
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Security-Policy", "default-src 'none'")
+        self.send_header("Content-Security-Policy", content_security_policy)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
 
     def _json(self, status: HTTPStatus, payload: object) -> None:
         body = (_canonical_json(payload) + "\n").encode("utf-8")
         self._headers(status, "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _bytes(self, status: HTTPStatus, media_type: str, payload: bytes) -> None:
+        self._headers(status, media_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _html(self, payload: str) -> None:
+        body = payload.encode("utf-8")
+        self._headers(
+            HTTPStatus.OK,
+            "text/html; charset=utf-8",
+            content_security_policy=(
+                "default-src 'self'; base-uri 'none'; connect-src 'self'; "
+                "frame-ancestors 'none'; img-src 'self' blob:; "
+                "script-src 'unsafe-inline'; style-src 'unsafe-inline'"
+            ),
+        )
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -1683,6 +1753,9 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         try:
             path = self._path()
+            if path == "/":
+                self._html(SERVICE_WORKBENCH_HTML)
+                return
             if path == "/api/healthz":
                 report = inspect_service_workspace(self.server.service_workspace)
                 self._json(
@@ -1755,6 +1828,27 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                         "network_required": False,
                     },
                 )
+                return
+            if (
+                len(parts) == 9
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "pages"
+                and parts[8] == "image"
+            ):
+                try:
+                    page_index = int(parts[7])
+                except ValueError as error:
+                    raise ServiceError("page index must be an integer") from error
+                account = self._account()
+                media_type, image = load_authorized_project_image(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                    page_index=page_index,
+                )
+                self._bytes(HTTPStatus.OK, media_type, image)
                 return
             if (
                 len(parts) == 5
@@ -1902,6 +1996,344 @@ class SelfHostedServiceServer(ThreadingHTTPServer):
     def server_close(self) -> None:
         self.worker.stop()
         super().server_close()
+
+
+SERVICE_WORKBENCH_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AKT Reader Collaborative Workbench</title>
+<style>
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+body { margin: 0; background: #f5f7fa; color: #18212f; }
+header { background: #172a45; color: #fff; padding: 16px 24px; }
+header h1 { margin: 0; font-size: 1.25rem; }
+header p { color: #dbeafe; margin: 4px 0 0; }
+main { margin: 0 auto; max-width: 1400px; padding: 18px; }
+.panel { background: #fff; border: 1px solid #d9e1ea; border-radius: 8px; padding: 16px; }
+#app { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); gap: 16px; }
+.controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+label { display: grid; gap: 5px; font-weight: 650; }
+input, select, textarea, button { font: inherit; }
+input, select, textarea { border: 1px solid #aab8c7; border-radius: 5px; padding: 8px; }
+button { background: #0f766e; border: 0; border-radius: 5px; color: #fff; cursor: pointer;
+  padding: 8px 12px; }
+button.secondary { background: #475569; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+#scan { background: #18212f; display: inline-block; max-width: 100%; position: relative; }
+#image { display: block; height: auto; max-width: 100%; }
+#overlay { height: 100%; inset: 0; pointer-events: auto; position: absolute; width: 100%; }
+.line-box { cursor: pointer; fill: rgba(245, 158, 11, .12); stroke: #d97706; stroke-width: 2; }
+.line-box.selected { fill: rgba(22, 163, 74, .18); stroke: #15803d; stroke-width: 3; }
+#line-list { display: grid; gap: 6px; max-height: 260px; overflow: auto; }
+.line { background: #fff; color: #18212f; text-align: left; }
+.line.selected { outline: 3px solid #15803d; }
+textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 100%; }
+.actions { align-items: center; display: flex; gap: 8px; margin-top: 8px; }
+#status, #detail { color: #475569; white-space: pre-wrap; }
+#login { margin: 48px auto; max-width: 430px; }
+#login form { display: grid; gap: 12px; }
+.hidden { display: none !important; }
+@media (max-width: 860px) { #app { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>AKT Reader collaborative workbench</h1>
+  <p>Authenticated local review service. This page is available only on loopback.</p>
+</header>
+<main>
+  <section id="login" class="panel" aria-labelledby="login-title">
+    <h2 id="login-title">Sign in</h2>
+    <form id="login-form">
+      <label>Username <input id="username" autocomplete="username" required></label>
+      <label>Password <input id="password" type="password"
+        autocomplete="current-password" required></label>
+      <button type="submit">Sign in</button>
+      <p id="login-status" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+  <section id="workspace" class="hidden">
+    <div class="actions">
+      <strong id="identity"></strong>
+      <button id="logout" class="secondary" type="button">Sign out</button>
+      <span id="status" role="status" aria-live="polite"></span>
+    </div>
+    <div id="app">
+      <section class="panel">
+        <div class="controls">
+          <label>Project <select id="project"></select></label>
+          <label>Document <select id="document"></select></label>
+          <label>Page <select id="page"></select></label>
+        </div>
+        <p id="page-detail">Choose a project.</p>
+        <div id="scan">
+          <img id="image" alt="Selected source page">
+          <svg id="overlay" aria-label="PAGE XML line bounds"></svg>
+        </div>
+      </section>
+      <aside class="panel">
+        <p id="detail">Choose a line to review its transcription.</p>
+        <div id="line-list" aria-label="Transcription lines"></div>
+        <label>Transcription <textarea id="text" disabled></textarea></label>
+        <div class="actions">
+          <button id="save" type="button" disabled>Save correction</button>
+          <span id="role"></span>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+<script>
+"use strict";
+
+const state = { token: null, account: null, projects: [], project: null, documents: [], page: null,
+  selected: null, imageUrl: null };
+const login = document.getElementById("login");
+const workspace = document.getElementById("workspace");
+const loginForm = document.getElementById("login-form");
+const username = document.getElementById("username");
+const password = document.getElementById("password");
+const loginStatus = document.getElementById("login-status");
+const identity = document.getElementById("identity");
+const status = document.getElementById("status");
+const projectSelect = document.getElementById("project");
+const documentSelect = document.getElementById("document");
+const pageSelect = document.getElementById("page");
+const pageDetail = document.getElementById("page-detail");
+const image = document.getElementById("image");
+const overlay = document.getElementById("overlay");
+const lineList = document.getElementById("line-list");
+const detail = document.getElementById("detail");
+const text = document.getElementById("text");
+const save = document.getElementById("save");
+const role = document.getElementById("role");
+
+function setStatus(message) { status.textContent = message; }
+function apiHeaders(extra) {
+  const headers = Object.assign({}, extra || {});
+  if (state.token) headers.Authorization = "Bearer " + state.token;
+  return headers;
+}
+async function api(path, options) {
+  const response = await fetch(path, Object.assign({}, options || {}, { headers: apiHeaders(
+    (options && options.headers) || {}
+  ) }));
+  const payload = await response.json();
+  if (!response.ok) throw new Error(payload.message || "Local request failed");
+  return payload;
+}
+function option(select, value, label) {
+  const item = document.createElement("option");
+  item.value = value;
+  item.textContent = label;
+  select.append(item);
+}
+function currentDocument() {
+  return state.documents.find(item => item.manifest_sha256 === documentSelect.value);
+}
+function selectedLine() {
+  return state.page && state.page.lines.find(item => item.source_span_id === state.selected);
+}
+function canEdit() {
+  return state.project && (state.project.role === "EDITOR" || state.project.role === "OWNER");
+}
+function renderLines() {
+  lineList.replaceChildren();
+  if (!state.page) return;
+  state.page.lines.forEach(line => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "line" + (line.source_span_id === state.selected ? " selected" : "");
+    button.textContent = line.line_id + " · revision " + line.revision + " · " + (line.text || "∅");
+    button.addEventListener("click", () => selectLine(line.source_span_id));
+    lineList.append(button);
+  });
+}
+function drawOverlay() {
+  overlay.replaceChildren();
+  if (!state.page) return;
+  overlay.setAttribute("viewBox", "0 0 " + state.page.width_px + " " + state.page.height_px);
+  state.page.lines.forEach(line => {
+    const box = line.bbox;
+    const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rectangle.setAttribute("x", box.x);
+    rectangle.setAttribute("y", box.y);
+    rectangle.setAttribute("width", box.width);
+    rectangle.setAttribute("height", box.height);
+    rectangle.setAttribute("class", "line-box" + (
+      line.source_span_id === state.selected ? " selected" : ""
+    ));
+    rectangle.addEventListener("click", () => selectLine(line.source_span_id));
+    overlay.append(rectangle);
+  });
+}
+function selectLine(sourceSpanId) {
+  state.selected = sourceSpanId;
+  const line = selectedLine();
+  text.disabled = !line || !canEdit();
+  save.disabled = !line || !canEdit();
+  text.value = line ? (line.text || "") : "";
+  detail.textContent = line ? (
+    "Line: " + line.line_id + "\\nCurrent revision: " + line.revision +
+    (canEdit() ? "" : "\\nYour VIEWER role can inspect but not save corrections.")
+  ) : "Choose a line to review its transcription.";
+  renderLines();
+  drawOverlay();
+}
+async function loadImage() {
+  const doc = currentDocument();
+  const response = await fetch(
+    "/api/projects/" + encodeURIComponent(state.project.project_id) +
+    "/documents/" + encodeURIComponent(doc.manifest_sha256) +
+    "/pages/" + encodeURIComponent(pageSelect.value) + "/image",
+    { headers: apiHeaders() }
+  );
+  if (!response.ok) {
+    const payload = await response.json();
+    throw new Error(payload.message || "Could not load the local page image");
+  }
+  const blob = await response.blob();
+  if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+  state.imageUrl = URL.createObjectURL(blob);
+  image.src = state.imageUrl;
+}
+async function loadPage() {
+  const doc = currentDocument();
+  if (!doc || pageSelect.value === "") return;
+  setStatus("Loading page…");
+  const payload = await api(
+    "/api/projects/" + encodeURIComponent(state.project.project_id) +
+    "/documents/" + encodeURIComponent(doc.manifest_sha256) +
+    "/pages/" + encodeURIComponent(pageSelect.value)
+  );
+  state.page = payload.page;
+  state.selected = state.page.lines.length ? state.page.lines[0].source_span_id : null;
+  pageDetail.textContent = "Page " + (Number(pageSelect.value) + 1) + " · " +
+    state.page.page_id + " · " + state.page.lines.length + " lines";
+  await loadImage();
+  selectLine(state.selected);
+  setStatus("");
+}
+async function loadDocument() {
+  pageSelect.replaceChildren();
+  const doc = currentDocument();
+  if (!doc) return;
+  for (let index = 0; index < doc.page_count; index += 1) {
+    option(pageSelect, String(index), "Page " + (index + 1) + " of " + doc.page_count);
+  }
+  await loadPage();
+}
+async function loadProjects() {
+  const payload = await api("/api/projects");
+  state.projects = payload.projects;
+  projectSelect.replaceChildren();
+  state.projects.forEach(project => option(
+    projectSelect, project.project_id, project.name + " (" + project.role + ")"
+  ));
+  if (!state.projects.length) {
+    setStatus("No projects are assigned to this account.");
+    return;
+  }
+  await loadProject();
+}
+async function loadProject() {
+  state.project = state.projects.find(item => item.project_id === projectSelect.value);
+  role.textContent = state.project ? "Role: " + state.project.role : "";
+  documentSelect.replaceChildren();
+  const payload = await api(
+    "/api/projects/" + encodeURIComponent(state.project.project_id) + "/documents"
+  );
+  state.documents = payload.documents;
+  state.documents.forEach((document, index) => option(
+    documentSelect, document.manifest_sha256,
+    (index + 1) + ". " + document.title + " (" + document.page_count + " pages)"
+  ));
+  if (!state.documents.length) {
+    state.page = null;
+    lineList.replaceChildren();
+    setStatus("This project has no imported PAGE XML documents.");
+    return;
+  }
+  await loadDocument();
+}
+async function saveRevision() {
+  const line = selectedLine();
+  const doc = currentDocument();
+  if (!line || !doc || !canEdit()) return;
+  save.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/transcriptions",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          source_span_id: line.source_span_id,
+          text: text.value,
+          expected_revision: line.revision
+        })
+      }
+    );
+    setStatus(payload.status === "SAVED" ? "Correction saved." : "No change was needed.");
+    await loadPage();
+  } catch (error) {
+    setStatus(error.message);
+    await loadPage();
+  } finally {
+    save.disabled = !canEdit();
+  }
+}
+loginForm.addEventListener("submit", async event => {
+  event.preventDefault();
+  loginStatus.textContent = "Signing in…";
+  try {
+    const payload = await api("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: username.value, password: password.value })
+    });
+    state.token = payload.access_token;
+    state.account = payload.account;
+    password.value = "";
+    identity.textContent = "Signed in as " + state.account.username;
+    login.classList.add("hidden");
+    workspace.classList.remove("hidden");
+    await loadProjects();
+    loginStatus.textContent = "";
+  } catch (error) {
+    loginStatus.textContent = error.message;
+  }
+});
+projectSelect.addEventListener(
+  "change", () => loadProject().catch(error => setStatus(error.message))
+);
+documentSelect.addEventListener(
+  "change", () => loadDocument().catch(error => setStatus(error.message))
+);
+pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
+save.addEventListener("click", () => saveRevision());
+document.getElementById("logout").addEventListener("click", () => {
+  state.token = null;
+  state.account = null;
+  state.projects = [];
+  state.project = null;
+  state.documents = [];
+  state.page = null;
+  if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+  state.imageUrl = null;
+  image.removeAttribute("src");
+  workspace.classList.add("hidden");
+  login.classList.remove("hidden");
+  username.focus();
+});
+</script>
+</body>
+</html>
+"""
 
 
 def create_self_hosted_service_server(

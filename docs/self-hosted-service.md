@@ -110,6 +110,26 @@ the page and explicitly decide how to reconcile the text. It never silently over
 This is an API foundation for shared review, not a shared browser editor yet: it does not serve
 scan image bytes, accept external identity, or expose a LAN listener.
 
+## Collaborative browser workbench
+
+Start the local service and open the loopback URL it prints (normally
+`http://127.0.0.1:8780/`). Sign in with a local service account; the browser keeps the bearer
+token only in memory for that tab.
+
+The workbench lets an authorized reviewer choose a project, PAGE XML document, and page; view the
+source image with line bounds; inspect current line revisions; and save a correction. Image bytes
+are fetched only with the authenticated request, and neither the API nor the page exposes a local
+filesystem path. `VIEWER` accounts can inspect, while `EDITOR` and `OWNER` accounts can save.
+
+Every save includes the line revision that was displayed. If another correction landed first, the
+workbench shows the service's conflict message and reloads the current page instead of overwriting
+it. The source PAGE XML and image object remain immutable; only an append-only human revision is
+created.
+
+The workbench is a single service UI on loopback only. It is not a LAN/public deployment, does not
+persist credentials in browser storage, and does not yet include presence indicators, comments,
+shared cursors, or simultaneous geometry editing.
+
 ## Run and back up
 
 Start the service only on the local machine:

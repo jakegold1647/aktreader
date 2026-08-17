@@ -279,6 +279,21 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
     thread.start()
     connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
     try:
+        connection.request("GET", "/")
+        workbench_response = connection.getresponse()
+        workbench = workbench_response.read().decode("utf-8")
+        assert workbench_response.status == 200
+        assert "AKT Reader collaborative workbench" in workbench
+        assert "Content-Security-Policy" in workbench_response.headers
+
+        image_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0/image"
+        )
+        connection.request("GET", image_route)
+        anonymous_image_response = connection.getresponse()
+        assert anonymous_image_response.status == 401
+        anonymous_image_response.read()
+
         session_payload = json.dumps(
             {
                 "username": "editor",
@@ -317,6 +332,13 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "image_path" not in page
         assert page["lines"][0]["revision"] == 0
         source_span_id = page["lines"][0]["source_span_id"]
+
+        connection.request("GET", image_route, headers=authorization)
+        image_response = connection.getresponse()
+        image_bytes = image_response.read()
+        assert image_response.status == 200
+        assert image_response.headers["Content-Type"].startswith("image/png")
+        assert image_bytes.startswith(b"\x89PNG")
 
         revision_payload = json.dumps(
             {
