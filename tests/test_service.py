@@ -287,6 +287,8 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         workbench = workbench_response.read().decode("utf-8")
         assert workbench_response.status == 200
         assert "AKT Reader collaborative workbench" in workbench
+        assert "Save region outline" in workbench
+        assert "Save reading order" in workbench
         assert "Content-Security-Policy" in workbench_response.headers
 
         image_route = (
