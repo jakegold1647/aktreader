@@ -89,7 +89,7 @@ is: none.
   socket creation disabled; any attempt to open a socket fails the run. This includes
   `pagexml-import`.
 - Runtime dependencies are `jsonschema`, `pillow`, and `pypdfium2`; the reviewed Python-package
-  license inventory (15 packages, including transitive) is `dependency-licenses.json`. PDFium wheel
+  license inventory (16 packages, including transitive) is `dependency-licenses.json`. PDFium wheel
   redistributions must retain their bundled third-party notices.
 - The only external processes the package starts are content-pinned local reader and Kraken
   subprocesses. They receive only local paths and a credential-free, offline environment. Owner-side
