@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import shutil
@@ -21,6 +22,8 @@ from aktreader.project import (
     evaluate_htr_suggestions,
     export_consented_training_pagexml,
     export_human_pagexml,
+    export_human_transcript,
+    export_human_transcriptions_csv,
     export_review_package,
     grant_training_consent,
     import_htr_suggestions,
@@ -831,6 +834,149 @@ def test_project_exports_human_revisions_as_derivative_pagexml(tmp_path: Path) -
     assert import_pagexml(exported_path, image_root=source_root)["pages"][0]["lines"][0][
         "text"
     ] == "Александръ!?"
+
+
+
+def test_project_exports_effective_human_transcriptions_as_text_and_csv(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    recognized = source_root / "page.kraken.xml"
+    _write_pagexml(source, text="source transcript")
+    _write_pagexml(recognized, text="machine-only suggestion")
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="a" * 64,
+    )
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    transcript_path = tmp_path / "serock.txt"
+    csv_path = tmp_path / "serock.csv"
+
+    initial_transcript = export_human_transcript(
+        project,
+        transcript_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+    initial_csv = export_human_transcriptions_csv(
+        project,
+        csv_path,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert initial_transcript["human_revision_count"] == 0
+    assert transcript_path.read_text(encoding="utf-8") == "source transcript\n"
+    initial_rows = list(
+        csv.DictReader(csv_path.open(encoding="utf-8", newline=""))
+    )
+    assert initial_csv["columns"] == [
+        "manifest_sha256",
+        "page_index",
+        "page_id",
+        "region_id",
+        "line_id",
+        "source_span_id",
+        "source_text",
+        "text",
+        "revision",
+        "editor",
+    ]
+    assert initial_rows == [
+        {
+            "manifest_sha256": imported["manifest_sha256"],
+            "page_index": "0",
+            "page_id": "page-index-0",
+            "region_id": "region-1",
+            "line_id": "line-1",
+            "source_span_id": line["source_span_id"],
+            "source_text": "source transcript",
+            "text": "source transcript",
+            "revision": "0",
+            "editor": "",
+        }
+    ]
+
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="first human correction",
+        editor="reviewer-1",
+    )
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="final human correction",
+        editor="reviewer-2",
+    )
+    transcript = export_human_transcript(
+        project,
+        transcript_path,
+        manifest_sha256=imported["manifest_sha256"],
+        replace_existing=True,
+    )
+    exported_csv = export_human_transcriptions_csv(
+        project,
+        csv_path,
+        manifest_sha256=imported["manifest_sha256"],
+        replace_existing=True,
+    )
+
+    assert transcript["human_revision_count"] == exported_csv["human_revision_count"] == 1
+    assert transcript_path.read_text(encoding="utf-8") == "final human correction\n"
+    rows = list(csv.DictReader(csv_path.open(encoding="utf-8", newline="")))
+    assert rows[0]["text"] == "final human correction"
+    assert rows[0]["revision"] == "2"
+    assert rows[0]["editor"] == "reviewer-2"
+    assert source.read_bytes() == source_bytes
+
+    cli_transcript = tmp_path / "cli-transcript.txt"
+    transcript_exit = main(
+        [
+            "project-export-transcript",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--output",
+            str(cli_transcript),
+        ]
+    )
+    transcript_report = json.loads(capsys.readouterr().out)
+    cli_csv = tmp_path / "cli-transcriptions.csv"
+    csv_exit = main(
+        [
+            "project-export-transcriptions-csv",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--output",
+            str(cli_csv),
+        ]
+    )
+    csv_report = json.loads(capsys.readouterr().out)
+
+    assert transcript_exit == csv_exit == 0
+    assert transcript_report["output"] == str(cli_transcript.resolve())
+    assert csv_report["output"] == str(cli_csv.resolve())
+    assert cli_transcript.read_text(encoding="utf-8") == "final human correction\n"
+    assert list(csv.DictReader(cli_csv.open(encoding="utf-8", newline="")))[0]["text"] == (
+        "final human correction"
+    )
 
 
 def test_project_export_can_add_text_equiv_for_previously_blank_line(tmp_path: Path) -> None:

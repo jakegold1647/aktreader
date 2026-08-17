@@ -84,6 +84,8 @@ from aktreader.project import (
     evaluate_htr_suggestions,
     export_consented_training_pagexml,
     export_human_pagexml,
+    export_human_transcript,
+    export_human_transcriptions_csv,
     export_review_package,
     grant_training_consent,
     import_htr_suggestions,
@@ -402,6 +404,58 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing PAGE XML export",
+    )
+
+    project_export_transcript = subparsers.add_parser(
+        "project-export-transcript",
+        help="export effective human text as a new local UTF-8 transcript",
+    )
+    project_export_transcript.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_export_transcript.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_export_transcript.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new UTF-8 transcript path outside the project",
+    )
+    project_export_transcript.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing transcript export",
+    )
+
+    project_export_csv = subparsers.add_parser(
+        "project-export-transcriptions-csv",
+        help="export effective human line text as a new local CSV",
+    )
+    project_export_csv.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_export_csv.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_export_csv.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="new transcription CSV path outside the project",
+    )
+    project_export_csv.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="explicitly replace an existing transcription CSV export",
     )
 
     project_geometry = subparsers.add_parser(
@@ -1521,6 +1575,49 @@ def _command_project_export_pagexml(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_export_transcript(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="transcript export")
+    if output.is_dir():
+        raise CliConfigurationError(f"transcript export is a directory: {output}")
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "transcript export already exists; pass --replace-existing to replace it atomically"
+        )
+    report = export_human_transcript(
+        project,
+        output,
+        manifest_sha256=args.manifest_sha256,
+        replace_existing=args.replace_existing,
+    )
+    _emit_json(report)
+    return 0
+
+
+def _command_project_export_transcriptions_csv(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    output = local_output_path(args.output, role="transcription CSV export")
+    if output.is_dir():
+        raise CliConfigurationError(f"transcription CSV export is a directory: {output}")
+    if output.exists() and not args.replace_existing:
+        raise CliConfigurationError(
+            "transcription CSV export already exists; pass --replace-existing "
+            "to replace it atomically"
+        )
+    report = export_human_transcriptions_csv(
+        project,
+        output,
+        manifest_sha256=args.manifest_sha256,
+        replace_existing=args.replace_existing,
+    )
+    _emit_json(report)
+    return 0
+
+
 def _command_project_revise_line_geometry(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     geometry_path = local_input_path(args.geometry, role="line geometry")
@@ -2494,6 +2591,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-kraken-segment": _command_project_kraken_segment,
         "project-kraken-recognize": _command_project_kraken_recognize,
         "project-export-pagexml": _command_project_export_pagexml,
+        "project-export-transcript": _command_project_export_transcript,
+        "project-export-transcriptions-csv": _command_project_export_transcriptions_csv,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
         "project-revise-page-reading-order": _command_project_revise_page_reading_order,
         "project-revise-region-geometry": _command_project_revise_region_geometry,
