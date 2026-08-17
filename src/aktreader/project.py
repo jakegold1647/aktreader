@@ -2091,7 +2091,6 @@ def update_project_document(
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         with connection:
-            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 """
                 SELECT
@@ -2358,6 +2357,7 @@ def revise_line_transcription(
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 """
                 SELECT
