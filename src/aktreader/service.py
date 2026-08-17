@@ -1290,6 +1290,12 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             raise ServiceError("query parameters are not supported")
         return unquote(parsed.path)
 
+    def _account(self) -> dict[str, object]:
+        return authenticated_service_account(
+            self.server.service_workspace,
+            self.headers.get("Authorization"),
+        )
+
     def do_GET(self) -> None:
         try:
             path = self._path()
@@ -1307,21 +1313,34 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 return
             if path == "/api/projects":
+                account = self._account()
                 self._json(
                     HTTPStatus.OK,
                     {
                         "status": "READY",
-                        "projects": list_service_projects(self.server.service_workspace),
+                        "projects": list_authorized_service_projects(
+                            self.server.service_workspace,
+                            account_id=str(account["account_id"]),
+                        ),
                         "network_required": False,
                     },
                 )
                 return
             prefix = "/api/jobs/"
             if path.startswith(prefix) and "/" not in path[len(prefix) :]:
-                job = get_service_job(self.server.service_workspace, path[len(prefix) :])
+                account = self._account()
+                job = get_authorized_service_job(
+                    self.server.service_workspace,
+                    path[len(prefix) :],
+                    account_id=str(account["account_id"]),
+                )
                 self._json(HTTPStatus.OK, _public_job(job))
                 return
             self._error(HTTPStatus.NOT_FOUND, "route was not found")
+        except AuthenticationError:
+            self._error(HTTPStatus.UNAUTHORIZED, "authentication is required")
+        except AuthorizationError:
+            self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
         except ServiceError as error:
             status = (
                 HTTPStatus.NOT_FOUND
@@ -1332,17 +1351,34 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         try:
-            if self._path() != "/api/jobs":
+            path = self._path()
+            payload = self._read_json()
+            if path == "/api/session":
+                if set(payload) != {"username", "password"}:
+                    raise ServiceError("sign-in requires username and password")
+                session = create_service_session(
+                    self.server.service_workspace,
+                    username=str(payload["username"]),
+                    password=str(payload["password"]),
+                )
+                self._json(HTTPStatus.CREATED, session)
+                return
+            if path != "/api/jobs":
                 self._error(HTTPStatus.NOT_FOUND, "route was not found")
                 return
-            payload = self._read_json()
             if set(payload) != {"kind", "project_id"} or payload["kind"] != "PROJECT_BACKUP":
                 raise ServiceError("request must be a PROJECT_BACKUP job with project_id")
+            account = self._account()
             job = queue_project_backup(
                 self.server.service_workspace,
                 _require_uuid(payload["project_id"], role="project_id"),
+                account_id=str(account["account_id"]),
             )
             self._json(HTTPStatus.ACCEPTED, job)
+        except AuthenticationError:
+            self._error(HTTPStatus.UNAUTHORIZED, "sign-in failed")
+        except AuthorizationError:
+            self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
         except ServiceError as error:
             self._error(HTTPStatus.BAD_REQUEST, str(error))
 
