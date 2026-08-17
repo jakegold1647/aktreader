@@ -12,9 +12,6 @@ from pathlib import Path
 from PIL import Image
 
 from aktreader.project import create_project, import_pagexml_into_project
-ROOT = Path(__file__).resolve().parents[1]
-
-
 from aktreader.service import (
     LOOPBACK_HOST,
     add_project_to_service,
@@ -22,6 +19,9 @@ from aktreader.service import (
     create_self_hosted_service_server,
     create_service_workspace,
 )
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def _reviewable_service(tmp_path: Path) -> tuple[Path, str, str]:
