@@ -80,6 +80,13 @@ LOOPBACK_ONLY_IMPORTS: dict[str, frozenset[str]] = {
             "http.server",
             "urllib.parse",
         }
+    ),
+    "src/aktreader/service.py": frozenset(
+        {
+            "http",
+            "http.server",
+            "urllib.parse",
+        }
     )
 }
 

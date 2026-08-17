@@ -102,6 +102,17 @@ from aktreader.project import (
     update_project_document,
 )
 from aktreader.prompt import verify_reader_prompt
+from aktreader.service import (
+    ServiceError,
+    add_project_to_service,
+    create_self_hosted_service_server,
+    create_service_workspace,
+    inspect_service_workspace,
+    list_service_projects,
+    queue_project_backup,
+    restore_project_backup,
+    verify_project_backup,
+)
 from aktreader.validators.dates import validate_dates
 from aktreader.validators.formula import validate_formula_positions
 from aktreader.verification import CHECK_NAMES, verify_application_checkout
@@ -695,6 +706,63 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=8765,
         help="loopback TCP port from 0 to 65535 (default: 8765)",
+    )
+
+    service_create = subparsers.add_parser(
+        "service-create",
+        help="create a local loopback service workspace",
+    )
+    service_create.add_argument("workspace", type=Path, help="new local service directory")
+
+    service_inspect = subparsers.add_parser(
+        "service-inspect",
+        help="inspect a local loopback service workspace",
+    )
+    service_inspect.add_argument("workspace", type=Path, help="local service directory")
+
+    service_add = subparsers.add_parser(
+        "service-add-project",
+        help="copy one local project into service-managed storage",
+    )
+    service_add.add_argument("workspace", type=Path, help="local service directory")
+    service_add.add_argument("project", type=Path, help="local .aktproj directory")
+
+    service_projects = subparsers.add_parser(
+        "service-list-projects",
+        help="list projects owned by a local service workspace",
+    )
+    service_projects.add_argument("workspace", type=Path, help="local service directory")
+
+    service_queue = subparsers.add_parser(
+        "service-queue-backup",
+        help="persist a local project backup job for a running service worker",
+    )
+    service_queue.add_argument("workspace", type=Path, help="local service directory")
+    service_queue.add_argument("--project-id", required=True, help="managed project UUID")
+
+    service_verify = subparsers.add_parser(
+        "service-backup-verify",
+        help="verify every file hash in a local service backup archive",
+    )
+    service_verify.add_argument("backup", type=Path, help="local .aktbackup.zip file")
+
+    service_restore = subparsers.add_parser(
+        "service-backup-restore",
+        help="verify then restore a local service backup archive",
+    )
+    service_restore.add_argument("backup", type=Path, help="local .aktbackup.zip file")
+    service_restore.add_argument("project", type=Path, help="new local .aktproj directory")
+
+    service_serve = subparsers.add_parser(
+        "service-serve",
+        help="run the local service and durable backup worker on loopback only",
+    )
+    service_serve.add_argument("workspace", type=Path, help="local service directory")
+    service_serve.add_argument(
+        "--port",
+        type=int,
+        default=8780,
+        help="loopback TCP port from 0 to 65535 (default: 8780)",
     )
 
     pagexml = subparsers.add_parser(
@@ -1538,6 +1606,75 @@ def _command_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_service_create(args: argparse.Namespace) -> int:
+    workspace = local_output_path(args.workspace, role="service workspace destination")
+    _emit_json(create_service_workspace(workspace))
+    return 0
+
+
+def _command_service_inspect(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(inspect_service_workspace(workspace))
+    return 0
+
+
+def _command_service_add_project(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    project = local_input_path(args.project, role="project")
+    _emit_json(add_project_to_service(workspace, project))
+    return 0
+
+
+def _command_service_list_projects(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        {
+            "status": "READY",
+            "projects": list_service_projects(workspace),
+            "network_required": False,
+        }
+    )
+    return 0
+
+
+def _command_service_queue_backup(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(queue_project_backup(workspace, args.project_id))
+    return 0
+
+
+def _command_service_backup_verify(args: argparse.Namespace) -> int:
+    backup = local_input_path(args.backup, role="backup archive")
+    _emit_json(verify_project_backup(backup))
+    return 0
+
+
+def _command_service_backup_restore(args: argparse.Namespace) -> int:
+    backup = local_input_path(args.backup, role="backup archive")
+    project = local_output_path(args.project, role="restored project destination")
+    _emit_json(restore_project_backup(backup, project))
+    return 0
+
+
+def _command_service_serve(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    server = create_self_hosted_service_server(workspace, port=args.port)
+    _emit_json(
+        {
+            "status": "SERVING",
+            "service_workspace": str(workspace),
+            "url": server.url,
+            "bind_address": "127.0.0.1",
+            "network_required": False,
+        }
+    )
+    try:
+        server.serve_forever(poll_interval=0.5)
+    finally:
+        server.server_close()
+    return 0
+
+
 def _command_pagexml_import(args: argparse.Namespace) -> int:
     source = local_input_path(args.source, role="PAGE XML source")
     if not source.is_file():
@@ -2077,6 +2214,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         "htr-inspect-corpus": _command_htr_inspect_corpus,
         "workbench": _command_workbench,
         "serve": _command_serve,
+        "service-create": _command_service_create,
+        "service-inspect": _command_service_inspect,
+        "service-add-project": _command_service_add_project,
+        "service-list-projects": _command_service_list_projects,
+        "service-queue-backup": _command_service_queue_backup,
+        "service-backup-verify": _command_service_backup_verify,
+        "service-backup-restore": _command_service_backup_restore,
+        "service-serve": _command_service_serve,
         "pagexml-import": _command_pagexml_import,
         "consensus-merge": _command_consensus_merge,
         "reader-inspect": _command_reader_inspect,
@@ -2105,6 +2250,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         KrakenTrainingError,
         KrakenEvaluationError,
         LocalReaderError,
+        ServiceError,
         OSError,
         TypeError,
         ValueError,
