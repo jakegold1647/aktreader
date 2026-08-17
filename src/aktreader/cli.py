@@ -105,9 +105,12 @@ from aktreader.prompt import verify_reader_prompt
 from aktreader.service import (
     ServiceError,
     add_project_to_service,
+    create_local_account,
     create_self_hosted_service_server,
     create_service_workspace,
+    grant_project_role,
     inspect_service_workspace,
+    list_local_accounts,
     list_service_projects,
     queue_project_backup,
     restore_project_backup,
@@ -720,12 +723,49 @@ def build_parser() -> argparse.ArgumentParser:
     )
     service_inspect.add_argument("workspace", type=Path, help="local service directory")
 
+    service_user_create = subparsers.add_parser(
+        "service-user-create",
+        help="create one password-protected local service account",
+    )
+    service_user_create.add_argument("workspace", type=Path, help="local service directory")
+    service_user_create.add_argument("--username", required=True, help="new local username")
+    service_user_create.add_argument(
+        "--password-file",
+        required=True,
+        type=Path,
+        help="local UTF-8 password file; its contents are never printed",
+    )
+
+    service_users = subparsers.add_parser(
+        "service-list-users",
+        help="list local service account identities without credentials",
+    )
+    service_users.add_argument("workspace", type=Path, help="local service directory")
+
+    service_role = subparsers.add_parser(
+        "service-grant-role",
+        help="grant a local account a role on one managed project",
+    )
+    service_role.add_argument("workspace", type=Path, help="local service directory")
+    service_role.add_argument("--project-id", required=True, help="managed project UUID")
+    service_role.add_argument("--username", required=True, help="local username")
+    service_role.add_argument(
+        "--role",
+        required=True,
+        choices=("VIEWER", "EDITOR", "OWNER"),
+        help="project access role",
+    )
+
     service_add = subparsers.add_parser(
         "service-add-project",
         help="copy one local project into service-managed storage",
     )
     service_add.add_argument("workspace", type=Path, help="local service directory")
     service_add.add_argument("project", type=Path, help="local .aktproj directory")
+    service_add.add_argument(
+        "--owner",
+        help="existing local username granted OWNER when the project is copied",
+    )
 
     service_projects = subparsers.add_parser(
         "service-list-projects",
@@ -1618,10 +1658,48 @@ def _command_service_inspect(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_service_user_create(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    password_file = local_input_path(args.password_file, role="local password file")
+    if not password_file.is_file():
+        raise CliConfigurationError("local password file is not a regular file")
+    try:
+        password = password_file.read_text(encoding="utf-8").rstrip("\r\n")
+    except (OSError, UnicodeError) as error:
+        raise CliConfigurationError("local password file is unreadable UTF-8") from error
+    _emit_json(create_local_account(workspace, username=args.username, password=password))
+    return 0
+
+
+def _command_service_list_users(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        {
+            "status": "READY",
+            "accounts": list_local_accounts(workspace),
+            "network_required": False,
+        }
+    )
+    return 0
+
+
+def _command_service_grant_role(args: argparse.Namespace) -> int:
+    workspace = local_input_path(args.workspace, role="service workspace")
+    _emit_json(
+        grant_project_role(
+            workspace,
+            project_id=args.project_id,
+            username=args.username,
+            role=args.role,
+        )
+    )
+    return 0
+
+
 def _command_service_add_project(args: argparse.Namespace) -> int:
     workspace = local_input_path(args.workspace, role="service workspace")
     project = local_input_path(args.project, role="project")
-    _emit_json(add_project_to_service(workspace, project))
+    _emit_json(add_project_to_service(workspace, project, owner_username=args.owner))
     return 0
 
 
@@ -2216,6 +2294,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "serve": _command_serve,
         "service-create": _command_service_create,
         "service-inspect": _command_service_inspect,
+        "service-user-create": _command_service_user_create,
+        "service-list-users": _command_service_list_users,
+        "service-grant-role": _command_service_grant_role,
         "service-add-project": _command_service_add_project,
         "service-list-projects": _command_service_list_projects,
         "service-queue-backup": _command_service_queue_backup,
