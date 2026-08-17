@@ -324,6 +324,9 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "/transcriptions/undo" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
+        assert "Attached models and datasets" in workbench
+        assert "Attach registered artifact" in workbench
+        assert "available-artifacts" in workbench
         assert "Download transcript" in workbench
         assert "Download CSV" in workbench
         assert "transcriptions-csv" in workbench
@@ -813,6 +816,13 @@ def test_owner_can_attach_model_metadata_without_exposing_artifact_paths(
         session = json.loads(connection.getresponse().read())
         authorization = {"Authorization": f"Bearer {session['access_token']}"}
 
+        available_route = f"/api/projects/{project_id}/available-artifacts"
+        connection.request("GET", available_route, headers=authorization)
+        available_response = connection.getresponse()
+        available = json.loads(available_response.read())
+        assert available_response.status == 200
+        assert available["artifacts"] == [registered["artifact"]]
+
         attachment_payload = json.dumps({"artifact_id": artifact_id})
         connection.request(
             "POST",
@@ -835,6 +845,12 @@ def test_owner_can_attach_model_metadata_without_exposing_artifact_paths(
         assert artifacts_response.status == 200
         assert artifacts["artifacts"] == [registered["artifact"]]
         assert "relative_path" not in artifacts["artifacts"][0]
+
+        connection.request("GET", available_route, headers=authorization)
+        attached_available_response = connection.getresponse()
+        attached_available = json.loads(attached_available_response.read())
+        assert attached_available_response.status == 200
+        assert attached_available["artifacts"] == []
     finally:
         connection.close()
         server.shutdown()

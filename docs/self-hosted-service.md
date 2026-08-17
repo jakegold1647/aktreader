@@ -85,10 +85,13 @@ Registering repeated bytes can reuse the same local content object while preserv
 metadata record.
 
 Only an `OWNER` may attach an artifact through the service API. Project viewers can read the
-attached metadata at `GET /api/projects/<project-id>/artifacts`, but the API does not disclose
-the managed filesystem path or serve the artifact bytes. This gives projects an auditable
-model/dataset selection boundary; reproducible training, evaluation, and publication receipts
-remain separate local workflows.
+attached metadata at `GET /api/projects/<project-id>/artifacts`; owners can list the remaining
+registered choices at `GET /api/projects/<project-id>/available-artifacts` and attach one by ID.
+The loopback workbench shows the attached model/dataset name, type, license, and SHA-256 prefix to
+every authorized viewer, and gives owners an attachment selector. Neither API discloses a managed
+filesystem path or serves artifact bytes. This gives projects an auditable model/dataset selection
+boundary; reproducible training, evaluation, and publication receipts remain separate local
+workflows.
 
 ## Authenticated review API
 
