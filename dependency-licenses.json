@@ -71,7 +71,7 @@
     {
       "name": "pypdfium2",
       "relationship": "direct runtime; local PDF rendering",
-      "spdx": "Apache-2.0 OR BSD-3-Clause"
+      "spdx": "Apache-2.0"
     },
     {
       "name": "pluggy",
@@ -110,5 +110,5 @@
     }
   ],
   "decision": "PASS",
-  "note": "The project itself remains unlicensed until Jake chooses AGPL or MIT. Dependency compatibility does not grant a project license. pypdfium2 wheels bundle PDFium; retain the wheel's bundled third-party notices when redistributing a binary environment."
+  "note": "AKT Reader is MIT-licensed. The pypdfium2 wheel bundles PDFium; retain the wheel's bundled third-party notices when redistributing a binary environment."
 }
