@@ -150,7 +150,7 @@ holdout separation.
 It requires no model weights, runtime binary, source scans, or network access. Use `--json` for a
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
-The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
+The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-save-search`, `collection-list-saved-searches`, `collection-run-saved-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
@@ -190,7 +190,17 @@ python -m aktreader collection-search registers.aktcollection "Aleksander"
 
 `collection-list-documents` searches only locally indexed document metadata. Run
 `collection-add-project` again after editing a project's transcription or document metadata to refresh
-its index.
+its index. A named saved search is private to that local collection; it re-runs against the refreshed
+index and is never included in a public static release.
+
+```powershell
+python -m aktreader collection-save-search registers.aktcollection \
+  --name "Aleksander records" \
+  --query "Aleksander"
+python -m aktreader collection-list-saved-searches registers.aktcollection
+python -m aktreader collection-run-saved-search registers.aktcollection \
+  --search-id <saved-search-id>
+```
 
 To create a static, read-only release for a separate public web host, export the selected collection
 explicitly. This writes `index.json` plus stable document URLs under `documents/<project-id>/<document-id>.json`;
