@@ -65,6 +65,11 @@ Historical machine-consensus payloads remain audit evidence, not training data. 
 blocked until new v1.4-or-later labels have grounded continuous transcriptions, recorded
 consent, and a clerk-year-separated holdout. See [the training transition gate](docs/training-transition.md).
 
+Before operating a local service with non-public records, read the
+[threat model](docs/threat-model.md), [data-governance policy](docs/data-governance.md), and
+[security policy](SECURITY.md). The supported service boundary remains one trusted machine on
+loopback; it is not a public or LAN deployment.
+
 ## Non-negotiable behavior
 
 - Never fill a missing or unreadable field from expectation.
