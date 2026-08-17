@@ -2627,9 +2627,11 @@ def export_human_alto(
             append_text_block(
                 block_key="unassigned",
                 block_polygon=[
-                    [int(_geometry_bbox(line["polygon"])["x"]), int(_geometry_bbox(line["polygon"])["y"])]
+                    point
                     for line in unassigned_lines
                     if isinstance(line.get("polygon"), list)
+                    for point in line["polygon"]
+                    if isinstance(point, list)
                 ],
                 lines=unassigned_lines,
             )
