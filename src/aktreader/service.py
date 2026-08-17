@@ -1415,6 +1415,52 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                     },
                 )
                 return
+            parts = path.split("/")
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "documents": list_authorized_project_documents(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 8
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "pages"
+            ):
+                try:
+                    page_index = int(parts[7])
+                except ValueError as error:
+                    raise ServiceError("page index must be an integer") from error
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "page": load_authorized_project_page(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                            manifest_sha256=parts[5],
+                            page_index=page_index,
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
             prefix = "/api/jobs/"
             if path.startswith(prefix) and "/" not in path[len(prefix) :]:
                 account = self._account()
@@ -1430,6 +1476,8 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             self._error(HTTPStatus.UNAUTHORIZED, "authentication is required")
         except AuthorizationError:
             self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
+        except ProjectStoreError as error:
+            self._error(HTTPStatus.BAD_REQUEST, str(error))
         except ServiceError as error:
             status = (
                 HTTPStatus.NOT_FOUND
@@ -1452,6 +1500,32 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 self._json(HTTPStatus.CREATED, session)
                 return
+            parts = path.split("/")
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "transcriptions"
+            ):
+                required = {
+                    "manifest_sha256",
+                    "source_span_id",
+                    "text",
+                    "expected_revision",
+                }
+                if set(payload) != required:
+                    raise ServiceError("transcription update has invalid keys")
+                account = self._account()
+                revision = revise_authorized_project_line(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    source_span_id=str(payload["source_span_id"]),
+                    text=payload["text"],
+                    expected_revision=payload["expected_revision"],
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
             if path != "/api/jobs":
                 self._error(HTTPStatus.NOT_FOUND, "route was not found")
                 return
@@ -1468,6 +1542,13 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             self._error(HTTPStatus.UNAUTHORIZED, "sign-in failed")
         except AuthorizationError:
             self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
+        except ProjectStoreError as error:
+            status = (
+                HTTPStatus.CONFLICT
+                if str(error) == "transcription revision conflict; reload the current line"
+                else HTTPStatus.BAD_REQUEST
+            )
+            self._error(status, str(error))
         except ServiceError as error:
             self._error(HTTPStatus.BAD_REQUEST, str(error))
 
