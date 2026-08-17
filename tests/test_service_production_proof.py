@@ -12,6 +12,9 @@ from pathlib import Path
 from PIL import Image
 
 from aktreader.project import create_project, import_pagexml_into_project
+ROOT = Path(__file__).resolve().parents[1]
+
+
 from aktreader.service import (
     LOOPBACK_HOST,
     add_project_to_service,
@@ -80,6 +83,22 @@ def _authorized_headers(port: int) -> dict[str, str]:
         return {"Authorization": f"Bearer {payload['access_token']}"}
     finally:
         connection.close()
+
+
+def test_synthetic_public_demo_imports_as_a_project(tmp_path: Path) -> None:
+    project = tmp_path / "demo.aktproj"
+    create_project(project, name="Synthetic public demo")
+    imported = import_pagexml_into_project(
+        project,
+        ROOT / "examples" / "public-demo" / "synthetic-demo.page.xml",
+        image_root=ROOT / "examples" / "public-demo",
+    )
+
+    assert imported["status"] == "SUCCEEDED"
+    assert imported["page_count"] == 1
+    assert imported["region_count"] == 1
+    assert imported["line_count"] == 2
+    assert imported["network_required"] is False
 
 
 def test_loopback_workbench_has_accessibility_basics(tmp_path: Path) -> None:
