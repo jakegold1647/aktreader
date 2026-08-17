@@ -244,9 +244,9 @@ accounts and cannot bind to a LAN or public address, so it is not yet a shared d
 
 A separate local service workspace can own copies of projects, run durable checksum-verified
 backup jobs, enforce local password-protected project roles, provide role-checked document
-review and optimistic transcription updates, and track attached model/dataset artifacts by hash.
-It still binds only to `127.0.0.1`, does not serve a shared browser editor, and must not be
-exposed through a reverse proxy or public address.
+review and optimistic transcription updates, track attached model/dataset artifacts by hash, and
+serve an authenticated collaborative browser workbench. It still binds only to `127.0.0.1` and
+must not be exposed through a reverse proxy or public address.
 
 ```powershell
 python -m aktreader service-create service-data
