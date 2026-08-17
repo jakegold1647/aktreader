@@ -46,6 +46,7 @@ PROJECTS_DIRECTORY = "projects"
 BACKUPS_DIRECTORY = "backups"
 ARTIFACTS_DIRECTORY = "artifacts"
 LOOPBACK_HOST = "127.0.0.1"
+CONTAINER_LISTEN_HOST = "0.0.0.0"
 MAX_REQUEST_BYTES = 65_536
 MAX_BACKUP_FILES = 100_000
 MAX_BACKUP_MANIFEST_BYTES = 16 * 1024 * 1024
@@ -2453,7 +2454,7 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
 
 
 class SelfHostedServiceServer(ThreadingHTTPServer):
-    """A loopback-only local service process with one durable worker."""
+    """A local service process with one durable worker and an explicit bind address."""
 
     allow_reuse_address = True
 
@@ -2461,13 +2462,18 @@ class SelfHostedServiceServer(ThreadingHTTPServer):
         self,
         service_workspace: Path | str,
         *,
+        host: str,
         port: int,
         kraken: LocalKraken | None = None,
     ) -> None:
+        if host not in {LOOPBACK_HOST, CONTAINER_LISTEN_HOST}:
+            raise ServiceError(
+                "host must be the loopback address or the explicit container listener"
+            )
         self.service_workspace = _service_root(service_workspace)
         self.kraken = kraken
         self.worker = ServiceJobWorker(self.service_workspace, kraken=kraken)
-        super().__init__((LOOPBACK_HOST, port), _ServiceRequestHandler)
+        super().__init__((host, port), _ServiceRequestHandler)
         self.worker.start()
 
     @property
@@ -3349,13 +3355,19 @@ document.getElementById("logout").addEventListener("click", () => {
 def create_self_hosted_service_server(
     service_workspace: Path | str,
     *,
+    host: str = LOOPBACK_HOST,
     port: int = 8780,
     kraken: LocalKraken | None = None,
 ) -> SelfHostedServiceServer:
-    """Create a loopback-only service server without starting its request loop."""
+    """Create a loopback server or an explicit container listener without serving yet."""
 
     if isinstance(port, bool) or not isinstance(port, int) or not 0 <= port <= 65535:
         raise ServiceError("port must be an integer from 0 to 65535")
     if kraken is not None and not isinstance(kraken, LocalKraken):
         raise ServiceError("kraken runner must be a LocalKraken instance")
-    return SelfHostedServiceServer(service_workspace, port=port, kraken=kraken)
+    return SelfHostedServiceServer(
+        service_workspace,
+        host=host,
+        port=port,
+        kraken=kraken,
+    )
