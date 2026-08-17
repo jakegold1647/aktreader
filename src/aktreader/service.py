@@ -24,6 +24,7 @@ from PIL import Image
 from aktreader.kraken import KrakenError, LocalKraken
 from aktreader.project import (
     ProjectStoreError,
+    evaluate_htr_suggestions,
     export_human_pagexml,
     export_human_transcript,
     export_human_transcriptions_csv,
@@ -46,6 +47,10 @@ SERVICE_DATABASE_NAME = "service.sqlite3"
 SERVICE_CONTRACT = {"name": "aktreader-self-hosted-service", "version": "1.0.0"}
 BACKUP_MANIFEST_NAME = "backup.aktreader.json"
 BACKUP_CONTRACT = {"name": "aktreader-project-backup", "version": "1.0.0"}
+HTR_EVALUATION_RECEIPT_CONTRACT = {
+    "name": "aktreader-htr-evaluation-receipt",
+    "version": "1.0.0",
+}
 PROJECTS_DIRECTORY = "projects"
 BACKUPS_DIRECTORY = "backups"
 ARTIFACTS_DIRECTORY = "artifacts"
@@ -1895,6 +1900,55 @@ def list_authorized_project_htr_evaluations(
 
 
 
+
+def export_authorized_project_htr_evaluation_receipt(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    result_pagexml_sha256: str,
+) -> tuple[str, bytes]:
+    """Render one authorized, provenance-pinned HTR evaluation receipt."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    canonical_manifest = _require_sha256(manifest_sha256, role="manifest_sha256")
+    canonical_result = _require_sha256(
+        result_pagexml_sha256,
+        role="result_pagexml_sha256",
+    )
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    report = evaluate_htr_suggestions(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=canonical_manifest,
+        result_pagexml_sha256=canonical_result,
+    )
+    public_report = {key: value for key, value in report.items() if key != "project"}
+    report_sha256 = hashlib.sha256(
+        _canonical_json(public_report).encode("utf-8")
+    ).hexdigest()
+    receipt = {
+        "contract": HTR_EVALUATION_RECEIPT_CONTRACT,
+        "report": public_report,
+        "report_sha256": report_sha256,
+        "network_required": False,
+    }
+    payload = (_canonical_json(receipt) + "\n").encode("utf-8")
+    if len(payload) > MAX_EXPORT_RESPONSE_BYTES:
+        raise ServiceError("generated HTR evaluation receipt exceeds the response size limit")
+    filename = (
+        f"aktreader-{canonical_manifest[:12]}-{canonical_result[:12]}.evaluation.json"
+    )
+    return filename, payload
+
+
+
 def load_authorized_project_layout(
     service_workspace: Path | str,
     project_id: str,
@@ -2451,6 +2505,28 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                         ),
                         "network_required": False,
                     },
+                )
+                return
+            if (
+                len(parts) == 9
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "evaluations"
+                and parts[8] == "receipt"
+            ):
+                account = self._account()
+                filename, receipt = export_authorized_project_htr_evaluation_receipt(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                    result_pagexml_sha256=parts[7],
+                )
+                self._bytes(
+                    HTTPStatus.OK,
+                    "application/json; charset=utf-8",
+                    receipt,
+                    download_name=filename,
                 )
                 return
             if (
@@ -3299,11 +3375,12 @@ function renderEvaluations() {
   }
   state.evaluations.forEach(evaluation => {
     const item = document.createElement("li");
+    const summary = document.createElement("span");
     const fingerprint = evaluation.runtime_fingerprint
       ? " · " + evaluation.runtime_fingerprint.slice(0, 12)
       : "";
     if (evaluation.status === "NO_EVALUABLE_HUMAN_REVISIONS") {
-      item.textContent = evaluation.engine + fingerprint +
+      summary.textContent = evaluation.engine + fingerprint +
         " · no saved human corrections are available yet.";
     } else {
       const cer = evaluation.character_error_rate === null
@@ -3312,11 +3389,47 @@ function renderEvaluations() {
       const wer = evaluation.word_error_rate === null
         ? "WER unavailable"
         : "WER " + (evaluation.word_error_rate * 100).toFixed(2) + "%";
-      item.textContent = evaluation.engine + fingerprint + " · " + cer + " · " + wer +
+      summary.textContent = evaluation.engine + fingerprint + " · " + cer + " · " + wer +
         " · " + evaluation.evaluated_line_count + " reviewed line(s)";
     }
+    const receipt = document.createElement("button");
+    receipt.type = "button";
+    receipt.className = "secondary";
+    receipt.textContent = "Download evaluation receipt";
+    receipt.addEventListener("click", () => downloadEvaluationReceipt(evaluation, receipt));
+    item.append(summary, receipt);
     evaluationList.append(item);
   });
+}
+async function downloadEvaluationReceipt(evaluation, control) {
+  const doc = currentDocument();
+  if (!doc || !state.project) return;
+  control.disabled = true;
+  try {
+    const response = await fetch(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(doc.manifest_sha256) + "/evaluations/" +
+      encodeURIComponent(evaluation.result_pagexml_sha256) + "/receipt",
+      { headers: apiHeaders() }
+    );
+    if (!response.ok) {
+      const payload = await response.json();
+      throw new Error(payload.message || "Could not export evaluation receipt");
+    }
+    const objectUrl = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = "aktreader-evaluation-receipt.json";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    setStatus("Evaluation receipt downloaded.");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    control.disabled = false;
+  }
 }
 
 function renderMembership() {

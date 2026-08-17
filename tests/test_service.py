@@ -336,6 +336,7 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "event.target === text" in workbench
         assert "Recognition suggestions" in workbench
         assert "Recognition evaluation" in workbench
+        assert "Download evaluation receipt" in workbench
         assert "/evaluations" in workbench
         assert "Use suggestion" in workbench
         assert "Suggestion copied into the editor. Review it before saving." in workbench
@@ -1058,6 +1059,33 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
         assert evaluations["evaluations"][0]["evaluated_line_count"] == 1
         assert evaluations["evaluations"][0]["character_error_rate"] == 0
         assert evaluations["evaluations"][0]["word_error_rate"] == 0
+
+        receipt_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/evaluations/"
+            f"{job['result']['result_pagexml_sha256']}/receipt"
+        )
+        connection.request("GET", receipt_route, headers=authorization)
+        receipt_response = connection.getresponse()
+        receipt_bytes = receipt_response.read()
+        receipt = json.loads(receipt_bytes)
+        assert receipt_response.status == 200
+        assert receipt_response.headers["Content-Type"].startswith("application/json")
+        assert receipt_response.headers["Content-Disposition"] == (
+            "attachment; filename="
+            f'"aktreader-{manifest_sha256[:12]}-'
+            f'{job["result"]["result_pagexml_sha256"][:12]}.evaluation.json"'
+        )
+        assert receipt["contract"] == {
+            "name": "aktreader-htr-evaluation-receipt",
+            "version": "1.0.0",
+        }
+        assert receipt["report"]["result_pagexml_sha256"] == (
+            job["result"]["result_pagexml_sha256"]
+        )
+        assert len(receipt["report"]["human_revision_set_sha256"]) == 64
+        assert len(receipt["report_sha256"]) == 64
+        assert "project" not in receipt["report"]
+        assert b"recognized by configured local Kraken" not in receipt_bytes
     finally:
         connection.close()
         server.shutdown()

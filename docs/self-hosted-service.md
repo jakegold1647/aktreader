@@ -157,7 +157,12 @@ The **Recognition evaluation** panel reads
 WER, exact-line coverage, and line counts against the latest saved human corrections each time the
 page reloads. With no saved human correction it reports that the result is not evaluable; it never
 treats imported source text, a suggestion, or a pending review proposal as ground truth. The endpoint
-does not persist a metric, promote a model, or change a transcription.
+does not persist a metric, promote a model, or change a transcription. Each result also has a
+portable receipt at
+`GET /api/projects/<project-id>/documents/<manifest-sha256>/evaluations/<result-pagexml-sha256>/receipt`.
+It contains only report metadata and a SHA-256 pin for the canonical report, including a hash of
+the exact human-revision set used for scoring. It contains no source images, project paths, or
+transcription text.
 
 The workbench is a single service UI on loopback only. It is not a LAN/public deployment, does not
 persist credentials in browser storage, and does not yet include presence indicators, comments,
