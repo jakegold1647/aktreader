@@ -93,6 +93,7 @@ from aktreader.project import (
     import_review_package,
     inspect_project,
     list_project_documents,
+    recognize_project_with_kraken,
     resolve_review_proposal,
     revise_line_geometry,
     revise_page_reading_order,
@@ -334,6 +335,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--image-root",
         type=Path,
         help="local directory containing the recognition XML imageFilename paths",
+    )
+
+    project_kraken = subparsers.add_parser(
+        "project-kraken-recognize",
+        help="recognize one imported project document with pinned local Kraken",
+    )
+    project_kraken.add_argument("project", type=Path, help="local .aktproj directory")
+    project_kraken.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="target PAGE XML project-import manifest SHA-256",
+    )
+    project_kraken.add_argument(
+        "--config",
+        required=True,
+        type=Path,
+        help="checksum-pinned local Kraken configuration JSON",
     )
 
 
@@ -1406,6 +1424,22 @@ def _command_project_import_htr_suggestions(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_kraken_recognize(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    config_path = local_input_path(args.config, role="Kraken configuration")
+    if not config_path.is_file():
+        raise CliConfigurationError(f"Kraken configuration is not a file: {config_path}")
+    report = recognize_project_with_kraken(
+        project,
+        manifest_sha256=args.manifest_sha256,
+        kraken=LocalKraken(load_kraken_config(config_path)),
+    )
+    _emit_json(report)
+    return 0
+
+
 def _command_project_export_pagexml(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -2381,6 +2415,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-images": _command_project_import_images,
         "project-import-pdf": _command_project_import_pdf,
         "project-import-htr-suggestions": _command_project_import_htr_suggestions,
+        "project-kraken-recognize": _command_project_kraken_recognize,
         "project-export-pagexml": _command_project_export_pagexml,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
         "project-revise-page-reading-order": _command_project_revise_page_reading_order,

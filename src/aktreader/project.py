@@ -26,6 +26,7 @@ from typing import Any
 import pypdfium2 as pdfium
 from PIL import Image, UnidentifiedImageError
 
+from aktreader.kraken import LocalKraken
 from aktreader.pagexml import import_pagexml
 
 PROJECT_CONTRACT_NAME = "aktreader-project"
@@ -1313,16 +1314,72 @@ def import_htr_suggestions(
             )
         }
         target_lines = {
-            _htr_line_key(row[0], row[1], row[2], row[3]): (row[4], row[5])
+            _htr_line_key(row[0], row[1], row[2], row[3]): (
+                row[4],
+                row[5],
+                int(row[6]),
+                int(row[7]),
+            )
             for row in connection.execute(
                 """
-                SELECT page_index, page_id, region_id, line_id, source_span_id, bbox_json
+                SELECT
+                    lines.page_index,
+                    lines.page_id,
+                    lines.region_id,
+                    lines.line_id,
+                    lines.source_span_id,
+                    lines.bbox_json,
+                    pages.width_px,
+                    pages.height_px
                 FROM lines
-                WHERE manifest_sha256 = ?
+                JOIN pages
+                    ON pages.manifest_sha256 = lines.manifest_sha256
+                   AND pages.page_index = lines.page_index
+                WHERE lines.manifest_sha256 = ?
                 """,
                 (manifest_sha256,),
             )
         }
+        line_keys_by_span = {
+            target_line[0]: key for key, target_line in target_lines.items()
+        }
+        for source_span_id, polygon_json in connection.execute(
+            """
+            SELECT source_span_id, polygon_json
+            FROM line_geometry_revisions
+            WHERE manifest_sha256 = ?
+              AND revision = (
+                    SELECT MAX(latest.revision)
+                    FROM line_geometry_revisions AS latest
+                    WHERE latest.manifest_sha256 = line_geometry_revisions.manifest_sha256
+                      AND latest.source_span_id = line_geometry_revisions.source_span_id
+              )
+            """,
+            (manifest_sha256,),
+        ):
+            key = line_keys_by_span.get(source_span_id)
+            if key is None:
+                raise ProjectStoreError(
+                    "stored line geometry refers to an unknown project line"
+                )
+            source_span, _, width, height = target_lines[key]
+            try:
+                polygon = json.loads(polygon_json)
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored line geometry is unreadable") from error
+            effective_polygon = _validated_points(
+                polygon,
+                role="stored line geometry",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            target_lines[key] = (
+                source_span,
+                _canonical_json(_geometry_bbox(effective_polygon)),
+                width,
+                height,
+            )
         if len(output_pages) != len(target_pages):
             raise ProjectStoreError(
                 "recognition PAGE XML page count does not match the project import"
@@ -1440,6 +1497,97 @@ def import_htr_suggestions(
         "result_pagexml_object": stored_output,
         "already_imported": already_imported,
         "suggestion_count": len(suggestions),
+        "network_required": False,
+    }
+
+
+def _materialize_project_pagexml_for_kraken(
+    root: Path,
+    *,
+    manifest_sha256: str,
+    output: Path,
+) -> None:
+    """Write effective PAGE XML and local image copies for one pre-segmented run."""
+
+    export_human_pagexml(
+        root,
+        output,
+        manifest_sha256=manifest_sha256,
+    )
+    try:
+        document = ET.parse(output)
+    except (OSError, ET.ParseError) as error:
+        raise ProjectStoreError("cannot materialize PAGE XML for local Kraken") from error
+    pages = [element for element in document.iter() if _xml_local_name(element) == "Page"]
+    if not pages:
+        raise ProjectStoreError("project PAGE XML contains no pages for local Kraken")
+    extensions = Image.registered_extensions()
+    for page_index, page in enumerate(pages):
+        page_record = load_project_page(
+            root,
+            manifest_sha256=manifest_sha256,
+            page_index=page_index,
+        )
+        image = Path(str(page_record["image_path"])).resolve()
+        if root not in image.parents or image.is_symlink() or not image.is_file():
+            raise ProjectStoreError("project image is invalid for local Kraken")
+        try:
+            with Image.open(image) as opened:
+                image_format = opened.format
+        except (OSError, UnidentifiedImageError) as error:
+            raise ProjectStoreError("project image is unreadable for local Kraken") from error
+        suffix = next(
+            (
+                extension
+                for extension, registered_format in extensions.items()
+                if registered_format == image_format
+            ),
+            ".img",
+        )
+        image_name = f"page-{page_index:04d}{suffix.lower()}"
+        destination = output.parent / image_name
+        shutil.copyfile(image, destination)
+        page.set("imageFilename", image_name)
+    document.write(output, encoding="utf-8", xml_declaration=True)
+
+
+def recognize_project_with_kraken(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    kraken: LocalKraken,
+) -> dict[str, object]:
+    """Run one checksum-pinned Kraken model on effective local project PAGE XML."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    root = _required_project_root(project)
+    if not isinstance(kraken, LocalKraken):
+        raise ProjectStoreError("kraken runner must be a LocalKraken instance")
+    with tempfile.TemporaryDirectory(
+        prefix=".aktreader-project-kraken-",
+        dir=root.parent,
+    ) as temporary:
+        workspace = Path(temporary)
+        prepared = workspace / "input.page.xml"
+        recognized = workspace / "recognized.page.xml"
+        _materialize_project_pagexml_for_kraken(
+            root,
+            manifest_sha256=manifest_sha256,
+            output=prepared,
+        )
+        recognition = kraken.recognize_pagexml(prepared, recognized)
+        imported = import_htr_suggestions(
+            root,
+            recognized,
+            manifest_sha256=manifest_sha256,
+            engine="kraken",
+            runtime_fingerprint=recognition.runtime_fingerprint,
+            image_root=workspace,
+        )
+    return {
+        **imported,
+        "input_pagexml_sha256": recognition.source_sha256,
+        "runtime_fingerprint": recognition.runtime_fingerprint,
         "network_required": False,
     }
 

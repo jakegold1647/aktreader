@@ -204,3 +204,23 @@ def test_prompt_verify_and_canonical_label_validation_are_machine_readable(
     assert labels["labels"][0]["schema_kind"] == "canonical"
     assert labels["labels"][0]["quality_metrics"]["groundedness"]["violation_count"] == 0
     assert Path(labels["labels"][0]["path"]) == label_path
+
+
+def test_project_kraken_command_requires_a_project_manifest_and_pinned_config() -> None:
+    parser = build_parser()
+
+    parsed = parser.parse_args(
+        [
+            "project-kraken-recognize",
+            "register.aktproj",
+            "--manifest-sha256",
+            "a" * 64,
+            "--config",
+            "kraken.json",
+        ]
+    )
+
+    assert parsed.command == "project-kraken-recognize"
+    assert parsed.project == Path("register.aktproj")
+    assert parsed.manifest_sha256 == "a" * 64
+    assert parsed.config == Path("kraken.json")

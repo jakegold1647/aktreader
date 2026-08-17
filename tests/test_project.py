@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import sqlite3
+import subprocess
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from PIL import Image
 
+import aktreader.kraken as kraken_module
 from aktreader.cli import main
+from aktreader.kraken import KrakenConfig, LocalKraken
+from aktreader.local_reader import PinnedArtifact, sha256_file
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
     ProjectStoreError,
@@ -26,6 +32,7 @@ from aktreader.project import (
     list_project_documents,
     list_project_pages,
     load_project_page,
+    recognize_project_with_kraken,
     resolve_review_proposal,
     revise_line_geometry,
     revise_line_transcription,
@@ -383,6 +390,115 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(tmp_pa
     assert unchanged["revision"] == 1
     assert inspect_project(project)["transcription_revision_count"] == 1
 
+
+
+def test_project_imports_htr_suggestions_with_effective_line_geometry(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        polygon=[[1, 1], [39, 1], [39, 13], [1, 13]],
+        baseline=[[1, 11], [39, 11]],
+        editor="reviewer-1",
+    )
+    recognized = tmp_path / "recognized.page.xml"
+    export_human_pagexml(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    report = import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="a" * 64,
+        image_root=source_root,
+    )
+
+    assert report["status"] == "SUCCEEDED"
+    assert report["suggestion_count"] == 1
+
+
+def test_project_runs_pinned_kraken_from_its_own_materialized_images(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    shutil.rmtree(source_root)
+
+    executable = tmp_path / "kraken.exe"
+    model = tmp_path / "register.safetensors"
+    executable.write_bytes(b"pinned local kraken executable")
+    model.write_bytes(b"pinned local recognition model")
+    kraken = LocalKraken(
+        KrakenConfig(
+            executable=PinnedArtifact(executable, sha256_file(executable)),
+            model=PinnedArtifact(model, sha256_file(model)),
+            timeout_seconds=60,
+        )
+    )
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        captured["command"] = command
+        source_path = Path(command[command.index("-i") + 1])
+        output_path = Path(command[command.index("-i") + 2])
+        document = ET.parse(source_path)
+        page = next(element for element in document.iter() if element.tag == "Page")
+        assert page.get("imageFilename") == "page-0000.png"
+        assert (source_path.parent / "page-0000.png").is_file()
+        text = next(element for element in document.iter() if element.tag == "Unicode")
+        text.text = "Александръ"
+        document.write(output_path, encoding="utf-8", xml_declaration=True)
+        return subprocess.CompletedProcess(command, 0, "local stdout", "local stderr")
+
+    monkeypatch.setattr(kraken_module.subprocess, "run", fake_run)
+
+    report = recognize_project_with_kraken(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        kraken=kraken,
+    )
+
+    assert report["status"] == "SUCCEEDED"
+    assert report["engine"] == "kraken"
+    assert report["suggestion_count"] == 1
+    assert report["runtime_fingerprint"] == kraken.runtime_fingerprint
+    assert all("source" not in item for item in report)
+    command = captured["command"]
+    assert isinstance(command, list)
+    assert command[command.index("-f") + 1] == "xml"
+    assert command[command.index("-x")] == "-x"
+    suggestion = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]["suggestions"][0]
+    assert suggestion["text"] == "Александръ"
 
 
 def test_project_keeps_htr_suggestions_separate_from_human_revisions(tmp_path: Path) -> None:
