@@ -2397,18 +2397,29 @@ def _pdf_export_font_path(font_path: Path | str | None) -> Path:
             raise ProjectStoreError("PDF font must be a readable local file")
         candidates.append(candidate)
     else:
-        windows_root = os.environ.get("WINDIR")
-        if windows_root:
-            candidates.append(Path(windows_root) / "Fonts" / "arial.ttf")
-        candidates.extend(
-            [
-                Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-                Path("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"),
-                Path("/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
-                Path("/System/Library/Fonts/Supplemental/Arial.ttf"),
-                Path("/Library/Fonts/Arial Unicode.ttf"),
-            ]
-        )
+        configured_font = os.environ.get("AKTREADER_PDF_FONT")
+        if configured_font:
+            candidate = _local_path(
+                configured_font,
+                role="AKTREADER_PDF_FONT",
+                must_exist=True,
+            )
+            if not candidate.is_file():
+                raise ProjectStoreError("AKTREADER_PDF_FONT must be a readable local file")
+            candidates.append(candidate)
+        else:
+            windows_root = os.environ.get("WINDIR")
+            if windows_root:
+                candidates.append(Path(windows_root) / "Fonts" / "arial.ttf")
+            candidates.extend(
+                [
+                    Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+                    Path("/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"),
+                    Path("/System/Library/Fonts/Supplemental/Arial Unicode.ttf"),
+                    Path("/System/Library/Fonts/Supplemental/Arial.ttf"),
+                    Path("/Library/Fonts/Arial Unicode.ttf"),
+                ]
+            )
     for candidate in candidates:
         try:
             ImageFont.truetype(str(candidate), size=12)
