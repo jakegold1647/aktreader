@@ -466,10 +466,22 @@ def export_public_collection(
             ORDER BY project_id, manifest_sha256, page_index, source_span_id
             """
         ).fetchall()
+        member_project_paths = connection.execute(
+            "SELECT project_path FROM projects ORDER BY project_id"
+        ).fetchall()
     except sqlite3.Error as error:
         raise CollectionError(f"cannot read local collection for public export: {error}") from error
     finally:
         connection.close()
+
+    for (member_project_path,) in member_project_paths:
+        if not isinstance(member_project_path, str):
+            raise CollectionError("local collection has an invalid member project path")
+        member_path = Path(member_project_path).resolve()
+        if destination == member_path or member_path in destination.parents:
+            raise CollectionError(
+                "public collection export must be outside every indexed project"
+            )
 
     lines_by_document: dict[tuple[str, str], list[tuple[object, ...]]] = {}
     for row in line_rows:
