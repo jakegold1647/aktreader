@@ -21,7 +21,13 @@ from urllib.parse import unquote, urlparse
 
 from PIL import Image
 
+from aktreader.htr_corpus import HtrCorpusError, inspect_consented_training_corpus
 from aktreader.kraken import KrakenConfig, KrakenError, LocalKraken
+from aktreader.kraken_training import (
+    KrakenTrainingError,
+    load_kraken_training_config,
+    run_kraken_training,
+)
 from aktreader.local_reader import PinnedArtifact
 from aktreader.project import (
     ProjectStoreError,
@@ -56,6 +62,7 @@ HTR_EVALUATION_RECEIPT_CONTRACT = {
 PROJECTS_DIRECTORY = "projects"
 BACKUPS_DIRECTORY = "backups"
 ARTIFACTS_DIRECTORY = "artifacts"
+TRAINING_DIRECTORY = "training"
 LOOPBACK_HOST = "127.0.0.1"
 CONTAINER_LISTEN_HOST = "0.0.0.0"
 MAX_REQUEST_BYTES = 65_536
@@ -259,6 +266,7 @@ def _service_root(path: Path | str) -> Path:
         root / PROJECTS_DIRECTORY,
         root / BACKUPS_DIRECTORY,
         root / ARTIFACTS_DIRECTORY,
+        root / TRAINING_DIRECTORY,
     ):
         if not directory.is_dir() or directory.is_symlink():
             raise ServiceError(f"service workspace is missing managed {directory.name} storage")
@@ -291,6 +299,7 @@ def create_service_workspace(path: Path | str) -> dict[str, object]:
             "projects": PROJECTS_DIRECTORY,
             "backups": BACKUPS_DIRECTORY,
             "artifacts": ARTIFACTS_DIRECTORY,
+            "training": TRAINING_DIRECTORY,
         },
         "network_required": False,
     }
@@ -298,6 +307,7 @@ def create_service_workspace(path: Path | str) -> dict[str, object]:
         (temporary / PROJECTS_DIRECTORY).mkdir()
         (temporary / BACKUPS_DIRECTORY).mkdir()
         (temporary / ARTIFACTS_DIRECTORY).mkdir()
+        (temporary / TRAINING_DIRECTORY).mkdir()
         (temporary / SERVICE_MANIFEST_NAME).write_text(
             _canonical_json(manifest) + "\n",
             encoding="utf-8",
@@ -983,6 +993,78 @@ def _artifact_storage_path(root: Path, artifact: sqlite3.Row) -> Path:
     if _sha256_file(resolved) != expected_sha256:
         raise ServiceError("registered artifact storage checksum does not match its metadata")
     return resolved
+
+
+def _training_job_directory(root: Path, job_id: str, *, must_exist: bool) -> Path:
+    """Resolve one service-owned training-job directory without following links."""
+
+    canonical_job_id = _require_uuid(job_id, role="training job_id")
+    directory = root / TRAINING_DIRECTORY / canonical_job_id
+    try:
+        resolved = directory.resolve(strict=must_exist)
+    except OSError as error:
+        raise ServiceError("service training job storage is missing or inaccessible") from error
+    training_root = (root / TRAINING_DIRECTORY).resolve()
+    if training_root not in resolved.parents or resolved.is_symlink():
+        raise ServiceError("service training job storage path is invalid")
+    return resolved
+
+
+def _regular_local_file(path: Path | str, *, role: str) -> Path:
+    candidate = _local_path(path, role=role, must_exist=True)
+    if candidate.is_symlink() or not candidate.is_file():
+        raise ServiceError(f"{role} must be a regular local file")
+    return candidate
+
+
+def _copy_regular_tree(source: Path, destination: Path) -> None:
+    """Copy a local directory only after rejecting symbolic links and special files."""
+
+    if source.is_symlink() or not source.is_dir():
+        raise ServiceError("HTR training corpus must be a regular local directory")
+    if destination.exists():
+        raise ServiceError("service training snapshot destination already exists")
+    temporary = Path(tempfile.mkdtemp(prefix=f".{destination.name}.", dir=destination.parent))
+    try:
+        for input_path, relative in _safe_project_files(source):
+            output_path = temporary / relative
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(input_path, output_path)
+        os.replace(temporary, destination)
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+
+
+def _snapshot_training_inputs(
+    root: Path,
+    *,
+    job_id: str,
+    config_path: Path,
+    plan_path: Path,
+    corpus_directory: Path,
+) -> tuple[Path, dict[str, object]]:
+    """Freeze local training inputs into service-owned storage before queueing."""
+
+    destination = _training_job_directory(root, job_id, must_exist=False)
+    temporary = Path(
+        tempfile.mkdtemp(prefix=f".{job_id}.", dir=root / TRAINING_DIRECTORY)
+    )
+    moved = False
+    try:
+        shutil.copyfile(config_path, temporary / "config.json")
+        shutil.copyfile(plan_path, temporary / "plan.json")
+        _copy_regular_tree(corpus_directory, temporary / "corpus")
+        inspected = inspect_consented_training_corpus(
+            temporary / "plan.json",
+            temporary / "corpus",
+        )
+        os.replace(temporary, destination)
+        moved = True
+    finally:
+        if not moved:
+            shutil.rmtree(temporary, ignore_errors=True)
+    return destination, inspected
 
 
 def _attached_project_model(
@@ -1952,6 +2034,91 @@ def queue_project_kraken_recognition(
     }
 
 
+def queue_service_project_kraken_training(
+    service_workspace: Path | str,
+    *,
+    project_id: str,
+    config_path: Path | str,
+    plan_path: Path | str,
+    corpus_directory: Path | str,
+    model_name: str,
+    model_license_id: str,
+    model_description: str = "",
+    queued_by: str = "LOCAL_SERVICE_OPERATOR",
+) -> dict[str, object]:
+    """Snapshot and queue one consent-checked local CPU/GPU Kraken training run."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _managed_project_path(root, canonical_project_id)
+    if not isinstance(queued_by, str) or not queued_by.strip():
+        raise ServiceError("training job actor must be a nonblank string")
+    config = _regular_local_file(config_path, role="Kraken training configuration")
+    plan = _regular_local_file(plan_path, role="HTR training corpus plan")
+    corpus = _local_path(
+        corpus_directory,
+        role="HTR training corpus directory",
+        must_exist=True,
+    )
+    if corpus.is_symlink() or not corpus.is_dir():
+        raise ServiceError("HTR training corpus must be a regular local directory")
+    config_report = load_kraken_training_config(config)
+    inspected = inspect_consented_training_corpus(plan, corpus)
+    canonical_name = _validated_artifact_name(model_name)
+    canonical_license_id = _validated_license_id(model_license_id)
+    canonical_description = _validated_artifact_description(model_description)
+    job_id = str(uuid.uuid4())
+    _, snapshot = _snapshot_training_inputs(
+        root,
+        job_id=job_id,
+        config_path=config,
+        plan_path=plan,
+        corpus_directory=corpus,
+    )
+    if (
+        snapshot["corpus_manifest_sha256"] != inspected["corpus_manifest_sha256"]
+        or snapshot["source_plan_sha256"] != inspected["source_plan_sha256"]
+    ):
+        raise ServiceError("service training snapshot did not reproduce the inspected corpus")
+    now = _timestamp()
+    payload = {
+        "project_id": canonical_project_id,
+        "training": {
+            "config_sha256": config_report.config_sha256,
+            "corpus_manifest_sha256": snapshot["corpus_manifest_sha256"],
+            "source_plan_sha256": snapshot["source_plan_sha256"],
+            "queued_by": queued_by,
+        },
+        "model": {
+            "name": canonical_name,
+            "license_id": canonical_license_id,
+            "description": canonical_description,
+        },
+    }
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO service_jobs
+                    (job_id, kind, payload_json, status, result_json, error, created_at, updated_at)
+                VALUES (?, 'PROJECT_KRAKEN_TRAINING', ?, 'PENDING', NULL, NULL, ?, ?)
+                """,
+                (job_id, _canonical_json(payload), now, now),
+            )
+    finally:
+        connection.close()
+    return {
+        "status": "QUEUED",
+        "job_id": job_id,
+        "kind": "PROJECT_KRAKEN_TRAINING",
+        "project_id": canonical_project_id,
+        "corpus_manifest_sha256": snapshot["corpus_manifest_sha256"],
+        "source_plan_sha256": snapshot["source_plan_sha256"],
+        "network_required": False,
+    }
+
+
 def get_service_job(service_workspace: Path | str, job_id: str) -> dict[str, object]:
     """Read one persisted job using a canonical job identifier."""
 
@@ -2144,6 +2311,77 @@ class ServiceJobWorker:
                         "backup_id": backup["backup_id"],
                         "file_count": backup["file_count"],
                     }
+                elif job["kind"] == "PROJECT_KRAKEN_TRAINING":
+                    training = payload.get("training")
+                    model = payload.get("model")
+                    if not isinstance(training, dict) or not isinstance(model, dict):
+                        raise ServiceError("Kraken training job payload is invalid")
+                    job_directory = _training_job_directory(
+                        self._root,
+                        str(job["job_id"]),
+                        must_exist=True,
+                    )
+                    config_path = job_directory / "config.json"
+                    plan_path = job_directory / "plan.json"
+                    corpus_directory = job_directory / "corpus"
+                    if _sha256_file(config_path) != training.get("config_sha256"):
+                        raise ServiceError("Kraken training configuration snapshot changed")
+                    inspected = inspect_consented_training_corpus(plan_path, corpus_directory)
+                    if (
+                        inspected["corpus_manifest_sha256"]
+                        != training.get("corpus_manifest_sha256")
+                        or inspected["source_plan_sha256"]
+                        != training.get("source_plan_sha256")
+                    ):
+                        raise ServiceError("Kraken training corpus snapshot changed")
+                    run_directory = job_directory / "run"
+                    training_report = run_kraken_training(
+                        config_path,
+                        plan_path,
+                        corpus_directory,
+                        run_directory,
+                    )
+                    receipt_path = run_directory / "training-run.aktreader.json"
+                    try:
+                        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+                    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+                        raise ServiceError("Kraken training receipt is unreadable") from error
+                    outputs = receipt.get("outputs") if isinstance(receipt, dict) else None
+                    if not isinstance(outputs, list) or not outputs:
+                        raise ServiceError("Kraken training receipt has no model outputs")
+                    registered_models: list[dict[str, object]] = []
+                    for output in outputs:
+                        if not isinstance(output, dict):
+                            raise ServiceError("Kraken training output receipt is invalid")
+                        relative = output.get("path")
+                        if not isinstance(relative, str):
+                            raise ServiceError("Kraken training output path is invalid")
+                        weights_path = (run_directory / PurePosixPath(relative)).resolve(
+                            strict=True
+                        )
+                        if run_directory not in weights_path.parents or not weights_path.is_file():
+                            raise ServiceError("Kraken training output path is invalid")
+                        registered = register_service_artifact(
+                            self._root,
+                            weights_path,
+                            kind="MODEL",
+                            name=str(model.get("name", "")),
+                            license_id=str(model.get("license_id", "")),
+                            description=str(model.get("description", "")),
+                        )
+                        attachment = attach_service_artifact(
+                            self._root,
+                            project_id=str(payload["project_id"]),
+                            artifact_id=str(registered["artifact"]["artifact_id"]),
+                        )
+                        registered_models.append(attachment["artifact"])
+                    result = {
+                        "project_id": payload["project_id"],
+                        "corpus_manifest_sha256": inspected["corpus_manifest_sha256"],
+                        "source_plan_sha256": inspected["source_plan_sha256"],
+                        "training_receipt_sha256": training_report["receipt_sha256"],
+                        "registered_models": registered_models,
+                    }
                 elif job["kind"] == "PROJECT_KRAKEN_RECOGNITION":
                     if self._kraken is None:
                         raise ServiceError(
@@ -2181,6 +2419,8 @@ class ServiceJobWorker:
                 )
             except (
                 KrakenError,
+                KrakenTrainingError,
+                HtrCorpusError,
                 OSError,
                 ProjectStoreError,
                 ServiceError,
