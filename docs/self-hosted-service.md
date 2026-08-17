@@ -51,6 +51,35 @@ Account creation and role assignment are local CLI administration actions, not p
 endpoints. An existing service workspace is migrated in place on first use; its existing
 projects remain inaccessible to HTTP sessions until an administrator grants a role.
 
+## Model and dataset artifact registry
+
+The service can make a model or dataset file a named, immutable local artifact without running,
+uploading, or trusting it. Register a regular local file together with the license identifier you
+have reviewed, then attach it explicitly to a managed project:
+
+```powershell
+python -m aktreader service-artifact-register service-data serock-model.bin `
+  --kind MODEL `
+  --name "Serock baseline" `
+  --license-id Apache-2.0 `
+  --description "Local baseline HTR weights"
+python -m aktreader service-project-attach-artifact service-data `
+  --project-id <project-id> `
+  --artifact-id <artifact-id>
+```
+
+Registration streams the file into `artifacts/sha256/<prefix>/<sha256>` and records its SHA-256,
+byte count, declared license ID, kind, name, and description. It never fetches a model registry,
+executes model code, accepts an archive directory, or asserts that a declared license is valid.
+Registering repeated bytes can reuse the same local content object while preserving each explicit
+metadata record.
+
+Only an `OWNER` may attach an artifact through the service API. Project viewers can read the
+attached metadata at `GET /api/projects/<project-id>/artifacts`, but the API does not disclose
+the managed filesystem path or serve the artifact bytes. This gives projects an auditable
+model/dataset selection boundary; reproducible training, evaluation, and publication receipts
+remain separate local workflows.
+
 ## Authenticated review API
 
 A signed-in `VIEWER` may list the project documents and load revision-aware PAGE records:
