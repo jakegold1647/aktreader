@@ -23,8 +23,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, UnidentifiedImageError
 import pypdfium2 as pdfium
+from PIL import Image, UnidentifiedImageError
 
 from aktreader.pagexml import import_pagexml
 
