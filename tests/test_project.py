@@ -38,6 +38,7 @@ from aktreader.project import (
     load_project_page,
     recognize_project_with_kraken,
     resolve_review_proposal,
+    search_project_transcriptions,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
@@ -187,6 +188,73 @@ def test_project_import_copies_hashed_pagexml_images_and_lines(tmp_path: Path) -
     assert report_after_repeat["pagexml_import_count"] == 1
     assert report_after_repeat["page_count"] == 1
     assert report_after_repeat["line_count"] == 1
+
+
+def test_project_searches_effective_transcriptions_by_field(tmp_path: Path) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source, text="Александр")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        title="Serock birth index",
+        tags=["Serock", "1890"],
+    )
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Aleksander Goldstein",
+        editor="reviewer-1",
+    )
+
+    text_matches = search_project_transcriptions(
+        project,
+        query="gold",
+        field="text",
+    )
+    title_matches = search_project_transcriptions(
+        project,
+        query="birth",
+        field="title",
+    )
+    tag_matches = search_project_transcriptions(
+        project,
+        query="ser",
+        field="tag",
+    )
+
+    assert text_matches["network_required"] is False
+    assert text_matches["result_count"] == 1
+    assert text_matches["truncated"] is False
+    assert text_matches["results"] == [
+        {
+            "manifest_sha256": imported["manifest_sha256"],
+            "document_id": text_matches["results"][0]["document_id"],
+            "title": "Serock birth index",
+            "tags": ["Serock", "1890"],
+            "page_index": 0,
+            "page_id": "page-index-0",
+            "region_id": "region-1",
+            "line_id": "line-1",
+            "source_span_id": line["source_span_id"],
+            "text": "Aleksander Goldstein",
+            "revision": 1,
+        }
+    ]
+    assert title_matches["result_count"] == tag_matches["result_count"] == 1
+    assert title_matches["results"][0]["source_span_id"] == line["source_span_id"]
+    assert tag_matches["results"][0]["source_span_id"] == line["source_span_id"]
 
 
 def test_project_imports_an_image_directory_as_editable_pagexml(tmp_path: Path) -> None:
