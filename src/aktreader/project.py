@@ -1594,6 +1594,7 @@ def segment_project_with_kraken(
         metadata = ET.SubElement(combined_root, "Metadata")
         ET.SubElement(metadata, "Creator").text = "AKT Reader local Kraken baseline segmentation"
         results = []
+        extensions = Image.registered_extensions()
         for page_index in range(page_count):
             page_record = load_project_page(
                 root,
@@ -1603,12 +1604,22 @@ def segment_project_with_kraken(
             image = Path(str(page_record["image_path"])).resolve()
             if root not in image.parents or image.is_symlink() or not image.is_file():
                 raise ProjectStoreError("project image is invalid for local Kraken layout")
-            suffix = image.suffix.lower()
-            if not suffix:
+            try:
+                with Image.open(image) as opened:
+                    image_format = opened.format
+            except (OSError, UnidentifiedImageError) as error:
                 raise ProjectStoreError(
-                    "project image has no file extension for local Kraken layout"
-                )
-            materialized_image = workspace / f"page-{page_index:04d}{suffix}"
+                    "project image is unreadable for local Kraken layout"
+                ) from error
+            suffix = next(
+                (
+                    extension
+                    for extension, registered_format in extensions.items()
+                    if registered_format == image_format
+                ),
+                ".img",
+            )
+            materialized_image = workspace / f"page-{page_index:04d}{suffix.lower()}"
             shutil.copyfile(image, materialized_image)
             segmented = workspace / f"page-{page_index:04d}.page.xml"
             result = kraken.segment_image(materialized_image, segmented)
