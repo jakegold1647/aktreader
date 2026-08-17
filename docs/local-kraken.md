@@ -227,6 +227,11 @@ features continue to work but recognition requests are rejected.
 
 An `EDITOR` or `OWNER` can submit only the project document's
 `manifest_sha256` to `POST /api/projects/<project-id>/recognitions/kraken`.
+When enabled, the loopback workbench exposes this as **Run local recognition**
+for the selected document. The control is disabled for viewers and for a
+service started without `--kraken-config`; it never asks the browser for a
+configuration, file path, model, URL, or command argument.
+
 The worker materializes the project's effective PAGE XML and managed image
 copies, invokes the configured local runner, then imports the result as
 reviewable HTR suggestions. It retains a durable job receipt containing the
