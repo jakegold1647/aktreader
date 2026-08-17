@@ -3650,6 +3650,51 @@ def load_project_page_layout(
             )
             for region_id in source_region_ids
         }
+        line_rows = connection.execute(
+            """
+            SELECT source_span_id, line_id, locator_json
+            FROM lines
+            WHERE manifest_sha256 = ? AND page_index = ?
+            ORDER BY rowid
+            """,
+            (manifest_sha256, page_index),
+        ).fetchall()
+        effective_lines: dict[
+            str, tuple[int, list[list[int]], list[list[int]] | None, str]
+        ] = {}
+        line_order: list[str] = []
+        for source_span_id, line_id, locator_json in line_rows:
+            if (
+                not isinstance(source_span_id, str)
+                or not source_span_id.strip()
+                or not isinstance(line_id, str)
+                or not line_id.strip()
+            ):
+                raise ProjectStoreError("stored line identity is invalid")
+            try:
+                locator = json.loads(locator_json)
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored line locator is unreadable") from error
+            if not isinstance(locator, dict):
+                raise ProjectStoreError("stored line locator is invalid")
+            polygon = _validated_points(
+                locator.get("polygon"),
+                role="stored line polygon",
+                width=width,
+                height=height,
+                allow_none=False,
+            )
+            baseline = _validated_points(
+                locator.get("baseline"),
+                role="stored line baseline",
+                width=width,
+                height=height,
+                allow_none=True,
+            )
+            if source_span_id in effective_lines:
+                raise ProjectStoreError("project page has duplicate line identities")
+            effective_lines[source_span_id] = (0, polygon, baseline, line_id)
+            line_order.append(source_span_id)
         geometry_rows = connection.execute(
             """
             SELECT region_id, revision, polygon_json
@@ -3678,6 +3723,46 @@ def load_project_page_layout(
                     height=height,
                     allow_none=False,
                 ),
+            )
+        line_geometry_rows = connection.execute(
+            """
+            SELECT source_span_id, revision, polygon_json, baseline_json
+            FROM line_geometry_revisions
+            WHERE manifest_sha256 = ? AND source_span_id IN (
+                SELECT source_span_id
+                FROM lines
+                WHERE manifest_sha256 = ? AND page_index = ?
+            )
+            ORDER BY source_span_id, revision
+            """,
+            (manifest_sha256, manifest_sha256, page_index),
+        ).fetchall()
+        for source_span_id, revision, polygon_json, baseline_json in line_geometry_rows:
+            current = effective_lines.get(source_span_id)
+            if current is None:
+                raise ProjectStoreError("stored line geometry refers to an unknown line")
+            try:
+                polygon = json.loads(polygon_json)
+                baseline = json.loads(baseline_json) if baseline_json is not None else None
+            except (TypeError, json.JSONDecodeError) as error:
+                raise ProjectStoreError("stored line geometry is unreadable") from error
+            effective_lines[source_span_id] = (
+                int(revision),
+                _validated_points(
+                    polygon,
+                    role="stored line polygon",
+                    width=width,
+                    height=height,
+                    allow_none=False,
+                ),
+                _validated_points(
+                    baseline,
+                    role="stored line baseline",
+                    width=width,
+                    height=height,
+                    allow_none=True,
+                ),
+                current[3],
             )
         order_row = connection.execute(
             """
@@ -3720,6 +3805,16 @@ def load_project_page_layout(
                 "revision": effective_regions[region_id][0],
             }
             for region_id in region_ids
+        ],
+        "lines": [
+            {
+                "source_span_id": source_span_id,
+                "line_id": effective_lines[source_span_id][3],
+                "polygon": effective_lines[source_span_id][1],
+                "baseline": effective_lines[source_span_id][2],
+                "revision": effective_lines[source_span_id][0],
+            }
+            for source_span_id in line_order
         ],
         "network_required": False,
     }
