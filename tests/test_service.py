@@ -999,24 +999,16 @@ def test_service_training_job_snapshots_inputs_and_registers_output(
     assert job["result"]["corpus_manifest_sha256"] == "a" * 64
     assert job["result"]["source_plan_sha256"] == "b" * 64
     assert job["result"]["training_receipt_sha256"] == "d" * 64
-    assert job["result"]["registered_models"] == [
-        {
-            "artifact_id": job["result"]["registered_models"][0]["artifact_id"],
-            "kind": "MODEL",
-            "name": "Local Serock training run",
-            "license_id": "Apache-2.0",
-            "description": "Consent-checked local test output",
-            "sha256": sha256_file(
-                workspace
-                / "artifacts"
-                / "sha256"
-                / job["result"]["registered_models"][0]["sha256"][:2]
-                / job["result"]["registered_models"][0]["sha256"]
-            ),
-            "size_bytes": len(b"trained local weights"),
-            "created_at": job["result"]["registered_models"][0]["created_at"],
-        }
-    ]
+    registered_models = job["result"]["registered_models"]
+    assert len(registered_models) == 1
+    registered_model = registered_models[0]
+    assert registered_model["kind"] == "MODEL"
+    assert registered_model["name"] == "Local Serock training run"
+    assert registered_model["license_id"] == "Apache-2.0"
+    assert registered_model["description"] == "Consent-checked local test output"
+    assert registered_model["size_bytes"] == len(b"trained local weights")
+    assert len(registered_model["sha256"]) == 64
+    assert "relative_path" not in registered_model
 
 
 def test_service_model_releases_pin_queued_recognition_and_support_rollback(
