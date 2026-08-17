@@ -335,6 +335,8 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "selectAdjacentLine" in workbench
         assert "event.target === text" in workbench
         assert "Recognition suggestions" in workbench
+        assert "Recognition evaluation" in workbench
+        assert "/evaluations" in workbench
         assert "Use suggestion" in workbench
         assert "Suggestion copied into the editor. Review it before saving." in workbench
         assert "apply.disabled = !canEdit()" in workbench
@@ -1017,6 +1019,45 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
                 "imported_at": page["lines"][0]["suggestions"][0]["imported_at"],
             }
         ]
+
+        evaluation_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/evaluations"
+        )
+        connection.request("GET", evaluation_route, headers=authorization)
+        initial_evaluation_response = connection.getresponse()
+        initial_evaluations = json.loads(initial_evaluation_response.read())
+        assert initial_evaluation_response.status == 200
+        assert initial_evaluations["evaluations"][0]["status"] == (
+            "NO_EVALUABLE_HUMAN_REVISIONS"
+        )
+        assert "project" not in initial_evaluations["evaluations"][0]
+
+        source_span_id = page["lines"][0]["source_span_id"]
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "text": "recognized by configured local Kraken",
+                    "expected_revision": 0,
+                }
+            ),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        revision_response = connection.getresponse()
+        assert revision_response.status == 200
+        revision_response.read()
+
+        connection.request("GET", evaluation_route, headers=authorization)
+        evaluated_response = connection.getresponse()
+        evaluations = json.loads(evaluated_response.read())
+        assert evaluated_response.status == 200
+        assert evaluations["evaluations"][0]["status"] == "SUCCEEDED"
+        assert evaluations["evaluations"][0]["evaluated_line_count"] == 1
+        assert evaluations["evaluations"][0]["character_error_rate"] == 0
+        assert evaluations["evaluations"][0]["word_error_rate"] == 0
     finally:
         connection.close()
         server.shutdown()
