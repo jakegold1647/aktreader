@@ -2,8 +2,10 @@
 
 The AKT Reader service foundation manages copies of local `.aktproj` projects, durable
 backup jobs, verified backup restore, and password-protected local accounts with per-project
-roles. It is deliberately a single-machine boundary: the service binds only to
-`127.0.0.1` and does not make the browser workbench available on a LAN or public address.
+roles. It is deliberately a single-machine boundary: the normal service process binds only to
+`127.0.0.1` and does not make the browser workbench available on a LAN or public address. The
+supplied Compose setup uses a container-only listener solely so Docker can forward a host-loopback
+port; it is not a LAN or public listener.
 
 This is local collaborative review on one machine, not a production network deployment.
 Authenticated owners, editors, and viewers can use the loopback workbench; text and layout saves
@@ -235,8 +237,9 @@ restored directory is re-opened as an AKT Reader project before it is published.
 
 ## Optional local Compose process
 
-The supplied `compose.yml` binds the service port to loopback only and keeps workspace
-state in `./service-data`.
+The supplied `compose.yml` binds the service port to host loopback only and keeps workspace
+state in `./service-data`. Inside the container it uses `--container-listen` solely for Docker
+port forwarding; the Compose port mapping is the external boundary.
 
 ```powershell
 docker compose run --rm aktreader service-create /data
@@ -245,6 +248,18 @@ docker compose up --build
 ```
 
 Put an importable project under `./projects-to-import`; Compose mounts that directory
-read-only at `/imports` for the explicit copy step. The service is reachable only from
-the host at `http://127.0.0.1:8780`. Building the image may download Python packages;
-the running application does not contact a network service.
+read-only at `/imports` for the explicit copy step. Create an owner before starting the service,
+using a temporary password file mounted read-only into a one-off command:
+
+```powershell
+docker compose run --rm `
+  --volume "${PWD}/owner-password.txt:/run/secrets/owner-password.txt:ro" `
+  aktreader service-user-create /data `
+  --username owner `
+  --password-file /run/secrets/owner-password.txt
+```
+
+Remove the password file after use, then add a project with `--owner owner`. The service is
+reachable only from the host at `http://127.0.0.1:8780`. Do not change the host-side
+`127.0.0.1:8780:8780` mapping or put the container behind a reverse proxy. Building the image
+may download Python packages; the running application does not contact a network service.

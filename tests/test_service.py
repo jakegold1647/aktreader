@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from http.client import HTTPConnection
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from aktreader import kraken as kraken_module
@@ -18,6 +19,7 @@ from aktreader.local_reader import PinnedArtifact, sha256_file
 from aktreader.project import create_project, import_pagexml_into_project, inspect_project
 from aktreader.service import (
     LOOPBACK_HOST,
+    ServiceError,
     add_project_to_service,
     create_local_account,
     create_project_backup,
@@ -88,6 +90,26 @@ def _reviewable_service(tmp_path: Path) -> tuple[Path, str, str]:
         str(added["project"]["project_id"]),
         str(imported["manifest_sha256"]),
     )
+
+
+def test_service_container_listener_requires_an_explicit_safe_address(tmp_path: Path) -> None:
+    workspace, _, _ = _reviewable_service(tmp_path)
+    server = create_self_hosted_service_server(
+        workspace,
+        host="0.0.0.0",
+        port=0,
+    )
+    try:
+        assert server.server_address[0] == "0.0.0.0"
+    finally:
+        server.server_close()
+
+    with pytest.raises(ServiceError, match="host must be"):
+        create_self_hosted_service_server(
+            workspace,
+            host="192.0.2.10",
+            port=0,
+        )
 
 
 def test_service_workspace_owns_a_copy_of_each_project(tmp_path: Path) -> None:

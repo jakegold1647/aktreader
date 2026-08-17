@@ -224,3 +224,15 @@ def test_project_kraken_command_requires_a_project_manifest_and_pinned_config() 
     assert parsed.project == Path("register.aktproj")
     assert parsed.manifest_sha256 == "a" * 64
     assert parsed.config == Path("kraken.json")
+
+
+def test_service_serve_container_listener_is_opt_in() -> None:
+    parser = build_parser()
+
+    local = parser.parse_args(["service-serve", "service-data"])
+    container = parser.parse_args(
+        ["service-serve", "service-data", "--container-listen"]
+    )
+
+    assert local.container_listen is False
+    assert container.container_listen is True
