@@ -107,8 +107,8 @@ The service derives the revision editor from the authenticated account and write
 project revision. If someone has saved another revision first, it returns `409 Conflict`; reload
 the page and explicitly decide how to reconcile the text. It never silently overwrites a correction.
 
-This is an API foundation for shared review, not a shared browser editor yet: it does not serve
-scan image bytes, accept external identity, or expose a LAN listener.
+This is a local-service foundation for shared review. It does not accept external identity or
+expose a LAN listener.
 
 ## Collaborative browser workbench
 
@@ -128,7 +128,35 @@ created.
 
 The workbench is a single service UI on loopback only. It is not a LAN/public deployment, does not
 persist credentials in browser storage, and does not yet include presence indicators, comments,
-shared cursors, or simultaneous geometry editing.
+or shared cursors.
+
+## Collaborative layout API
+
+The service exposes the imported PAGE XML layout without a filesystem path:
+
+```text
+GET /api/projects/<project-id>/documents/<manifest-sha256>/pages/<page-index>/layout
+```
+
+A signed-in `VIEWER` can inspect the current region polygons and reading order. An `EDITOR` or
+`OWNER` can append audited geometry changes using these routes:
+
+```text
+POST /api/projects/<project-id>/line-geometry
+POST /api/projects/<project-id>/region-geometry
+POST /api/projects/<project-id>/reading-order
+```
+
+Every request must include the revision the editor saw as `expected_revision`; line changes also
+include `source_span_id`, `polygon`, and `baseline`, while region changes include
+`page_index`, `region_id`, and `polygon`. Reading-order changes include `page_index` and an
+exact permutation of the imported `region_ids`. All three operations append revisions rather than
+rewriting the original PAGE XML. A stale revision returns `409 Conflict`, so clients must reload
+and explicitly reconcile before saving.
+
+The browser workbench currently renders source lines and supports transcription correction. Layout
+endpoints are ready for another trusted local client or a subsequent visual geometry editor; they do
+not provide simultaneous pointer editing, comments, or presence tracking.
 
 ## Run and back up
 
