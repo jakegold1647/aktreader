@@ -234,8 +234,9 @@ For a single-user browser editor on the same machine, explicitly serve one proje
 python -m aktreader serve serock.aktproj
 ```
 
-It prints a `127.0.0.1` URL with document/page navigation, PAGE line and region overlays, saved
-human transcription revisions, and auditable region geometry or reading-order changes. It has no
+It prints a `127.0.0.1` URL with document/page navigation and generated thumbnails, PAGE line and
+region overlays, saved human transcription revisions, and auditable region geometry or reading-order
+changes. It has no
 accounts and cannot bind to a LAN or public address, so it is not yet a shared deployment. See
 [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).
 
