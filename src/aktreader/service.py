@@ -2538,7 +2538,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
         </div>
         <section id="recognition-suggestions" aria-labelledby="suggestions-title">
           <h2 id="suggestions-title">Recognition suggestions</h2>
-          <p>Copy a local model suggestion into the editor, then review and save it as a human correction.</p>
+          <p>Copy a local model suggestion into the editor, then review and save it as a
+            human correction.</p>
           <div id="suggestions" aria-live="polite"></div>
         </section>
         <section id="layout-editor" aria-labelledby="layout-title">
