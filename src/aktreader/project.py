@@ -1605,7 +1605,9 @@ def segment_project_with_kraken(
                 raise ProjectStoreError("project image is invalid for local Kraken layout")
             suffix = image.suffix.lower()
             if not suffix:
-                raise ProjectStoreError("project image has no file extension for local Kraken layout")
+                raise ProjectStoreError(
+                    "project image has no file extension for local Kraken layout"
+                )
             materialized_image = workspace / f"page-{page_index:04d}{suffix}"
             shutil.copyfile(image, materialized_image)
             segmented = workspace / f"page-{page_index:04d}.page.xml"
@@ -1639,7 +1641,11 @@ def segment_project_with_kraken(
     source_tags = source_document["tags"]
     if not isinstance(source_tags, list) or not all(isinstance(tag, str) for tag in source_tags):
         raise ProjectStoreError("project document has invalid tags")
-    derived_title = title.strip() if title is not None else f"{source_document['title']} — Kraken layout"
+    derived_title = (
+        title.strip()
+        if title is not None
+        else f"{source_document['title']} — Kraken layout"
+    )
     derived_tags = list(dict.fromkeys([*source_tags, "kraken-layout"]))
     derived_notes = (
         f"Derived from document manifest {manifest_sha256} with local Kraken baseline "
