@@ -849,7 +849,7 @@ def _render_pdf_pages(
     source: Path,
     *,
     dpi: int,
-) -> tuple[Path, str, list[dict[str, object]]]:
+) -> tuple[Path, str, list[dict[str, object]], str]:
     pdf_sha256 = _sha256_file(source)
     renderer_version = _pdfium_version()
     scale = dpi / 72
@@ -919,7 +919,7 @@ def _render_pdf_pages(
             shutil.rmtree(temporary)
         else:
             os.replace(temporary, destination)
-        return destination, renderer_version, pages
+        return destination, renderer_version, pages, pdf_sha256
     except Exception:
         if temporary.exists():
             shutil.rmtree(temporary, ignore_errors=True)
@@ -1030,7 +1030,7 @@ def import_pdf_into_project(
     pdf_path = _local_path(source, role="PDF source", must_exist=True)
     if not pdf_path.is_file() or pdf_path.suffix.lower() != ".pdf":
         raise ProjectStoreError("PDF import source must be a local .pdf file")
-    render_directory, renderer_version, rendered_pages = _render_pdf_pages(
+    render_directory, renderer_version, rendered_pages, rendered_source_sha256 = _render_pdf_pages(
         root,
         pdf_path,
         dpi=dpi,
@@ -1043,6 +1043,8 @@ def import_pdf_into_project(
             title=pdf_path.stem,
         )
     source_sha256 = _sha256_file(pdf_path)
+    if source_sha256 != rendered_source_sha256:
+        raise ProjectStoreError("PDF source changed while it was being rendered")
     receipt_path, stored_pdf = _store_pdf_import_receipt(
         root,
         source=pdf_path,
