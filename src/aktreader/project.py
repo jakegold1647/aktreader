@@ -2716,6 +2716,95 @@ def revise_line_transcription(
     }
 
 
+def undo_line_transcription(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    source_span_id: str,
+    editor: str = "local-user",
+    expected_revision: int | None = None,
+) -> dict[str, object]:
+    """Append a reversal of the latest human transcription revision."""
+
+    if not isinstance(manifest_sha256, str) or len(manifest_sha256) != 64:
+        raise ProjectStoreError("manifest_sha256 must be a SHA-256 string")
+    if not isinstance(source_span_id, str) or not source_span_id.strip():
+        raise ProjectStoreError("source_span_id must be a nonblank string")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("editor must be a nonblank string")
+    if (
+        expected_revision is not None
+        and (
+            isinstance(expected_revision, bool)
+            or not isinstance(expected_revision, int)
+            or expected_revision < 0
+        )
+    ):
+        raise ProjectStoreError("expected_revision must be a non-negative integer")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        row = connection.execute(
+            """
+            SELECT
+                lines.text_equiv,
+                COALESCE(MAX(transcription_revisions.revision), 0)
+            FROM lines
+            LEFT JOIN transcription_revisions
+                ON transcription_revisions.manifest_sha256 = lines.manifest_sha256
+               AND transcription_revisions.source_span_id = lines.source_span_id
+            WHERE lines.manifest_sha256 = ? AND lines.source_span_id = ?
+            GROUP BY lines.manifest_sha256, lines.source_span_id, lines.text_equiv
+            """,
+            (manifest_sha256, source_span_id),
+        ).fetchone()
+        if row is None:
+            raise ProjectStoreError("project line was not found")
+        current_revision = int(row[1])
+        if expected_revision is not None and current_revision != expected_revision:
+            raise ProjectStoreError(
+                "transcription revision conflict; reload the current line"
+            )
+        if current_revision == 0:
+            return {
+                "status": "UNDO_UNAVAILABLE",
+                "project": str(root),
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "revision": 0,
+                "network_required": False,
+            }
+        latest = connection.execute(
+            """
+            SELECT prior_text
+            FROM transcription_revisions
+            WHERE manifest_sha256 = ? AND source_span_id = ? AND revision = ?
+            """,
+            (manifest_sha256, source_span_id, current_revision),
+        ).fetchone()
+        if latest is None:
+            raise ProjectStoreError("latest transcription revision is unavailable")
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load transcription revision: {error}") from error
+    finally:
+        connection.close()
+    prior_text = latest[0] if latest[0] is not None else row[0]
+    if not isinstance(prior_text, str):
+        prior_text = ""
+    result = revise_line_transcription(
+        root,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        text=prior_text,
+        editor=editor,
+        expected_revision=current_revision,
+    )
+    if result["status"] == "SAVED":
+        result["status"] = "UNDONE"
+        result["undone_revision"] = current_revision
+    return result
+
+
 def _latest_human_revisions(
     connection: sqlite3.Connection,
     *,
