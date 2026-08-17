@@ -36,10 +36,10 @@ from aktreader.project import (
     load_project_page_layout,
     recognize_project_with_kraken,
     revise_line_geometry,
-    search_project_transcriptions,
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
+    search_project_transcriptions,
     undo_line_transcription,
 )
 
