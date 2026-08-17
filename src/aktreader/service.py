@@ -2014,7 +2014,8 @@ main { margin: 0 auto; max-width: 1400px; padding: 18px; }
 label { display: grid; gap: 5px; font-weight: 650; }
 input, select, textarea, button { font: inherit; }
 input, select, textarea { border: 1px solid #aab8c7; border-radius: 5px; padding: 8px; }
-button { background: #0f766e; border: 0; border-radius: 5px; color: #fff; cursor: pointer; padding: 8px 12px; }
+button { background: #0f766e; border: 0; border-radius: 5px; color: #fff; cursor: pointer;
+  padding: 8px 12px; }
 button.secondary { background: #475569; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 #scan { background: #18212f; display: inline-block; max-width: 100%; position: relative; }
@@ -2031,7 +2032,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #login { margin: 48px auto; max-width: 430px; }
 #login form { display: grid; gap: 12px; }
 .hidden { display: none !important; }
-@media (max-width: 860px) { #app { grid-template-columns: 1fr; } .controls { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { #app { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -2044,7 +2046,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
     <h2 id="login-title">Sign in</h2>
     <form id="login-form">
       <label>Username <input id="username" autocomplete="username" required></label>
-      <label>Password <input id="password" type="password" autocomplete="current-password" required></label>
+      <label>Password <input id="password" type="password"
+        autocomplete="current-password" required></label>
       <button type="submit">Sign in</button>
       <p id="login-status" role="status" aria-live="polite"></p>
     </form>
@@ -2302,8 +2305,12 @@ loginForm.addEventListener("submit", async event => {
     loginStatus.textContent = error.message;
   }
 });
-projectSelect.addEventListener("change", () => loadProject().catch(error => setStatus(error.message)));
-documentSelect.addEventListener("change", () => loadDocument().catch(error => setStatus(error.message)));
+projectSelect.addEventListener(
+  "change", () => loadProject().catch(error => setStatus(error.message))
+);
+documentSelect.addEventListener(
+  "change", () => loadDocument().catch(error => setStatus(error.message))
+);
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 save.addEventListener("click", () => saveRevision());
 document.getElementById("logout").addEventListener("click", () => {
