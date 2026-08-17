@@ -566,6 +566,17 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "project" not in search["results"][0]
         assert "image_path" not in search["results"][0]
 
+        invalid_search_payload = json.dumps({"query": "reviewed", "field": []})
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/search",
+            body=invalid_search_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_search_response = connection.getresponse()
+        assert invalid_search_response.status == 400
+        assert "search field" in json.loads(invalid_search_response.read())["message"]
+
         connection.request(
             "POST",
             f"/api/projects/{project_id}/transcriptions",
