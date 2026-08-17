@@ -6,3 +6,4 @@ services:
       - "127.0.0.1:8780:8780"
     volumes:
       - "./service-data:/data"
+      - "./projects-to-import:/imports:ro"
