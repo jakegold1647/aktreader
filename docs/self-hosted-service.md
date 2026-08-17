@@ -53,9 +53,13 @@ role: `VIEWER` can inspect documents, revisions, layout, and recognition suggest
 `EDITOR` can save text and layout corrections and queue backups or configured local recognition;
 and `OWNER` has those capabilities plus local role administration.
 
-Account creation and role assignment are local CLI administration actions, not public HTTP
-endpoints. An existing service workspace is migrated in place on first use; its existing
-projects remain inaccessible to HTTP sessions until an administrator grants a role.
+Account creation remains a local CLI administration action. An `OWNER` can use the loopback
+workbench to list existing local accounts and grant them a `VIEWER`, `EDITOR`, or `OWNER` role on
+that project; passwords and password verifiers are never exposed to the browser. Owners cannot
+change their own role through the service, and the underlying role store rejects an operation that
+would leave a project with no owner. An existing service workspace is migrated in place on first
+use; its existing projects remain inaccessible to HTTP sessions until an administrator grants a
+role.
 
 ## Model and dataset artifact registry
 

@@ -615,6 +615,30 @@ def grant_project_role(
     connection = _connection(root)
     try:
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            existing = connection.execute(
+                """
+                SELECT role
+                FROM service_project_roles
+                WHERE project_id = ? AND account_id = ?
+                """,
+                (canonical_project_id, account["account_id"]),
+            ).fetchone()
+            if (
+                existing is not None
+                and str(existing["role"]) == "OWNER"
+                and canonical_role != "OWNER"
+            ):
+                owner_count = connection.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM service_project_roles
+                    WHERE project_id = ? AND role = 'OWNER'
+                    """,
+                    (canonical_project_id,),
+                ).fetchone()[0]
+                if int(owner_count) <= 1:
+                    raise ServiceError("project must retain at least one owner")
             connection.execute(
                 """
                 INSERT INTO service_project_roles
@@ -668,6 +692,100 @@ def list_authorized_service_projects(
         for project in list_service_projects(root)
         if str(project["project_id"]) in roles_by_project
     ]
+
+
+def list_authorized_project_members(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List project memberships for an owner without password material."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                service_accounts.account_id,
+                service_accounts.username,
+                service_project_roles.role,
+                service_project_roles.granted_at
+            FROM service_project_roles
+            JOIN service_accounts
+                ON service_accounts.account_id = service_project_roles.account_id
+            WHERE service_project_roles.project_id = ?
+            ORDER BY service_accounts.username, service_accounts.account_id
+            """,
+            (canonical_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+    return [
+        {
+            "account_id": str(row["account_id"]),
+            "username": str(row["username"]),
+            "role": str(row["role"]),
+            "granted_at": str(row["granted_at"]),
+        }
+        for row in rows
+    ]
+
+
+def list_authorized_project_accounts(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> list[dict[str, object]]:
+    """List local account identities for a project owner."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    return list_local_accounts(root)
+
+
+def grant_authorized_project_role(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    username: str,
+    role: str,
+) -> dict[str, object]:
+    """Let an owner grant an existing local account a project role."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="OWNER",
+    )
+    target = _account_by_username(root, username)
+    if str(target["account_id"]) == _require_uuid(account_id, role="account_id"):
+        raise ServiceError("owners cannot change their own project role through the service")
+    return grant_project_role(
+        root,
+        project_id=canonical_id,
+        username=username,
+        role=role,
+    )
 
 
 def _validated_artifact_kind(value: object) -> str:
@@ -2121,6 +2239,44 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "members"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "members": list_authorized_project_members(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "accounts"
+            ):
+                account = self._account()
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "accounts": list_authorized_project_accounts(
+                            self.server.service_workspace,
+                            parts[3],
+                            account_id=str(account["account_id"]),
+                        ),
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "documents"
             ):
                 account = self._account()
@@ -2326,6 +2482,23 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                     artifact_id=str(payload["artifact_id"]),
                 )
                 self._json(HTTPStatus.OK, attachment)
+                return
+            if (
+                len(parts) == 5
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "members"
+            ):
+                if set(payload) != {"username", "role"}:
+                    raise ServiceError("project membership update has invalid keys")
+                account = self._account()
+                membership = grant_authorized_project_role(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    username=str(payload["username"]),
+                    role=str(payload["role"]),
+                )
+                self._json(HTTPStatus.OK, membership)
                 return
             if (
                 len(parts) == 6
@@ -2575,6 +2748,10 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #activity-list { display: grid; gap: 6px; list-style: none; margin: 0; max-height: 220px;
   overflow: auto; padding: 0; }
 .activity { background: #fff; color: #18212f; text-align: left; }
+#membership { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
+#membership h2 { margin: 8px 0; }
+#member-list { display: grid; gap: 6px; list-style: none; margin: 8px 0 0; padding: 0; }
+.member { color: #475569; }
 #recognition-suggestions { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #recognition-suggestions h2 { margin: 8px 0; }
 #suggestions { display: grid; gap: 8px; }
@@ -2654,6 +2831,21 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <h2 id="activity-title">Recent project activity</h2>
           <ol id="activity-list" aria-live="polite"></ol>
         </section>
+        <section id="membership" class="hidden" aria-labelledby="membership-title">
+          <h2 id="membership-title">Project members</h2>
+          <form id="member-form">
+            <label>Account <select id="member-account" required></select></label>
+            <label>Role
+              <select id="member-role">
+                <option value="VIEWER">Viewer</option>
+                <option value="EDITOR">Editor</option>
+                <option value="OWNER">Owner</option>
+              </select>
+            </label>
+            <button id="save-member" type="submit">Save project role</button>
+          </form>
+          <ul id="member-list" aria-live="polite"></ul>
+        </section>
         <section id="recognition-suggestions" aria-labelledby="suggestions-title">
           <h2 id="suggestions-title">Recognition suggestions</h2>
           <p>Copy a local model suggestion into the editor, then review and save it as a
@@ -2696,7 +2888,7 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 const state = {
   token: null, account: null, projects: [], project: null, documents: [], page: null,
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
-  activity: [], krakenRecognitionEnabled: false
+  activity: [], members: [], accounts: [], krakenRecognitionEnabled: false
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -2714,6 +2906,12 @@ const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
 const activityList = document.getElementById("activity-list");
+const membership = document.getElementById("membership");
+const memberForm = document.getElementById("member-form");
+const memberAccount = document.getElementById("member-account");
+const memberRole = document.getElementById("member-role");
+const memberList = document.getElementById("member-list");
+const saveMember = document.getElementById("save-member");
 const detail = document.getElementById("detail");
 const suggestions = document.getElementById("suggestions");
 const text = document.getElementById("text");
@@ -2766,6 +2964,9 @@ function selectedLineGeometry() {
 }
 function canEdit() {
   return state.project && (state.project.role === "EDITOR" || state.project.role === "OWNER");
+}
+function isOwner() {
+  return state.project && state.project.role === "OWNER";
 }
 function updateRecognitionControl() {
   const available = state.krakenRecognitionEnabled && canEdit() && currentDocument();
@@ -2829,6 +3030,36 @@ function renderActivity() {
     item.append(button);
     activityList.append(item);
   });
+}
+function renderMembership() {
+  membership.classList.toggle("hidden", !isOwner());
+  memberList.replaceChildren();
+  memberAccount.replaceChildren();
+  if (!isOwner()) return;
+  state.accounts
+    .filter(account => account.username !== state.account.username)
+    .forEach(account => option(memberAccount, account.username, account.username));
+  state.members.forEach(member => {
+    const item = document.createElement("li");
+    item.className = "member";
+    item.textContent = member.username + " · " + member.role + " · granted " +
+      member.granted_at;
+    memberList.append(item);
+  });
+  saveMember.disabled = !memberAccount.value;
+}
+async function loadMembership() {
+  if (!isOwner()) {
+    state.members = [];
+    state.accounts = [];
+    renderMembership();
+    return;
+  }
+  const base = "/api/projects/" + encodeURIComponent(state.project.project_id);
+  const responses = await Promise.all([api(base + "/members"), api(base + "/accounts")]);
+  state.members = responses[0].members;
+  state.accounts = responses[1].accounts;
+  renderMembership();
 }
 function renderSuggestions() {
   suggestions.replaceChildren();
@@ -3227,14 +3458,42 @@ async function loadProject() {
     state.page = null;
     state.layout = null;
     state.activity = [];
+    state.members = [];
+    state.accounts = [];
     renderActivity();
+    renderMembership();
     downloadPagexml.disabled = true;
     updateRecognitionControl();
     lineList.replaceChildren();
+    await loadMembership();
     setStatus("This project has no imported PAGE XML documents.");
     return;
   }
-  await loadDocument();
+  await Promise.all([loadDocument(), loadMembership()]);
+}
+async function saveMemberRole(event) {
+  event.preventDefault();
+  if (!isOwner() || !memberAccount.value) return;
+  saveMember.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/members",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: memberAccount.value,
+          role: memberRole.value
+        })
+      }
+    );
+    await loadMembership();
+    setStatus(payload.username + " is now a " + payload.role + " on this project.");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    saveMember.disabled = !isOwner() || !memberAccount.value;
+  }
 }
 async function queueKrakenRecognition() {
   const doc = currentDocument();
@@ -3345,6 +3604,7 @@ documentSelect.addEventListener(
   "change", () => loadDocument().catch(error => setStatus(error.message))
 );
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
+memberForm.addEventListener("submit", event => saveMemberRole(event));
 document.addEventListener("keydown", event => {
   if (event.defaultPrevented) return;
   if (
@@ -3444,6 +3704,9 @@ document.getElementById("logout").addEventListener("click", () => {
   state.page = null;
   state.layout = null;
   state.activity = [];
+  state.members = [];
+  state.accounts = [];
+  renderMembership();
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;
