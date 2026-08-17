@@ -194,11 +194,11 @@ its index. A named saved search is private to that local collection; it re-runs 
 index and is never included in a public static release.
 
 ```powershell
-python -m aktreader collection-save-search registers.aktcollection \
-  --name "Aleksander records" \
+python -m aktreader collection-save-search registers.aktcollection `
+  --name "Aleksander records" `
   --query "Aleksander"
 python -m aktreader collection-list-saved-searches registers.aktcollection
-python -m aktreader collection-run-saved-search registers.aktcollection \
+python -m aktreader collection-run-saved-search registers.aktcollection `
   --search-id <saved-search-id>
 ```
 
