@@ -154,11 +154,11 @@ exact permutation of the imported `region_ids`. All three operations append revi
 rewriting the original PAGE XML. A stale revision returns `409 Conflict`, so clients must reload
 and explicitly reconcile before saving.
 
-The browser workbench renders region outlines over the source image. An `EDITOR` or `OWNER`
-can drag a selected region's vertices, review the resulting JSON polygon, save it against the
-displayed revision, and move regions up or down before saving reading order. A stale save reloads
-the page rather than overwriting another editor's revision. Line-geometry revisions are exposed by
-the API but do not yet have a dedicated browser control.
+The browser workbench renders line and region outlines over the source image. An `EDITOR` or
+`OWNER` can select an outline, drag its vertices, review the resulting JSON geometry, and save it
+against the displayed revision. Line baseline JSON can also be edited explicitly. Region controls
+move entries up or down before saving reading order. A stale save reloads the page rather than
+overwriting another editor's revision.
 
 The workbench does not provide simultaneous multi-pointer editing, comments, or presence tracking.
 
