@@ -2209,7 +2209,9 @@ def _human_transcription_export_context(
             (manifest_sha256,),
         ).fetchall()
     except sqlite3.Error as error:
-        raise ProjectStoreError(f"cannot load project transcriptions for export: {error}") from error
+        raise ProjectStoreError(
+            f"cannot load project transcriptions for export: {error}"
+        ) from error
     finally:
         connection.close()
 
