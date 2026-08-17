@@ -3727,12 +3727,15 @@ async function loadProject() {
     state.activity = [];
     state.members = [];
     state.accounts = [];
+    state.artifacts = [];
+    state.attachableArtifacts = [];
     renderActivity();
     renderMembership();
+    renderArtifacts();
     setExportDisabled(true);
     updateRecognitionControl();
     lineList.replaceChildren();
-    await loadMembership();
+    await Promise.all([loadMembership(), loadArtifacts()]);
     setStatus("This project has no imported PAGE XML documents.");
     return;
   }
