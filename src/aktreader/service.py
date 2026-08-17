@@ -3882,7 +3882,7 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 account = self._account()
                 accepted = accept_service_project_invitation(
                     self.server.service_workspace,
-                    parts[4],
+                    parts[3],
                     account_id=str(account["account_id"]),
                     invite_code=payload["invite_code"],
                 )
