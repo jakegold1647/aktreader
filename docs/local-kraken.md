@@ -221,7 +221,7 @@ configuration:
     aktreader service-serve E:\AKTREADER_SERVICE --kraken-config E:\AKTREADER_LOCAL\kraken.json
 
 The service validates the configuration and artifact checksums before opening
-its loopback listener. Its startup JSON and `GET /healthz` report
+its loopback listener. Its startup JSON and `GET /api/healthz` report
 `kraken_recognition_enabled`; without the flag, the usual review and backup
 features continue to work but recognition requests are rejected.
 
