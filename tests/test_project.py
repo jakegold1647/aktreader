@@ -32,6 +32,7 @@ from aktreader.project import (
     import_pdf_into_project,
     import_review_package,
     inspect_project,
+    list_htr_suggestion_evaluations,
     list_project_documents,
     list_project_pages,
     load_project_page,
@@ -1078,6 +1079,16 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     assert report["exact_line_match_count"] == 0
     assert report["exact_line_match_rate"] == 0
     assert report["network_required"] is False
+
+    evaluations = list_htr_suggestion_evaluations(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+    assert len(evaluations) == 1
+    assert evaluations[0]["result_pagexml_sha256"] == htr["result_pagexml_sha256"]
+    assert evaluations[0]["engine"] == "kraken"
+    assert evaluations[0]["character_error_rate"] == 1 / 3
+    assert isinstance(evaluations[0]["imported_at"], str)
 
 
 def test_project_training_consent_tracks_the_current_human_revision(tmp_path: Path) -> None:
