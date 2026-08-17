@@ -109,6 +109,36 @@ activation or rollback cannot alter an already queued job. This gives projects a
 selection and rollback boundary; reproducible training, evaluation, and publication receipts remain
 separate local workflows.
 
+## Durable local Kraken training
+
+A local service operator can also queue one consent-checked Kraken training run. It is deliberately
+a local administration command: the operator supplies a checksum-pinned local trainer config, corpus
+plan, and already-inspected corpus; neither the browser nor the HTTP API accepts filesystem paths or
+can launch GPU work.
+
+```powershell
+python -m aktreader service-queue-kraken-training service-data `
+  --project-id <managed-project-id> `
+  --config C:\local\kraken-training.json `
+  --plan C:\local\corpus-plan.json `
+  --corpus-directory C:\local\consented-corpus `
+  --model-name "Serock handwritten baseline v1" `
+  --model-license-id Apache-2.0 `
+  --model-description "First consented local training run"
+```
+
+Queueing verifies the trainer executable pin and current corpus consent, then copies the config, plan,
+and regular corpus files into `service-data/training/<job-id>/`. The worker rechecks that snapshot
+and current consent immediately before calling `ketos`; it receives the config's explicit CPU/GPU
+device setting and never downloads a model or contacts a hosted trainer. Mutating the original local
+paths after queueing cannot change the queued inputs.
+
+A successful run keeps its receipt and logs in the service-owned job directory. Each generated
+`.safetensors` file is content-addressed into the model registry and attached to the selected project,
+but is **not activated automatically**. Review its receipt and then explicitly activate it (or roll
+back) with the model-release commands above. A failed job exposes no trainer stdout/stderr or local
+path through the HTTP job endpoint; inspect the local service logs instead.
+
 ## Authenticated review API
 
 A signed-in `VIEWER` may list the project documents and load revision-aware PAGE records:
