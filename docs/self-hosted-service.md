@@ -51,6 +51,36 @@ Account creation and role assignment are local CLI administration actions, not p
 endpoints. An existing service workspace is migrated in place on first use; its existing
 projects remain inaccessible to HTTP sessions until an administrator grants a role.
 
+## Authenticated review API
+
+A signed-in `VIEWER` may list the project documents and load revision-aware PAGE records:
+
+```text
+GET /api/projects/<project-id>/documents
+GET /api/projects/<project-id>/documents/<manifest-sha256>/pages/<page-index>
+```
+
+The page response includes source geometry, current text, revision numbers, suggestions, and queued
+review proposals, but intentionally omits the managed image path. An `EDITOR` (or `OWNER`) can
+append a human correction with the revision it was based on:
+
+```json
+{
+  "manifest_sha256": "<document-manifest-sha256>",
+  "source_span_id": "<PAGE-line-source-span>",
+  "text": "corrected transcription",
+  "expected_revision": 3
+}
+```
+
+Send that object to `POST /api/projects/<project-id>/transcriptions` with the bearer session.
+The service derives the revision editor from the authenticated account and writes an append-only
+project revision. If someone has saved another revision first, it returns `409 Conflict`; reload
+the page and explicitly decide how to reconcile the text. It never silently overwrites a correction.
+
+This is an API foundation for shared review, not a shared browser editor yet: it does not serve
+scan image bytes, accept external identity, or expose a LAN listener.
+
 ## Run and back up
 
 Start the service only on the local machine:

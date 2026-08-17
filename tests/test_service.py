@@ -8,7 +8,9 @@ import time
 from http.client import HTTPConnection
 from pathlib import Path
 
-from aktreader.project import create_project, inspect_project
+from PIL import Image
+
+from aktreader.project import create_project, import_pagexml_into_project, inspect_project
 from aktreader.service import (
     LOOPBACK_HOST,
     add_project_to_service,
@@ -34,6 +36,49 @@ def _managed_project(tmp_path: Path) -> tuple[Path, Path, str]:
     create_service_workspace(workspace)
     added = add_project_to_service(workspace, project)
     return workspace, project, str(added["project"]["project_id"])
+
+
+def _reviewable_service(tmp_path: Path) -> tuple[Path, str, str]:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    image_path = source_root / "page.png"
+    image = Image.new("L", (20, 20), color=255)
+    try:
+        image.save(image_path)
+    finally:
+        image.close()
+    pagexml = source_root / "page.xml"
+    pagexml.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>source text</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    project = tmp_path / "reviewable.aktproj"
+    create_project(project, name="Shared register")
+    imported = import_pagexml_into_project(project, pagexml, image_root=source_root)
+    workspace = tmp_path / "review-service"
+    create_service_workspace(workspace)
+    create_local_account(
+        workspace,
+        username="editor",
+        password="a sufficiently long local editor password",
+    )
+    added = add_project_to_service(workspace, project, owner_username="editor")
+    return (
+        workspace,
+        str(added["project"]["project_id"]),
+        str(imported["manifest_sha256"]),
+    )
 
 
 def test_service_workspace_owns_a_copy_of_each_project(tmp_path: Path) -> None:
@@ -219,6 +264,91 @@ def test_loopback_service_queues_and_completes_a_backup_job(tmp_path: Path) -> N
         assert job_response.status == 200
         assert public_job["status"] == "SUCCEEDED"
         assert public_job["result"]["backup_id"] == job["result"]["backup_id"]
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_authenticated_document_review_api_requires_current_revision(tmp_path: Path) -> None:
+    workspace, project_id, manifest_sha256 = _reviewable_service(tmp_path)
+    server = create_self_hosted_service_server(workspace, port=0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    connection = HTTPConnection(LOOPBACK_HOST, server.server_address[1], timeout=5)
+    try:
+        session_payload = json.dumps(
+            {
+                "username": "editor",
+                "password": "a sufficiently long local editor password",
+            }
+        )
+        connection.request(
+            "POST",
+            "/api/session",
+            body=session_payload,
+            headers={"Content-Type": "application/json"},
+        )
+        session_response = connection.getresponse()
+        session = json.loads(session_response.read())
+        assert session_response.status == 201
+        authorization = {"Authorization": f"Bearer {session['access_token']}"}
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents",
+            headers=authorization,
+        )
+        documents_response = connection.getresponse()
+        documents = json.loads(documents_response.read())
+        assert documents_response.status == 200
+        assert documents["documents"][0]["manifest_sha256"] == manifest_sha256
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0",
+            headers=authorization,
+        )
+        page_response = connection.getresponse()
+        page = json.loads(page_response.read())["page"]
+        assert page_response.status == 200
+        assert "image_path" not in page
+        assert page["lines"][0]["revision"] == 0
+        source_span_id = page["lines"][0]["source_span_id"]
+
+        revision_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "text": "reviewed text",
+                "expected_revision": 0,
+            }
+        )
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions",
+            body=revision_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        revision_response = connection.getresponse()
+        revision = json.loads(revision_response.read())
+        assert revision_response.status == 200
+        assert revision["status"] == "SAVED"
+        assert revision["revision"] == 1
+        assert revision["editor"] == "editor"
+        assert "project" not in revision
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions",
+            body=revision_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        conflict_response = connection.getresponse()
+        conflict = json.loads(conflict_response.read())
+        assert conflict_response.status == 409
+        assert "conflict" in conflict["message"]
     finally:
         connection.close()
         server.shutdown()

@@ -2332,6 +2332,7 @@ def revise_line_transcription(
     source_span_id: str,
     text: str,
     editor: str = "local-user",
+    expected_revision: int | None = None,
 ) -> dict[str, object]:
     """Append one human transcription revision without changing PAGE XML source text."""
 
@@ -2343,10 +2344,20 @@ def revise_line_transcription(
         raise ProjectStoreError("transcription text must be a string")
     if not isinstance(editor, str) or not editor.strip():
         raise ProjectStoreError("editor must be a nonblank string")
+    if (
+        expected_revision is not None
+        and (
+            isinstance(expected_revision, bool)
+            or not isinstance(expected_revision, int)
+            or expected_revision < 0
+        )
+    ):
+        raise ProjectStoreError("expected_revision must be a non-negative integer")
     root = _required_project_root(path)
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 """
                 SELECT
@@ -2373,6 +2384,13 @@ def revise_line_transcription(
                 raise ProjectStoreError("project line was not found")
             current_text = row[2] if row[2] is not None else row[0]
             current_revision = row[1]
+            if (
+                expected_revision is not None
+                and current_revision != expected_revision
+            ):
+                raise ProjectStoreError(
+                    "transcription revision conflict; reload the current line"
+                )
             if current_text == text:
                 return {
                     "status": "UNCHANGED",
