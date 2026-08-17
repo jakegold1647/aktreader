@@ -1,9 +1,9 @@
-"""Pinned local Kraken PageXML recognition backend.
+"""Pinned local Kraken PAGE XML recognition and layout backend.
 
 AKT Reader does not package, download, or invoke a Kraken server. The owner
 supplies a checksum-pinned local executable and recognition model. The backend
-recognizes existing PAGE XML in a subprocess and atomically publishes a new
-PAGE XML result only after validating its local output.
+can segment local page images into PAGE XML and recognize pre-segmented local
+PAGE XML in a subprocess, atomically publishing only validated local output.
 """
 
 from __future__ import annotations
@@ -19,11 +19,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from PIL import Image, UnidentifiedImageError
+
 from aktreader.local_reader import PinnedArtifact, sha256_file
 
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
 _DEVICE = re.compile(r"^(?:cpu|mps|cuda:[0-9]+)$")
 _PRECISIONS = frozenset({"32", "16", "16-mixed", "bf16", "bf16-mixed"})
+_TEXT_DIRECTIONS = frozenset(
+    {"horizontal-lr", "horizontal-rl", "vertical-lr", "vertical-rl"}
+)
 _SAFE_ENVIRONMENT_KEYS = {
     "COMSPEC",
     "CUDA_PATH",
@@ -78,6 +83,7 @@ class KrakenConfig:
     device: str = "cpu"
     precision: str = "32"
     batch_size: int = 1
+    text_direction: str = "horizontal-lr"
     timeout_seconds: float | None = 1_800.0
 
     def __post_init__(self) -> None:
@@ -91,8 +97,25 @@ class KrakenConfig:
             raise TypeError("batch_size must be an integer")
         if self.batch_size < 1:
             raise ValueError("batch_size must be positive")
+        if self.text_direction not in _TEXT_DIRECTIONS:
+            raise ValueError(
+                "text_direction must be horizontal-lr, horizontal-rl, vertical-lr, or vertical-rl"
+            )
         if self.timeout_seconds is not None and self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive or None")
+
+
+@dataclass(frozen=True)
+class KrakenSegmentationResult:
+    """Immutable evidence about one local image-to-PAGE XML layout run."""
+
+    source_sha256: str
+    output_sha256: str
+    output_path: Path
+    runtime_fingerprint: str
+    fingerprint_manifest: dict[str, Any]
+    stdout: str
+    stderr: str
 
 
 @dataclass(frozen=True)
@@ -189,6 +212,17 @@ def _local_name(tag: str) -> str:
     return tag.rsplit("}", maxsplit=1)[-1]
 
 
+def _validate_image(path: Path, *, role: str) -> None:
+    try:
+        with Image.open(path) as opened:
+            width, height = opened.size
+            opened.verify()
+    except (OSError, UnidentifiedImageError) as error:
+        raise KrakenOutputError(f"{role} is not a readable image: {path}") from error
+    if width < 1 or height < 1:
+        raise KrakenOutputError(f"{role} has invalid dimensions")
+
+
 def _validate_pagexml(path: Path, *, role: str) -> None:
     try:
         raw = path.read_bytes()
@@ -236,6 +270,7 @@ class LocalKraken:
         return {
             "batch_size": self.config.batch_size,
             "device": self.config.device,
+            "text_direction": self.config.text_direction,
             "precision": self.config.precision,
             "timeout_seconds": self.config.timeout_seconds,
         }
@@ -259,6 +294,99 @@ class LocalKraken:
             "-B",
             str(self.config.batch_size),
         ]
+
+    def _segment_command(self, source: Path, destination: Path) -> list[str]:
+        return [
+            os.fspath(self._paths["executable"]),
+            "-x",
+            "--device",
+            self.config.device,
+            "--precision",
+            self.config.precision,
+            "-i",
+            os.fspath(source),
+            os.fspath(destination),
+            "segment",
+            "-bl",
+            "-d",
+            self.config.text_direction,
+        ]
+
+    def segment_image(
+        self,
+        source: Path | str,
+        output: Path | str,
+        *,
+        replace_existing: bool = False,
+    ) -> KrakenSegmentationResult:
+        """Segment one local image into validated PAGE XML with Kraken's baseline model."""
+
+        source_path = _resolve_local_file(source, role="input image")
+        _validate_image(source_path, role="input image")
+        output_path = _resolve_local_output(output)
+        if source_path == output_path:
+            raise KrakenOutputError("PAGE XML output must not overwrite the input image")
+        if output_path.exists() and not replace_existing:
+            raise KrakenOutputError(
+                "PAGE XML output already exists; pass --replace-existing to replace it"
+            )
+        source_sha256 = sha256_file(source_path)
+
+        with tempfile.TemporaryDirectory(
+            prefix=".aktreader-kraken-", dir=os.fspath(output_path.parent)
+        ) as temporary_directory:
+            temporary_output = Path(temporary_directory) / "segmented.page.xml"
+            command = self._segment_command(source_path, temporary_output)
+            try:
+                completed = subprocess.run(
+                    command,
+                    check=False,
+                    cwd=temporary_directory,
+                    env=_safe_subprocess_environment(),
+                    stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                    shell=False,
+                    timeout=self.config.timeout_seconds,
+                )
+            except subprocess.TimeoutExpired as error:
+                raise KrakenInferenceError(
+                    f"local Kraken timed out after {self.config.timeout_seconds} seconds",
+                    stdout=_stream_text(error.stdout),
+                    stderr=_stream_text(error.stderr),
+                ) from error
+            if completed.returncode != 0:
+                raise KrakenInferenceError(
+                    f"local Kraken exited with code {completed.returncode}",
+                    stdout=completed.stdout,
+                    stderr=completed.stderr,
+                )
+            if not temporary_output.is_file():
+                raise KrakenOutputError(
+                    "local Kraken exited successfully but did not create PAGE XML output",
+                    stdout=completed.stdout,
+                    stderr=completed.stderr,
+                )
+            _validate_pagexml(temporary_output, role="Kraken PAGE XML layout output")
+            output_sha256 = sha256_file(temporary_output)
+            os.replace(temporary_output, output_path)
+
+        manifest = {
+            "runtime_fingerprint": self.runtime_fingerprint,
+            "source_sha256": source_sha256,
+            "output_sha256": output_sha256,
+        }
+        return KrakenSegmentationResult(
+            source_sha256=source_sha256,
+            output_sha256=output_sha256,
+            output_path=output_path,
+            runtime_fingerprint=self.runtime_fingerprint,
+            fingerprint_manifest=manifest,
+            stdout=completed.stdout,
+            stderr=completed.stderr,
+        )
 
     def recognize_pagexml(
         self,
