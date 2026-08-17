@@ -76,6 +76,15 @@ python -m aktreader service-artifact-register service-data serock-model.bin `
 python -m aktreader service-project-attach-artifact service-data `
   --project-id <project-id> `
   --artifact-id <artifact-id>
+
+python -m aktreader service-project-activate-model service-data `
+  --project-id <project-id> `
+  --artifact-id <attached-model-artifact-id>
+python -m aktreader service-project-model-history service-data `
+  --project-id <project-id>
+python -m aktreader service-project-rollback-model service-data `
+  --project-id <project-id> `
+  --release-id <prior-release-id>
 ```
 
 Registration streams the file into `artifacts/sha256/<prefix>/<sha256>` and records its SHA-256,
@@ -89,9 +98,16 @@ attached metadata at `GET /api/projects/<project-id>/artifacts`; owners can list
 registered choices at `GET /api/projects/<project-id>/available-artifacts` and attach one by ID.
 The loopback workbench shows the attached model/dataset name, type, license, and SHA-256 prefix to
 every authorized viewer, and gives owners an attachment selector. Neither API discloses a managed
-filesystem path or serves artifact bytes. This gives projects an auditable model/dataset selection
-boundary; reproducible training, evaluation, and publication receipts remain separate local
-workflows.
+filesystem path or serves artifact bytes.
+
+The local administrator can then activate one attached `MODEL` artifact. Activation creates an
+immutable release record; a rollback appends a new record pointing to an earlier attached model and
+never deletes history. A queued Kraken recognition job captures the active model artifact ID at
+queue time. The worker re-verifies the content-addressed model file, combines it with the
+operator-pinned Kraken executable and inference settings, and runs that exact model; a later
+activation or rollback cannot alter an already queued job. This gives projects an auditable model
+selection and rollback boundary; reproducible training, evaluation, and publication receipts remain
+separate local workflows.
 
 ## Authenticated review API
 

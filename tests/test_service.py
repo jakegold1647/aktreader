@@ -20,7 +20,9 @@ from aktreader.project import create_project, import_pagexml_into_project, inspe
 from aktreader.service import (
     LOOPBACK_HOST,
     ServiceError,
+    activate_service_project_model,
     add_project_to_service,
+    attach_service_artifact,
     create_local_account,
     create_project_backup,
     create_self_hosted_service_server,
@@ -30,9 +32,12 @@ from aktreader.service import (
     grant_project_role,
     inspect_service_workspace,
     list_authorized_service_projects,
+    list_service_project_model_releases,
     list_service_projects,
+    queue_project_kraken_recognition,
     register_service_artifact,
     restore_project_backup,
+    rollback_service_project_model,
     verify_project_backup,
 )
 
@@ -894,6 +899,92 @@ def test_owner_can_attach_model_metadata_without_exposing_artifact_paths(
         thread.join(timeout=5)
 
 
+
+def test_service_model_releases_pin_queued_recognition_and_support_rollback(
+    tmp_path: Path,
+) -> None:
+    workspace, project_id, manifest_sha256 = _reviewable_service(tmp_path)
+    first_source = tmp_path / "first-model.bin"
+    second_source = tmp_path / "second-model.bin"
+    first_source.write_bytes(b"first local model")
+    second_source.write_bytes(b"second local model")
+    first = register_service_artifact(
+        workspace,
+        first_source,
+        kind="MODEL",
+        name="Serock model v1",
+        license_id="Apache-2.0",
+    )
+    second = register_service_artifact(
+        workspace,
+        second_source,
+        kind="MODEL",
+        name="Serock model v2",
+        license_id="Apache-2.0",
+    )
+    first_artifact_id = str(first["artifact"]["artifact_id"])
+    second_artifact_id = str(second["artifact"]["artifact_id"])
+    attach_service_artifact(
+        workspace,
+        project_id=project_id,
+        artifact_id=first_artifact_id,
+    )
+    attach_service_artifact(
+        workspace,
+        project_id=project_id,
+        artifact_id=second_artifact_id,
+    )
+
+    first_release = activate_service_project_model(
+        workspace,
+        project_id=project_id,
+        artifact_id=first_artifact_id,
+    )
+    second_release = activate_service_project_model(
+        workspace,
+        project_id=project_id,
+        artifact_id=second_artifact_id,
+    )
+    session = create_service_session(
+        workspace,
+        username="editor",
+        password="a sufficiently long local editor password",
+    )
+    queued = queue_project_kraken_recognition(
+        workspace,
+        project_id,
+        account_id=str(session["account"]["account_id"]),
+        manifest_sha256=manifest_sha256,
+        kraken=object(),
+    )
+    stored_job = get_service_job(workspace, str(queued["job_id"]))
+
+    assert queued["model_artifact_id"] == second_artifact_id
+    assert stored_job["model_artifact_id"] == second_artifact_id
+    assert first_release["active_model"]["artifact"]["artifact_id"] == first_artifact_id
+    assert second_release["active_model"]["prior_release_id"] == (
+        first_release["active_model"]["release_id"]
+    )
+
+    rolled_back = rollback_service_project_model(
+        workspace,
+        project_id=project_id,
+        release_id=str(first_release["active_model"]["release_id"]),
+    )
+    history = list_service_project_model_releases(workspace, project_id=project_id)
+
+    assert rolled_back["status"] == "ROLLED_BACK"
+    assert history["active_model"]["artifact"]["artifact_id"] == first_artifact_id
+    assert history["active_model"]["prior_release_id"] == (
+        second_release["active_model"]["release_id"]
+    )
+    assert [release["action"] for release in history["releases"]] == [
+        "ROLLED_BACK",
+        "ACTIVATED",
+        "ACTIVATED",
+    ]
+    assert "relative_path" not in history["active_model"]["artifact"]
+
 def _editor_authorization(connection: HTTPConnection) -> dict[str, str]:
     connection.request(
         "POST",
@@ -974,10 +1065,32 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
             model=PinnedArtifact(model, sha256_file(model)),
         )
     )
+    registered_model = register_service_artifact(
+        workspace,
+        model,
+        kind="MODEL",
+        name="Service-managed test model",
+        license_id="Apache-2.0",
+    )
+    model_artifact_id = str(registered_model["artifact"]["artifact_id"])
+    attach_service_artifact(
+        workspace,
+        project_id=project_id,
+        artifact_id=model_artifact_id,
+    )
+    activate_service_project_model(
+        workspace,
+        project_id=project_id,
+        artifact_id=model_artifact_id,
+    )
+    used_model_paths: list[Path] = []
 
     def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
         source = Path(command[command.index("-i") + 1])
         destination = Path(command[command.index("-i") + 2])
+        used_model = Path(command[command.index("-m") + 1])
+        used_model_paths.append(used_model)
+        assert used_model.read_bytes() == b"fake local kraken model"
         document = ET.parse(source)
         for element in document.getroot().iter():
             if element.tag.rsplit("}", 1)[-1] == "Unicode":
@@ -1022,7 +1135,10 @@ def test_configured_kraken_recognition_job_imports_local_suggestions(
             "result_pagexml_sha256": job["result"]["result_pagexml_sha256"],
             "suggestion_count": 1,
             "runtime_fingerprint": kraken.runtime_fingerprint,
+            "model_artifact_id": model_artifact_id,
         }
+        assert len(used_model_paths) == 1
+        assert used_model_paths[0] != model
 
         connection.request(
             "GET",

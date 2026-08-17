@@ -21,7 +21,8 @@ from urllib.parse import unquote, urlparse
 
 from PIL import Image
 
-from aktreader.kraken import KrakenError, LocalKraken
+from aktreader.kraken import KrakenConfig, KrakenError, LocalKraken
+from aktreader.local_reader import PinnedArtifact
 from aktreader.project import (
     ProjectStoreError,
     evaluate_htr_suggestions,
@@ -220,6 +221,17 @@ def _migrate_service_database(path: Path) -> None:
                 );
                 CREATE INDEX IF NOT EXISTS service_project_artifacts_artifact
                     ON service_project_artifacts (artifact_id, project_id);
+                CREATE TABLE IF NOT EXISTS service_project_model_releases (
+                    release_id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    artifact_id TEXT NOT NULL,
+                    action TEXT NOT NULL CHECK (action IN ('ACTIVATED', 'ROLLED_BACK')),
+                    prior_release_id TEXT,
+                    activated_by TEXT NOT NULL,
+                    activated_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS service_project_model_releases_project_created
+                    ON service_project_model_releases (project_id, activated_at, release_id);
                 """
             )
     finally:
@@ -951,6 +963,333 @@ def register_service_artifact(
     return {"status": "REGISTERED", "artifact": _artifact_report(row), "network_required": False}
 
 
+
+def _artifact_storage_path(root: Path, artifact: sqlite3.Row) -> Path:
+    raw_relative_path = artifact["relative_path"]
+    if not isinstance(raw_relative_path, str):
+        raise ServiceError("registered artifact storage path is invalid")
+    relative_path = PurePosixPath(raw_relative_path)
+    if relative_path.is_absolute() or ".." in relative_path.parts or not relative_path.parts:
+        raise ServiceError("registered artifact storage path is invalid")
+    candidate = root / ARTIFACTS_DIRECTORY / Path(*relative_path.parts)
+    try:
+        resolved = candidate.resolve(strict=True)
+    except OSError as error:
+        raise ServiceError("registered artifact storage is missing or inaccessible") from error
+    artifact_root = (root / ARTIFACTS_DIRECTORY).resolve()
+    if artifact_root not in resolved.parents or not resolved.is_file() or resolved.is_symlink():
+        raise ServiceError("registered artifact storage path is invalid")
+    expected_sha256 = str(artifact["sha256"])
+    if _sha256_file(resolved) != expected_sha256:
+        raise ServiceError("registered artifact storage checksum does not match its metadata")
+    return resolved
+
+
+def _attached_project_model(
+    root: Path,
+    *,
+    project_id: str,
+    artifact_id: str,
+) -> sqlite3.Row:
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    artifact = _artifact_by_id(root, artifact_id)
+    if artifact["kind"] != "MODEL":
+        raise ServiceError("project model release requires a MODEL artifact")
+    connection = _connection(root)
+    try:
+        attached = connection.execute(
+            """
+            SELECT 1
+            FROM service_project_artifacts
+            WHERE project_id = ? AND artifact_id = ?
+            """,
+            (canonical_project_id, artifact["artifact_id"]),
+        ).fetchone()
+    finally:
+        connection.close()
+    if attached is None:
+        raise ServiceError("model artifact must be attached to the managed project first")
+    _artifact_storage_path(root, artifact)
+    return artifact
+
+
+def _current_project_model_release(root: Path, project_id: str) -> sqlite3.Row | None:
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    connection = _connection(root)
+    try:
+        return connection.execute(
+            """
+            SELECT releases.release_id, releases.project_id, releases.artifact_id,
+                   releases.action, releases.prior_release_id, releases.activated_by,
+                   releases.activated_at, artifacts.kind, artifacts.name,
+                   artifacts.license_id, artifacts.description, artifacts.sha256,
+                   artifacts.size_bytes, artifacts.relative_path, artifacts.created_at
+            FROM service_project_model_releases AS releases
+            JOIN service_artifacts AS artifacts ON artifacts.artifact_id = releases.artifact_id
+            WHERE releases.project_id = ?
+            ORDER BY releases.rowid DESC
+            LIMIT 1
+            """,
+            (canonical_project_id,),
+        ).fetchone()
+    finally:
+        connection.close()
+
+
+def _model_release_report(row: sqlite3.Row) -> dict[str, object]:
+    return {
+        "release_id": str(row["release_id"]),
+        "project_id": str(row["project_id"]),
+        "action": str(row["action"]),
+        "prior_release_id": row["prior_release_id"],
+        "activated_at": str(row["activated_at"]),
+        "artifact": _artifact_report(row),
+    }
+
+
+def _append_project_model_release(
+    root: Path,
+    *,
+    project_id: str,
+    artifact: sqlite3.Row,
+    action: str,
+    prior_release_id: str | None,
+    activated_by: str,
+) -> dict[str, object]:
+    if action not in {"ACTIVATED", "ROLLED_BACK"}:
+        raise ServiceError("model release action is invalid")
+    if not isinstance(activated_by, str) or not activated_by.strip():
+        raise ServiceError("model release actor must be a nonblank string")
+    release_id = str(uuid.uuid4())
+    activated_at = _timestamp()
+    connection = _connection(root)
+    try:
+        with connection:
+            connection.execute(
+                """
+                INSERT INTO service_project_model_releases
+                    (release_id, project_id, artifact_id, action, prior_release_id,
+                     activated_by, activated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    release_id,
+                    project_id,
+                    artifact["artifact_id"],
+                    action,
+                    prior_release_id,
+                    activated_by,
+                    activated_at,
+                ),
+            )
+    finally:
+        connection.close()
+    return {
+        "release_id": release_id,
+        "project_id": project_id,
+        "action": action,
+        "prior_release_id": prior_release_id,
+        "activated_at": activated_at,
+        "artifact": _artifact_report(artifact),
+    }
+
+
+def activate_service_project_model(
+    service_workspace: Path | str,
+    *,
+    project_id: str,
+    artifact_id: str,
+    activated_by: str = "LOCAL_SERVICE_OPERATOR",
+) -> dict[str, object]:
+    """Set one attached local model as a project's next recognition release."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _managed_project_path(root, canonical_project_id)
+    artifact = _attached_project_model(
+        root,
+        project_id=canonical_project_id,
+        artifact_id=artifact_id,
+    )
+    current = _current_project_model_release(root, canonical_project_id)
+    release = _append_project_model_release(
+        root,
+        project_id=canonical_project_id,
+        artifact=artifact,
+        action="ACTIVATED",
+        prior_release_id=None if current is None else str(current["release_id"]),
+        activated_by=activated_by,
+    )
+    return {
+        "status": "ACTIVATED",
+        "active_model": release,
+        "network_required": False,
+    }
+
+
+def list_service_project_model_releases(
+    service_workspace: Path | str,
+    *,
+    project_id: str,
+) -> dict[str, object]:
+    """List one managed project's immutable model-release history."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _managed_project_path(root, canonical_project_id)
+    connection = _connection(root)
+    try:
+        rows = connection.execute(
+            """
+            SELECT releases.release_id, releases.project_id, releases.artifact_id,
+                   releases.action, releases.prior_release_id, releases.activated_by,
+                   releases.activated_at, artifacts.kind, artifacts.name,
+                   artifacts.license_id, artifacts.description, artifacts.sha256,
+                   artifacts.size_bytes, artifacts.relative_path, artifacts.created_at
+            FROM service_project_model_releases AS releases
+            JOIN service_artifacts AS artifacts ON artifacts.artifact_id = releases.artifact_id
+            WHERE releases.project_id = ?
+            ORDER BY releases.rowid DESC
+            """,
+            (canonical_project_id,),
+        ).fetchall()
+    finally:
+        connection.close()
+    releases = [_model_release_report(row) for row in rows]
+    return {
+        "status": "READY",
+        "project_id": canonical_project_id,
+        "active_model": None if not releases else releases[0],
+        "release_count": len(releases),
+        "releases": releases,
+        "network_required": False,
+    }
+
+
+def rollback_service_project_model(
+    service_workspace: Path | str,
+    *,
+    project_id: str,
+    release_id: str,
+    activated_by: str = "LOCAL_SERVICE_OPERATOR",
+) -> dict[str, object]:
+    """Append an auditable rollback to one prior attached model release."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _managed_project_path(root, canonical_project_id)
+    canonical_release_id = _require_uuid(release_id, role="release_id")
+    current = _current_project_model_release(root, canonical_project_id)
+    if current is None:
+        raise ServiceError("project has no active model release to roll back")
+    if canonical_release_id == current["release_id"]:
+        raise ServiceError("rollback target is already the active model release")
+    connection = _connection(root)
+    try:
+        target = connection.execute(
+            """
+            SELECT artifact_id
+            FROM service_project_model_releases
+            WHERE project_id = ? AND release_id = ?
+            """,
+            (canonical_project_id, canonical_release_id),
+        ).fetchone()
+    finally:
+        connection.close()
+    if target is None:
+        raise ServiceError("rollback target model release was not found")
+    artifact = _attached_project_model(
+        root,
+        project_id=canonical_project_id,
+        artifact_id=str(target["artifact_id"]),
+    )
+    if artifact["artifact_id"] == current["artifact_id"]:
+        raise ServiceError("rollback target already uses the active model artifact")
+    release = _append_project_model_release(
+        root,
+        project_id=canonical_project_id,
+        artifact=artifact,
+        action="ROLLED_BACK",
+        prior_release_id=str(current["release_id"]),
+        activated_by=activated_by,
+    )
+    return {
+        "status": "ROLLED_BACK",
+        "active_model": release,
+        "network_required": False,
+    }
+
+
+def activate_authorized_project_model(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    artifact_id: str,
+) -> dict[str, object]:
+    """Let an owner choose the pinned model for future queued recognition."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=canonical_account_id,
+        minimum_role="OWNER",
+    )
+    return activate_service_project_model(
+        root,
+        project_id=canonical_project_id,
+        artifact_id=artifact_id,
+        activated_by=canonical_account_id,
+    )
+
+
+def rollback_authorized_project_model(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    release_id: str,
+) -> dict[str, object]:
+    """Let an owner append a rollback to one prior model release."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    canonical_account_id = _require_uuid(account_id, role="account_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=canonical_account_id,
+        minimum_role="OWNER",
+    )
+    return rollback_service_project_model(
+        root,
+        project_id=canonical_project_id,
+        release_id=release_id,
+        activated_by=canonical_account_id,
+    )
+
+
+def list_authorized_project_model_releases(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+) -> dict[str, object]:
+    """Let a project viewer inspect model-release identity without storage paths."""
+
+    root = _service_root(service_workspace)
+    canonical_project_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_project_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return list_service_project_model_releases(root, project_id=canonical_project_id)
+
 def list_service_artifacts(service_workspace: Path | str) -> list[dict[str, object]]:
     """List registered model and dataset metadata without local storage paths."""
 
@@ -1573,6 +1912,10 @@ def queue_project_kraken_recognition(
         account_id=account_id,
         minimum_role="EDITOR",
     )
+    active_release = _current_project_model_release(root, canonical_id)
+    model_artifact_id = (
+        None if active_release is None else str(active_release["artifact_id"])
+    )
     job_id = str(uuid.uuid4())
     now = _timestamp()
     connection = _connection(root)
@@ -1590,6 +1933,7 @@ def queue_project_kraken_recognition(
                         {
                             "project_id": canonical_id,
                             "manifest_sha256": canonical_manifest,
+                            "model_artifact_id": model_artifact_id,
                         }
                     ),
                     now,
@@ -1603,6 +1947,7 @@ def queue_project_kraken_recognition(
         "job_id": job_id,
         "kind": "PROJECT_KRAKEN_RECOGNITION",
         "project_id": canonical_id,
+        "model_artifact_id": model_artifact_id,
         "network_required": False,
     }
 
@@ -1631,6 +1976,7 @@ def get_service_job(service_workspace: Path | str, job_id: str) -> dict[str, obj
         "job_id": row["job_id"],
         "kind": row["kind"],
         "project_id": payload["project_id"],
+        "model_artifact_id": payload.get("model_artifact_id"),
         "status": row["status"],
         "result": result,
         "error": row["error"],
@@ -1723,6 +2069,37 @@ def _finish_job(
         connection.close()
 
 
+def _kraken_with_project_model(
+    root: Path,
+    *,
+    project_id: str,
+    artifact_id: str | None,
+    kraken: LocalKraken,
+) -> LocalKraken:
+    if artifact_id is None:
+        return kraken
+    artifact = _attached_project_model(
+        root,
+        project_id=project_id,
+        artifact_id=artifact_id,
+    )
+    config = kraken.config
+    return LocalKraken(
+        KrakenConfig(
+            executable=config.executable,
+            model=PinnedArtifact(
+                path=_artifact_storage_path(root, artifact),
+                sha256=str(artifact["sha256"]),
+            ),
+            device=config.device,
+            precision=config.precision,
+            batch_size=config.batch_size,
+            text_direction=config.text_direction,
+            timeout_seconds=config.timeout_seconds,
+        )
+    )
+
+
 class ServiceJobWorker:
     """Single-process durable worker for explicit local service jobs."""
 
@@ -1772,10 +2149,19 @@ class ServiceJobWorker:
                         raise ServiceError(
                             "local Kraken recognition is not configured for this service"
                         )
+                    model_artifact_id = payload.get("model_artifact_id")
+                    if model_artifact_id is not None and not isinstance(model_artifact_id, str):
+                        raise ServiceError("Kraken recognition job model artifact is invalid")
+                    recognition_kraken = _kraken_with_project_model(
+                        self._root,
+                        project_id=str(payload["project_id"]),
+                        artifact_id=model_artifact_id,
+                        kraken=self._kraken,
+                    )
                     recognition = recognize_project_with_kraken(
                         _managed_project_path(self._root, str(payload["project_id"])),
                         manifest_sha256=str(payload["manifest_sha256"]),
-                        kraken=self._kraken,
+                        kraken=recognition_kraken,
                     )
                     result = {
                         "project_id": payload["project_id"],
@@ -1783,6 +2169,7 @@ class ServiceJobWorker:
                         "result_pagexml_sha256": recognition["result_pagexml_sha256"],
                         "suggestion_count": recognition["suggestion_count"],
                         "runtime_fingerprint": recognition["runtime_fingerprint"],
+                        "model_artifact_id": model_artifact_id,
                     }
                 else:
                     raise ServiceError("service worker received an unsupported job")
