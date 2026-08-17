@@ -317,6 +317,9 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "Save region outline" in workbench
         assert "Save line outline" in workbench
         assert "Recent project activity" in workbench
+        assert "Search project" in workbench
+        assert "/search" in workbench
+        assert "openSearchResult" in workbench
         assert "/activity" in workbench
         assert "Project members" in workbench
         assert "/members" in workbench
@@ -543,6 +546,25 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert revision["revision"] == 1
         assert revision["editor"] == "editor"
         assert "project" not in revision
+
+        search_payload = json.dumps({"query": "reviewed", "field": "text"})
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/search",
+            body=search_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        search_response = connection.getresponse()
+        search = json.loads(search_response.read())
+        assert search_response.status == 200
+        assert search["network_required"] is False
+        assert search["result_count"] == 1
+        assert search["truncated"] is False
+        assert search["results"][0]["manifest_sha256"] == manifest_sha256
+        assert search["results"][0]["text"] == "reviewed text"
+        assert search["results"][0]["revision"] == 1
+        assert "project" not in search["results"][0]
+        assert "image_path" not in search["results"][0]
 
         connection.request(
             "POST",
