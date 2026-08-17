@@ -68,6 +68,8 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         root_status, _root_headers, root = _request(port, "GET", "/")
         assert root_status == 200
         assert b"AKT Reader browser workbench" in root
+        assert b"region-handle" in root
+        assert b"Drag region vertex" in root
 
         project_status, _project_headers, project_body = _request(port, "GET", "/api/project")
         project_report = json.loads(project_body)
