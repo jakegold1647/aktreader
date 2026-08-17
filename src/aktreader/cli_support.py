@@ -17,7 +17,9 @@ READER_CONFIG_VERSION = "1.0.0"
 
 KRAKEN_CONFIG_VERSION = "1.0.0"
 _KRAKEN_REQUIRED_ARTIFACTS = frozenset({"executable", "model"})
-_KRAKEN_INFERENCE_KEYS = frozenset({"device", "precision", "batch_size", "timeout_seconds"})
+_KRAKEN_INFERENCE_KEYS = frozenset(
+    {"device", "precision", "batch_size", "text_direction", "timeout_seconds"}
+)
 
 _REQUIRED_ARTIFACTS = frozenset(
     {"executable", "model", "mmproj", "prompt", "schema", "model_schema"}
