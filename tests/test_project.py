@@ -1093,6 +1093,52 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     assert isinstance(evaluations[0]["imported_at"], str)
 
 
+
+def test_project_htr_evaluation_keeps_missing_suggestions_out_of_coverage(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    recognized = source_root / "page.kraken.xml"
+    _write_pagexml(source, text="source text")
+    _write_pagexml(recognized, text="")
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    htr = import_htr_suggestions(
+        project,
+        recognized,
+        manifest_sha256=imported["manifest_sha256"],
+        engine="kraken",
+        runtime_fingerprint="b" * 64,
+    )
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="reviewed text",
+        editor="reviewer-1",
+    )
+
+    report = evaluate_htr_suggestions(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        result_pagexml_sha256=htr["result_pagexml_sha256"],
+    )
+
+    assert report["status"] == "NO_EVALUABLE_HUMAN_REVISIONS"
+    assert report["human_revision_count"] == 1
+    assert report["suggestion_count_for_human_revisions"] == 0
+    assert report["evaluated_line_count"] == 0
+
+
 def test_project_training_consent_tracks_the_current_human_revision(tmp_path: Path) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()
