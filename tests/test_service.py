@@ -294,6 +294,8 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         assert "AKT Reader collaborative workbench" in workbench
         assert "Save region outline" in workbench
         assert "Save line outline" in workbench
+        assert "Undo latest correction" in workbench
+        assert "/transcriptions/undo" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
         assert "Run local recognition" in workbench
@@ -540,6 +542,49 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
             if element.tag.rsplit("}", 1)[-1] == "RegionRefIndexed"
         ]
         assert exported_order == ["region-2", "region-1"]
+
+        undo_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "expected_revision": 1,
+            }
+        )
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions/undo",
+            body=undo_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        undo_response = connection.getresponse()
+        undone = json.loads(undo_response.read())
+        assert undo_response.status == 200
+        assert undone["status"] == "UNDONE"
+        assert undone["revision"] == 2
+        assert undone["undone_revision"] == 1
+        assert undone["editor"] == "editor"
+        assert "project" not in undone
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0",
+            headers=authorization,
+        )
+        undone_page_response = connection.getresponse()
+        undone_page = json.loads(undone_page_response.read())["page"]
+        assert undone_page_response.status == 200
+        assert undone_page["lines"][0]["text"] == page["lines"][0]["text"]
+        assert undone_page["lines"][0]["revision"] == 2
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions/undo",
+            body=undo_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        stale_undo_response = connection.getresponse()
+        assert stale_undo_response.status == 409
+        assert "conflict" in json.loads(stale_undo_response.read())["message"]
     finally:
         connection.close()
         server.shutdown()
