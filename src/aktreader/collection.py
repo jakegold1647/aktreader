@@ -485,7 +485,17 @@ def export_public_collection(
 
     lines_by_document: dict[tuple[str, str], list[tuple[object, ...]]] = {}
     for row in line_rows:
-        project_id, manifest_sha256, page_index, page_id, source_span_id, region_id, line_id, text, revision = row
+        (
+            project_id,
+            manifest_sha256,
+            page_index,
+            page_id,
+            source_span_id,
+            region_id,
+            line_id,
+            text,
+            revision,
+        ) = row
         if (
             not isinstance(project_id, str)
             or not isinstance(manifest_sha256, str)
@@ -565,7 +575,9 @@ def export_public_collection(
                     pages.append(current_page)
                     current_page_index = page_index
                 elif current_page is None or current_page.get("page_id") != page_id:
-                    raise CollectionError("local collection has inconsistent public page identities")
+                    raise CollectionError(
+                        "local collection has inconsistent public page identities"
+                    )
                 lines = current_page["lines"]
                 if not isinstance(lines, list):
                     raise CollectionError("local collection has invalid public page lines")
