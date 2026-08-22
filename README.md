@@ -152,7 +152,7 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-save-search`, `collection-list-saved-searches`, `collection-run-saved-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
-`project-list-documents`, `project-update-document`,
+`project-list-documents`, `project-search`, `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
 `project-kraken-recognize`, `project-export-pagexml`, `project-export-transcript`,
@@ -273,6 +273,13 @@ does not make it training data or publishable data.
 
 Every import is also a stable document record. Its local title, tags, and notes can be updated without
 touching the PAGE XML or images; see [document metadata](docs/document-metadata.md).
+
+Search one project without first building a collection. Results use the latest effective human
+revision, can target transcription text, document titles, or tags, and never require network access:
+
+```powershell
+python -m aktreader project-search serock.aktproj "Aleksander" --field text --limit 20
+```
 
 ### Loopback browser workbench
 
