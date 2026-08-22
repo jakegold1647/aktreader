@@ -193,7 +193,7 @@ def test_project_import_copies_hashed_pagexml_images_and_lines(tmp_path: Path) -
     assert report_after_repeat["line_count"] == 1
 
 
-def test_project_searches_effective_transcriptions_by_field(tmp_path: Path) -> None:
+def test_project_searches_effective_transcriptions_by_field(tmp_path: Path, capsys) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()
     _write_image(source_root / "page.png")
@@ -258,6 +258,29 @@ def test_project_searches_effective_transcriptions_by_field(tmp_path: Path) -> N
     assert title_matches["result_count"] == tag_matches["result_count"] == 1
     assert title_matches["results"][0]["source_span_id"] == line["source_span_id"]
     assert tag_matches["results"][0]["source_span_id"] == line["source_span_id"]
+
+    assert (
+        main(
+            [
+                "project-search",
+                str(project),
+                "Serock",
+                "--field",
+                "tag",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    cli_report = json.loads(capsys.readouterr().out)
+    assert cli_report["field"] == "tag"
+    assert cli_report["limit"] == 1
+    assert cli_report["network_required"] is False
+    assert cli_report["results"][0]["text"] == "Aleksander Goldstein"
+
+    assert main(["project-search", str(project), "gold", "--limit", "0"]) == 2
+    assert "search limit must be an integer from 1 to 100" in capsys.readouterr().err
 
 
 def test_project_imports_an_image_directory_as_editable_pagexml(tmp_path: Path) -> None:

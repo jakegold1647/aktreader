@@ -107,6 +107,7 @@ from aktreader.project import (
     revise_page_reading_order,
     revise_region_geometry,
     revoke_training_consent,
+    search_project_transcriptions,
     segment_project_with_kraken,
     training_readiness,
     update_project_document,
@@ -294,6 +295,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="list local PAGE XML document records",
     )
     project_documents.add_argument("project", type=Path, help="local .aktproj directory")
+
+    project_search = subparsers.add_parser(
+        "project-search",
+        help="search effective local transcription text or document metadata",
+    )
+    project_search.add_argument("project", type=Path, help="local .aktproj directory")
+    project_search.add_argument("query", help="case-insensitive local search text")
+    project_search.add_argument(
+        "--field",
+        choices=("text", "title", "tag"),
+        default="text",
+        help="field to search (default: text)",
+    )
+    project_search.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="maximum results from 1 to 100 (default: 50)",
+    )
 
     project_document_update = subparsers.add_parser(
         "project-update-document",
@@ -1675,6 +1695,19 @@ def _command_project_list_documents(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_search(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    _emit_json(
+        search_project_transcriptions(
+            project,
+            query=args.query,
+            field=args.field,
+            limit=args.limit,
+        )
+    )
+    return 0
+
+
 def _command_project_update_document(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     metadata_path = local_input_path(args.metadata, role="document metadata")
@@ -2946,6 +2979,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
         "project-list-documents": _command_project_list_documents,
+        "project-search": _command_project_search,
         "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-images": _command_project_import_images,
