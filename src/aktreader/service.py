@@ -49,6 +49,7 @@ from aktreader.project import (
     revise_region_geometry,
     search_project_transcriptions,
     undo_line_transcription,
+    update_project_document,
 )
 
 SERVICE_MANIFEST_NAME = "service.akt.json"
@@ -2801,6 +2802,45 @@ def list_authorized_project_documents(
     return list_project_documents(_managed_project_path(root, canonical_id))
 
 
+def update_authorized_project_document(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    title: object,
+    tags: object,
+    notes: object,
+    expected_updated_at: object,
+) -> dict[str, object]:
+    """Update document metadata for an authorized project editor."""
+
+    if not isinstance(title, str):
+        raise ServiceError("document title must be a string")
+    if not isinstance(tags, list):
+        raise ServiceError("document tags must be a list")
+    if not isinstance(notes, str):
+        raise ServiceError("document notes must be a string")
+    if not isinstance(expected_updated_at, str):
+        raise ServiceError("expected_updated_at must be a string")
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    return update_project_document(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        title=title,
+        tags=tags,
+        notes=notes,
+        expected_updated_at=expected_updated_at,
+    )
+
+
 def load_authorized_project_page(
     service_workspace: Path | str,
     project_id: str,
@@ -3814,6 +3854,28 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.OK, report)
                 return
             if (
+                len(parts) == 7
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6] == "metadata"
+            ):
+                required = {"title", "tags", "notes", "expected_updated_at"}
+                if set(payload) != required:
+                    raise ServiceError("document metadata update has invalid keys")
+                account = self._account()
+                document = update_authorized_project_document(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                    title=payload["title"],
+                    tags=payload["tags"],
+                    notes=payload["notes"],
+                    expected_updated_at=payload["expected_updated_at"],
+                )
+                self._json(HTTPStatus.OK, document)
+                return
+            if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "artifacts"
@@ -4143,6 +4205,11 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #search-results { display: grid; gap: 6px; list-style: none; margin: 8px 0 0; max-height: 220px;
   overflow: auto; padding: 0; }
 .search-result { background: #fff; color: #18212f; text-align: left; }
+#document-metadata { border-top: 1px solid #d9e1ea; margin-top: 14px; padding-top: 12px; }
+#document-metadata summary { cursor: pointer; font-weight: 700; }
+#document-metadata-form { display: grid; gap: 8px; margin-top: 10px; }
+#document-tags, #document-notes { min-height: 72px; }
+#metadata-status { color: #475569; min-height: 1.3rem; }
 #activity-list { display: grid; gap: 6px; list-style: none; margin: 0; max-height: 220px;
   overflow: auto; padding: 0; }
 .activity { background: #fff; color: #18212f; text-align: left; }
@@ -4221,6 +4288,24 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <label>Document <select id="document"></select></label>
           <label>Page <select id="page"></select></label>
         </div>
+        <details id="document-metadata">
+          <summary>Document details</summary>
+          <form id="document-metadata-form">
+            <label>Title <input id="document-title" required disabled></label>
+            <label>Tags (one per line)
+              <textarea id="document-tags" spellcheck="false" disabled></textarea>
+            </label>
+            <label>Project notes (visible to project members)
+              <textarea id="document-notes" disabled></textarea>
+            </label>
+            <div class="actions">
+              <button id="save-document-metadata" type="submit" disabled>
+                Save document details
+              </button>
+              <span id="metadata-status" role="status" aria-live="polite"></span>
+            </div>
+          </form>
+        </details>
         <p id="page-detail">Choose a project.</p>
         <div id="scan">
           <img id="image" alt="Selected source page">
@@ -4364,7 +4449,7 @@ const state = {
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
   activity: [], evaluations: [], members: [], accounts: [], projectInvitations: [],
   invitations: [], artifacts: [], attachableArtifacts: [], searchResults: [],
-  searchTruncated: false, krakenRecognitionEnabled: false
+  searchTruncated: false, krakenRecognitionEnabled: false, metadataManifest: null
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -4377,6 +4462,12 @@ const status = document.getElementById("status");
 const projectSelect = document.getElementById("project");
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
+const documentMetadataForm = document.getElementById("document-metadata-form");
+const documentTitle = document.getElementById("document-title");
+const documentTags = document.getElementById("document-tags");
+const documentNotes = document.getElementById("document-notes");
+const saveDocumentMetadata = document.getElementById("save-document-metadata");
+const metadataStatus = document.getElementById("metadata-status");
 const pageDetail = document.getElementById("page-detail");
 const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
@@ -4444,7 +4535,11 @@ async function api(path, options) {
     (options && options.headers) || {}
   ) }));
   const payload = await response.json();
-  if (!response.ok) throw new Error(payload.message || "Local request failed");
+  if (!response.ok) {
+    const error = new Error(payload.message || "Local request failed");
+    error.status = response.status;
+    throw error;
+  }
   return payload;
 }
 function option(select, value, label) {
@@ -4453,8 +4548,56 @@ function option(select, value, label) {
   item.textContent = label;
   select.append(item);
 }
+function renderDocumentOptions(preferredManifest) {
+  const selected = preferredManifest || documentSelect.value;
+  documentSelect.replaceChildren();
+  state.documents.forEach((document, index) => option(
+    documentSelect, document.manifest_sha256,
+    (index + 1) + ". " + document.title + " (" + document.page_count + " pages)"
+  ));
+  if (state.documents.some(document => document.manifest_sha256 === selected)) {
+    documentSelect.value = selected;
+  }
+}
 function currentDocument() {
   return state.documents.find(item => item.manifest_sha256 === documentSelect.value);
+}
+function metadataDocument() {
+  return state.documents.find(item => item.manifest_sha256 === state.metadataManifest);
+}
+function documentTagsDraft() {
+  return documentTags.value.split("\\n").map(tag => tag.trim()).filter(Boolean);
+}
+function documentMetadataDirty() {
+  const record = metadataDocument();
+  return Boolean(record) && (
+    documentTitle.value !== record.title ||
+    JSON.stringify(documentTagsDraft()) !== JSON.stringify(record.tags) ||
+    documentNotes.value !== record.notes
+  );
+}
+function confirmMetadataNavigation() {
+  return !documentMetadataDirty() || window.confirm(
+    "Discard unsaved document title, tags, or notes?"
+  );
+}
+function renderDocumentMetadata() {
+  const record = currentDocument();
+  state.metadataManifest = record ? record.manifest_sha256 : null;
+  documentTitle.value = record ? record.title : "";
+  documentTags.value = record ? record.tags.join("\\n") : "";
+  documentNotes.value = record ? record.notes : "";
+  const editable = Boolean(record) && canEdit();
+  documentTitle.disabled = !editable;
+  documentTags.disabled = !editable;
+  documentNotes.disabled = !editable;
+  saveDocumentMetadata.disabled = !editable;
+  saveDocumentMetadata.title = editable
+    ? "Save title, tags, and notes against the loaded metadata revision."
+    : "Only editors and owners can change document details.";
+  metadataStatus.textContent = record
+    ? (editable ? "Loaded saved document details." : "Your VIEWER role is read-only.")
+    : "No document selected.";
 }
 function selectedLine() {
   return state.page && state.page.lines.find(item => item.source_span_id === state.selected);
@@ -4564,7 +4707,7 @@ function renderSearchResults() {
   }
 }
 async function runProjectSearch(event) {
-  event.preventDefault();
+  if (event) event.preventDefault();
   const query = searchQuery.value.trim();
   if (!state.project || !query) {
     setStatus("Enter a search query.");
@@ -4594,6 +4737,10 @@ async function runProjectSearch(event) {
 async function openSearchResult(result) {
   if (!state.project) return;
   if (documentSelect.value !== result.manifest_sha256) {
+    if (!confirmMetadataNavigation()) {
+      setStatus("Kept unsaved document details.");
+      return;
+    }
     documentSelect.value = result.manifest_sha256;
     await loadDocument();
   }
@@ -5204,6 +5351,7 @@ async function loadPage() {
 async function loadDocument() {
   pageSelect.replaceChildren();
   const doc = currentDocument();
+  renderDocumentMetadata();
   if (!doc) return;
   for (let index = 0; index < doc.page_count; index += 1) {
     option(pageSelect, String(index), "Page " + (index + 1) + " of " + doc.page_count);
@@ -5234,10 +5382,7 @@ async function loadProject() {
     "/api/projects/" + encodeURIComponent(state.project.project_id) + "/documents"
   );
   state.documents = payload.documents;
-  state.documents.forEach((document, index) => option(
-    documentSelect, document.manifest_sha256,
-    (index + 1) + ". " + document.title + " (" + document.page_count + " pages)"
-  ));
+  renderDocumentOptions();
   if (!state.documents.length) {
     state.page = null;
     state.layout = null;
@@ -5255,11 +5400,71 @@ async function loadProject() {
     setExportDisabled(true);
     updateRecognitionControl();
     lineList.replaceChildren();
+    renderDocumentMetadata();
     await Promise.all([loadMembership(), loadArtifacts()]);
     setStatus("This project has no imported PAGE XML documents.");
     return;
   }
   await Promise.all([loadDocument(), loadMembership(), loadArtifacts()]);
+}
+async function saveDocumentMetadataRevision(event) {
+  event.preventDefault();
+  const record = metadataDocument();
+  if (!record || !state.project || !canEdit()) return;
+  const tags = documentTagsDraft();
+  if (!documentTitle.value.trim()) {
+    metadataStatus.textContent = "Document title must not be blank.";
+    return;
+  }
+  if (new Set(tags).size !== tags.length) {
+    metadataStatus.textContent = "Document tags must be unique.";
+    return;
+  }
+  saveDocumentMetadata.disabled = true;
+  metadataStatus.textContent = "Saving document details…";
+  try {
+    const updated = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(record.manifest_sha256) + "/metadata",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: documentTitle.value,
+          tags,
+          notes: documentNotes.value,
+          expected_updated_at: record.updated_at
+        })
+      }
+    );
+    const index = state.documents.findIndex(
+      item => item.manifest_sha256 === updated.manifest_sha256
+    );
+    if (index < 0) throw new Error("Updated document is not in the current project.");
+    state.documents[index] = updated;
+    documentSelect.options[index].textContent = (index + 1) + ". " + updated.title +
+      " (" + updated.page_count + " pages)";
+    renderDocumentMetadata();
+    if (searchQuery.value.trim()) await runProjectSearch();
+    metadataStatus.textContent = "Saved document details.";
+  } catch (error) {
+    if (error.status === 409) {
+      try {
+        const payload = await api(
+          "/api/projects/" + encodeURIComponent(state.project.project_id) + "/documents"
+        );
+        state.documents = payload.documents;
+        renderDocumentOptions(state.metadataManifest);
+        renderDocumentMetadata();
+        if (searchQuery.value.trim()) await runProjectSearch();
+      } catch (reloadError) {
+        setStatus("Could not reload document details: " + reloadError.message);
+      }
+    }
+    metadataStatus.textContent = error.message;
+  } finally {
+    saveDocumentMetadata.disabled = !canEdit() || !metadataDocument();
+  }
 }
 async function createProjectInvitation(event) {
   event.preventDefault();
@@ -5450,13 +5655,24 @@ loginForm.addEventListener("submit", async event => {
     loginStatus.textContent = error.message;
   }
 });
-projectSelect.addEventListener(
-  "change", () => loadProject().catch(error => setStatus(error.message))
-);
-documentSelect.addEventListener(
-  "change", () => loadDocument().catch(error => setStatus(error.message))
-);
+projectSelect.addEventListener("change", () => {
+  const previousProject = state.project && state.project.project_id;
+  if (!confirmMetadataNavigation()) {
+    projectSelect.value = previousProject || "";
+    return;
+  }
+  loadProject().catch(error => setStatus(error.message));
+});
+documentSelect.addEventListener("change", () => {
+  const previousDocument = state.metadataManifest;
+  if (!confirmMetadataNavigation()) {
+    documentSelect.value = previousDocument || "";
+    return;
+  }
+  loadDocument().catch(error => setStatus(error.message));
+});
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
+documentMetadataForm.addEventListener("submit", event => saveDocumentMetadataRevision(event));
 memberForm.addEventListener("submit", event => saveMemberRole(event));
 inviteForm.addEventListener("submit", event => createProjectInvitation(event));
 acceptInvitationForm.addEventListener("submit", event => acceptIncomingInvitation(event));
@@ -5571,12 +5787,19 @@ overlay.addEventListener("pointermove", event => {
 });
 overlay.addEventListener("pointerup", () => { state.drag = null; });
 overlay.addEventListener("pointercancel", () => { state.drag = null; });
+window.addEventListener("beforeunload", event => {
+  if (!documentMetadataDirty()) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 document.getElementById("logout").addEventListener("click", () => {
+  if (!confirmMetadataNavigation()) return;
   state.token = null;
   state.account = null;
   state.projects = [];
   state.project = null;
   state.documents = [];
+  state.metadataManifest = null;
   state.page = null;
   state.layout = null;
   state.activity = [];
@@ -5590,6 +5813,7 @@ document.getElementById("logout").addEventListener("click", () => {
   renderMembership();
   renderArtifacts();
   renderEvaluations();
+  renderDocumentMetadata();
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;

@@ -340,6 +340,17 @@ def test_authenticated_document_review_api_requires_current_revision(
         assert "Search project" in workbench
         assert "/search" in workbench
         assert "openSearchResult" in workbench
+        assert "Document details" in workbench
+        assert 'id="document-metadata-form"' in workbench
+        assert 'id="document-title"' in workbench
+        assert 'id="document-tags"' in workbench
+        assert 'id="document-notes"' in workbench
+        assert "/metadata" in workbench
+        assert "documentMetadataDirty" in workbench
+        assert "Discard unsaved document title, tags, or notes?" in workbench
+        assert "error.status = response.status" in workbench
+        assert "if (searchQuery.value.trim()) await runProjectSearch();" in workbench
+        assert "renderDocumentOptions(state.metadataManifest);" in workbench
         assert "/activity" in workbench
         assert "Project members" in workbench
         assert "Local invitations" in workbench
@@ -406,6 +417,108 @@ def test_authenticated_document_review_api_requires_current_revision(
         documents = json.loads(documents_response.read())
         assert documents_response.status == 200
         assert documents["documents"][0]["manifest_sha256"] == manifest_sha256
+        original_document = documents["documents"][0]
+
+        metadata_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/metadata"
+        )
+        metadata_payload = json.dumps(
+            {
+                "title": "Serock civil register, 1890",
+                "tags": ["Serock", "births"],
+                "notes": "Shared review note.",
+                "expected_updated_at": original_document["updated_at"],
+            }
+        )
+        connection.request(
+            "POST",
+            metadata_route,
+            body=metadata_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        metadata_response = connection.getresponse()
+        metadata = json.loads(metadata_response.read())
+        assert metadata_response.status == 200
+        assert metadata["title"] == "Serock civil register, 1890"
+        assert metadata["tags"] == ["Serock", "births"]
+        assert metadata["notes"] == "Shared review note."
+        assert metadata["updated_at"] != original_document["updated_at"]
+        assert metadata["network_required"] is False
+        assert "project" not in metadata
+        assert all(not key.endswith("_path") for key in metadata)
+
+        connection.request(
+            "POST",
+            metadata_route,
+            body=metadata_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        stale_metadata_response = connection.getresponse()
+        assert stale_metadata_response.status == 409
+        assert "document metadata conflict" in json.loads(
+            stale_metadata_response.read()
+        )["message"]
+
+        invalid_metadata = json.loads(metadata_payload)
+        invalid_metadata["managed_project_path"] = "must not be accepted"
+        connection.request(
+            "POST",
+            metadata_route,
+            body=json.dumps(invalid_metadata),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_metadata_response = connection.getresponse()
+        assert invalid_metadata_response.status == 400
+        assert "invalid keys" in json.loads(invalid_metadata_response.read())["message"]
+
+        invalid_value_payload = json.dumps(
+            {
+                "title": metadata["title"],
+                "tags": ["duplicate", "duplicate"],
+                "notes": metadata["notes"],
+                "expected_updated_at": metadata["updated_at"],
+            }
+        )
+        connection.request(
+            "POST",
+            metadata_route,
+            body=invalid_value_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_value_response = connection.getresponse()
+        assert invalid_value_response.status == 400
+        assert "must be unique" in json.loads(invalid_value_response.read())["message"]
+
+        missing_snapshot_payload = json.dumps(
+            {
+                "title": metadata["title"],
+                "tags": None,
+                "notes": metadata["notes"],
+                "expected_updated_at": metadata["updated_at"],
+            }
+        )
+        connection.request(
+            "POST",
+            metadata_route,
+            body=missing_snapshot_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        missing_snapshot_response = connection.getresponse()
+        assert missing_snapshot_response.status == 400
+        assert "must be a list" in json.loads(missing_snapshot_response.read())["message"]
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/search",
+            body=json.dumps({"query": "births", "field": "tag"}),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        metadata_search_response = connection.getresponse()
+        metadata_search = json.loads(metadata_search_response.read())
+        assert metadata_search_response.status == 200
+        assert metadata_search["result_count"] == 1
+        assert metadata_search["results"][0]["title"] == "Serock civil register, 1890"
+        assert metadata_search["results"][0]["tags"] == ["Serock", "births"]
 
         connection.request(
             "GET",
@@ -847,6 +960,44 @@ def test_owner_can_manage_existing_project_members(tmp_path: Path) -> None:
         reviewer_documents = json.loads(reviewer_documents_response.read())
         assert reviewer_documents_response.status == 200
         assert reviewer_documents["documents"][0]["manifest_sha256"] == manifest_sha256
+
+        connection.request(
+            "POST",
+            members_route,
+            body=json.dumps({"username": "reviewer", "role": "VIEWER"}),
+            headers={"Content-Type": "application/json", **owner_headers},
+        )
+        viewer_role_response = connection.getresponse()
+        assert viewer_role_response.status == 200
+        viewer_role_response.read()
+
+        viewer_document = reviewer_documents["documents"][0]
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/metadata",
+            body=json.dumps(
+                {
+                    "title": viewer_document["title"],
+                    "tags": viewer_document["tags"],
+                    "notes": "Viewer must not save this note.",
+                    "expected_updated_at": viewer_document["updated_at"],
+                }
+            ),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        viewer_metadata_response = connection.getresponse()
+        assert viewer_metadata_response.status == 403
+        viewer_metadata_response.read()
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents",
+            headers=reviewer_headers,
+        )
+        unchanged_response = connection.getresponse()
+        unchanged_document = json.loads(unchanged_response.read())["documents"][0]
+        assert unchanged_response.status == 200
+        assert unchanged_document["notes"] != "Viewer must not save this note."
     finally:
         connection.close()
         server.shutdown()
