@@ -29,7 +29,8 @@ Stop it with Ctrl+C.
 - bounded local search across effective transcription text, document titles,
   and document tags, with direct jumps to the matching line;
 - a bounded, content-free recent-activity panel for the selected document,
-  with guarded jumps to the affected page, line, or region;
+  with revision-stream and current-location filters plus guarded jumps to the
+  affected page, line, or region;
 - an editor that appends the same human transcription revisions as the
   desktop workbench;
 - direct on-canvas line-polygon and baseline-point dragging, with source-pixel
@@ -86,6 +87,14 @@ document. The panel reuses the same content-free project activity feed as the
 `project-activity` command: each event includes its revision kind, page and line
 or region locator, editor, revision number, and timestamp, but never prior or
 revised transcription text or a local filesystem path.
+
+Use **Stream** to show all revisions or one exact transcription, line-geometry,
+region-geometry, or reading-order stream. Use **Scope** to keep the whole
+document visible or narrow the feed to the current page, selected line, or
+selected region. Page, line, and region filters follow the live workbench
+selection. If the selected page has no line or region, the panel reports that
+the scope is unavailable and shows no events; it never falls back to a wider
+feed. Every filtered response remains capped at 50 events and content-free.
 
 Selecting an event loads its page and, where available, its exact line or region.
 The jump uses the same unsaved-work confirmation as page and search navigation,

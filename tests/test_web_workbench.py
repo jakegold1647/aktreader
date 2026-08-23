@@ -125,6 +125,18 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"Recent changes" in root
         assert b'id="activity-status" role="status" aria-live="polite"' in root
         assert b'id="activity-list" aria-label="Recent project activity"' in root
+        assert b'id="activity-kind"' in root
+        assert b'<option value="LINE_GEOMETRY">Line geometry</option>' in root
+        assert b'id="activity-scope"' in root
+        assert b'<option value="line">Selected line</option>' in root
+        assert b"function activityParameters()" in root
+        assert b'parameters.set("source_span_id", line.source_span_id)' in root
+        assert b'parameters.set("region_id", region.region_id)' in root
+        assert b'if (activityScope.value === "line") await loadActivity();' in root
+        assert b'if (activityScope.value === "region") await loadActivity();' in root
+        assert b'if (activityScope.value === "page") await loadActivity();' in root
+        assert b'activityKind.addEventListener("change"' in root
+        assert b'activityScope.addEventListener("change"' in root
         assert b"async function jumpToActivityEvent(event)" in root
         assert b'api("/api/activity?" + parameters.toString())' in root
         assert b"It does not include transcription values or local paths." in root
@@ -274,17 +286,105 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert "revised_text" not in activity_body.decode("utf-8")
         assert str(project) not in activity_body.decode("utf-8")
 
+        filtered_activity_status, _, filtered_activity_body = _request(
+            port,
+            "GET",
+            "/api/activity?"
+            + urlencode(
+                {
+                    "manifest_sha256": imported["manifest_sha256"],
+                    "kind": "transcription",
+                    "page_index": 0,
+                    "source_span_id": page["lines"][0]["source_span_id"],
+                }
+            ),
+        )
+        filtered_activity = json.loads(filtered_activity_body)
+        assert filtered_activity_status == 200
+        assert filtered_activity["filters"] == {
+            "kind": "TRANSCRIPTION",
+            "page_index": 0,
+            "source_span_id": page["lines"][0]["source_span_id"],
+            "region_id": None,
+        }
+        assert filtered_activity["event_count"] == 1
+        assert filtered_activity["events"] == activity["events"]
+        assert "Aleksander corrected" not in filtered_activity_body.decode("utf-8")
+        assert str(project) not in filtered_activity_body.decode("utf-8")
+
+        region_activity_status, _, region_activity_body = _request(
+            port,
+            "GET",
+            "/api/activity?"
+            + urlencode(
+                {
+                    "manifest_sha256": imported["manifest_sha256"],
+                    "page_index": 0,
+                    "region_id": "region-1",
+                }
+            ),
+        )
+        assert region_activity_status == 200
+        assert json.loads(region_activity_body)["event_count"] == 1
+
+        empty_activity_status, _, empty_activity_body = _request(
+            port,
+            "GET",
+            "/api/activity?"
+            + urlencode(
+                {
+                    "manifest_sha256": imported["manifest_sha256"],
+                    "kind": "READING_ORDER",
+                    "page_index": 0,
+                }
+            ),
+        )
+        assert empty_activity_status == 200
+        assert json.loads(empty_activity_body)["event_count"] == 0
+
         invalid_activity_status, _invalid_activity_headers, invalid_activity_body = _request(
             port,
             "GET",
-            "/api/activity?" + urlencode(
-                {"manifest_sha256": imported["manifest_sha256"], "limit": "500"}
-            ),
+            "/api/activity?"
+            + urlencode({"manifest_sha256": imported["manifest_sha256"], "limit": "500"}),
         )
         assert invalid_activity_status == 400
-        assert "requires only the manifest_sha256" in json.loads(
-            invalid_activity_body
-        )["message"]
+        assert (
+            "supports manifest_sha256 plus optional" in json.loads(invalid_activity_body)["message"]
+        )
+
+        unscoped_line_status, _, unscoped_line_body = _request(
+            port,
+            "GET",
+            "/api/activity?"
+            + urlencode(
+                {
+                    "manifest_sha256": imported["manifest_sha256"],
+                    "source_span_id": page["lines"][0]["source_span_id"],
+                }
+            ),
+        )
+        assert unscoped_line_status == 400
+        assert json.loads(unscoped_line_body)["message"] == (
+            "line and region activity scopes require page_index"
+        )
+
+        missing_line_status, _, missing_line_body = _request(
+            port,
+            "GET",
+            "/api/activity?"
+            + urlencode(
+                {
+                    "manifest_sha256": imported["manifest_sha256"],
+                    "page_index": 0,
+                    "source_span_id": "missing-line",
+                }
+            ),
+        )
+        assert missing_line_status == 400
+        assert json.loads(missing_line_body)["message"] == (
+            "activity scope line was not found on the selected page"
+        )
 
         missing_activity_status, _missing_activity_headers, missing_activity_body = _request(
             port,
