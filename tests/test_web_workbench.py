@@ -64,6 +64,20 @@ def _request(
         connection.close()
 
 
+def _assert_workbench_security_headers(headers: dict[str, str]) -> None:
+    assert headers["Cache-Control"] == "no-store"
+    assert headers["X-Content-Type-Options"] == "nosniff"
+    assert headers["X-Frame-Options"] == "DENY"
+    assert headers["Referrer-Policy"] == "no-referrer"
+    assert headers["Cross-Origin-Opener-Policy"] == "same-origin"
+    assert headers["Cross-Origin-Resource-Policy"] == "same-origin"
+    assert headers["Content-Security-Policy"] == (
+        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; "
+        "object-src 'none'; form-action 'none'; frame-ancestors 'none'"
+    )
+
+
 def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path: Path) -> None:
     project, imported = _project_with_one_page(tmp_path)
     server = create_self_hosted_workbench_server(project, port=0)
@@ -73,8 +87,9 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         host, port = server.server_address[:2]
         assert host == "127.0.0.1"
 
-        root_status, _root_headers, root = _request(port, "GET", "/")
+        root_status, root_headers, root = _request(port, "GET", "/")
         assert root_status == 200
+        _assert_workbench_security_headers(root_headers)
         assert b"AKT Reader browser workbench" in root
         assert b"Page thumbnails" in root
         assert b"region-handle" in root
@@ -95,9 +110,10 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"state.page.reading_order.region_ids = [...state.regionOrder]" in root
         assert b'].join("\\n");' in root
 
-        project_status, _project_headers, project_body = _request(port, "GET", "/api/project")
+        project_status, project_headers, project_body = _request(port, "GET", "/api/project")
         project_report = json.loads(project_body)
         assert project_status == 200
+        _assert_workbench_security_headers(project_headers)
         assert project_report["name"] == "Serock births"
         document = project_report["documents"][0]
         assert document["manifest_sha256"] == imported["manifest_sha256"]
@@ -120,6 +136,7 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         with Image.open(BytesIO(thumbnail)) as opened_thumbnail:
             thumbnail_size = opened_thumbnail.size
         assert thumbnail_status == 200
+        _assert_workbench_security_headers(thumbnail_headers)
         assert thumbnail_headers["Content-Type"].startswith("image/png")
         assert thumbnail_size[0] <= 240
         assert thumbnail_size[1] <= 180
@@ -135,6 +152,7 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
 
         image_status, image_headers, image = _request(port, "GET", page["image_url"])
         assert image_status == 200
+        _assert_workbench_security_headers(image_headers)
         assert image_headers["Content-Type"].startswith("image/")
         assert image.startswith(b"\x89PNG")
 
@@ -291,7 +309,7 @@ def test_loopback_browser_workbench_rejects_nonlocal_request_boundaries(
             ),
         ]
         for method, path, body, headers, expected_status, expected_message in rejected_requests:
-            response_status, _response_headers, response_body = _request(
+            response_status, response_headers, response_body = _request(
                 port,
                 method,
                 path,
@@ -300,6 +318,7 @@ def test_loopback_browser_workbench_rejects_nonlocal_request_boundaries(
             )
             response = json.loads(response_body)
             assert response_status == expected_status
+            _assert_workbench_security_headers(response_headers)
             assert response["status"] == "ERROR"
             assert expected_message in response["message"]
 

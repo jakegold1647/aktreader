@@ -54,6 +54,12 @@ This is a single-user, loopback-only service. It binds exclusively to
 It sends no CORS headers, accepts no remote model configuration, keeps responses
 out of HTTP caches, and limits JSON write requests to 64 KiB.
 
+Every HTML, JSON, image, and error response also carries the same browser
+boundary: no referrer disclosure, same-origin opener and resource policies, and
+a content security policy that forbids framing, object embedding, and form
+submission. These headers complement the request checks below; they do not turn
+the loopback service into a remotely safe or multi-user deployment.
+
 Every request must identify the actual bound port under `127.0.0.1` or
 `localhost`. Other `Host` values are rejected before route handling, which
 narrows the DNS-rebinding surface. When a browser sends `Origin` or
