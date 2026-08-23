@@ -152,7 +152,8 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-save-search`, `collection-list-saved-searches`, `collection-run-saved-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
-`project-list-documents`, `project-search`, `project-activity`,
+`project-list-documents`, `project-list-pages`, `project-show-page`,
+`project-show-page-layout`, `project-search`, `project-activity`,
 `project-revise-line-transcription`, `project-undo-line-transcription`,
 `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
@@ -231,7 +232,18 @@ the stored manifest retains the original local paths for provenance.
 python -m aktreader project-create serock.aktproj --name "Serock births"
 python -m aktreader project-import-pagexml serock.aktproj page.xml --image-root .
 python -m aktreader project-inspect serock.aktproj
+python -m aktreader project-list-pages serock.aktproj
+python -m aktreader project-show-page serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> --page-index 0
+python -m aktreader project-show-page-layout serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> --page-index 0
 ```
+
+The page commands are read-only and local-only. `project-show-page` includes source and effective
+line text, stable source-span IDs, current transcription revisions, imported HTR suggestions, and
+pending review proposals. `project-show-page-layout` reports effective reading order plus region
+and line geometry revisions. These outputs can contain transcription content and local image paths;
+review them before copying them into logs or sharing them.
 
 For scans that have not been segmented yet, import one directory of top-level image files. AKT Reader
 creates and retains a deterministic PAGE XML source with one editable full-page TextRegion per scan,

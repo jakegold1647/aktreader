@@ -594,6 +594,112 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(
     assert "transcription revision conflict" in capsys.readouterr().err
 
 
+def test_project_cli_inspects_effective_pages_and_layout(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    revise_line_transcription(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        text="Александръ",
+        editor="reviewer-1",
+        expected_revision=0,
+    )
+    revised_polygon = [[1, 1], [39, 1], [39, 16], [1, 16]]
+    revise_line_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        polygon=revised_polygon,
+        baseline=[[2, 13], [38, 13]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+
+    assert main(["project-list-pages", str(project)]) == 0
+    inventory = json.loads(capsys.readouterr().out)
+    assert inventory["status"] == "READY"
+    assert inventory["page_count"] == 1
+    assert inventory["network_required"] is False
+    assert inventory["pages"][0]["manifest_sha256"] == imported["manifest_sha256"]
+    assert inventory["pages"][0]["page_index"] == 0
+    assert Path(inventory["pages"][0]["image_path"]).is_file()
+
+    assert (
+        main(
+            [
+                "project-show-page",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--page-index",
+                "0",
+            ]
+        )
+        == 0
+    )
+    page = json.loads(capsys.readouterr().out)
+    expected_page = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )
+    assert page == {**expected_page, "network_required": False}
+    assert page["network_required"] is False
+    assert page["lines"][0]["source_text"] == "Александр"
+    assert page["lines"][0]["text"] == "Александръ"
+    assert page["lines"][0]["revision"] == 1
+
+    assert (
+        main(
+            [
+                "project-show-page-layout",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--page-index",
+                "0",
+            ]
+        )
+        == 0
+    )
+    layout = json.loads(capsys.readouterr().out)
+    assert layout["network_required"] is False
+    assert layout["reading_order"]["revision"] == 0
+    assert layout["lines"][0]["source_span_id"] == line["source_span_id"]
+    assert layout["lines"][0]["revision"] == 1
+    assert layout["lines"][0]["polygon"] == revised_polygon
+
+    assert (
+        main(
+            [
+                "project-show-page",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--page-index",
+                "-1",
+            ]
+        )
+        == 2
+    )
+    assert "page_index must be a non-negative integer" in capsys.readouterr().err
+
+
 
 def test_project_imports_htr_suggestions_with_effective_line_geometry(
     tmp_path: Path,
