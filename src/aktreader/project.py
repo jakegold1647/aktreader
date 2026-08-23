@@ -44,6 +44,10 @@ class ProjectStoreError(ValueError):
     """Raised when a local project cannot be created, opened, or updated."""
 
 
+class ProjectRevisionConflictError(ProjectStoreError):
+    """Raised when an optimistic project write is based on stale state."""
+
+
 def _canonical_json(payload: object) -> str:
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
@@ -3417,7 +3421,7 @@ def update_project_document(
                 ),
             )
             if update.rowcount != 1:
-                raise ProjectStoreError(
+                raise ProjectRevisionConflictError(
                     "document metadata conflict; reload the current document"
                 )
     except sqlite3.Error as error:
@@ -3688,7 +3692,7 @@ def revise_line_transcription(
                 expected_revision is not None
                 and current_revision != expected_revision
             ):
-                raise ProjectStoreError(
+                raise ProjectRevisionConflictError(
                     "transcription revision conflict; reload the current line"
                 )
             if current_text == text:
@@ -3780,7 +3784,7 @@ def undo_line_transcription(
             raise ProjectStoreError("project line was not found")
         current_revision = int(row[1])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "transcription revision conflict; reload the current line"
             )
         if current_revision == 0:
@@ -3868,7 +3872,7 @@ def restore_line_transcription(
             raise ProjectStoreError("project line was not found")
         current_revision = int(row[1])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "transcription revision conflict; reload the current line"
             )
         if target_revision >= current_revision:
@@ -5548,7 +5552,7 @@ def revise_line_geometry(
                 expected_revision is not None
                 and current_revision != expected_revision
             ):
-                raise ProjectStoreError(
+                raise ProjectRevisionConflictError(
                     "line geometry revision conflict; reload the current page"
                 )
             if (
@@ -5645,7 +5649,7 @@ def undo_line_geometry(
         ).fetchone()
         current_revision = 0 if latest is None else int(latest[0])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "line geometry revision conflict; reload the current page"
             )
         if latest is None:
@@ -5722,7 +5726,7 @@ def restore_line_geometry(
         ).fetchone()
         current_revision = int(latest[0])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "line geometry revision conflict; reload the current page"
             )
         if target_revision >= current_revision:
@@ -5958,7 +5962,7 @@ def revise_page_reading_order(
                 expected_revision is not None
                 and current_revision != expected_revision
             ):
-                raise ProjectStoreError(
+                raise ProjectRevisionConflictError(
                     "reading-order revision conflict; reload the current page"
                 )
             if _canonical_json(prior_region_ids) == _canonical_json(revised_region_ids):
@@ -6048,7 +6052,7 @@ def undo_page_reading_order(
         ).fetchone()
         current_revision = 0 if latest is None else int(latest[0])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "reading-order revision conflict; reload the current page"
             )
         if latest is None:
@@ -6125,7 +6129,7 @@ def restore_page_reading_order(
         ).fetchone()
         current_revision = int(latest[0])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "reading-order revision conflict; reload the current page"
             )
         if target_revision >= current_revision:
@@ -6763,7 +6767,7 @@ def revise_region_geometry(
                 expected_revision is not None
                 and current_revision != expected_revision
             ):
-                raise ProjectStoreError(
+                raise ProjectRevisionConflictError(
                     "region geometry revision conflict; reload the current page"
                 )
             if _canonical_json(prior_polygon) == _canonical_json(revised_polygon):
@@ -6860,7 +6864,7 @@ def undo_region_geometry(
         ).fetchone()
         current_revision = 0 if latest is None else int(latest[0])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "region geometry revision conflict; reload the current page"
             )
         if latest is None:
@@ -6941,7 +6945,7 @@ def restore_region_geometry(
         ).fetchone()
         current_revision = int(latest[0])
         if expected_revision is not None and current_revision != expected_revision:
-            raise ProjectStoreError(
+            raise ProjectRevisionConflictError(
                 "region geometry revision conflict; reload the current page"
             )
         if target_revision >= current_revision:

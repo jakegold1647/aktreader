@@ -250,7 +250,7 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
             "/api/documents",
             body=metadata_request,
         )
-        assert stale_metadata_status == 400
+        assert stale_metadata_status == 409
         assert "document metadata conflict" in json.loads(stale_metadata_body)["message"]
 
         invalid_metadata_status, _invalid_metadata_headers, invalid_metadata_body = (
@@ -503,7 +503,7 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
             body=stale_request,
         )
         stale = json.loads(stale_body)
-        assert stale_status == 400
+        assert stale_status == 409
         assert stale["status"] == "ERROR"
         assert "transcription revision conflict" in stale["message"]
         unchanged_status, _unchanged_headers, unchanged_body = _request(
@@ -783,7 +783,7 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
             body=stale_line_request,
         )
         stale_line = json.loads(stale_line_body)
-        assert stale_line_status == 400
+        assert stale_line_status == 409
         assert "line geometry revision conflict" in stale_line["message"]
 
         stale_region_request = json.dumps(
@@ -803,7 +803,7 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
             body=stale_region_request,
         )
         stale_region = json.loads(stale_region_body)
-        assert stale_region_status == 400
+        assert stale_region_status == 409
         assert "region geometry revision conflict" in stale_region["message"]
 
         stale_order_request = json.dumps(
@@ -822,7 +822,7 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
             body=stale_order_request,
         )
         stale_order = json.loads(stale_order_body)
-        assert stale_order_status == 400
+        assert stale_order_status == 409
         assert "reading-order revision conflict" in stale_order["message"]
         summary = inspect_project(project)
         assert summary["line_geometry_revision_count"] == 1
@@ -1008,7 +1008,7 @@ def test_loopback_browser_workbench_reads_and_restores_all_revision_streams(
                 }
             ).encode("utf-8"),
         )
-        assert stale_status == 400
+        assert stale_status == 409
         assert "transcription revision conflict" in json.loads(stale_body)["message"]
 
         invalid_status, _invalid_headers, invalid_body = _request(

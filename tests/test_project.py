@@ -19,6 +19,7 @@ from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import PinnedArtifact, sha256_file
 from aktreader.pagexml import import_pagexml
 from aktreader.project import (
+    ProjectRevisionConflictError,
     ProjectStoreError,
     create_project,
     evaluate_htr_suggestions,
@@ -1296,7 +1297,7 @@ def test_project_document_update_refuses_a_stale_metadata_timestamp(
     )
     assert updated["updated_at"] == "2026-08-23T12:00:01Z"
 
-    with pytest.raises(ProjectStoreError, match="document metadata conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="document metadata conflict"):
         update_project_document(
             project,
             manifest_sha256=imported["manifest_sha256"],
@@ -3085,14 +3086,14 @@ def test_project_undoes_layout_revisions_by_appending_restorations(
     assert summary["region_geometry_revision_count"] == 2
     assert summary["page_reading_order_revision_count"] == 2
 
-    with pytest.raises(ProjectStoreError, match="line geometry revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="line geometry revision conflict"):
         undo_line_geometry(
             project,
             manifest_sha256=manifest_sha256,
             source_span_id=source_span_id,
             expected_revision=1,
         )
-    with pytest.raises(ProjectStoreError, match="region geometry revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="region geometry revision conflict"):
         undo_region_geometry(
             project,
             manifest_sha256=manifest_sha256,
@@ -3100,7 +3101,7 @@ def test_project_undoes_layout_revisions_by_appending_restorations(
             region_id="region-2",
             expected_revision=1,
         )
-    with pytest.raises(ProjectStoreError, match="reading-order revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="reading-order revision conflict"):
         undo_page_reading_order(
             project,
             manifest_sha256=manifest_sha256,
@@ -3452,7 +3453,7 @@ def test_project_restores_any_prior_revision_by_appending_new_revisions(
     assert unchanged_summary["region_geometry_revision_count"] == 4
     assert unchanged_summary["page_reading_order_revision_count"] == 4
 
-    with pytest.raises(ProjectStoreError, match="transcription revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="transcription revision conflict"):
         restore_line_transcription(
             project,
             manifest_sha256=manifest_sha256,
@@ -3460,7 +3461,7 @@ def test_project_restores_any_prior_revision_by_appending_new_revisions(
             target_revision=1,
             expected_revision=3,
         )
-    with pytest.raises(ProjectStoreError, match="line geometry revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="line geometry revision conflict"):
         restore_line_geometry(
             project,
             manifest_sha256=manifest_sha256,
@@ -3468,7 +3469,7 @@ def test_project_restores_any_prior_revision_by_appending_new_revisions(
             target_revision=1,
             expected_revision=3,
         )
-    with pytest.raises(ProjectStoreError, match="region geometry revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="region geometry revision conflict"):
         restore_region_geometry(
             project,
             manifest_sha256=manifest_sha256,
@@ -3477,7 +3478,7 @@ def test_project_restores_any_prior_revision_by_appending_new_revisions(
             target_revision=1,
             expected_revision=3,
         )
-    with pytest.raises(ProjectStoreError, match="reading-order revision conflict"):
+    with pytest.raises(ProjectRevisionConflictError, match="reading-order revision conflict"):
         restore_page_reading_order(
             project,
             manifest_sha256=manifest_sha256,

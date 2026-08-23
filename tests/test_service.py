@@ -17,7 +17,12 @@ import aktreader.service as service_module
 from aktreader import kraken as kraken_module
 from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import PinnedArtifact, sha256_file
-from aktreader.project import create_project, import_pagexml_into_project, inspect_project
+from aktreader.project import (
+    ProjectStoreError,
+    create_project,
+    import_pagexml_into_project,
+    inspect_project,
+)
 from aktreader.service import (
     LOOPBACK_HOST,
     ServiceError,
@@ -314,7 +319,10 @@ def test_loopback_service_queues_and_completes_a_backup_job(tmp_path: Path) -> N
         thread.join(timeout=5)
 
 
-def test_authenticated_document_review_api_requires_current_revision(tmp_path: Path) -> None:
+def test_authenticated_document_review_api_requires_current_revision(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     workspace, project_id, manifest_sha256 = _reviewable_service(tmp_path)
     server = create_self_hosted_service_server(workspace, port=0)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -602,6 +610,21 @@ def test_authenticated_document_review_api_requires_current_revision(tmp_path: P
         conflict = json.loads(conflict_response.read())
         assert conflict_response.status == 409
         assert "conflict" in conflict["message"]
+
+        def generic_project_error(*_args: object, **_kwargs: object) -> None:
+            raise ProjectStoreError("transcription revision conflict; reload the current line")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(service_module, "revise_line_transcription", generic_project_error)
+            connection.request(
+                "POST",
+                f"/api/projects/{project_id}/transcriptions",
+                body=revision_payload,
+                headers={"Content-Type": "application/json", **authorization},
+            )
+            generic_error_response = connection.getresponse()
+            assert generic_error_response.status == 400
+            assert "conflict" in json.loads(generic_error_response.read())["message"]
 
         export_route = (
             f"/api/projects/{project_id}/documents/{manifest_sha256}/export/pagexml"
