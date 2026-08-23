@@ -154,6 +154,7 @@ stable machine-readable report; a failed or skipped check makes the command exit
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-save-search`, `collection-list-saved-searches`, `collection-run-saved-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
 `project-list-documents`, `project-list-pages`, `project-show-page`,
 `project-show-page-layout`, `project-search`, `project-activity`,
+`project-show-revision-history`,
 `project-revise-line-transcription`, `project-undo-line-transcription`,
 `project-restore-line-transcription`,
 `project-update-document`,
@@ -318,6 +319,11 @@ python -m aktreader project-activity serock.aktproj `
 can be combined. The JSON report echoes their normalized values under `filters`; omitted filters
 remain `null`. Filtering does not add prior text, revised text, polygons, or other revision content
 to the activity feed.
+
+When choosing a target for an append-only restoration, inspect one exact entity with the separate
+`project-show-revision-history` command. Unlike the activity feed, that command deliberately returns
+historical values and may therefore expose private human transcription content. See
+[restoring prior revisions](docs/revision-restoration.md) for selectors, pagination, and handling.
 
 ### Loopback browser workbench
 

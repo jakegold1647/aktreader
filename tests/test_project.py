@@ -42,6 +42,7 @@ from aktreader.project import (
     list_project_pages,
     load_project_page,
     load_project_page_layout,
+    load_project_revision_history,
     recognize_project_with_kraken,
     resolve_review_proposal,
     restore_line_geometry,
@@ -3569,3 +3570,396 @@ def test_project_restore_cli_covers_all_four_revision_streams(
         for item in layout["regions"]
         if item["region_id"] == "region-2"
     ) == 3
+
+
+def test_project_loads_targeted_contentful_revision_history_without_writes(
+    tmp_path: Path,
+) -> None:
+    project, source, manifest_sha256, source_span_id = _create_two_revision_streams(
+        tmp_path
+    )
+    source_bytes = source.read_bytes()
+    summary_before = inspect_project(project)
+
+    transcription = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="transcription",
+        source_span_id=source_span_id,
+    )
+    line_geometry = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="LINE_GEOMETRY",
+        source_span_id=source_span_id,
+    )
+    region_geometry = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="REGION_GEOMETRY",
+        page_index=0,
+        region_id="region-2",
+    )
+    reading_order = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="READING_ORDER",
+        page_index=0,
+    )
+
+    assert transcription["kind"] == "TRANSCRIPTION"
+    assert transcription["locator"] == {
+        "page_index": 0,
+        "page_id": "page-1",
+        "region_id": "region-1",
+        "line_id": "line-1",
+        "source_span_id": source_span_id,
+    }
+    assert transcription["imported_state"] == {"text": "first"}
+    assert transcription["current_revision"] == 2
+    assert [item["revision"] for item in transcription["revisions"]] == [2, 1]
+    assert transcription["revisions"][0]["prior_state"] == {"text": "first draft"}
+    assert transcription["revisions"][0]["revised_state"] == {
+        "text": "first approved"
+    }
+    assert transcription["revisions"][1]["prior_state"] == {"text": "first"}
+    assert transcription["revisions"][1]["revised_state"] == {"text": "first draft"}
+    assert transcription["contains_human_text"] is True
+    assert transcription["content_included"] is True
+    assert transcription["network_required"] is False
+
+    assert line_geometry["locator"] == transcription["locator"]
+    assert line_geometry["imported_state"] == {
+        "polygon": [[2, 2], [38, 2], [38, 10], [2, 10]],
+        "baseline": None,
+    }
+    assert line_geometry["current_revision"] == 2
+    assert [item["revision"] for item in line_geometry["revisions"]] == [2, 1]
+    assert line_geometry["revisions"][0]["prior_state"] == {
+        "polygon": [[1, 1], [39, 1], [39, 11], [1, 11]],
+        "baseline": [[2, 9], [38, 9]],
+    }
+    assert line_geometry["revisions"][0]["revised_state"] == {
+        "polygon": [[1, 2], [39, 2], [39, 12], [1, 12]],
+        "baseline": [[2, 10], [38, 10]],
+    }
+    assert line_geometry["contains_human_text"] is False
+
+    assert region_geometry["locator"] == {
+        "page_index": 0,
+        "page_id": "page-1",
+        "region_id": "region-2",
+    }
+    assert region_geometry["imported_state"] == {
+        "polygon": [[0, 15], [40, 15], [40, 30], [0, 30]]
+    }
+    assert region_geometry["current_revision"] == 2
+    assert [item["revision"] for item in region_geometry["revisions"]] == [2, 1]
+    assert region_geometry["revisions"][0]["prior_state"] == {
+        "polygon": [[1, 15], [39, 15], [39, 29], [1, 29]]
+    }
+    assert region_geometry["revisions"][0]["revised_state"] == {
+        "polygon": [[2, 15], [38, 15], [38, 29], [2, 29]]
+    }
+
+    assert reading_order["locator"] == {"page_index": 0, "page_id": "page-1"}
+    assert reading_order["imported_state"] == {
+        "region_ids": ["region-1", "region-2"]
+    }
+    assert reading_order["current_revision"] == 2
+    assert [item["revision"] for item in reading_order["revisions"]] == [2, 1]
+    assert reading_order["revisions"][0]["prior_state"] == {
+        "region_ids": ["region-2", "region-1"]
+    }
+    assert reading_order["revisions"][0]["revised_state"] == {
+        "region_ids": ["region-1", "region-2"]
+    }
+
+    newest = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="TRANSCRIPTION",
+        source_span_id=source_span_id,
+        limit=1,
+    )
+    older = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="TRANSCRIPTION",
+        source_span_id=source_span_id,
+        limit=1,
+        before_revision=2,
+    )
+    exhausted = load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="TRANSCRIPTION",
+        source_span_id=source_span_id,
+        limit=1,
+        before_revision=1,
+    )
+    assert [item["revision"] for item in newest["revisions"]] == [2]
+    assert newest["pagination"] == {
+        "limit": 1,
+        "before_revision": None,
+        "has_more": True,
+        "next_before_revision": 2,
+    }
+    assert [item["revision"] for item in older["revisions"]] == [1]
+    assert older["pagination"] == {
+        "limit": 1,
+        "before_revision": 2,
+        "has_more": False,
+        "next_before_revision": None,
+    }
+    assert exhausted["revisions"] == []
+    assert exhausted["current_revision"] == 2
+
+    activity = list_project_activity(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+    )
+    assert all(
+        not ({"prior_state", "revised_state", "imported_state"} & set(event))
+        for event in activity["events"]
+    )
+    assert source.read_bytes() == source_bytes
+    assert inspect_project(project) == summary_before
+
+
+def test_project_revision_history_reports_imported_state_before_any_edits(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    manifest_sha256 = imported["manifest_sha256"]
+    source_span_id = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"][0]["source_span_id"]
+
+    histories = [
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="TRANSCRIPTION",
+            source_span_id=source_span_id,
+        ),
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="LINE_GEOMETRY",
+            source_span_id=source_span_id,
+        ),
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="REGION_GEOMETRY",
+            page_index=0,
+            region_id="region-2",
+        ),
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="READING_ORDER",
+            page_index=0,
+        ),
+    ]
+
+    assert [history["current_revision"] for history in histories] == [0, 0, 0, 0]
+    assert [history["revisions"] for history in histories] == [[], [], [], []]
+    assert all(history["pagination"]["has_more"] is False for history in histories)
+    assert histories[0]["imported_state"] == {"text": "first"}
+    assert histories[1]["imported_state"] == {
+        "polygon": [[2, 2], [38, 2], [38, 10], [2, 10]],
+        "baseline": None,
+    }
+    assert histories[2]["imported_state"] == {
+        "polygon": [[0, 15], [40, 15], [40, 30], [0, 30]]
+    }
+    assert histories[3]["imported_state"] == {
+        "region_ids": ["region-1", "region-2"]
+    }
+
+
+def test_project_revision_history_validates_exact_stream_locators(
+    tmp_path: Path,
+) -> None:
+    project, _, manifest_sha256, source_span_id = _create_two_revision_streams(
+        tmp_path
+    )
+
+    with pytest.raises(ProjectStoreError, match="supported revision kind"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="OTHER",
+            source_span_id=source_span_id,
+        )
+    with pytest.raises(ProjectStoreError, match="requires one exact source_span_id"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="TRANSCRIPTION",
+        )
+    with pytest.raises(ProjectStoreError, match="accepts source_span_id only"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="LINE_GEOMETRY",
+            source_span_id=source_span_id,
+            page_index=0,
+        )
+    with pytest.raises(ProjectStoreError, match="requires a non-negative page_index"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="READING_ORDER",
+        )
+    with pytest.raises(ProjectStoreError, match="accepts page_index only"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="READING_ORDER",
+            page_index=0,
+            region_id="region-2",
+        )
+    with pytest.raises(ProjectStoreError, match="requires one exact region_id"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="REGION_GEOMETRY",
+            page_index=0,
+        )
+    with pytest.raises(ProjectStoreError, match="accepts page_index and region_id only"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="REGION_GEOMETRY",
+            page_index=0,
+            region_id="region-2",
+            source_span_id=source_span_id,
+        )
+    with pytest.raises(ProjectStoreError, match="limit must be an integer from 1 to 500"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="TRANSCRIPTION",
+            source_span_id=source_span_id,
+            limit=0,
+        )
+    with pytest.raises(ProjectStoreError, match="before_revision must be a positive integer"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="TRANSCRIPTION",
+            source_span_id=source_span_id,
+            before_revision=0,
+        )
+    with pytest.raises(ProjectStoreError, match="project line was not found"):
+        load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="TRANSCRIPTION",
+            source_span_id="pagexml-missing",
+        )
+
+
+def test_project_revision_history_cli_covers_all_four_streams(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    project, _, manifest_sha256, source_span_id = _create_two_revision_streams(
+        tmp_path
+    )
+    commands = [
+        [
+            "project-show-revision-history",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--kind",
+            "TRANSCRIPTION",
+            "--source-span-id",
+            source_span_id,
+            "--limit",
+            "1",
+        ],
+        [
+            "project-show-revision-history",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--kind",
+            "LINE_GEOMETRY",
+            "--source-span-id",
+            source_span_id,
+            "--limit",
+            "1",
+        ],
+        [
+            "project-show-revision-history",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--kind",
+            "REGION_GEOMETRY",
+            "--page-index",
+            "0",
+            "--region-id",
+            "region-2",
+            "--limit",
+            "1",
+        ],
+        [
+            "project-show-revision-history",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--kind",
+            "READING_ORDER",
+            "--page-index",
+            "0",
+            "--limit",
+            "1",
+        ],
+    ]
+
+    reports = []
+    for command in commands:
+        assert main(command) == 0
+        reports.append(json.loads(capsys.readouterr().out))
+
+    assert [report["kind"] for report in reports] == [
+        "TRANSCRIPTION",
+        "LINE_GEOMETRY",
+        "REGION_GEOMETRY",
+        "READING_ORDER",
+    ]
+    assert [report["current_revision"] for report in reports] == [2, 2, 2, 2]
+    assert [report["revisions"][0]["revision"] for report in reports] == [2, 2, 2, 2]
+    assert all(report["pagination"]["has_more"] is True for report in reports)
+    assert reports[0]["revisions"][0]["revised_state"] == {
+        "text": "first approved"
+    }
+    assert reports[1]["revisions"][0]["revised_state"]["baseline"] == [
+        [2, 10],
+        [38, 10],
+    ]
+    assert reports[2]["revisions"][0]["revised_state"]["polygon"] == [
+        [2, 15],
+        [38, 15],
+        [38, 29],
+        [2, 29],
+    ]
+    assert reports[3]["revisions"][0]["revised_state"] == {
+        "region_ids": ["region-1", "region-2"]
+    }

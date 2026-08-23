@@ -106,6 +106,7 @@ from aktreader.project import (
     list_project_pages,
     load_project_page,
     load_project_page_layout,
+    load_project_revision_history,
     recognize_project_with_kraken,
     resolve_review_proposal,
     restore_line_geometry,
@@ -407,6 +408,50 @@ def build_parser() -> argparse.ArgumentParser:
     project_activity.add_argument(
         "--region-id",
         help="optional exact PAGE XML region ID",
+    )
+
+    project_revision_history = subparsers.add_parser(
+        "project-show-revision-history",
+        help="show contentful local revision values for exactly one project entity",
+    )
+    project_revision_history.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_revision_history.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_revision_history.add_argument(
+        "--kind",
+        required=True,
+        type=str.upper,
+        choices=("TRANSCRIPTION", "LINE_GEOMETRY", "REGION_GEOMETRY", "READING_ORDER"),
+        help="exact revision stream to inspect",
+    )
+    project_revision_history.add_argument(
+        "--source-span-id",
+        help="exact line source-span ID for a line stream",
+    )
+    project_revision_history.add_argument(
+        "--page-index",
+        type=int,
+        help="exact zero-based page index for a page or region stream",
+    )
+    project_revision_history.add_argument(
+        "--region-id",
+        help="exact PAGE XML region ID for region geometry",
+    )
+    project_revision_history.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="maximum newest revisions from 1 to 500 (default: 100)",
+    )
+    project_revision_history.add_argument(
+        "--before-revision",
+        type=int,
+        help="optional positive exclusive revision cursor for older results",
     )
 
     project_revise_line = subparsers.add_parser(
@@ -2189,6 +2234,23 @@ def _command_project_activity(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_show_revision_history(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    _emit_json(
+        load_project_revision_history(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            kind=args.kind,
+            source_span_id=args.source_span_id,
+            page_index=args.page_index,
+            region_id=args.region_id,
+            limit=args.limit,
+            before_revision=args.before_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_revise_line_transcription(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -3632,6 +3694,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-show-page-layout": _command_project_show_page_layout,
         "project-search": _command_project_search,
         "project-activity": _command_project_activity,
+        "project-show-revision-history": _command_project_show_revision_history,
         "project-revise-line-transcription": _command_project_revise_line_transcription,
         "project-undo-line-transcription": _command_project_undo_line_transcription,
         "project-restore-line-transcription": (

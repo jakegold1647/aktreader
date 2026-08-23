@@ -5755,13 +5755,12 @@ def restore_line_geometry(
 
 
 
-def _stored_page_region_order(
+def _read_pagexml_import_manifest(
     root: Path,
     connection: sqlite3.Connection,
     *,
     manifest_sha256: str,
-    page_index: int,
-) -> list[str]:
+) -> dict[str, Any]:
     row = connection.execute(
         """
         SELECT manifest_relative_path
@@ -5784,6 +5783,14 @@ def _stored_page_region_order(
         raise ProjectStoreError("project import manifest is unreadable") from error
     if not isinstance(manifest, dict) or not isinstance(manifest.get("pages"), list):
         raise ProjectStoreError("project import manifest is invalid")
+    return manifest
+
+
+def _import_manifest_page(
+    manifest: dict[str, Any],
+    *,
+    page_index: int,
+) -> dict[str, Any]:
     page = next(
         (
             item
@@ -5794,6 +5801,22 @@ def _stored_page_region_order(
     )
     if page is None:
         raise ProjectStoreError("project page was not found in its import manifest")
+    return page
+
+
+def _stored_page_region_order(
+    root: Path,
+    connection: sqlite3.Connection,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+) -> list[str]:
+    manifest = _read_pagexml_import_manifest(
+        root,
+        connection,
+        manifest_sha256=manifest_sha256,
+    )
+    page = _import_manifest_page(manifest, page_index=page_index)
     regions = page.get("regions")
     reading_order = page.get("reading_order")
     if not isinstance(regions, list) or not isinstance(reading_order, dict):
@@ -6135,37 +6158,13 @@ def _stored_region_polygon(
     page_index: int,
     region_id: str,
 ) -> object:
-    row = connection.execute(
-        """
-        SELECT manifest_relative_path
-        FROM pagexml_imports
-        WHERE manifest_sha256 = ?
-        """,
-        (manifest_sha256,),
-    ).fetchone()
-    if row is None:
-        raise ProjectStoreError("project PAGE XML import was not found")
-    relative_path = row[0]
-    if not isinstance(relative_path, str):
-        raise ProjectStoreError("project import manifest path is invalid")
-    manifest_path = (root / relative_path).resolve()
-    if root not in manifest_path.parents or not manifest_path.is_file():
-        raise ProjectStoreError("project import manifest is missing or outside the project")
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
-        raise ProjectStoreError("project import manifest is unreadable") from error
-    if not isinstance(manifest, dict) or not isinstance(manifest.get("pages"), list):
-        raise ProjectStoreError("project import manifest is invalid")
-    page = next(
-        (
-            item
-            for item in manifest["pages"]
-            if isinstance(item, dict) and item.get("page_index") == page_index
-        ),
-        None,
+    manifest = _read_pagexml_import_manifest(
+        root,
+        connection,
+        manifest_sha256=manifest_sha256,
     )
-    if page is None or not isinstance(page.get("regions"), list):
+    page = _import_manifest_page(manifest, page_index=page_index)
+    if not isinstance(page.get("regions"), list):
         raise ProjectStoreError("project page regions are invalid")
     regions = [
         item
@@ -6175,6 +6174,482 @@ def _stored_region_polygon(
     if len(regions) != 1:
         raise ProjectStoreError("project region was not found in its import manifest")
     return regions[0].get("polygon")
+
+
+def _revision_history_json(value: object, *, role: str) -> object:
+    if not isinstance(value, str):
+        raise ProjectStoreError(f"{role} is unreadable")
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError as error:
+        raise ProjectStoreError(f"{role} is unreadable") from error
+
+
+def _revision_history_points(
+    value: object,
+    *,
+    role: str,
+    width: int,
+    height: int,
+    allow_none: bool,
+) -> list[list[int]] | None:
+    if value is None and allow_none:
+        return None
+    decoded = _revision_history_json(value, role=role)
+    return _validated_points(
+        decoded,
+        role=role,
+        width=width,
+        height=height,
+        allow_none=allow_none,
+    )
+
+
+def load_project_revision_history(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    kind: str,
+    source_span_id: str | None = None,
+    page_index: int | None = None,
+    region_id: str | None = None,
+    limit: int = 100,
+    before_revision: int | None = None,
+) -> dict[str, object]:
+    """Load contentful revision values for exactly one local project entity."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(kind, str) or not kind.strip():
+        raise ProjectStoreError("revision history kind must be a supported revision kind")
+    kind = kind.strip().upper()
+    if kind not in {
+        "TRANSCRIPTION",
+        "LINE_GEOMETRY",
+        "REGION_GEOMETRY",
+        "READING_ORDER",
+    }:
+        raise ProjectStoreError("revision history kind must be a supported revision kind")
+    if (
+        isinstance(limit, bool)
+        or not isinstance(limit, int)
+        or not 1 <= limit <= 500
+    ):
+        raise ProjectStoreError("revision history limit must be an integer from 1 to 500")
+    if before_revision is not None and (
+        isinstance(before_revision, bool)
+        or not isinstance(before_revision, int)
+        or before_revision < 1
+    ):
+        raise ProjectStoreError("before_revision must be a positive integer")
+    if kind in {"TRANSCRIPTION", "LINE_GEOMETRY"}:
+        if (
+            not isinstance(source_span_id, str)
+            or not source_span_id.strip()
+            or source_span_id != source_span_id.strip()
+        ):
+            raise ProjectStoreError(
+                "line revision history requires one exact source_span_id"
+            )
+        if page_index is not None or region_id is not None:
+            raise ProjectStoreError(
+                "line revision history accepts source_span_id only"
+            )
+    elif kind == "READING_ORDER":
+        if (
+            isinstance(page_index, bool)
+            or not isinstance(page_index, int)
+            or page_index < 0
+        ):
+            raise ProjectStoreError(
+                "reading-order revision history requires a non-negative page_index"
+            )
+        if source_span_id is not None or region_id is not None:
+            raise ProjectStoreError(
+                "reading-order revision history accepts page_index only"
+            )
+    else:
+        if (
+            isinstance(page_index, bool)
+            or not isinstance(page_index, int)
+            or page_index < 0
+        ):
+            raise ProjectStoreError(
+                "region revision history requires a non-negative page_index"
+            )
+        if (
+            not isinstance(region_id, str)
+            or not region_id.strip()
+            or region_id != region_id.strip()
+        ):
+            raise ProjectStoreError("region revision history requires one exact region_id")
+        if source_span_id is not None:
+            raise ProjectStoreError(
+                "region revision history accepts page_index and region_id only"
+            )
+
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        cursor_clause = " AND revision < ?" if before_revision is not None else ""
+        if kind in {"TRANSCRIPTION", "LINE_GEOMETRY"}:
+            line = connection.execute(
+                """
+                SELECT
+                    lines.page_index,
+                    lines.page_id,
+                    lines.region_id,
+                    lines.line_id,
+                    lines.text_equiv,
+                    pages.width_px,
+                    pages.height_px
+                FROM lines
+                JOIN pages
+                  ON pages.manifest_sha256 = lines.manifest_sha256
+                 AND pages.page_index = lines.page_index
+                WHERE lines.manifest_sha256 = ? AND lines.source_span_id = ?
+                """,
+                (manifest_sha256, source_span_id),
+            ).fetchone()
+            if line is None:
+                raise ProjectStoreError("project line was not found")
+            effective_page_index = int(line[0])
+            locator = {
+                "page_index": effective_page_index,
+                "page_id": line[1],
+                "region_id": line[2],
+                "line_id": line[3],
+                "source_span_id": source_span_id,
+            }
+            width, height = int(line[5]), int(line[6])
+            if kind == "TRANSCRIPTION":
+                source_text = line[4] if isinstance(line[4], str) else ""
+                imported_state: dict[str, object] = {"text": source_text}
+                rows = connection.execute(
+                    f"""
+                    SELECT revision, prior_text, revised_text, editor, created_at
+                    FROM transcription_revisions
+                    WHERE manifest_sha256 = ? AND source_span_id = ?{cursor_clause}
+                    ORDER BY revision DESC
+                    LIMIT ?
+                    """,
+                    (
+                        manifest_sha256,
+                        source_span_id,
+                        *(() if before_revision is None else (before_revision,)),
+                        limit + 1,
+                    ),
+                ).fetchall()
+                revisions = []
+                for row in rows[:limit]:
+                    prior_text = row[1] if isinstance(row[1], str) else ""
+                    if not isinstance(row[2], str):
+                        raise ProjectStoreError(
+                            "stored transcription revision is unreadable"
+                        )
+                    revisions.append(
+                        {
+                            "revision": int(row[0]),
+                            "prior_state": {"text": prior_text},
+                            "revised_state": {"text": row[2]},
+                            "editor": row[3],
+                            "created_at": row[4],
+                        }
+                    )
+                table = "transcription_revisions"
+            else:
+                manifest = _read_pagexml_import_manifest(
+                    root,
+                    connection,
+                    manifest_sha256=manifest_sha256,
+                )
+                page = _import_manifest_page(
+                    manifest,
+                    page_index=effective_page_index,
+                )
+                source_lines = page.get("lines")
+                if not isinstance(source_lines, list):
+                    raise ProjectStoreError("project page lines are invalid")
+                matching_lines = [
+                    item
+                    for item in source_lines
+                    if isinstance(item, dict)
+                    and item.get("source_span_id") == source_span_id
+                ]
+                if len(matching_lines) != 1 or not isinstance(
+                    matching_lines[0].get("locator"), dict
+                ):
+                    raise ProjectStoreError(
+                        "project line was not found in its import manifest"
+                    )
+                source_locator = matching_lines[0]["locator"]
+                imported_state = {
+                    "polygon": _validated_points(
+                        source_locator.get("polygon"),
+                        role="imported line polygon",
+                        width=width,
+                        height=height,
+                        allow_none=False,
+                    ),
+                    "baseline": _validated_points(
+                        source_locator.get("baseline"),
+                        role="imported line baseline",
+                        width=width,
+                        height=height,
+                        allow_none=True,
+                    ),
+                }
+                rows = connection.execute(
+                    f"""
+                    SELECT
+                        revision,
+                        prior_polygon_json,
+                        prior_baseline_json,
+                        polygon_json,
+                        baseline_json,
+                        editor,
+                        created_at
+                    FROM line_geometry_revisions
+                    WHERE manifest_sha256 = ? AND source_span_id = ?{cursor_clause}
+                    ORDER BY revision DESC
+                    LIMIT ?
+                    """,
+                    (
+                        manifest_sha256,
+                        source_span_id,
+                        *(() if before_revision is None else (before_revision,)),
+                        limit + 1,
+                    ),
+                ).fetchall()
+                revisions = []
+                for row in rows[:limit]:
+                    revision = int(row[0])
+                    revisions.append(
+                        {
+                            "revision": revision,
+                            "prior_state": {
+                                "polygon": _revision_history_points(
+                                    row[1],
+                                    role=f"line geometry revision {revision} prior polygon",
+                                    width=width,
+                                    height=height,
+                                    allow_none=False,
+                                ),
+                                "baseline": _revision_history_points(
+                                    row[2],
+                                    role=f"line geometry revision {revision} prior baseline",
+                                    width=width,
+                                    height=height,
+                                    allow_none=True,
+                                ),
+                            },
+                            "revised_state": {
+                                "polygon": _revision_history_points(
+                                    row[3],
+                                    role=f"line geometry revision {revision} polygon",
+                                    width=width,
+                                    height=height,
+                                    allow_none=False,
+                                ),
+                                "baseline": _revision_history_points(
+                                    row[4],
+                                    role=f"line geometry revision {revision} baseline",
+                                    width=width,
+                                    height=height,
+                                    allow_none=True,
+                                ),
+                            },
+                            "editor": row[5],
+                            "created_at": row[6],
+                        }
+                    )
+                table = "line_geometry_revisions"
+        else:
+            page = connection.execute(
+                """
+                SELECT page_id, width_px, height_px
+                FROM pages
+                WHERE manifest_sha256 = ? AND page_index = ?
+                """,
+                (manifest_sha256, page_index),
+            ).fetchone()
+            if page is None:
+                raise ProjectStoreError("project page was not found")
+            width, height = int(page[1]), int(page[2])
+            if kind == "READING_ORDER":
+                source_region_ids = _stored_page_region_order(
+                    root,
+                    connection,
+                    manifest_sha256=manifest_sha256,
+                    page_index=page_index,
+                )
+                locator = {"page_index": page_index, "page_id": page[0]}
+                imported_state = {"region_ids": source_region_ids}
+                rows = connection.execute(
+                    f"""
+                    SELECT
+                        revision,
+                        prior_region_ids_json,
+                        region_ids_json,
+                        editor,
+                        created_at
+                    FROM page_reading_order_revisions
+                    WHERE manifest_sha256 = ? AND page_index = ?{cursor_clause}
+                    ORDER BY revision DESC
+                    LIMIT ?
+                    """,
+                    (
+                        manifest_sha256,
+                        page_index,
+                        *(() if before_revision is None else (before_revision,)),
+                        limit + 1,
+                    ),
+                ).fetchall()
+                revisions = []
+                for row in rows[:limit]:
+                    revision = int(row[0])
+                    prior = _revision_history_json(
+                        row[1],
+                        role=f"reading-order revision {revision} prior state",
+                    )
+                    revised = _revision_history_json(
+                        row[2],
+                        role=f"reading-order revision {revision} revised state",
+                    )
+                    revisions.append(
+                        {
+                            "revision": revision,
+                            "prior_state": {
+                                "region_ids": _validated_region_order(
+                                    prior,
+                                    expected_region_ids=source_region_ids,
+                                )
+                            },
+                            "revised_state": {
+                                "region_ids": _validated_region_order(
+                                    revised,
+                                    expected_region_ids=source_region_ids,
+                                )
+                            },
+                            "editor": row[3],
+                            "created_at": row[4],
+                        }
+                    )
+                table = "page_reading_order_revisions"
+            else:
+                source_polygon = _validated_points(
+                    _stored_region_polygon(
+                        root,
+                        connection,
+                        manifest_sha256=manifest_sha256,
+                        page_index=page_index,
+                        region_id=region_id,
+                    ),
+                    role="imported region polygon",
+                    width=width,
+                    height=height,
+                    allow_none=False,
+                )
+                locator = {
+                    "page_index": page_index,
+                    "page_id": page[0],
+                    "region_id": region_id,
+                }
+                imported_state = {"polygon": source_polygon}
+                rows = connection.execute(
+                    f"""
+                    SELECT
+                        revision,
+                        prior_polygon_json,
+                        polygon_json,
+                        editor,
+                        created_at
+                    FROM region_geometry_revisions
+                    WHERE manifest_sha256 = ? AND page_index = ?
+                      AND region_id = ?{cursor_clause}
+                    ORDER BY revision DESC
+                    LIMIT ?
+                    """,
+                    (
+                        manifest_sha256,
+                        page_index,
+                        region_id,
+                        *(() if before_revision is None else (before_revision,)),
+                        limit + 1,
+                    ),
+                ).fetchall()
+                revisions = []
+                for row in rows[:limit]:
+                    revision = int(row[0])
+                    revisions.append(
+                        {
+                            "revision": revision,
+                            "prior_state": {
+                                "polygon": _revision_history_points(
+                                    row[1],
+                                    role=f"region geometry revision {revision} prior polygon",
+                                    width=width,
+                                    height=height,
+                                    allow_none=False,
+                                )
+                            },
+                            "revised_state": {
+                                "polygon": _revision_history_points(
+                                    row[2],
+                                    role=f"region geometry revision {revision} polygon",
+                                    width=width,
+                                    height=height,
+                                    allow_none=False,
+                                )
+                            },
+                            "editor": row[3],
+                            "created_at": row[4],
+                        }
+                    )
+                table = "region_geometry_revisions"
+        current = connection.execute(
+            f"SELECT COALESCE(MAX(revision), 0) FROM {table} "
+            + (
+                "WHERE manifest_sha256 = ? AND source_span_id = ?"
+                if kind in {"TRANSCRIPTION", "LINE_GEOMETRY"}
+                else "WHERE manifest_sha256 = ? AND page_index = ?"
+                if kind == "READING_ORDER"
+                else "WHERE manifest_sha256 = ? AND page_index = ? AND region_id = ?"
+            ),
+            (
+                (manifest_sha256, source_span_id)
+                if kind in {"TRANSCRIPTION", "LINE_GEOMETRY"}
+                else (manifest_sha256, page_index)
+                if kind == "READING_ORDER"
+                else (manifest_sha256, page_index, region_id)
+            ),
+        ).fetchone()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load project revision history: {error}") from error
+    finally:
+        connection.close()
+    has_more = len(rows) > limit
+    returned_revisions = revisions[:limit]
+    return {
+        "manifest_sha256": manifest_sha256,
+        "kind": kind,
+        "locator": locator,
+        "imported_state": imported_state,
+        "current_revision": int(current[0]),
+        "revisions": returned_revisions,
+        "pagination": {
+            "limit": limit,
+            "before_revision": before_revision,
+            "has_more": has_more,
+            "next_before_revision": (
+                returned_revisions[-1]["revision"]
+                if has_more and returned_revisions
+                else None
+            ),
+        },
+        "content_included": True,
+        "contains_human_text": kind == "TRANSCRIPTION",
+        "network_required": False,
+    }
 
 
 def revise_region_geometry(

@@ -28,6 +28,56 @@ Read the current transcription revision with `project-show-page`. Read current l
 reading-order, and region geometry revisions with `project-show-page-layout`. The exact entity IDs
 and revision numbers also appear in the content-free `project-activity` feed.
 
+## Inspect values before restoring
+
+`project-show-revision-history` is a separate, explicitly contentful local reader. It targets one
+entity and stream, returning `imported_state` for revision zero and newest-first audit entries with
+`prior_state`, `revised_state`, editor, and timestamp. Transcription output contains human-readable
+text: keep it private unless you have independently confirmed that it may be shared. The command
+does not write the project or use the network, and it does not change the content-free contract of
+`project-activity`.
+
+Inspect one line's transcription history:
+
+~~~powershell
+python -m aktreader project-show-revision-history serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --kind TRANSCRIPTION `
+  --source-span-id <source-span-id>
+~~~
+
+Use the same line selector with `--kind LINE_GEOMETRY`. Reading order accepts only
+`--page-index`; region geometry requires both `--page-index` and `--region-id`:
+
+~~~powershell
+python -m aktreader project-show-revision-history serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --kind READING_ORDER `
+  --page-index 0
+
+python -m aktreader project-show-revision-history serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --kind REGION_GEOMETRY `
+  --page-index 0 `
+  --region-id region-2
+~~~
+
+Results are bounded to 100 revisions by default. Set `--limit` from 1 to 500. When
+`pagination.has_more` is true, pass `pagination.next_before_revision` back as the exclusive cursor:
+
+~~~powershell
+python -m aktreader project-show-revision-history serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --kind TRANSCRIPTION `
+  --source-span-id <source-span-id> `
+  --limit 50 `
+  --before-revision <next-before-revision>
+~~~
+
+`current_revision` always reports the entity's latest revision, even while an older page of history
+is being viewed. With no edits, `current_revision` is zero, `revisions` is empty, and
+`imported_state` remains available.
+
 ## Commands
 
 Restore a line transcription:
