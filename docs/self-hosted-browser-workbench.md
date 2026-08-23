@@ -24,6 +24,8 @@ Stop it with Ctrl+C.
   baselines, and region polygons;
 - effective transcription, local HTR suggestions, and pending review-proposal
   context for each line;
+- previous/next line controls, a live line-position readout, and keyboard
+  navigation for sustained line-by-line review;
 - an editor that appends the same human transcription revisions as the
   desktop workbench;
 - direct on-canvas line-polygon and baseline-point dragging, with source-pixel
@@ -46,6 +48,18 @@ Stop it with Ctrl+C.
 The API never sends image filesystem paths to the browser. Source images are
 streamed only after their manifest and page index resolve through the local
 project store.
+
+## Keyboard review
+
+Use **Previous line** and **Next line** or press Alt+Up and Alt+Down while focus
+is in the review panel. When focus is on a line in the line list, plain Up and
+Down move to the adjacent line and keep focus in the list. Ctrl+Enter on Windows
+and Linux, or Command+Enter on macOS, saves the current transcription through
+the same audited revision path as the visible save button.
+
+Changing lines still checks unsaved transcription and line-geometry drafts. If
+either stream is dirty, the workbench asks before discarding it; cancelling keeps
+the current line and draft selected.
 
 ## Security boundary
 

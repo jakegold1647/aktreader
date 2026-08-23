@@ -754,12 +754,26 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
   <div class="scan"><img id="image" alt="Selected source page">
     <svg id="overlay" aria-label="Effective PAGE XML layout geometry"></svg></div>
 </section>
-<aside class="panel">
+<aside class="panel" id="review-panel">
   <label>Editor <input id="editor" value="local-user" autocomplete="off"></label>
   <p id="detail">Choose a document and page.</p>
   <div id="line-list" aria-label="Lines"></div>
-  <label>Transcription <textarea id="text" disabled></textarea></label>
-  <div class="actions"><button id="save" disabled>Save human revision</button>
+  <div class="actions" aria-label="Line navigation">
+    <button id="previous-line" type="button" aria-keyshortcuts="Alt+ArrowUp" disabled>
+      Previous line
+    </button>
+    <span id="line-position" role="status" aria-live="polite">No lines</span>
+    <button id="next-line" type="button" aria-keyshortcuts="Alt+ArrowDown" disabled>
+      Next line
+    </button>
+  </div>
+  <label>Transcription
+    <textarea id="text" aria-describedby="line-shortcuts" disabled></textarea>
+  </label>
+  <small id="line-shortcuts">Alt+Up/Down changes line. Ctrl+Enter or Command+Enter saves.</small>
+  <div class="actions"><button id="save" aria-keyshortcuts="Control+Enter Meta+Enter" disabled>
+      Save human revision
+    </button>
     <span id="status"></span></div>
   <p id="dirty-indicator" role="status" aria-live="polite"></p>
   <details open>
@@ -816,12 +830,16 @@ const state = {
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
 const pageThumbnails = document.getElementById("page-thumbnails");
+const reviewPanel = document.getElementById("review-panel");
 const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
 const text = document.getElementById("text");
 const editor = document.getElementById("editor");
 const save = document.getElementById("save");
+const previousLine = document.getElementById("previous-line");
+const nextLine = document.getElementById("next-line");
+const linePosition = document.getElementById("line-position");
 const detail = document.getElementById("detail");
 const status = document.getElementById("status");
 const dirtyIndicator = document.getElementById("dirty-indicator");
@@ -927,6 +945,31 @@ function clearHistory(message) {
   restoreRevision.disabled = true;
   historyPreview.textContent = message || "No revision history loaded.";
 }
+function selectedLineIndex() {
+  return state.lines.findIndex(line => line.source_span_id === state.selected);
+}
+function updateLineNavigation() {
+  const index = selectedLineIndex();
+  previousLine.disabled = index <= 0;
+  nextLine.disabled = index < 0 || index >= state.lines.length - 1;
+  linePosition.textContent = index < 0
+    ? "No lines"
+    : "Line " + (index + 1) + " of " + state.lines.length;
+}
+function focusLineButton(sourceSpanId) {
+  const button = Array.from(lineList.querySelectorAll("button.line")).find(
+    item => item.dataset.sourceSpanId === sourceSpanId
+  );
+  if (button) button.focus();
+}
+async function navigateLine(offset, focusList) {
+  const targetIndex = selectedLineIndex() + offset;
+  if (targetIndex < 0 || targetIndex >= state.lines.length) return false;
+  const target = state.lines[targetIndex].source_span_id;
+  const changed = await selectLine(target);
+  if (focusList) focusLineButton(changed ? target : state.selected);
+  return changed;
+}
 async function selectLine(sourceSpanId, discardConfirmed) {
   if (sourceSpanId === state.selected) return true;
   if (!discardConfirmed && !await confirmDiscard(["transcription", "line geometry"])) {
@@ -969,13 +1012,18 @@ function renderLines() {
   lineList.replaceChildren();
   state.lines.forEach(line => {
     const button = document.createElement("button");
+    button.type = "button";
     button.className = "line" + (line.source_span_id === state.selected ? " selected" : "");
+    button.dataset.sourceSpanId = line.source_span_id;
+    if (line.source_span_id === state.selected) button.setAttribute("aria-current", "true");
     button.textContent = line.line_id + " · text r" + line.revision
       + " · geometry r" + line.geometry_revision + " · " + (line.text || "∅");
-    button.addEventListener("click", () =>
-      selectLine(line.source_span_id).catch(error => setStatus(error.message)));
+    button.addEventListener("click", () => selectLine(line.source_span_id)
+      .then(() => focusLineButton(state.selected))
+      .catch(error => setStatus(error.message)));
     lineList.append(button);
   });
+  updateLineNavigation();
 }
 function displayedRegionPolygon(region) {
   return region.region_id === state.selectedRegion
@@ -1309,6 +1357,31 @@ pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(
 regionSelect.addEventListener("change", () =>
   selectRegion(regionSelect.value).catch(error => setStatus(error.message)));
 text.addEventListener("input", updateDirtyIndicator);
+previousLine.addEventListener("click", () => navigateLine(-1, false)
+  .then(changed => { if (changed && previousLine.disabled) nextLine.focus(); })
+  .catch(error => setStatus(error.message)));
+nextLine.addEventListener("click", () => navigateLine(1, false)
+  .then(changed => { if (changed && nextLine.disabled) previousLine.focus(); })
+  .catch(error => setStatus(error.message)));
+lineList.addEventListener("keydown", event => {
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  const offset = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+  if (!offset) return;
+  event.preventDefault();
+  navigateLine(offset, true).catch(error => setStatus(error.message));
+});
+reviewPanel.addEventListener("keydown", event => {
+  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  const offset = event.key === "ArrowUp" ? -1 : event.key === "ArrowDown" ? 1 : 0;
+  if (!offset) return;
+  event.preventDefault();
+  navigateLine(offset, lineList.contains(event.target)).catch(error => setStatus(error.message));
+});
+text.addEventListener("keydown", event => {
+  if (event.key !== "Enter" || (!event.ctrlKey && !event.metaKey) || event.altKey) return;
+  event.preventDefault();
+  save.click();
+});
 [linePolygon, lineBaseline, polygon].forEach(control => control.addEventListener("input", () => {
   drawOverlay(); updateDirtyIndicator();
 }));
