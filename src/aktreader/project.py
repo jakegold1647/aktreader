@@ -3808,6 +3808,10 @@ def list_project_activity(
     *,
     manifest_sha256: str,
     limit: int = 100,
+    kind: str | None = None,
+    page_index: int | None = None,
+    source_span_id: str | None = None,
+    region_id: str | None = None,
 ) -> dict[str, object]:
     """List bounded, content-free revision activity for one imported document."""
 
@@ -3818,6 +3822,29 @@ def list_project_activity(
         or not 1 <= limit <= 500
     ):
         raise ProjectStoreError("activity limit must be an integer from 1 to 500")
+    if kind is not None:
+        if not isinstance(kind, str) or not kind.strip():
+            raise ProjectStoreError("activity kind must be a supported revision kind")
+        kind = kind.strip().upper()
+        if kind not in {
+            "TRANSCRIPTION",
+            "LINE_GEOMETRY",
+            "REGION_GEOMETRY",
+            "READING_ORDER",
+        }:
+            raise ProjectStoreError("activity kind must be a supported revision kind")
+    if page_index is not None and (
+        isinstance(page_index, bool) or not isinstance(page_index, int) or page_index < 0
+    ):
+        raise ProjectStoreError("activity page_index must be a non-negative integer")
+    if source_span_id is not None and (
+        not isinstance(source_span_id, str) or not source_span_id.strip()
+    ):
+        raise ProjectStoreError("activity source_span_id must be a nonblank exact string")
+    if region_id is not None and (
+        not isinstance(region_id, str) or not region_id.strip()
+    ):
+        raise ProjectStoreError("activity region_id must be a nonblank exact string")
     root = _required_project_root(path)
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
@@ -3886,7 +3913,11 @@ def list_project_activity(
                     page_reading_order_revisions.created_at
                 FROM page_reading_order_revisions
                 WHERE page_reading_order_revisions.manifest_sha256 = ?
-            )
+            ) AS activity
+            WHERE (? IS NULL OR kind = ?)
+              AND (? IS NULL OR page_index = ?)
+              AND (? IS NULL OR source_span_id = ?)
+              AND (? IS NULL OR region_id = ?)
             ORDER BY created_at DESC, kind ASC, page_index ASC, revision DESC
             LIMIT ?
             """,
@@ -3895,6 +3926,14 @@ def list_project_activity(
                 manifest_sha256,
                 manifest_sha256,
                 manifest_sha256,
+                kind,
+                kind,
+                page_index,
+                page_index,
+                source_span_id,
+                source_span_id,
+                region_id,
+                region_id,
                 limit,
             ),
         ).fetchall()
@@ -3917,6 +3956,12 @@ def list_project_activity(
     ]
     return {
         "manifest_sha256": manifest_sha256,
+        "filters": {
+            "kind": kind,
+            "page_index": page_index,
+            "source_span_id": source_span_id,
+            "region_id": region_id,
+        },
         "events": events,
         "network_required": False,
     }
