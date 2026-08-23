@@ -103,6 +103,9 @@ from aktreader.project import (
     list_htr_suggestion_evaluations,
     list_project_activity,
     list_project_documents,
+    list_project_pages,
+    load_project_page,
+    load_project_page_layout,
     recognize_project_with_kraken,
     resolve_review_proposal,
     revise_line_geometry,
@@ -299,6 +302,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="list local PAGE XML document records",
     )
     project_documents.add_argument("project", type=Path, help="local .aktproj directory")
+
+    project_pages = subparsers.add_parser(
+        "project-list-pages",
+        help="list imported local project pages in stable order",
+    )
+    project_pages.add_argument("project", type=Path, help="local .aktproj directory")
+
+    project_show_page = subparsers.add_parser(
+        "project-show-page",
+        help="show one revision-aware local project page",
+    )
+    project_show_page.add_argument("project", type=Path, help="local .aktproj directory")
+    project_show_page.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_show_page.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+
+    project_show_page_layout = subparsers.add_parser(
+        "project-show-page-layout",
+        help="show effective local page reading order and geometry revisions",
+    )
+    project_show_page_layout.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_show_page_layout.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_show_page_layout.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
 
     project_search = subparsers.add_parser(
         "project-search",
@@ -1790,6 +1837,44 @@ def _command_project_list_documents(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_list_pages(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    pages = list_project_pages(project)
+    _emit_json(
+        {
+            "status": "READY",
+            "project": str(project),
+            "page_count": len(pages),
+            "pages": pages,
+            "network_required": False,
+        }
+    )
+    return 0
+
+
+def _command_project_show_page(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    page = load_project_page(
+        project,
+        manifest_sha256=args.manifest_sha256,
+        page_index=args.page_index,
+    )
+    _emit_json({**page, "network_required": False})
+    return 0
+
+
+def _command_project_show_page_layout(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    _emit_json(
+        load_project_page_layout(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+        )
+    )
+    return 0
+
+
 def _command_project_search(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     _emit_json(
@@ -3132,6 +3217,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-create": _command_project_create,
         "project-inspect": _command_project_inspect,
         "project-list-documents": _command_project_list_documents,
+        "project-list-pages": _command_project_list_pages,
+        "project-show-page": _command_project_show_page,
+        "project-show-page-layout": _command_project_show_page_layout,
         "project-search": _command_project_search,
         "project-activity": _command_project_activity,
         "project-revise-line-transcription": _command_project_revise_line_transcription,

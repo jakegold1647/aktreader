@@ -611,6 +611,29 @@ def test_project_line_correction_cli_runs_with_sockets_disabled(
     assert undone["revision"] == 2
     assert undone["network_required"] is False
 
+    assert main(["project-list-pages", str(project)]) == 0
+    inventory = json.loads(capsys.readouterr().out)
+    assert inventory["page_count"] == 1
+    assert inventory["network_required"] is False
+
+    for command in ("project-show-page", "project-show-page-layout"):
+        assert (
+            main(
+                [
+                    command,
+                    str(project),
+                    "--manifest-sha256",
+                    imported["manifest_sha256"],
+                    "--page-index",
+                    "0",
+                ]
+            )
+            == 0
+        )
+        inspected = json.loads(capsys.readouterr().out)
+        assert inspected["page_index"] == 0
+        assert inspected["network_required"] is False
+
 
 def test_project_training_readiness_runs_with_sockets_disabled(
     sockets_disabled: None,
