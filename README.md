@@ -155,6 +155,7 @@ The CLI also provides `label-validate`, `collection-create`, `collection-add-pro
 `project-list-documents`, `project-list-pages`, `project-show-page`,
 `project-show-page-layout`, `project-search`, `project-activity`,
 `project-revise-line-transcription`, `project-undo-line-transcription`,
+`project-restore-line-transcription`,
 `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
@@ -165,9 +166,10 @@ The CLI also provides `label-validate`, `collection-create`, `collection-add-pro
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
 `project-resolve-review-proposal`, `project-revise-line-geometry`,
-`project-undo-line-geometry`, `project-revise-page-reading-order`,
-`project-undo-page-reading-order`, `project-revise-region-geometry`,
-`project-undo-region-geometry`,
+`project-undo-line-geometry`, `project-restore-line-geometry`,
+`project-revise-page-reading-order`, `project-undo-page-reading-order`,
+`project-restore-page-reading-order`, `project-revise-region-geometry`,
+`project-undo-region-geometry`, `project-restore-region-geometry`,
 `htr-build-corpus`,
 `htr-inspect-corpus`, `workbench`, `serve`, `pagexml-import`,
 `consensus-merge`, `reader-inspect`,
@@ -421,6 +423,11 @@ python -m aktreader project-undo-line-transcription serock.aktproj `
   --manifest-sha256 <project-import-manifest-sha256> `
   --source-span-id <source-span-id> --editor local-user --expected-revision 1
 ```
+
+Undo restores only the immediately preceding value. To restore any older transcription or layout
+revision, including imported state as revision zero, see
+[restoring prior revisions](docs/revision-restoration.md). Every restoration remains append-only
+and uses the current revision as an optimistic-lock precondition.
 
 ### Offline review exchange
 

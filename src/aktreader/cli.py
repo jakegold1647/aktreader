@@ -108,6 +108,10 @@ from aktreader.project import (
     load_project_page_layout,
     recognize_project_with_kraken,
     resolve_review_proposal,
+    restore_line_geometry,
+    restore_line_transcription,
+    restore_page_reading_order,
+    restore_region_geometry,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
@@ -464,6 +468,41 @@ def build_parser() -> argparse.ArgumentParser:
         help="current non-negative line revision; zero reports undo unavailable",
     )
 
+    project_restore_line = subparsers.add_parser(
+        "project-restore-line-transcription",
+        help="append an older local human transcription state as a new revision",
+    )
+    project_restore_line.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_restore_line.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_restore_line.add_argument(
+        "--source-span-id",
+        required=True,
+        help="stable line source-span ID from a transcription CSV export",
+    )
+    project_restore_line.add_argument(
+        "--target-revision",
+        required=True,
+        type=int,
+        help="older line revision to restore; zero selects imported source text",
+    )
+    project_restore_line.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the restoration",
+    )
+    project_restore_line.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative line revision from project-show-page",
+    )
+
     project_document_update = subparsers.add_parser(
         "project-update-document",
         help="update title, tags, or notes for one local document",
@@ -796,6 +835,41 @@ def build_parser() -> argparse.ArgumentParser:
         help="current non-negative line geometry revision from project-show-page-layout",
     )
 
+    project_restore_geometry = subparsers.add_parser(
+        "project-restore-line-geometry",
+        help="append an older local line geometry state as a new revision",
+    )
+    project_restore_geometry.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_restore_geometry.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_restore_geometry.add_argument(
+        "--source-span-id",
+        required=True,
+        help="PAGE XML line source span ID",
+    )
+    project_restore_geometry.add_argument(
+        "--target-revision",
+        required=True,
+        type=int,
+        help="older geometry revision to restore; zero selects imported geometry",
+    )
+    project_restore_geometry.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the geometry restoration",
+    )
+    project_restore_geometry.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative line geometry revision from project-show-page-layout",
+    )
+
     project_reading_order = subparsers.add_parser(
         "project-revise-page-reading-order",
         help="append one validated local page region reading-order revision",
@@ -854,6 +928,42 @@ def build_parser() -> argparse.ArgumentParser:
         help="local editor recording the reading-order reversal",
     )
     project_undo_reading_order.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative reading-order revision from project-show-page-layout",
+    )
+
+    project_restore_reading_order = subparsers.add_parser(
+        "project-restore-page-reading-order",
+        help="append an older local page reading order as a new revision",
+    )
+    project_restore_reading_order.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_restore_reading_order.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_restore_reading_order.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+    project_restore_reading_order.add_argument(
+        "--target-revision",
+        required=True,
+        type=int,
+        help="older order revision to restore; zero selects imported order",
+    )
+    project_restore_reading_order.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the reading-order restoration",
+    )
+    project_restore_reading_order.add_argument(
         "--expected-revision",
         required=True,
         type=int,
@@ -932,6 +1042,47 @@ def build_parser() -> argparse.ArgumentParser:
         help="local editor recording the region geometry reversal",
     )
     project_undo_region_geometry.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative region geometry revision from project-show-page-layout",
+    )
+
+    project_restore_region_geometry = subparsers.add_parser(
+        "project-restore-region-geometry",
+        help="append an older local TextRegion geometry state as a new revision",
+    )
+    project_restore_region_geometry.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_restore_region_geometry.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_restore_region_geometry.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+    project_restore_region_geometry.add_argument(
+        "--region-id",
+        required=True,
+        help="exact PAGE XML TextRegion ID",
+    )
+    project_restore_region_geometry.add_argument(
+        "--target-revision",
+        required=True,
+        type=int,
+        help="older region revision to restore; zero selects imported geometry",
+    )
+    project_restore_region_geometry.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the region geometry restoration",
+    )
+    project_restore_region_geometry.add_argument(
         "--expected-revision",
         required=True,
         type=int,
@@ -2071,6 +2222,23 @@ def _command_project_undo_line_transcription(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_restore_line_transcription(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        restore_line_transcription(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            source_span_id=args.source_span_id,
+            target_revision=args.target_revision,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_update_document(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     metadata_path = local_input_path(args.metadata, role="document metadata")
@@ -2358,6 +2526,23 @@ def _command_project_undo_line_geometry(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_restore_line_geometry(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        restore_line_geometry(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            source_span_id=args.source_span_id,
+            target_revision=args.target_revision,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_revise_page_reading_order(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     order_path = local_input_path(args.region_order, role="page region order")
@@ -2399,6 +2584,23 @@ def _command_project_undo_page_reading_order(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_restore_page_reading_order(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        restore_page_reading_order(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+            target_revision=args.target_revision,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_revise_region_geometry(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     geometry_path = local_input_path(args.geometry, role="region geometry")
@@ -2433,6 +2635,24 @@ def _command_project_undo_region_geometry(args: argparse.Namespace) -> int:
             manifest_sha256=args.manifest_sha256,
             page_index=args.page_index,
             region_id=args.region_id,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
+def _command_project_restore_region_geometry(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        restore_region_geometry(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+            region_id=args.region_id,
+            target_revision=args.target_revision,
             editor=args.editor,
             expected_revision=args.expected_revision,
         )
@@ -3414,6 +3634,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-activity": _command_project_activity,
         "project-revise-line-transcription": _command_project_revise_line_transcription,
         "project-undo-line-transcription": _command_project_undo_line_transcription,
+        "project-restore-line-transcription": (
+            _command_project_restore_line_transcription
+        ),
         "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-images": _command_project_import_images,
@@ -3428,10 +3651,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-export-pdf": _command_project_export_pdf,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
         "project-undo-line-geometry": _command_project_undo_line_geometry,
+        "project-restore-line-geometry": _command_project_restore_line_geometry,
         "project-revise-page-reading-order": _command_project_revise_page_reading_order,
         "project-undo-page-reading-order": _command_project_undo_page_reading_order,
+        "project-restore-page-reading-order": (
+            _command_project_restore_page_reading_order
+        ),
         "project-revise-region-geometry": _command_project_revise_region_geometry,
         "project-undo-region-geometry": _command_project_undo_region_geometry,
+        "project-restore-region-geometry": _command_project_restore_region_geometry,
         "project-export-review-package": _command_project_export_review_package,
         "project-import-review-package": _command_project_import_review_package,
         "project-resolve-review-proposal": _command_project_resolve_review_proposal,
