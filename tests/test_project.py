@@ -1272,6 +1272,52 @@ def test_project_documents_keep_metadata_separate_from_imported_pagexml(
     assert inspect_project(project)["document_count"] == 1
 
 
+def test_project_document_update_refuses_a_stale_metadata_timestamp(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "register.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    original = list_project_documents(project)[0]
+    timestamps = iter(("2026-08-23T12:00:01Z", "2026-08-23T12:00:02Z"))
+    monkeypatch.setattr("aktreader.project._timestamp", lambda: next(timestamps))
+
+    updated = update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        title="Serock register",
+        expected_updated_at=original["updated_at"],
+    )
+    assert updated["updated_at"] == "2026-08-23T12:00:01Z"
+
+    with pytest.raises(ProjectStoreError, match="document metadata conflict"):
+        update_project_document(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            notes="stale tab should not win",
+            expected_updated_at=original["updated_at"],
+        )
+
+    stored = list_project_documents(project)[0]
+    assert stored["title"] == "Serock register"
+    assert stored["notes"] == ""
+    assert stored["updated_at"] == "2026-08-23T12:00:01Z"
+
+    with pytest.raises(ProjectStoreError, match="nonblank exact string"):
+        update_project_document(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            notes="invalid token",
+            expected_updated_at="  ",
+        )
+
+
 def test_project_document_cli_updates_strict_metadata(tmp_path: Path, capsys) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()

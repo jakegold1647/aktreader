@@ -26,6 +26,8 @@ Stop it with Ctrl+C.
   context for each line;
 - previous/next line controls, a live line-position readout, and keyboard
   navigation for sustained line-by-line review;
+- selected-document title, one-tag-per-line tags, and private-note editing that
+  leaves imported PAGE XML and images unchanged;
 - bounded local search across effective transcription text, document titles,
   and document tags, with direct jumps to the matching line;
 - a bounded, content-free recent-activity panel for the selected document,
@@ -53,6 +55,24 @@ Stop it with Ctrl+C.
 The API never sends image filesystem paths to the browser. Source images are
 streamed only after their manifest and page index resolve through the local
 project store.
+
+## Document details
+
+Open **Document details** to edit the selected document's local title, tags, or
+private notes. Enter one tag per line; commas remain part of a tag rather than
+acting as a separator. Saving updates only the mutable document record. It does
+not rewrite imported PAGE XML, source scans, transcriptions, or layout revisions.
+
+Document metadata participates in the unsaved-work indicator. Switching to
+another document or jumping to a search result in another document asks before
+discarding the draft. Page, line, region, and activity navigation within the
+same document preserves it. Saving document details also preserves unsaved
+transcription and layout drafts.
+
+The write includes the document's exact `updated_at` value from the page load.
+If another tab or local command updates that record first, the stale save is
+refused. The workbench keeps the draft visible so the reviewer can reload,
+compare the newer metadata, and make a fresh decision.
 
 ## Keyboard review
 
@@ -152,11 +172,12 @@ a fresh decision.
 
 ## Concurrent tabs
 
-Each transcription, line-geometry, region-polygon, and reading-order save
-includes the exact revision displayed when that page was loaded. Line text and
-line geometry have separate revision streams, so correcting one does not make
-an untouched editor for the other stale. If another tab or local command saves
-the same entity stream first, the stale request returns a conflict and does not
-append another audit row. Reload the page, review the newer state, and then
-decide whether to apply the edit again. A conflict never merges or retries
-content automatically.
+Each document-metadata save includes the exact `updated_at` token loaded with
+that record. Each transcription, line-geometry, region-polygon, and reading-order
+save includes the exact revision displayed when that page was loaded. Line text
+and line geometry have separate revision streams, so correcting one does not
+make an untouched editor for the other stale. If another tab or local command
+saves the same record or entity stream first, the stale request returns a
+conflict and does not overwrite or append anything. Reload the current state,
+review the newer value, and then decide whether to apply the edit again. A
+conflict never merges or retries content automatically.

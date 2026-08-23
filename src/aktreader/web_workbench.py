@@ -34,6 +34,7 @@ from aktreader.project import (
     revise_page_reading_order,
     revise_region_geometry,
     search_project_transcriptions,
+    update_project_document,
 )
 
 LOOPBACK_HOST = "127.0.0.1"
@@ -443,6 +444,34 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
     )
 
 
+def _document_update_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("document metadata request must be a JSON object")
+    expected = {
+        "manifest_sha256",
+        "title",
+        "tags",
+        "notes",
+        "expected_updated_at",
+    }
+    if set(payload) != expected:
+        raise WebWorkbenchError("document metadata request has invalid keys")
+    expected_updated_at = payload["expected_updated_at"]
+    if (
+        not isinstance(expected_updated_at, str)
+        or not expected_updated_at.strip()
+        or expected_updated_at != expected_updated_at.strip()
+    ):
+        raise WebWorkbenchError("expected_updated_at must be a nonblank exact string")
+    return update_project_document(
+        project,
+        manifest_sha256=_require_manifest_sha256(payload["manifest_sha256"]),
+        title=payload["title"],
+        tags=payload["tags"],
+        notes=payload["notes"],
+        expected_updated_at=expected_updated_at,
+    )
+
 
 def _line_geometry_payload(project: Path, payload: object) -> dict[str, object]:
     if not isinstance(payload, dict):
@@ -733,6 +762,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                 payload = self._request_json()
                 if parsed.path == "/api/transcriptions":
                     response = _revision_payload(project, payload)
+                elif parsed.path == "/api/documents":
+                    response = _document_update_payload(project, payload)
                 elif parsed.path == "/api/line-geometry":
                     response = _line_geometry_payload(project, payload)
                 elif parsed.path == "/api/region-geometry":
@@ -827,6 +858,9 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 .activity-event:hover, .activity-event:focus-visible { border-color: #0f766e; }
 .activity-event small { font-weight: 400; }
 #activity-status { color: #52616f; font-size: .85rem; min-height: 1.3rem; }
+.metadata-fields { display: grid; gap: 8px; }
+.metadata-fields textarea { min-height: 72px; }
+#metadata-status { color: #52616f; font-size: .85rem; min-height: 1.3rem; }
 small, #status, #dirty-indicator { color: #52616f; }
 #dirty-indicator:not(:empty) { color: #9a3412; font-weight: 600; }
 textarea { min-height: 120px; resize: vertical; width: 100%; box-sizing: border-box; }
@@ -861,6 +895,26 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
 </section>
 <aside class="panel" id="review-panel">
   <label>Editor <input id="editor" value="local-user" autocomplete="off"></label>
+  <details id="document-metadata-panel">
+    <summary>Document details</summary>
+    <p><small>Title, tags, and notes stay in this local project. Tags use one line each;
+      notes may contain private research context.</small></p>
+    <form id="document-metadata-form">
+      <div class="metadata-fields">
+        <label>Title <input id="document-title" autocomplete="off" disabled></label>
+        <label>Tags (one per line)
+          <textarea id="document-tags" spellcheck="false" disabled></textarea>
+        </label>
+        <label>Private notes
+          <textarea id="document-notes" disabled></textarea>
+        </label>
+      </div>
+      <div class="actions">
+        <button id="save-document-metadata" type="submit" disabled>Save document details</button>
+        <span id="metadata-status" role="status" aria-live="polite"></span>
+      </div>
+    </form>
+  </details>
   <details id="search-panel">
     <summary>Find a line</summary>
     <p><small>Search runs only against this local project. Results can contain transcription
@@ -972,8 +1026,9 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
 </dialog>
 <script>
 const state = {
-  document: null, page: null, pages: [], lines: [], selected: null, selectedRegion: null,
-  regionOrder: [], drag: null, history: null, pageUrl: null, activity: [], activityRequest: 0
+  document: null, documents: [], page: null, pages: [], lines: [], selected: null,
+  selectedRegion: null, regionOrder: [], drag: null, history: null, pageUrl: null,
+  activity: [], activityRequest: 0
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
@@ -984,6 +1039,12 @@ const overlay = document.getElementById("overlay");
 const lineList = document.getElementById("line-list");
 const text = document.getElementById("text");
 const editor = document.getElementById("editor");
+const documentMetadataForm = document.getElementById("document-metadata-form");
+const documentTitle = document.getElementById("document-title");
+const documentTags = document.getElementById("document-tags");
+const documentNotes = document.getElementById("document-notes");
+const saveDocumentMetadata = document.getElementById("save-document-metadata");
+const metadataStatus = document.getElementById("metadata-status");
 const save = document.getElementById("save");
 const previousLine = document.getElementById("previous-line");
 const nextLine = document.getElementById("next-line");
@@ -1037,6 +1098,39 @@ function selectedLine() { return state.lines.find(line => line.source_span_id ==
 function selectedRegion() {
   return state.page && state.page.regions.find(region => region.region_id === state.selectedRegion);
 }
+function selectedDocumentRecord() {
+  return state.documents.find(document => document.manifest_sha256 === state.document);
+}
+function documentTagsDraft() {
+  return documentTags.value.split(/\\r?\\n/).map(tag => tag.trim()).filter(tag => tag);
+}
+function documentMetadataDirty() {
+  const record = selectedDocumentRecord();
+  if (!record) return false;
+  return documentTitle.value.trim() !== record.title
+    || JSON.stringify(documentTagsDraft()) !== JSON.stringify(record.tags)
+    || documentNotes.value !== record.notes;
+}
+function renderDocumentOptions() {
+  const selected = state.document;
+  documentSelect.replaceChildren();
+  state.documents.forEach((document, index) => {
+    option(documentSelect, document.manifest_sha256,
+      (index + 1) + ". " + document.title + " (" + document.page_count + " pages)");
+  });
+  if (selected) documentSelect.value = selected;
+}
+function renderDocumentMetadata() {
+  const record = selectedDocumentRecord();
+  documentTitle.disabled = !record;
+  documentTags.disabled = !record;
+  documentNotes.disabled = !record;
+  saveDocumentMetadata.disabled = !record;
+  documentTitle.value = record ? record.title : "";
+  documentTags.value = record ? record.tags.join("\\n") : "";
+  documentNotes.value = record ? record.notes : "";
+  metadataStatus.textContent = record ? "Loaded saved document details." : "No document selected.";
+}
 function jsonDraft(value, fallback) {
   try { return JSON.parse(value); }
   catch (_error) { return fallback; }
@@ -1049,6 +1143,7 @@ function dirtyStreams() {
   const streams = [];
   const line = selectedLine();
   const region = selectedRegion();
+  if (documentMetadataDirty()) streams.push("document metadata");
   if (line && text.value !== (line.text === null ? "" : line.text)) {
     streams.push("transcription");
   }
@@ -1129,9 +1224,9 @@ async function jumpToSearchResult(result) {
     focusLineButton(result.source_span_id);
     return true;
   }
-  if (!await confirmDiscard([
-    "transcription", "line geometry", "region geometry", "reading order"
-  ])) return false;
+  const streams = ["transcription", "line geometry", "region geometry", "reading order"];
+  if (state.document !== result.manifest_sha256) streams.unshift("document metadata");
+  if (!await confirmDiscard(streams)) return false;
   if (state.document !== result.manifest_sha256) {
     documentSelect.value = result.manifest_sha256;
     if (!await loadDocument(true)) return false;
@@ -1183,6 +1278,46 @@ async function runSearch() {
     renderSearchResults(await api("/api/search?" + parameters.toString()));
   } finally {
     searchButton.disabled = false;
+  }
+}
+async function saveDocumentMetadataDraft() {
+  const record = selectedDocumentRecord();
+  if (!record) throw new Error("Choose a document before saving its details.");
+  const title = documentTitle.value.trim();
+  const tags = documentTagsDraft();
+  if (!title) throw new Error("Document title must not be blank.");
+  if (new Set(tags).size !== tags.length) {
+    throw new Error("Document tags must be unique.");
+  }
+  saveDocumentMetadata.disabled = true;
+  metadataStatus.textContent = "Saving document details…";
+  try {
+    const updated = await api("/api/documents", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        manifest_sha256: record.manifest_sha256,
+        title: title,
+        tags: tags,
+        notes: documentNotes.value,
+        expected_updated_at: record.updated_at
+      })
+    });
+    const index = state.documents.findIndex(
+      document => document.manifest_sha256 === updated.manifest_sha256
+    );
+    if (index < 0) throw new Error("Saved document is no longer in this project.");
+    state.documents[index] = {...state.documents[index], ...updated};
+    renderDocumentOptions();
+    renderDocumentMetadata();
+    metadataStatus.textContent = "Saved document details.";
+    updateDirtyIndicator();
+    if (searchQuery.value.trim() && ["title", "tag"].includes(searchField.value)) {
+      await runSearch();
+    }
+    return true;
+  } finally {
+    saveDocumentMetadata.disabled = false;
   }
 }
 function activityKindLabel(kind) {
@@ -1681,7 +1816,7 @@ async function loadPage(discardConfirmed) {
 async function loadDocument(discardConfirmed) {
   const targetDocument = documentSelect.value;
   if (targetDocument !== state.document && !discardConfirmed && !await confirmDiscard([
-    "transcription", "line geometry", "region geometry", "reading order"
+    "document metadata", "transcription", "line geometry", "region geometry", "reading order"
   ])) {
     documentSelect.value = state.document || "";
     return false;
@@ -1690,6 +1825,7 @@ async function loadDocument(discardConfirmed) {
     "/api/pages?manifest_sha256=" + encodeURIComponent(targetDocument)
   );
   state.document = targetDocument;
+  renderDocumentMetadata();
   pageSelect.replaceChildren();
   state.pages = response.pages;
   response.pages.forEach((page, index) => {
@@ -1704,17 +1840,27 @@ async function loadDocument(discardConfirmed) {
 async function boot() {
   try {
     const project = await api("/api/project");
-    documentSelect.replaceChildren();
-    project.documents.forEach((document, index) => {
-      option(documentSelect, document.manifest_sha256,
-        (index + 1) + ". " + document.title + " (" + document.page_count + " pages)");
-    });
+    state.documents = project.documents;
+    renderDocumentOptions();
     if (project.documents.length) await loadDocument();
-    else detail.textContent = "This project has no imported documents.";
+    else {
+      renderDocumentMetadata();
+      detail.textContent = "This project has no imported documents.";
+    }
   } catch (error) { detail.textContent = error.message; }
 }
 documentSelect.addEventListener("change", () =>
   loadDocument().catch(error => setStatus(error.message)));
+documentMetadataForm.addEventListener("submit", event => {
+  event.preventDefault();
+  saveDocumentMetadataDraft().catch(error => {
+    metadataStatus.textContent = error.message;
+    saveDocumentMetadata.disabled = false;
+    updateDirtyIndicator();
+  });
+});
+[documentTitle, documentTags, documentNotes].forEach(control =>
+  control.addEventListener("input", updateDirtyIndicator));
 searchForm.addEventListener("submit", event => {
   event.preventDefault();
   runSearch().catch(error => {

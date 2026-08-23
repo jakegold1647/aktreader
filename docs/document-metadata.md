@@ -29,5 +29,13 @@ python -m aktreader project-update-document serock.aktproj `
   --metadata document.json
 ~~~
 
+The loopback browser workbench exposes the same fields under **Document details**.
+It accepts one tag per line so commas can remain part of a tag. Browser saves send
+all three fields plus the document's exact `updated_at` value; a stale tab is
+refused instead of overwriting metadata saved by another tab or local command.
+Document switches guard unsaved metadata, while page and line navigation within
+the same document preserves the draft. Saving metadata does not discard unsaved
+transcription or layout work.
+
 Re-importing the same PAGE XML never replaces document metadata. Document records are the
 collection/search boundary for later multi-page import, thumbnails, tags, and publishing workflows.
