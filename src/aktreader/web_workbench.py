@@ -75,6 +75,12 @@ def _require_page_index(value: object) -> int:
     return page_index
 
 
+def _require_expected_revision(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise WebWorkbenchError("expected_revision must be a non-negative integer")
+    return value
+
+
 def _query_value(query: dict[str, list[str]], name: str) -> str:
     values = query.get(name)
     if values is None or len(values) != 1 or not values[0]:
@@ -229,10 +235,17 @@ def _thumbnail_payload(
 def _revision_payload(project: Path, payload: object) -> dict[str, object]:
     if not isinstance(payload, dict):
         raise WebWorkbenchError("revision request must be a JSON object")
-    allowed = {"manifest_sha256", "source_span_id", "text", "editor"}
+    allowed = {
+        "manifest_sha256",
+        "source_span_id",
+        "text",
+        "editor",
+        "expected_revision",
+    }
     if set(payload) != allowed:
         raise WebWorkbenchError(
-            "revision request must contain only manifest_sha256, source_span_id, text, editor"
+            "revision request must contain only manifest_sha256, source_span_id, text, "
+            "editor, expected_revision"
         )
     manifest_sha256 = _require_manifest_sha256(payload["manifest_sha256"])
     source_span_id = payload["source_span_id"]
@@ -250,6 +263,7 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
         source_span_id=source_span_id,
         text=text,
         editor=editor,
+        expected_revision=_require_expected_revision(payload["expected_revision"]),
     )
 
 
@@ -257,7 +271,14 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
 def _region_geometry_payload(project: Path, payload: object) -> dict[str, object]:
     if not isinstance(payload, dict):
         raise WebWorkbenchError("region geometry request must be a JSON object")
-    expected = {"manifest_sha256", "page_index", "region_id", "polygon", "editor"}
+    expected = {
+        "manifest_sha256",
+        "page_index",
+        "region_id",
+        "polygon",
+        "editor",
+        "expected_revision",
+    }
     if set(payload) != expected:
         raise WebWorkbenchError(
             "region geometry request has invalid keys"
@@ -269,13 +290,20 @@ def _region_geometry_payload(project: Path, payload: object) -> dict[str, object
         region_id=payload["region_id"],
         polygon=payload["polygon"],
         editor=payload["editor"],
+        expected_revision=_require_expected_revision(payload["expected_revision"]),
     )
 
 
 def _reading_order_payload(project: Path, payload: object) -> dict[str, object]:
     if not isinstance(payload, dict):
         raise WebWorkbenchError("reading-order request must be a JSON object")
-    expected = {"manifest_sha256", "page_index", "region_ids", "editor"}
+    expected = {
+        "manifest_sha256",
+        "page_index",
+        "region_ids",
+        "editor",
+        "expected_revision",
+    }
     if set(payload) != expected:
         raise WebWorkbenchError("reading-order request has invalid keys")
     return revise_page_reading_order(
@@ -284,6 +312,7 @@ def _reading_order_payload(project: Path, payload: object) -> dict[str, object]:
         page_index=_require_page_index(payload["page_index"]),
         region_ids=payload["region_ids"],
         editor=payload["editor"],
+        expected_revision=_require_expected_revision(payload["expected_revision"]),
     )
 
 def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
@@ -758,7 +787,8 @@ save.addEventListener("click", async () => {
         manifest_sha256: state.page.manifest_sha256,
         source_span_id: line.source_span_id,
         text: text.value,
-        editor: editor.value
+        editor: editor.value,
+        expected_revision: line.revision
       })
     });
     setStatus(result.status === "UNCHANGED"
@@ -781,7 +811,8 @@ saveRegion.addEventListener("click", async () => {
         page_index: state.page.page_index,
         region_id: region.region_id,
         polygon: revisedPolygon,
-        editor: editor.value
+        editor: editor.value,
+        expected_revision: region.revision
       })
     });
     await loadPage();
@@ -799,7 +830,8 @@ saveOrder.addEventListener("click", async () => {
         manifest_sha256: state.page.manifest_sha256,
         page_index: state.page.page_index,
         region_ids: state.regionOrder,
-        editor: editor.value
+        editor: editor.value,
+        expected_revision: state.page.reading_order.revision
       })
     });
     await loadPage();

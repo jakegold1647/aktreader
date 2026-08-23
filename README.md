@@ -335,7 +335,8 @@ python -m aktreader serve serock.aktproj
 
 It prints a `127.0.0.1` URL with document/page navigation and generated thumbnails, PAGE line and
 region overlays, saved human transcription revisions, and auditable region geometry or reading-order
-changes. It has no
+changes. Every save is revision-checked; a stale tab must reload and review newer work before
+trying again. It has no
 accounts and cannot bind to a LAN or public address, so it is not yet a shared deployment. See
 [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).
 
