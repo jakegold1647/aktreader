@@ -17,6 +17,17 @@ an available loopback port.
 The server is not started by imports, project commands, or the desktop workbench.
 Stop it with Ctrl+C.
 
+Contributors can parse the rendered inline client with Node.js before sending a
+change:
+
+```powershell
+python -m tools.check_workbench_javascript
+```
+
+This catches malformed JavaScript introduced by Python string escaping. The
+normal Python test suite remains usable without Node.js, while CI runs this
+command as a required check.
+
 ## What it provides
 
 - document-first and page-scoped navigation with bounded, server-generated page thumbnails;
