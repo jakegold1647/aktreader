@@ -48,6 +48,16 @@ This is a single-user, loopback-only service. It binds exclusively to
 It sends no CORS headers, accepts no remote model configuration, keeps responses
 out of HTTP caches, and limits JSON write requests to 64 KiB.
 
+Every request must identify the actual bound port under `127.0.0.1` or
+`localhost`. Other `Host` values are rejected before route handling, which
+narrows the DNS-rebinding surface. When a browser sends `Origin` or
+`Sec-Fetch-Site`, the origin must match that local authority and the request
+must be same-origin (or a direct `none` navigation). Write routes additionally
+require `Content-Type: application/json`; simple cross-origin form-style bodies
+are not accepted. Local command-line clients may omit browser-only origin and
+fetch metadata, but they still need the correct loopback `Host` and JSON media
+type for writes.
+
 There is no login or authorization layer yet. Any process able to make requests
 from the same machine can use the browser workbench while it is running. Do not
 treat this phase as a multi-user deployment. Authentication, role-based access,

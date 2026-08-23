@@ -47,11 +47,16 @@ def _request(
     path: str,
     *,
     body: bytes | None = None,
+    headers: dict[str, str] | None = None,
 ) -> tuple[int, dict[str, str], bytes]:
     connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
-    headers = {"Content-Type": "application/json"} if body is not None else {}
+    request_headers = dict(headers or {})
+    if body is not None and not any(
+        name.lower() == "content-type" for name in request_headers
+    ):
+        request_headers["Content-Type"] = "application/json"
     try:
-        connection.request(method, path, body=body, headers=headers)
+        connection.request(method, path, body=body, headers=request_headers)
         response = connection.getresponse()
         return response.status, dict(response.getheaders()), response.read()
     finally:
@@ -136,6 +141,11 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
             "POST",
             "/api/transcriptions",
             body=revision_request,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Origin": f"http://127.0.0.1:{port}",
+                "Sec-Fetch-Site": "same-origin",
+            },
         )
         saved = json.loads(save_body)
         assert save_status == 200
@@ -177,6 +187,112 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert unchanged["lines"][0]["text"] == "Aleksander corrected"
         assert unchanged["lines"][0]["revision"] == 1
         assert inspect_project(project)["transcription_revision_count"] == 1
+    finally:
+        server.shutdown()
+        thread.join(timeout=3)
+        server.server_close()
+
+
+def test_loopback_browser_workbench_rejects_nonlocal_request_boundaries(
+    tmp_path: Path,
+) -> None:
+    project, imported = _project_with_one_page(tmp_path)
+    server = create_self_hosted_workbench_server(project, port=0)
+    thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01})
+    thread.start()
+    try:
+        _host, port = server.server_address[:2]
+        local_status, _local_headers, local_body = _request(
+            port,
+            "GET",
+            "/api/project",
+            headers={
+                "Host": f"localhost:{port}",
+                "Origin": f"http://localhost:{port}",
+                "Sec-Fetch-Site": "same-origin",
+            },
+        )
+        assert local_status == 200
+        assert json.loads(local_body)["status"] == "READY"
+
+        manifest_sha256 = imported["manifest_sha256"]
+        page_url = f"/api/page?manifest_sha256={manifest_sha256}&page_index=0"
+        page_status, _page_headers, page_body = _request(port, "GET", page_url)
+        assert page_status == 200
+        source_span_id = json.loads(page_body)["lines"][0]["source_span_id"]
+        valid_write = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "text": "must not be saved",
+                "editor": "remote-page",
+                "expected_revision": 0,
+            }
+        ).encode("utf-8")
+        rejected_requests = [
+            (
+                "GET",
+                "/api/project",
+                None,
+                {"Host": f"attacker.example:{port}"},
+                403,
+                "Host",
+            ),
+            (
+                "GET",
+                "/api/project",
+                None,
+                {"Origin": "https://attacker.example"},
+                403,
+                "Origin",
+            ),
+            (
+                "GET",
+                "/api/project",
+                None,
+                {"Sec-Fetch-Site": "cross-site"},
+                403,
+                "cross-origin",
+            ),
+            (
+                "POST",
+                "/api/transcriptions",
+                valid_write,
+                {"Origin": "https://attacker.example"},
+                403,
+                "Origin",
+            ),
+            (
+                "POST",
+                "/api/transcriptions",
+                valid_write,
+                {"Sec-Fetch-Site": "same-site"},
+                403,
+                "cross-origin",
+            ),
+            (
+                "POST",
+                "/api/transcriptions",
+                valid_write,
+                {"Content-Type": "text/plain"},
+                415,
+                "Content-Type application/json",
+            ),
+        ]
+        for method, path, body, headers, expected_status, expected_message in rejected_requests:
+            response_status, _response_headers, response_body = _request(
+                port,
+                method,
+                path,
+                body=body,
+                headers=headers,
+            )
+            response = json.loads(response_body)
+            assert response_status == expected_status
+            assert response["status"] == "ERROR"
+            assert expected_message in response["message"]
+
+        assert inspect_project(project)["transcription_revision_count"] == 0
     finally:
         server.shutdown()
         thread.join(timeout=3)
