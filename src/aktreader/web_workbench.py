@@ -23,6 +23,11 @@ from aktreader.project import (
     list_project_pages,
     load_project_page,
     load_project_page_layout,
+    load_project_revision_history,
+    restore_line_geometry,
+    restore_line_transcription,
+    restore_page_reading_order,
+    restore_region_geometry,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
@@ -86,6 +91,26 @@ def _require_expected_revision(value: object) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise WebWorkbenchError("expected_revision must be a non-negative integer")
     return value
+
+
+def _require_target_revision(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise WebWorkbenchError("target_revision must be a non-negative integer")
+    return value
+
+
+def _require_revision_kind(value: object) -> str:
+    if not isinstance(value, str):
+        raise WebWorkbenchError("kind must be a supported revision kind")
+    kind = value.strip().upper()
+    if kind not in {
+        "TRANSCRIPTION",
+        "LINE_GEOMETRY",
+        "REGION_GEOMETRY",
+        "READING_ORDER",
+    }:
+        raise WebWorkbenchError("kind must be a supported revision kind")
+    return kind
 
 
 def _query_value(query: dict[str, list[str]], name: str) -> str:
@@ -205,6 +230,54 @@ def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[
         "network_required": False,
     }
     return safe_fields
+
+
+def _revision_history_payload(
+    project: Path,
+    query: dict[str, list[str]],
+) -> dict[str, object]:
+    manifest_sha256 = _require_manifest_sha256(_query_value(query, "manifest_sha256"))
+    kind = _require_revision_kind(_query_value(query, "kind"))
+    common = {"manifest_sha256", "kind"}
+    if kind in {"TRANSCRIPTION", "LINE_GEOMETRY"}:
+        expected = common | {"source_span_id"}
+        if set(query) != expected:
+            raise WebWorkbenchError(
+                "line revision history requires only manifest_sha256, kind, and source_span_id"
+            )
+        return load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind=kind,
+            source_span_id=_query_value(query, "source_span_id"),
+            limit=100,
+        )
+    if kind == "READING_ORDER":
+        expected = common | {"page_index"}
+        if set(query) != expected:
+            raise WebWorkbenchError(
+                "reading-order history requires only manifest_sha256, kind, and page_index"
+            )
+        return load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind=kind,
+            page_index=_require_page_index(_query_value(query, "page_index")),
+            limit=100,
+        )
+    expected = common | {"page_index", "region_id"}
+    if set(query) != expected:
+        raise WebWorkbenchError(
+            "region history requires only manifest_sha256, kind, page_index, and region_id"
+        )
+    return load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind=kind,
+        page_index=_require_page_index(_query_value(query, "page_index")),
+        region_id=_query_value(query, "region_id"),
+        limit=100,
+    )
 
 
 def _image_payload(project: Path, manifest_sha256: str, page_index: int) -> tuple[str, bytes]:
@@ -360,6 +433,60 @@ def _reading_order_payload(project: Path, payload: object) -> dict[str, object]:
         expected_revision=_require_expected_revision(payload["expected_revision"]),
     )
 
+
+def _restoration_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("restoration request must be a JSON object")
+    common = {
+        "manifest_sha256",
+        "kind",
+        "target_revision",
+        "editor",
+        "expected_revision",
+    }
+    kind = _require_revision_kind(payload.get("kind"))
+    manifest_sha256 = _require_manifest_sha256(payload.get("manifest_sha256"))
+    target_revision = _require_target_revision(payload.get("target_revision"))
+    expected_revision = _require_expected_revision(payload.get("expected_revision"))
+    if kind in {"TRANSCRIPTION", "LINE_GEOMETRY"}:
+        if set(payload) != common | {"source_span_id"}:
+            raise WebWorkbenchError("line restoration request has invalid keys")
+        restore = (
+            restore_line_transcription
+            if kind == "TRANSCRIPTION"
+            else restore_line_geometry
+        )
+        return restore(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=payload["source_span_id"],
+            target_revision=target_revision,
+            editor=payload.get("editor"),
+            expected_revision=expected_revision,
+        )
+    if kind == "READING_ORDER":
+        if set(payload) != common | {"page_index"}:
+            raise WebWorkbenchError("reading-order restoration request has invalid keys")
+        return restore_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=_require_page_index(payload.get("page_index")),
+            target_revision=target_revision,
+            editor=payload.get("editor"),
+            expected_revision=expected_revision,
+        )
+    if set(payload) != common | {"page_index", "region_id"}:
+        raise WebWorkbenchError("region restoration request has invalid keys")
+    return restore_region_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=_require_page_index(payload.get("page_index")),
+        region_id=payload.get("region_id"),
+        target_revision=target_revision,
+        editor=payload.get("editor"),
+        expected_revision=expected_revision,
+    )
+
 def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
     class ProjectHandler(BaseHTTPRequestHandler):
         server_version = "AKTReaderWorkbench/0.1"
@@ -484,6 +611,11 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                             _require_page_index(_query_value(query, "page_index")),
                         ),
                     )
+                elif parsed.path == "/api/revision-history":
+                    self._json(
+                        HTTPStatus.OK,
+                        _revision_history_payload(project, query),
+                    )
                 elif parsed.path == "/api/image":
                     media_type, image = _image_payload(
                         project,
@@ -518,6 +650,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                     response = _region_geometry_payload(project, payload)
                 elif parsed.path == "/api/reading-order":
                     response = _reading_order_payload(project, payload)
+                elif parsed.path == "/api/restorations":
+                    response = _restoration_payload(project, payload)
                 else:
                     self._error(HTTPStatus.NOT_FOUND, "route was not found")
                     return
@@ -595,6 +729,9 @@ button { background: #0f766e; border: 0; border-radius: 5px; color: white;
   cursor: pointer; padding: 8px 12px; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 #detail { white-space: pre-wrap; color: #52616f; font-size: .9rem; }
+#history-preview { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 5px;
+  box-sizing: border-box; color: #334155; max-height: 220px; overflow: auto;
+  padding: 8px; white-space: pre-wrap; }
 @media (max-width: 850px) { main { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -637,12 +774,29 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     <div id="reading-order"></div>
     <div class="actions"><button id="save-order" disabled>Save reading order</button></div>
   </details>
+  <details>
+    <summary>Revision history and restore</summary>
+    <p><small>This view contains local revision values, including human text. Restoring appends a
+      new audited revision; it never deletes history.</small></p>
+    <label>Stream <select id="history-kind">
+      <option value="TRANSCRIPTION">Selected line transcription</option>
+      <option value="LINE_GEOMETRY">Selected line geometry</option>
+      <option value="REGION_GEOMETRY">Selected region geometry</option>
+      <option value="READING_ORDER">Page reading order</option>
+    </select></label>
+    <div class="actions"><button id="load-history">Load history</button></div>
+    <label>Older state <select id="history-revision" disabled></select></label>
+    <pre id="history-preview">No revision history loaded.</pre>
+    <div class="actions">
+      <button id="restore-revision" disabled>Restore as new revision</button>
+    </div>
+  </details>
 </aside>
 </main>
 <script>
 const state = {
   document: null, page: null, pages: [], lines: [], selected: null, selectedRegion: null,
-  regionOrder: [], drag: null
+  regionOrder: [], drag: null, history: null
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
@@ -663,6 +817,11 @@ const polygon = document.getElementById("polygon");
 const saveRegion = document.getElementById("save-region");
 const readingOrder = document.getElementById("reading-order");
 const saveOrder = document.getElementById("save-order");
+const historyKind = document.getElementById("history-kind");
+const loadHistoryButton = document.getElementById("load-history");
+const historyRevision = document.getElementById("history-revision");
+const historyPreview = document.getElementById("history-preview");
+const restoreRevision = document.getElementById("restore-revision");
 
 overlay.addEventListener("pointermove", moveGeometryDrag);
 overlay.addEventListener("pointerup", finishGeometryDrag);
@@ -683,7 +842,15 @@ function selectedLine() { return state.lines.find(line => line.source_span_id ==
 function selectedRegion() {
   return state.page && state.page.regions.find(region => region.region_id === state.selectedRegion);
 }
+function clearHistory(message) {
+  state.history = null;
+  historyRevision.replaceChildren();
+  historyRevision.disabled = true;
+  restoreRevision.disabled = true;
+  historyPreview.textContent = message || "No revision history loaded.";
+}
 function selectLine(sourceSpanId) {
+  clearHistory();
   state.selected = sourceSpanId;
   const line = selectedLine();
   text.disabled = !line; save.disabled = !line;
@@ -806,6 +973,7 @@ function drawOverlay() {
   });
 }
 function selectRegion(regionId) {
+  clearHistory();
   state.selectedRegion = regionId;
   const region = selectedRegion();
   polygon.disabled = !region;
@@ -892,6 +1060,69 @@ function renderReadingOrder() {
   saveOrder.disabled = state.regionOrder.length === 0;
 }
 
+function historyLocator(kind) {
+  if (!state.page) throw new Error("Choose a page before loading revision history.");
+  if (kind === "TRANSCRIPTION" || kind === "LINE_GEOMETRY") {
+    const line = selectedLine();
+    if (!line) throw new Error("Choose a line before loading this revision history.");
+    return {source_span_id: line.source_span_id};
+  }
+  if (kind === "REGION_GEOMETRY") {
+    const region = selectedRegion();
+    if (!region) throw new Error("Choose a region before loading this revision history.");
+    return {page_index: state.page.page_index, region_id: region.region_id};
+  }
+  return {page_index: state.page.page_index};
+}
+
+function selectedHistoryState() {
+  if (!state.history || historyRevision.value === "") return null;
+  const targetRevision = Number(historyRevision.value);
+  if (targetRevision === 0) return state.history.imported_state;
+  const entry = state.history.revisions.find(item => item.revision === targetRevision);
+  return entry ? entry.revised_state : null;
+}
+
+function renderHistorySelection() {
+  const historicalState = selectedHistoryState();
+  restoreRevision.disabled = !historicalState;
+  historyPreview.textContent = historicalState
+    ? JSON.stringify(historicalState, null, 2)
+    : "No older revision is available for this stream.";
+}
+
+async function loadHistory() {
+  const kind = historyKind.value;
+  const locator = historyLocator(kind);
+  const query = new URLSearchParams({
+    manifest_sha256: state.page.manifest_sha256,
+    kind: kind,
+    ...locator
+  });
+  setStatus("Loading revision history…");
+  const history = await api("/api/revision-history?" + query.toString());
+  state.history = history;
+  historyRevision.replaceChildren();
+  history.revisions
+    .filter(item => item.revision < history.current_revision)
+    .forEach(item => option(
+      historyRevision,
+      String(item.revision),
+      "Revision " + item.revision + " · " + item.editor + " · " + item.created_at
+    ));
+  if (history.current_revision > 0) {
+    option(historyRevision, "0", "Imported source · revision 0");
+  }
+  historyRevision.disabled = historyRevision.options.length === 0;
+  if (historyRevision.options.length) historyRevision.selectedIndex = 0;
+  renderHistorySelection();
+  const suffix = history.pagination.has_more ? " (newest 100 shown)" : "";
+  setStatus(
+    "Loaded " + history.kind.toLowerCase().replaceAll("_", " ")
+      + " history" + suffix + "."
+  );
+}
+
 function moveRegion(index, offset) {
   const target = index + offset;
   if (target < 0 || target >= state.regionOrder.length) return;
@@ -902,6 +1133,7 @@ function moveRegion(index, offset) {
 }
 
 async function loadPage() {
+  clearHistory();
   setStatus("");
   state.page = await api(pageSelect.value);
   state.lines = state.page.lines;
@@ -941,6 +1173,40 @@ documentSelect.addEventListener("change", () =>
   loadDocument().catch(error => setStatus(error.message)));
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
+historyKind.addEventListener("change", () => clearHistory());
+historyRevision.addEventListener("change", renderHistorySelection);
+loadHistoryButton.addEventListener("click", () =>
+  loadHistory().catch(error => setStatus(error.message)));
+restoreRevision.addEventListener("click", async () => {
+  if (!state.history || historyRevision.value === "") return;
+  const kind = state.history.kind;
+  const selectedSourceSpanId = state.selected;
+  const selectedRegionId = state.selectedRegion;
+  try {
+    const locator = historyLocator(kind);
+    setStatus("Restoring revision " + historyRevision.value + "…");
+    const result = await api("/api/restorations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        manifest_sha256: state.page.manifest_sha256,
+        kind: kind,
+        target_revision: Number(historyRevision.value),
+        editor: editor.value,
+        expected_revision: state.history.current_revision,
+        ...locator
+      })
+    });
+    await loadPage();
+    if (selectedSourceSpanId) selectLine(selectedSourceSpanId);
+    if (selectedRegionId) selectRegion(selectedRegionId);
+    await loadHistory();
+    setStatus(result.status === "UNCHANGED"
+      ? "The selected historical value is already current."
+      : "Restored revision " + result.target_revision
+        + " as new revision " + result.revision + ".");
+  } catch (error) { setStatus(error.message); }
+});
 save.addEventListener("click", async () => {
   const line = selectedLine(); if (!line) return;
   try {
