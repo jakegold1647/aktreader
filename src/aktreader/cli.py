@@ -116,7 +116,10 @@ from aktreader.project import (
     search_project_transcriptions,
     segment_project_with_kraken,
     training_readiness,
+    undo_line_geometry,
     undo_line_transcription,
+    undo_page_reading_order,
+    undo_region_geometry,
     update_project_document,
 )
 from aktreader.prompt import verify_reader_prompt
@@ -745,6 +748,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="current non-negative line geometry revision from project-show-page-layout",
     )
 
+    project_undo_geometry = subparsers.add_parser(
+        "project-undo-line-geometry",
+        help="append a reversal of the latest local line geometry revision",
+    )
+    project_undo_geometry.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_undo_geometry.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_undo_geometry.add_argument(
+        "--source-span-id",
+        required=True,
+        help="PAGE XML line source span ID",
+    )
+    project_undo_geometry.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the geometry reversal",
+    )
+    project_undo_geometry.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative line geometry revision from project-show-page-layout",
+    )
+
     project_reading_order = subparsers.add_parser(
         "project-revise-page-reading-order",
         help="append one validated local page region reading-order revision",
@@ -773,6 +805,36 @@ def build_parser() -> argparse.ArgumentParser:
         help="local editor recording the reading-order revision",
     )
     project_reading_order.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative reading-order revision from project-show-page-layout",
+    )
+
+    project_undo_reading_order = subparsers.add_parser(
+        "project-undo-page-reading-order",
+        help="append a reversal of the latest local page reading-order revision",
+    )
+    project_undo_reading_order.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_undo_reading_order.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_undo_reading_order.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+    project_undo_reading_order.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the reading-order reversal",
+    )
+    project_undo_reading_order.add_argument(
         "--expected-revision",
         required=True,
         type=int,
@@ -816,6 +878,41 @@ def build_parser() -> argparse.ArgumentParser:
         help="local editor recording the region geometry revision",
     )
     project_region_geometry.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative region geometry revision from project-show-page-layout",
+    )
+
+    project_undo_region_geometry = subparsers.add_parser(
+        "project-undo-region-geometry",
+        help="append a reversal of the latest local TextRegion geometry revision",
+    )
+    project_undo_region_geometry.add_argument(
+        "project", type=Path, help="local .aktproj directory"
+    )
+    project_undo_region_geometry.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
+    )
+    project_undo_region_geometry.add_argument(
+        "--page-index",
+        required=True,
+        type=int,
+        help="zero-based PAGE XML page index",
+    )
+    project_undo_region_geometry.add_argument(
+        "--region-id",
+        required=True,
+        help="exact PAGE XML TextRegion ID",
+    )
+    project_undo_region_geometry.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the region geometry reversal",
+    )
+    project_undo_region_geometry.add_argument(
         "--expected-revision",
         required=True,
         type=int,
@@ -2222,6 +2319,22 @@ def _command_project_revise_line_geometry(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_undo_line_geometry(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        undo_line_geometry(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            source_span_id=args.source_span_id,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_revise_page_reading_order(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     order_path = local_input_path(args.region_order, role="page region order")
@@ -2247,6 +2360,22 @@ def _command_project_revise_page_reading_order(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_undo_page_reading_order(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        undo_page_reading_order(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_revise_region_geometry(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     geometry_path = local_input_path(args.geometry, role="region geometry")
@@ -2264,6 +2393,23 @@ def _command_project_revise_region_geometry(args: argparse.Namespace) -> int:
             page_index=args.page_index,
             region_id=args.region_id,
             polygon=geometry["polygon"],
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
+def _command_project_undo_region_geometry(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        undo_region_geometry(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            page_index=args.page_index,
+            region_id=args.region_id,
             editor=args.editor,
             expected_revision=args.expected_revision,
         )
@@ -3258,8 +3404,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-export-alto": _command_project_export_alto,
         "project-export-pdf": _command_project_export_pdf,
         "project-revise-line-geometry": _command_project_revise_line_geometry,
+        "project-undo-line-geometry": _command_project_undo_line_geometry,
         "project-revise-page-reading-order": _command_project_revise_page_reading_order,
+        "project-undo-page-reading-order": _command_project_undo_page_reading_order,
         "project-revise-region-geometry": _command_project_revise_region_geometry,
+        "project-undo-region-geometry": _command_project_undo_region_geometry,
         "project-export-review-package": _command_project_export_review_package,
         "project-import-review-package": _command_project_import_review_package,
         "project-resolve-review-proposal": _command_project_resolve_review_proposal,

@@ -5455,6 +5455,83 @@ def revise_line_geometry(
     }
 
 
+def undo_line_geometry(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    source_span_id: str,
+    editor: str = "local-user",
+    expected_revision: int | None = None,
+) -> dict[str, object]:
+    """Append a reversal of the latest local line geometry revision."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(source_span_id, str) or not source_span_id.strip():
+        raise ProjectStoreError("source_span_id must be a nonblank string")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("geometry editor must be a nonblank string")
+    expected_revision = _validated_expected_revision(expected_revision)
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        line = connection.execute(
+            """
+            SELECT 1
+            FROM lines
+            WHERE manifest_sha256 = ? AND source_span_id = ?
+            """,
+            (manifest_sha256, source_span_id),
+        ).fetchone()
+        if line is None:
+            raise ProjectStoreError("project line was not found")
+        latest = connection.execute(
+            """
+            SELECT revision, prior_polygon_json, prior_baseline_json
+            FROM line_geometry_revisions
+            WHERE manifest_sha256 = ? AND source_span_id = ?
+            ORDER BY revision DESC
+            LIMIT 1
+            """,
+            (manifest_sha256, source_span_id),
+        ).fetchone()
+        current_revision = 0 if latest is None else int(latest[0])
+        if expected_revision is not None and current_revision != expected_revision:
+            raise ProjectStoreError(
+                "line geometry revision conflict; reload the current page"
+            )
+        if latest is None:
+            return {
+                "status": "UNDO_UNAVAILABLE",
+                "project": str(root),
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "revision": 0,
+                "network_required": False,
+            }
+        try:
+            prior_polygon = json.loads(latest[1])
+            prior_baseline = json.loads(latest[2]) if latest[2] is not None else None
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError("latest line geometry revision is unreadable") from error
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load line geometry revision: {error}") from error
+    finally:
+        connection.close()
+    result = revise_line_geometry(
+        root,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        polygon=prior_polygon,
+        baseline=prior_baseline,
+        editor=editor,
+        expected_revision=current_revision,
+    )
+    if result["status"] == "SAVED":
+        result["status"] = "UNDONE"
+        result["undone_revision"] = current_revision
+    return result
+
+
 
 def _stored_page_region_order(
     root: Path,
@@ -5665,6 +5742,83 @@ def revise_page_reading_order(
     }
 
 
+def undo_page_reading_order(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+    editor: str = "local-user",
+    expected_revision: int | None = None,
+) -> dict[str, object]:
+    """Append a reversal of the latest local page reading-order revision."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+        raise ProjectStoreError("page_index must be a non-negative integer")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("reading-order editor must be a nonblank string")
+    expected_revision = _validated_expected_revision(expected_revision)
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        page = connection.execute(
+            """
+            SELECT 1
+            FROM pages
+            WHERE manifest_sha256 = ? AND page_index = ?
+            """,
+            (manifest_sha256, page_index),
+        ).fetchone()
+        if page is None:
+            raise ProjectStoreError("project page was not found")
+        latest = connection.execute(
+            """
+            SELECT revision, prior_region_ids_json
+            FROM page_reading_order_revisions
+            WHERE manifest_sha256 = ? AND page_index = ?
+            ORDER BY revision DESC
+            LIMIT 1
+            """,
+            (manifest_sha256, page_index),
+        ).fetchone()
+        current_revision = 0 if latest is None else int(latest[0])
+        if expected_revision is not None and current_revision != expected_revision:
+            raise ProjectStoreError(
+                "reading-order revision conflict; reload the current page"
+            )
+        if latest is None:
+            return {
+                "status": "UNDO_UNAVAILABLE",
+                "project": str(root),
+                "manifest_sha256": manifest_sha256,
+                "page_index": page_index,
+                "revision": 0,
+                "network_required": False,
+            }
+        try:
+            prior_region_ids = json.loads(latest[1])
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError(
+                "latest page reading-order revision is unreadable"
+            ) from error
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load page reading-order revision: {error}") from error
+    finally:
+        connection.close()
+    result = revise_page_reading_order(
+        root,
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+        region_ids=prior_region_ids,
+        editor=editor,
+        expected_revision=current_revision,
+    )
+    if result["status"] == "SAVED":
+        result["status"] = "UNDONE"
+        result["undone_revision"] = current_revision
+    return result
+
+
 def _stored_region_polygon(
     root: Path,
     connection: sqlite3.Connection,
@@ -5856,6 +6010,88 @@ def revise_region_geometry(
         "editor": editor.strip(),
         "network_required": False,
     }
+
+
+def undo_region_geometry(
+    project: Path | str,
+    *,
+    manifest_sha256: str,
+    page_index: int,
+    region_id: str,
+    editor: str = "local-user",
+    expected_revision: int | None = None,
+) -> dict[str, object]:
+    """Append a reversal of the latest local TextRegion geometry revision."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if not isinstance(page_index, int) or isinstance(page_index, bool) or page_index < 0:
+        raise ProjectStoreError("page_index must be a non-negative integer")
+    if (
+        not isinstance(region_id, str)
+        or not region_id.strip()
+        or region_id != region_id.strip()
+    ):
+        raise ProjectStoreError("region_id must be a nonblank exact PAGE XML region ID")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("region geometry editor must be a nonblank string")
+    expected_revision = _validated_expected_revision(expected_revision)
+    root = _required_project_root(project)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        _stored_region_polygon(
+            root,
+            connection,
+            manifest_sha256=manifest_sha256,
+            page_index=page_index,
+            region_id=region_id,
+        )
+        latest = connection.execute(
+            """
+            SELECT revision, prior_polygon_json
+            FROM region_geometry_revisions
+            WHERE manifest_sha256 = ? AND page_index = ? AND region_id = ?
+            ORDER BY revision DESC
+            LIMIT 1
+            """,
+            (manifest_sha256, page_index, region_id),
+        ).fetchone()
+        current_revision = 0 if latest is None else int(latest[0])
+        if expected_revision is not None and current_revision != expected_revision:
+            raise ProjectStoreError(
+                "region geometry revision conflict; reload the current page"
+            )
+        if latest is None:
+            return {
+                "status": "UNDO_UNAVAILABLE",
+                "project": str(root),
+                "manifest_sha256": manifest_sha256,
+                "page_index": page_index,
+                "region_id": region_id,
+                "revision": 0,
+                "network_required": False,
+            }
+        try:
+            prior_polygon = json.loads(latest[1])
+        except (TypeError, json.JSONDecodeError) as error:
+            raise ProjectStoreError("latest region geometry revision is unreadable") from error
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load region geometry revision: {error}") from error
+    finally:
+        connection.close()
+    result = revise_region_geometry(
+        root,
+        manifest_sha256=manifest_sha256,
+        page_index=page_index,
+        region_id=region_id,
+        polygon=prior_polygon,
+        editor=editor,
+        expected_revision=current_revision,
+    )
+    if result["status"] == "SAVED":
+        result["status"] = "UNDONE"
+        result["undone_revision"] = current_revision
+    return result
+
 
 def _replace_line_geometry(
     line: ET.Element,
