@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from PIL import Image
 
 from aktreader.project import (
+    ProjectRevisionConflictError,
     ProjectStoreError,
     inspect_project,
     list_project_activity,
@@ -778,6 +779,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                 self._json(HTTPStatus.OK, response)
             except _RequestBoundaryError as error:
                 self._error(error.status, str(error))
+            except ProjectRevisionConflictError as error:
+                self._error(HTTPStatus.CONFLICT, str(error))
             except (ProjectStoreError, WebWorkbenchError) as error:
                 self._error(HTTPStatus.BAD_REQUEST, str(error))
 

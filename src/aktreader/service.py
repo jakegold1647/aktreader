@@ -30,6 +30,7 @@ from aktreader.kraken_training import (
 )
 from aktreader.local_reader import PinnedArtifact
 from aktreader.project import (
+    ProjectRevisionConflictError,
     ProjectStoreError,
     evaluate_htr_suggestions,
     export_human_pagexml,
@@ -81,16 +82,6 @@ SESSION_TTL_SECONDS = 8 * 60 * 60
 INVITATION_TTL_SECONDS = 7 * 24 * 60 * 60
 PROJECT_ROLES = ("VIEWER", "EDITOR", "OWNER")
 _ROLE_RANK = {role: index for index, role in enumerate(PROJECT_ROLES)}
-_REVISION_CONFLICT_MESSAGES = frozenset(
-    {
-        "transcription revision conflict; reload the current line",
-        "line geometry revision conflict; reload the current page",
-        "region geometry revision conflict; reload the current page",
-        "reading-order revision conflict; reload the current page",
-    }
-)
-
-
 class ServiceError(ValueError):
     """Raised when a local self-hosted service contract is invalid."""
 
@@ -4065,13 +4056,10 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
             self._error(HTTPStatus.UNAUTHORIZED, "sign-in failed")
         except AuthorizationError:
             self._error(HTTPStatus.FORBIDDEN, "account is not authorized for this project")
+        except ProjectRevisionConflictError as error:
+            self._error(HTTPStatus.CONFLICT, str(error))
         except ProjectStoreError as error:
-            status = (
-                HTTPStatus.CONFLICT
-                if str(error) in _REVISION_CONFLICT_MESSAGES
-                else HTTPStatus.BAD_REQUEST
-            )
-            self._error(status, str(error))
+            self._error(HTTPStatus.BAD_REQUEST, str(error))
         except ServiceError as error:
             self._error(HTTPStatus.BAD_REQUEST, str(error))
 

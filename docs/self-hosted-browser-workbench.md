@@ -189,6 +189,7 @@ save includes the exact revision displayed when that page was loaded. Line text
 and line geometry have separate revision streams, so correcting one does not
 make an untouched editor for the other stale. If another tab or local command
 saves the same record or entity stream first, the stale request returns a
-conflict and does not overwrite or append anything. Reload the current state,
-review the newer value, and then decide whether to apply the edit again. A
-conflict never merges or retries content automatically.
+conflict with HTTP status `409` and does not overwrite or append anything.
+Malformed requests and invalid field values remain `400` responses. Reload the
+current state, review the newer value, and then decide whether to apply the edit
+again. A conflict never merges or retries content automatically.
