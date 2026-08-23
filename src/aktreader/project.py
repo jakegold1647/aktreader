@@ -3356,6 +3356,7 @@ def update_project_document(
     title: str | None = None,
     tags: Sequence[str] | None = None,
     notes: str | None = None,
+    expected_updated_at: str | None = None,
 ) -> dict[str, object]:
     """Update mutable local metadata for one immutable PAGE XML import."""
 
@@ -3366,6 +3367,12 @@ def update_project_document(
         raise ProjectStoreError("document title must be a nonblank string")
     if notes is not None and not isinstance(notes, str):
         raise ProjectStoreError("document notes must be a string")
+    if expected_updated_at is not None and (
+        not isinstance(expected_updated_at, str)
+        or not expected_updated_at.strip()
+        or expected_updated_at != expected_updated_at.strip()
+    ):
+        raise ProjectStoreError("expected_updated_at must be a nonblank exact string")
     normalized_tags = None if tags is None else _validated_document_tags(tags)
     root = _required_project_root(path)
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
@@ -3392,14 +3399,27 @@ def update_project_document(
             next_tags = normalized_tags if normalized_tags is not None else current["tags"]
             next_notes = notes if notes is not None else current["notes"]
             updated_at = _timestamp()
-            connection.execute(
+            update = connection.execute(
                 """
                 UPDATE documents
                 SET title = ?, tags_json = ?, notes = ?, updated_at = ?
                 WHERE manifest_sha256 = ?
+                  AND (? IS NULL OR updated_at = ?)
                 """,
-                (next_title, _canonical_json(next_tags), next_notes, updated_at, manifest_sha256),
+                (
+                    next_title,
+                    _canonical_json(next_tags),
+                    next_notes,
+                    updated_at,
+                    manifest_sha256,
+                    expected_updated_at,
+                    expected_updated_at,
+                ),
             )
+            if update.rowcount != 1:
+                raise ProjectStoreError(
+                    "document metadata conflict; reload the current document"
+                )
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot update project document: {error}") from error
     finally:

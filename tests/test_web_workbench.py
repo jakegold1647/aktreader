@@ -116,6 +116,22 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b'lineList.addEventListener("keydown"' in root
         assert b'reviewPanel.addEventListener("keydown"' in root
         assert b"save.click();" in root
+        assert b"Document details" in root
+        assert b'id="document-metadata-form"' in root
+        assert b'id="document-title"' in root
+        assert b'id="document-tags"' in root
+        assert b'id="document-notes"' in root
+        assert b'id="metadata-status" role="status" aria-live="polite"' in root
+        assert b"function documentMetadataDirty()" in root
+        assert b"async function saveDocumentMetadataDraft()" in root
+        assert b"split(/\\r?\\n/)" in root
+        assert b'record.tags.join("\\n")' in root
+        assert b'api("/api/documents"' in root
+        assert b"expected_updated_at: record.updated_at" in root
+        assert b'streams.push("document metadata")' in root
+        assert b'streams.unshift("document metadata")' in root
+        assert b'"document metadata", "transcription", "line geometry"' in root
+        assert b'[documentTitle, documentTags, documentNotes]' in root
         assert b'id="search-query"' in root
         assert b'id="search-field"' in root
         assert b'id="search-status" role="status" aria-live="polite"' in root
@@ -185,6 +201,75 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         )
         assert invalid_search_status == 400
         assert "requires only q and field" in json.loads(invalid_search_body)["message"]
+
+        metadata_request = json.dumps(
+            {
+                "manifest_sha256": document["manifest_sha256"],
+                "title": "Serock civil register, 1890",
+                "tags": ["Serock", "births"],
+                "notes": "Private local review note.",
+                "expected_updated_at": document["updated_at"],
+            }
+        ).encode("utf-8")
+        metadata_status, metadata_headers, metadata_body = _request(
+            port,
+            "POST",
+            "/api/documents",
+            body=metadata_request,
+        )
+        metadata = json.loads(metadata_body)
+        assert metadata_status == 200
+        _assert_workbench_security_headers(metadata_headers)
+        assert metadata["title"] == "Serock civil register, 1890"
+        assert metadata["tags"] == ["Serock", "births"]
+        assert metadata["notes"] == "Private local review note."
+        assert metadata["updated_at"] != document["updated_at"]
+        assert metadata["network_required"] is False
+
+        refreshed_project_status, _refreshed_project_headers, refreshed_project_body = (
+            _request(port, "GET", "/api/project")
+        )
+        refreshed_document = json.loads(refreshed_project_body)["documents"][0]
+        assert refreshed_project_status == 200
+        assert refreshed_document["title"] == "Serock civil register, 1890"
+        assert refreshed_document["tags"] == ["Serock", "births"]
+
+        refreshed_title_status, _refreshed_title_headers, refreshed_title_body = (
+            _request(
+                port,
+                "GET",
+                "/api/search?" + urlencode({"q": "civil register", "field": "title"}),
+            )
+        )
+        assert refreshed_title_status == 200
+        assert json.loads(refreshed_title_body)["result_count"] == 1
+
+        stale_metadata_status, _stale_metadata_headers, stale_metadata_body = _request(
+            port,
+            "POST",
+            "/api/documents",
+            body=metadata_request,
+        )
+        assert stale_metadata_status == 400
+        assert "document metadata conflict" in json.loads(stale_metadata_body)["message"]
+
+        invalid_metadata_status, _invalid_metadata_headers, invalid_metadata_body = (
+            _request(
+                port,
+                "POST",
+                "/api/documents",
+                body=json.dumps(
+                    {
+                        "manifest_sha256": document["manifest_sha256"],
+                        "title": "Missing optimistic token",
+                        "tags": [],
+                        "notes": "",
+                    }
+                ).encode("utf-8"),
+            )
+        )
+        assert invalid_metadata_status == 400
+        assert "invalid keys" in json.loads(invalid_metadata_body)["message"]
 
         pages_status, _pages_headers, pages_body = _request(
             port,

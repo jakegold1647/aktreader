@@ -292,8 +292,9 @@ safety limit; they do not extract text or call a remote OCR service.
 Projects are intentionally local-only and contain no training consent. Importing source material
 does not make it training data or publishable data.
 
-Every import is also a stable document record. Its local title, tags, and notes can be updated without
-touching the PAGE XML or images; see [document metadata](docs/document-metadata.md).
+Every import is also a stable document record. Its local title, tags, and notes can be updated from
+the loopback browser workbench or CLI without touching the PAGE XML or images; see
+[document metadata](docs/document-metadata.md).
 
 Search one project without first building a collection. Results use the latest effective human
 revision, can target transcription text, document titles, or tags, and never require network access:
@@ -338,11 +339,12 @@ line polygons and baselines, region overlays, saved human transcription revision
 line geometry, region geometry, or reading-order changes. Layout vertices can be dragged on the
 scan or entered as source-pixel coordinates. A bounded, contentful history view can inspect any of
 those four streams and restore an explicitly selected older value by appending a new audited
-revision. The workbench can also search effective transcription text, document titles, and tags
-locally, then jump directly to a matching line. A content-free recent-changes panel shows the
-newest 50 human revisions for the selected document, filters them by revision stream or the current
-page, line, or region, and can jump to the affected location without exposing revision values or
-local paths. Unsaved work is identified per stream: line,
+revision. The workbench can edit the selected document's local title, one-tag-per-line tags, and
+private notes with a stale-tab check. It can also search effective transcription text, document
+titles, and tags locally, then jump directly to a matching line. A content-free recent-changes panel
+shows the newest 50 human revisions for the selected document, filters them by revision stream or
+the current page, line, or region, and can jump to the affected location without exposing revision
+values or local paths. Unsaved work is identified per stream: line,
 region, page, and document changes require
 confirmation before discarding an affected draft, while saving one stream preserves drafts in the
 others. Reloading or closing a dirty tab also triggers the browser's unsaved-work warning. Every
