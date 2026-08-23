@@ -19,6 +19,7 @@ from PIL import Image
 from aktreader.project import (
     ProjectStoreError,
     inspect_project,
+    list_project_activity,
     list_project_documents,
     list_project_pages,
     load_project_page,
@@ -38,6 +39,7 @@ from aktreader.project import (
 LOOPBACK_HOST = "127.0.0.1"
 MAX_REQUEST_BYTES = 65536
 THUMBNAIL_MAX_SIZE = (240, 180)
+ACTIVITY_LIMIT = 50
 
 
 class WebWorkbenchError(ValueError):
@@ -202,6 +204,38 @@ def _search_payload(
         field=_query_value(query, "field"),
         limit=50,
     )
+
+
+def _activity_payload(
+    project: Path,
+    query: dict[str, list[str]],
+) -> dict[str, object]:
+    if set(query) != {"manifest_sha256"}:
+        raise WebWorkbenchError(
+            "activity requires only the manifest_sha256 query parameter"
+        )
+    manifest_sha256 = _require_manifest_sha256(
+        _query_value(query, "manifest_sha256")
+    )
+    document_ids = {
+        str(document["manifest_sha256"])
+        for document in list_project_documents(project)
+    }
+    if manifest_sha256 not in document_ids:
+        raise WebWorkbenchError("project document was not found")
+    activity = list_project_activity(
+        project,
+        manifest_sha256=manifest_sha256,
+        limit=ACTIVITY_LIMIT,
+    )
+    events = activity.get("events")
+    if not isinstance(events, list):
+        raise WebWorkbenchError("project activity response is invalid")
+    return {
+        **activity,
+        "limit": ACTIVITY_LIMIT,
+        "event_count": len(events),
+    }
 
 
 def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[str, object]:
@@ -622,6 +656,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                     )
                 elif parsed.path == "/api/search":
                     self._json(HTTPStatus.OK, _search_payload(project, query))
+                elif parsed.path == "/api/activity":
+                    self._json(HTTPStatus.OK, _activity_payload(project, query))
                 elif parsed.path == "/api/page":
                     self._json(
                         HTTPStatus.OK,
@@ -750,6 +786,13 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 .search-result:hover, .search-result:focus-visible { border-color: #0f766e; }
 .search-result small { font-weight: 400; }
 #search-status { color: #52616f; font-size: .85rem; min-height: 1.3rem; }
+.activity-list { display: grid; gap: 6px; list-style: none; margin: 8px 0 0; max-height: 260px;
+  overflow: auto; padding: 0; }
+.activity-event { background: white; border: 1px solid #d9e1ea; color: #18212f;
+  display: grid; gap: 3px; text-align: left; width: 100%; }
+.activity-event:hover, .activity-event:focus-visible { border-color: #0f766e; }
+.activity-event small { font-weight: 400; }
+#activity-status { color: #52616f; font-size: .85rem; min-height: 1.3rem; }
 small, #status, #dirty-indicator { color: #52616f; }
 #dirty-indicator:not(:empty) { color: #9a3412; font-weight: 600; }
 textarea { min-height: 120px; resize: vertical; width: 100%; box-sizing: border-box; }
@@ -801,6 +844,16 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
     </form>
     <p id="search-status" role="status" aria-live="polite">No search run.</p>
     <div class="search-results" id="search-results" aria-label="Project search results"></div>
+  </details>
+  <details id="activity-panel" open>
+    <summary>Recent changes</summary>
+    <p><small>This content-free audit view shows who changed which revision stream and when.
+      It does not include transcription values or local paths.</small></p>
+    <div class="actions">
+      <button id="refresh-activity" type="button">Refresh activity</button>
+      <span id="activity-status" role="status" aria-live="polite">No activity loaded.</span>
+    </div>
+    <ol class="activity-list" id="activity-list" aria-label="Recent project activity"></ol>
   </details>
   <p id="detail">Choose a document and page.</p>
   <div id="line-list" aria-label="Lines"></div>
@@ -871,7 +924,7 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
 <script>
 const state = {
   document: null, page: null, pages: [], lines: [], selected: null, selectedRegion: null,
-  regionOrder: [], drag: null, history: null, pageUrl: null
+  regionOrder: [], drag: null, history: null, pageUrl: null, activity: []
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
@@ -910,6 +963,9 @@ const searchField = document.getElementById("search-field");
 const searchButton = document.getElementById("search-button");
 const searchStatus = document.getElementById("search-status");
 const searchResults = document.getElementById("search-results");
+const refreshActivity = document.getElementById("refresh-activity");
+const activityStatus = document.getElementById("activity-status");
+const activityList = document.getElementById("activity-list");
 
 overlay.addEventListener("pointermove", moveGeometryDrag);
 overlay.addEventListener("pointerup", finishGeometryDrag);
@@ -1076,6 +1132,97 @@ async function runSearch() {
     renderSearchResults(await api("/api/search?" + parameters.toString()));
   } finally {
     searchButton.disabled = false;
+  }
+}
+function activityKindLabel(kind) {
+  return {
+    TRANSCRIPTION: "Transcription",
+    LINE_GEOMETRY: "Line geometry",
+    REGION_GEOMETRY: "Region geometry",
+    READING_ORDER: "Reading order"
+  }[kind] || kind;
+}
+function activityLocation(event) {
+  const page = "Page " + (Number(event.page_index) + 1);
+  if (event.line_id) return page + " · line " + event.line_id;
+  if (event.region_id) return page + " · region " + event.region_id;
+  return page;
+}
+async function jumpToActivityEvent(event) {
+  const targetPage = state.pages.find(page => page.page_index === event.page_index);
+  if (!targetPage) throw new Error("Activity event page is no longer available");
+  const samePage = state.pageUrl === targetPage.page_url;
+  const sameTarget = samePage && (
+    event.source_span_id ? state.selected === event.source_span_id
+      : event.region_id ? state.selectedRegion === event.region_id : true
+  );
+  if (!sameTarget && !await confirmDiscard([
+    "transcription", "line geometry", "region geometry", "reading order"
+  ])) return false;
+  if (!samePage) {
+    pageSelect.value = targetPage.page_url;
+    if (!await loadPage(true)) return false;
+  }
+  if (event.source_span_id) {
+    if (!state.lines.some(line => line.source_span_id === event.source_span_id)) {
+      throw new Error("Activity event line is no longer available");
+    }
+    if (!await selectLine(event.source_span_id, true)) return false;
+    focusLineButton(event.source_span_id);
+  } else if (event.region_id) {
+    if (!state.page.regions.some(region => region.region_id === event.region_id)) {
+      throw new Error("Activity event region is no longer available");
+    }
+    if (!await selectRegion(event.region_id, true)) return false;
+  }
+  setStatus("Opened " + activityKindLabel(event.kind).toLowerCase()
+    + " revision " + event.revision + " from recent activity.");
+  return true;
+}
+function renderActivity() {
+  activityList.replaceChildren();
+  if (!state.activity.length) {
+    const note = document.createElement("li");
+    note.textContent = "No human revision activity for this document yet.";
+    activityList.append(note);
+    return;
+  }
+  state.activity.forEach(event => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "activity-event";
+    const title = document.createElement("strong");
+    title.textContent = activityKindLabel(event.kind) + " · revision " + event.revision;
+    const context = document.createElement("small");
+    context.textContent = activityLocation(event) + " · " + event.editor
+      + " · " + event.created_at;
+    button.append(title, context);
+    button.addEventListener("click", () => jumpToActivityEvent(event)
+      .catch(error => setStatus(error.message)));
+    item.append(button);
+    activityList.append(item);
+  });
+}
+async function loadActivity() {
+  if (!state.document) {
+    state.activity = [];
+    renderActivity();
+    activityStatus.textContent = "No document selected.";
+    return;
+  }
+  refreshActivity.disabled = true;
+  activityStatus.textContent = "Loading recent activity…";
+  try {
+    const parameters = new URLSearchParams({manifest_sha256: state.document});
+    const report = await api("/api/activity?" + parameters.toString());
+    state.activity = report.events;
+    renderActivity();
+    activityStatus.textContent = report.event_count
+      ? report.event_count + (report.event_count === 1 ? " event." : " events.")
+      : "No revision activity yet.";
+  } finally {
+    refreshActivity.disabled = false;
   }
 }
 async function navigateLine(offset, focusList) {
@@ -1453,6 +1600,7 @@ async function loadDocument(discardConfirmed) {
   });
   renderPageThumbnails();
   if (response.pages.length) await loadPage(true);
+  await loadActivity();
   return true;
 }
 async function boot() {
@@ -1476,6 +1624,8 @@ searchForm.addEventListener("submit", event => {
     searchButton.disabled = false;
   });
 });
+refreshActivity.addEventListener("click", () =>
+  loadActivity().catch(error => { activityStatus.textContent = error.message; }));
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 regionSelect.addEventListener("change", () =>
   selectRegion(regionSelect.value).catch(error => setStatus(error.message)));
@@ -1544,6 +1694,7 @@ restoreRevision.addEventListener("click", async () => {
     if (selectedSourceSpanId) await selectLine(selectedSourceSpanId);
     if (selectedRegionId) await selectRegion(selectedRegionId);
     await loadHistory();
+    await loadActivity();
     setStatus(result.status === "UNCHANGED"
       ? "The selected historical value is already current."
       : "Restored revision " + result.target_revision
@@ -1569,6 +1720,7 @@ save.addEventListener("click", async () => {
     line.revision = result.revision;
     clearHistory();
     renderLines(); renderLineDetail(); updateDirtyIndicator();
+    await loadActivity();
     setStatus(result.status === "UNCHANGED"
       ? "No change to save."
       : "Saved human revision " + result.revision + ".");
@@ -1600,6 +1752,7 @@ saveLineGeometry.addEventListener("click", async () => {
     lineBaseline.value = JSON.stringify(revisedBaseline);
     clearHistory();
     renderLines(); renderLineDetail(); drawOverlay(); updateDirtyIndicator();
+    await loadActivity();
     setStatus(result.status === "UNCHANGED"
       ? "No line geometry change to save."
       : "Saved line geometry revision " + result.revision + ".");
@@ -1628,6 +1781,7 @@ saveRegion.addEventListener("click", async () => {
     polygon.value = JSON.stringify(revisedPolygon);
     clearHistory();
     renderRegions(); drawOverlay(); updateDirtyIndicator();
+    await loadActivity();
     setStatus(result.status === "UNCHANGED"
       ? "No region geometry change to save."
       : "Saved region geometry revision " + result.revision + ".");
@@ -1650,6 +1804,7 @@ saveOrder.addEventListener("click", async () => {
     state.page.reading_order.region_ids = [...state.regionOrder];
     state.page.reading_order.revision = result.revision;
     clearHistory(); updateDirtyIndicator();
+    await loadActivity();
     setStatus(result.status === "UNCHANGED"
       ? "No reading-order change to save."
       : "Saved reading-order revision " + result.revision + ".");

@@ -122,6 +122,12 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"async function jumpToSearchResult(result)" in root
         assert b'"transcription", "line geometry", "region geometry", "reading order"' in root
         assert b'api("/api/search?" + parameters.toString())' in root
+        assert b"Recent changes" in root
+        assert b'id="activity-status" role="status" aria-live="polite"' in root
+        assert b'id="activity-list" aria-label="Recent project activity"' in root
+        assert b"async function jumpToActivityEvent(event)" in root
+        assert b'api("/api/activity?" + parameters.toString())' in root
+        assert b"It does not include transcription values or local paths." in root
         assert b"line.text = text.value" in root
         assert b"state.page.reading_order.region_ids = [...state.regionOrder]" in root
         assert b'].join("\\n");' in root
@@ -230,6 +236,65 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert save_status == 200
         assert saved["status"] == "SAVED"
         assert saved["revision"] == 1
+
+        activity_status, activity_headers, activity_body = _request(
+            port,
+            "GET",
+            "/api/activity?" + urlencode(
+                {"manifest_sha256": imported["manifest_sha256"]}
+            ),
+        )
+        activity = json.loads(activity_body)
+        assert activity_status == 200
+        _assert_workbench_security_headers(activity_headers)
+        assert activity["manifest_sha256"] == imported["manifest_sha256"]
+        assert activity["network_required"] is False
+        assert activity["limit"] == 50
+        assert activity["event_count"] == 1
+        assert activity["filters"] == {
+            "kind": None,
+            "page_index": None,
+            "source_span_id": None,
+            "region_id": None,
+        }
+        assert activity["events"] == [
+            {
+                "kind": "TRANSCRIPTION",
+                "page_index": 0,
+                "source_span_id": page["lines"][0]["source_span_id"],
+                "line_id": "line-1",
+                "region_id": "region-1",
+                "revision": 1,
+                "editor": "reviewer-1",
+                "created_at": activity["events"][0]["created_at"],
+            }
+        ]
+        assert "Aleksander corrected" not in activity_body.decode("utf-8")
+        assert "prior_text" not in activity_body.decode("utf-8")
+        assert "revised_text" not in activity_body.decode("utf-8")
+        assert str(project) not in activity_body.decode("utf-8")
+
+        invalid_activity_status, _invalid_activity_headers, invalid_activity_body = _request(
+            port,
+            "GET",
+            "/api/activity?" + urlencode(
+                {"manifest_sha256": imported["manifest_sha256"], "limit": "500"}
+            ),
+        )
+        assert invalid_activity_status == 400
+        assert "requires only the manifest_sha256" in json.loads(
+            invalid_activity_body
+        )["message"]
+
+        missing_activity_status, _missing_activity_headers, missing_activity_body = _request(
+            port,
+            "GET",
+            "/api/activity?" + urlencode({"manifest_sha256": "0" * 64}),
+        )
+        assert missing_activity_status == 400
+        assert json.loads(missing_activity_body)["message"] == (
+            "project document was not found"
+        )
 
         refreshed_status, _refreshed_headers, refreshed_body = _request(port, "GET", page_url)
         refreshed = json.loads(refreshed_body)
