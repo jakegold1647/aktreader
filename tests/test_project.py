@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pypdfium2 as pdfium
+import pytest
 from PIL import Image
 
 import aktreader.kraken as kraken_module
@@ -39,6 +40,7 @@ from aktreader.project import (
     list_project_documents,
     list_project_pages,
     load_project_page,
+    load_project_page_layout,
     recognize_project_with_kraken,
     resolve_review_proposal,
     revise_line_geometry,
@@ -49,6 +51,9 @@ from aktreader.project import (
     search_project_transcriptions,
     segment_project_with_kraken,
     training_readiness,
+    undo_line_geometry,
+    undo_page_reading_order,
+    undo_region_geometry,
     update_project_document,
 )
 
@@ -2639,3 +2644,269 @@ def test_project_layout_cli_rejects_stale_revision_preconditions(
     assert summary["line_geometry_revision_count"] == 1
     assert summary["region_geometry_revision_count"] == 1
     assert summary["page_reading_order_revision_count"] == 1
+
+
+def test_project_undoes_layout_revisions_by_appending_restorations(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    source_bytes = source.read_bytes()
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    manifest_sha256 = imported["manifest_sha256"]
+    line = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"][0]
+    source_span_id = line["source_span_id"]
+
+    unavailable = [
+        undo_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            expected_revision=0,
+        ),
+        undo_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            expected_revision=0,
+        ),
+        undo_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            expected_revision=0,
+        ),
+    ]
+    assert [item["status"] for item in unavailable] == [
+        "UNDO_UNAVAILABLE",
+        "UNDO_UNAVAILABLE",
+        "UNDO_UNAVAILABLE",
+    ]
+
+    revise_line_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        polygon=[[1, 1], [39, 1], [39, 11], [1, 11]],
+        baseline=[[2, 9], [38, 9]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+    revise_page_reading_order(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+
+    undone = [
+        undo_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            editor="layout-reviewer",
+            expected_revision=1,
+        ),
+        undo_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            editor="layout-reviewer",
+            expected_revision=1,
+        ),
+        undo_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            editor="layout-reviewer",
+            expected_revision=1,
+        ),
+    ]
+
+    assert [item["status"] for item in undone] == ["UNDONE", "UNDONE", "UNDONE"]
+    assert [item["revision"] for item in undone] == [2, 2, 2]
+    assert [item["undone_revision"] for item in undone] == [1, 1, 1]
+    assert all(item["network_required"] is False for item in undone)
+    layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )
+    restored_line = next(
+        item for item in layout["lines"] if item["source_span_id"] == source_span_id
+    )
+    restored_region = next(
+        item for item in layout["regions"] if item["region_id"] == "region-2"
+    )
+    assert restored_line["polygon"] == [[2, 2], [38, 2], [38, 10], [2, 10]]
+    assert restored_line["baseline"] is None
+    assert restored_line["revision"] == 2
+    assert restored_region["polygon"] == [[0, 15], [40, 15], [40, 30], [0, 30]]
+    assert restored_region["revision"] == 2
+    assert layout["reading_order"] == {
+        "revision": 2,
+        "region_ids": ["region-1", "region-2"],
+    }
+    assert source.read_bytes() == source_bytes
+    summary = inspect_project(project)
+    assert summary["line_geometry_revision_count"] == 2
+    assert summary["region_geometry_revision_count"] == 2
+    assert summary["page_reading_order_revision_count"] == 2
+
+    with pytest.raises(ProjectStoreError, match="line geometry revision conflict"):
+        undo_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            expected_revision=1,
+        )
+    with pytest.raises(ProjectStoreError, match="region geometry revision conflict"):
+        undo_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            expected_revision=1,
+        )
+    with pytest.raises(ProjectStoreError, match="reading-order revision conflict"):
+        undo_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            expected_revision=1,
+        )
+
+
+def test_project_layout_undo_cli_restores_all_three_revision_streams(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    manifest_sha256 = imported["manifest_sha256"]
+    line = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"][0]
+    source_span_id = line["source_span_id"]
+
+    revise_line_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        polygon=[[1, 1], [39, 1], [39, 11], [1, 11]],
+        baseline=[[2, 9], [38, 9]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+    revise_page_reading_order(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+
+    commands = [
+        [
+            "project-undo-line-geometry",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--source-span-id",
+            source_span_id,
+            "--editor",
+            "layout-reviewer",
+            "--expected-revision",
+            "1",
+        ],
+        [
+            "project-undo-region-geometry",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--page-index",
+            "0",
+            "--region-id",
+            "region-2",
+            "--editor",
+            "layout-reviewer",
+            "--expected-revision",
+            "1",
+        ],
+        [
+            "project-undo-page-reading-order",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--page-index",
+            "0",
+            "--editor",
+            "layout-reviewer",
+            "--expected-revision",
+            "1",
+        ],
+    ]
+
+    reports = []
+    for command in commands:
+        assert main(command) == 0
+        reports.append(json.loads(capsys.readouterr().out))
+
+    assert [report["status"] for report in reports] == ["UNDONE", "UNDONE", "UNDONE"]
+    assert [report["revision"] for report in reports] == [2, 2, 2]
+    assert [report["undone_revision"] for report in reports] == [1, 1, 1]
+    assert all(report["network_required"] is False for report in reports)
+    layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )
+    assert layout["reading_order"]["region_ids"] == ["region-1", "region-2"]
+    assert next(
+        item["revision"] for item in layout["regions"] if item["region_id"] == "region-2"
+    ) == 2
+    assert next(
+        item["revision"]
+        for item in layout["lines"]
+        if item["source_span_id"] == source_span_id
+    ) == 2

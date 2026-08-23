@@ -30,6 +30,21 @@ polygon, editor claim, and timestamp. Repeating the latest polygon reports UNCHA
 region's current geometry `revision` with `project-show-page-layout` and pass it as
 `--expected-revision`; a stale value is rejected before anything is appended.
 
+Reverse the latest saved polygon with the currently displayed revision:
+
+~~~powershell
+python -m aktreader project-undo-region-geometry serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --page-index 0 `
+  --region-id region-2 `
+  --editor layout-reviewer `
+  --expected-revision 1
+~~~
+
+Undo appends the preceding polygon as a new revision. It reports `UNDO_UNAVAILABLE` at revision
+zero, rejects stale revisions, and never deletes the revision it reverses. Undoing that new undo
+revision restores the polygon it replaced.
+
 When project-export-pagexml writes a derivative, it applies only the latest region polygon for each
 affected TextRegion. The source PAGE XML, import manifest, image, and all earlier revisions remain
 unchanged. Reading order, line polygons and baselines, and transcription text are separate revision

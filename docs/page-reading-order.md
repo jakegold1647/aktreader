@@ -30,6 +30,20 @@ instead of adding another revision. Read the page reading order's current `revis
 `project-show-page-layout` and pass it as `--expected-revision`; a stale value is rejected before
 anything is appended.
 
+Reverse the latest saved order with the currently displayed revision:
+
+~~~powershell
+python -m aktreader project-undo-page-reading-order serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --page-index 0 `
+  --editor layout-reviewer `
+  --expected-revision 1
+~~~
+
+Undo appends the preceding complete region sequence as a new revision. It reports
+`UNDO_UNAVAILABLE` at revision zero, rejects stale revisions, and never deletes the revision it
+reverses. Undoing that new undo revision restores the order it replaced.
+
 project-export-pagexml applies only the latest saved order for each affected page to a new
 derivative PAGE XML file. It replaces that page's direct ReadingOrder element with an OrderedGroup
 of indexed RegionRefIndexed entries. Export never changes the immutable source PAGE XML, its import
