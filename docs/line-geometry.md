@@ -15,10 +15,12 @@ Create a strict local JSON object in source-image pixels:
 Both polygon and baseline points must be integer pixels inside the imported source image. A
 baseline may be `null` to explicitly remove it; the polygon needs at least two distinct points.
 
-    aktreader project-revise-line-geometry E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --source-span-id <pagexml-source-span-id> --geometry E:\changes\line-geometry.json --editor layout-reviewer
+    aktreader project-revise-line-geometry E:\projects\serock.aktproj --manifest-sha256 <project-import-manifest-sha256> --source-span-id <pagexml-source-span-id> --geometry E:\changes\line-geometry.json --editor layout-reviewer --expected-revision 0
 
 The command appends an audit record with the prior and proposed geometry. It does not move text,
-change HTR suggestions, alter the project source object, or grant training consent.
+change HTR suggestions, alter the project source object, or grant training consent. Read the
+line's current geometry `revision` with `project-show-page-layout` and pass it as
+`--expected-revision`; the command rejects a stale value instead of overwriting newer work.
 
 Export the revised layout as a new PAGE XML derivative:
 

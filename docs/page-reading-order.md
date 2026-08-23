@@ -19,13 +19,16 @@ python -m aktreader project-revise-page-reading-order serock.aktproj `
   --manifest-sha256 <project-import-manifest-sha256> `
   --page-index 0 `
   --region-order reading-order.json `
-  --editor layout-reviewer
+  --editor layout-reviewer `
+  --expected-revision 0
 ~~~
 
 The command validates that the list is an exact permutation of the region IDs captured in the
 content-addressed import manifest. It records the previous and new sequences, an editor claim, and
 a timestamp in the local project database. Repeating the current sequence reports UNCHANGED
-instead of adding another revision.
+instead of adding another revision. Read the page reading order's current `revision` with
+`project-show-page-layout` and pass it as `--expected-revision`; a stale value is rejected before
+anything is appended.
 
 project-export-pagexml applies only the latest saved order for each affected page to a new
 derivative PAGE XML file. It replaces that page's direct ReadingOrder element with an OrderedGroup
