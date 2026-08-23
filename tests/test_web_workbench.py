@@ -116,6 +116,12 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b'lineList.addEventListener("keydown"' in root
         assert b'reviewPanel.addEventListener("keydown"' in root
         assert b"save.click();" in root
+        assert b'id="search-query"' in root
+        assert b'id="search-field"' in root
+        assert b'id="search-status" role="status" aria-live="polite"' in root
+        assert b"async function jumpToSearchResult(result)" in root
+        assert b'"transcription", "line geometry", "region geometry", "reading order"' in root
+        assert b'api("/api/search?" + parameters.toString())' in root
         assert b"line.text = text.value" in root
         assert b"state.page.reading_order.region_ids = [...state.regionOrder]" in root
         assert b'].join("\\n");' in root
@@ -127,6 +133,40 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert project_report["name"] == "Serock births"
         document = project_report["documents"][0]
         assert document["manifest_sha256"] == imported["manifest_sha256"]
+
+        search_status, search_headers, search_body = _request(
+            port,
+            "GET",
+            "/api/search?" + urlencode({"q": "alex", "field": "text"}),
+        )
+        search_report = json.loads(search_body)
+        assert search_status == 200
+        _assert_workbench_security_headers(search_headers)
+        assert search_report["network_required"] is False
+        assert search_report["limit"] == 50
+        assert search_report["result_count"] == 1
+        assert search_report["truncated"] is False
+        assert search_report["results"][0]["manifest_sha256"] == imported["manifest_sha256"]
+        assert search_report["results"][0]["page_index"] == 0
+        assert search_report["results"][0]["line_id"] == "line-1"
+        assert search_report["results"][0]["text"] == "Alexander record"
+        assert "image_path" not in search_report["results"][0]
+
+        title_status, _title_headers, title_body = _request(
+            port,
+            "GET",
+            "/api/search?" + urlencode({"q": document["title"], "field": "title"}),
+        )
+        assert title_status == 200
+        assert json.loads(title_body)["result_count"] == 1
+
+        invalid_search_status, _invalid_search_headers, invalid_search_body = _request(
+            port,
+            "GET",
+            "/api/search?" + urlencode({"q": "alex", "field": "text", "limit": "500"}),
+        )
+        assert invalid_search_status == 400
+        assert "requires only q and field" in json.loads(invalid_search_body)["message"]
 
         pages_status, _pages_headers, pages_body = _request(
             port,

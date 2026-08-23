@@ -26,6 +26,8 @@ Stop it with Ctrl+C.
   context for each line;
 - previous/next line controls, a live line-position readout, and keyboard
   navigation for sustained line-by-line review;
+- bounded local search across effective transcription text, document titles,
+  and document tags, with direct jumps to the matching line;
 - an editor that appends the same human transcription revisions as the
   desktop workbench;
 - direct on-canvas line-polygon and baseline-point dragging, with source-pixel
@@ -60,6 +62,20 @@ the same audited revision path as the visible save button.
 Changing lines still checks unsaved transcription and line-geometry drafts. If
 either stream is dirty, the workbench asks before discarding it; cancelling keeps
 the current line and draft selected.
+
+## Find a line
+
+Open **Find a line**, choose transcription text, document title, or document tag,
+and enter a nonblank query. Search is case-insensitive, runs against the existing
+local project index, and returns at most 50 lines. No query or result leaves the
+loopback server. Results contain effective transcription text, so screenshots of
+the panel need the same privacy care as the editor itself.
+
+Each result names its document, page, line, and current text revision. Activating
+one loads that exact line and moves keyboard focus to it. A jump to another line,
+page, or document uses the normal unsaved-work confirmation across transcription,
+line geometry, region geometry, and reading order. Cancelling leaves the current
+selection and every draft in place.
 
 ## Security boundary
 
