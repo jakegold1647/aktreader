@@ -210,23 +210,56 @@ def _activity_payload(
     project: Path,
     query: dict[str, list[str]],
 ) -> dict[str, object]:
-    if set(query) != {"manifest_sha256"}:
+    allowed = {
+        "manifest_sha256",
+        "kind",
+        "page_index",
+        "source_span_id",
+        "region_id",
+    }
+    if "manifest_sha256" not in query or set(query) - allowed:
         raise WebWorkbenchError(
-            "activity requires only the manifest_sha256 query parameter"
+            "activity supports manifest_sha256 plus optional kind, page_index, "
+            "source_span_id, or region_id filters"
         )
-    manifest_sha256 = _require_manifest_sha256(
-        _query_value(query, "manifest_sha256")
-    )
+    manifest_sha256 = _require_manifest_sha256(_query_value(query, "manifest_sha256"))
     document_ids = {
-        str(document["manifest_sha256"])
-        for document in list_project_documents(project)
+        str(document["manifest_sha256"]) for document in list_project_documents(project)
     }
     if manifest_sha256 not in document_ids:
         raise WebWorkbenchError("project document was not found")
+    kind = _require_revision_kind(_query_value(query, "kind")) if "kind" in query else None
+    page_index = (
+        _require_page_index(_query_value(query, "page_index")) if "page_index" in query else None
+    )
+    source_span_id = _query_value(query, "source_span_id") if "source_span_id" in query else None
+    region_id = _query_value(query, "region_id") if "region_id" in query else None
+    if source_span_id is not None and region_id is not None:
+        raise WebWorkbenchError("activity scope may select a line or a region, but not both")
+    if (source_span_id is not None or region_id is not None) and page_index is None:
+        raise WebWorkbenchError("line and region activity scopes require page_index")
+    if page_index is not None:
+        layout = load_project_page_layout(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=page_index,
+        )
+        if source_span_id is not None and source_span_id not in {
+            str(line["source_span_id"]) for line in layout["lines"]
+        }:
+            raise WebWorkbenchError("activity scope line was not found on the selected page")
+        if region_id is not None and region_id not in {
+            str(region["region_id"]) for region in layout["regions"]
+        }:
+            raise WebWorkbenchError("activity scope region was not found on the selected page")
     activity = list_project_activity(
         project,
         manifest_sha256=manifest_sha256,
         limit=ACTIVITY_LIMIT,
+        kind=kind,
+        page_index=page_index,
+        source_span_id=source_span_id,
+        region_id=region_id,
     )
     events = activity.get("events")
     if not isinstance(events, list):
@@ -786,6 +819,7 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 .search-result:hover, .search-result:focus-visible { border-color: #0f766e; }
 .search-result small { font-weight: 400; }
 #search-status { color: #52616f; font-size: .85rem; min-height: 1.3rem; }
+.activity-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .activity-list { display: grid; gap: 6px; list-style: none; margin: 8px 0 0; max-height: 260px;
   overflow: auto; padding: 0; }
 .activity-event { background: white; border: 1px solid #d9e1ea; color: #18212f;
@@ -808,7 +842,7 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
   padding: 8px; white-space: pre-wrap; }
 @media (max-width: 850px) {
   main { grid-template-columns: 1fr; }
-  .search-controls { grid-template-columns: 1fr; }
+  .search-controls, .activity-controls { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -849,6 +883,21 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
     <summary>Recent changes</summary>
     <p><small>This content-free audit view shows who changed which revision stream and when.
       It does not include transcription values or local paths.</small></p>
+    <div class="activity-controls">
+      <label>Stream <select id="activity-kind">
+        <option value="">All revision streams</option>
+        <option value="TRANSCRIPTION">Transcription</option>
+        <option value="LINE_GEOMETRY">Line geometry</option>
+        <option value="REGION_GEOMETRY">Region geometry</option>
+        <option value="READING_ORDER">Reading order</option>
+      </select></label>
+      <label>Scope <select id="activity-scope">
+        <option value="document">Whole document</option>
+        <option value="page">Current page</option>
+        <option value="line">Selected line</option>
+        <option value="region">Selected region</option>
+      </select></label>
+    </div>
     <div class="actions">
       <button id="refresh-activity" type="button">Refresh activity</button>
       <span id="activity-status" role="status" aria-live="polite">No activity loaded.</span>
@@ -924,7 +973,7 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
 <script>
 const state = {
   document: null, page: null, pages: [], lines: [], selected: null, selectedRegion: null,
-  regionOrder: [], drag: null, history: null, pageUrl: null, activity: []
+  regionOrder: [], drag: null, history: null, pageUrl: null, activity: [], activityRequest: 0
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
@@ -963,6 +1012,8 @@ const searchField = document.getElementById("search-field");
 const searchButton = document.getElementById("search-button");
 const searchStatus = document.getElementById("search-status");
 const searchResults = document.getElementById("search-results");
+const activityKind = document.getElementById("activity-kind");
+const activityScope = document.getElementById("activity-scope");
 const refreshActivity = document.getElementById("refresh-activity");
 const activityStatus = document.getElementById("activity-status");
 const activityList = document.getElementById("activity-list");
@@ -1204,7 +1255,37 @@ function renderActivity() {
     activityList.append(item);
   });
 }
+function activityParameters() {
+  const parameters = new URLSearchParams({manifest_sha256: state.document});
+  if (activityKind.value) parameters.set("kind", activityKind.value);
+  if (!["document", "page", "line", "region"].includes(activityScope.value)) {
+    throw new Error("Choose a supported activity scope.");
+  }
+  if (activityScope.value === "document") return parameters;
+  if (!state.page) throw new Error("The current activity scope has no selected page.");
+  parameters.set("page_index", String(state.page.page_index));
+  if (activityScope.value === "line") {
+    const line = selectedLine();
+    if (!line) throw new Error("The current page has no selected line to filter.");
+    parameters.set("source_span_id", line.source_span_id);
+  } else if (activityScope.value === "region") {
+    const region = selectedRegion();
+    if (!region) throw new Error("The current page has no selected region to filter.");
+    parameters.set("region_id", region.region_id);
+  }
+  return parameters;
+}
+function activityFilterLabel() {
+  const scope = {
+    document: "whole document", page: "current page",
+    line: "selected line", region: "selected region"
+  }[activityScope.value];
+  const stream = activityKind.value
+    ? activityKindLabel(activityKind.value).toLowerCase() : "all streams";
+  return scope + " · " + stream;
+}
 async function loadActivity() {
+  const requestId = ++state.activityRequest;
   if (!state.document) {
     state.activity = [];
     renderActivity();
@@ -1214,15 +1295,29 @@ async function loadActivity() {
   refreshActivity.disabled = true;
   activityStatus.textContent = "Loading recent activity…";
   try {
-    const parameters = new URLSearchParams({manifest_sha256: state.document});
+    let parameters;
+    try {
+      parameters = activityParameters();
+    } catch (error) {
+      if (requestId !== state.activityRequest) return;
+      state.activity = [];
+      renderActivity();
+      activityStatus.textContent = error.message;
+      return;
+    }
     const report = await api("/api/activity?" + parameters.toString());
+    if (requestId !== state.activityRequest) return;
     state.activity = report.events;
     renderActivity();
-    activityStatus.textContent = report.event_count
-      ? report.event_count + (report.event_count === 1 ? " event." : " events.")
-      : "No revision activity yet.";
+    const count = report.event_count
+      ? report.event_count + (report.event_count === 1 ? " event" : " events")
+      : "No events";
+    activityStatus.textContent = count + " · " + activityFilterLabel() + ".";
+  } catch (error) {
+    if (requestId === state.activityRequest) activityStatus.textContent = error.message;
+    throw error;
   } finally {
-    refreshActivity.disabled = false;
+    if (requestId === state.activityRequest) refreshActivity.disabled = false;
   }
 }
 async function navigateLine(offset, focusList) {
@@ -1249,6 +1344,7 @@ async function selectLine(sourceSpanId, discardConfirmed) {
   lineBaseline.value = line ? JSON.stringify(line.baseline) : "";
   renderLines(); drawOverlay();
   renderLineDetail(); updateDirtyIndicator();
+  if (activityScope.value === "line") await loadActivity();
   return true;
 }
 function renderPageThumbnails() {
@@ -1392,6 +1488,7 @@ async function selectRegion(regionId, discardConfirmed) {
   polygon.value = region ? JSON.stringify(region.polygon) : "";
   regionSelect.value = regionId || "";
   drawOverlay(); updateDirtyIndicator();
+  if (activityScope.value === "region") await loadActivity();
   return true;
 }
 
@@ -1578,6 +1675,7 @@ async function loadPage(discardConfirmed) {
   await selectLine(firstLine, true);
   await selectRegion(firstRegion, true);
   updateDirtyIndicator();
+  if (activityScope.value === "page") await loadActivity();
   return true;
 }
 async function loadDocument(discardConfirmed) {
@@ -1625,6 +1723,10 @@ searchForm.addEventListener("submit", event => {
   });
 });
 refreshActivity.addEventListener("click", () =>
+  loadActivity().catch(error => { activityStatus.textContent = error.message; }));
+activityKind.addEventListener("change", () =>
+  loadActivity().catch(error => { activityStatus.textContent = error.message; }));
+activityScope.addEventListener("change", () =>
   loadActivity().catch(error => { activityStatus.textContent = error.message; }));
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 regionSelect.addEventListener("change", () =>

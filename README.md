@@ -340,8 +340,9 @@ scan or entered as source-pixel coordinates. A bounded, contentful history view 
 those four streams and restore an explicitly selected older value by appending a new audited
 revision. The workbench can also search effective transcription text, document titles, and tags
 locally, then jump directly to a matching line. A content-free recent-changes panel shows the
-newest 50 human revisions for the selected document and can jump to the affected page, line, or
-region without exposing revision values or local paths. Unsaved work is identified per stream: line,
+newest 50 human revisions for the selected document, filters them by revision stream or the current
+page, line, or region, and can jump to the affected location without exposing revision values or
+local paths. Unsaved work is identified per stream: line,
 region, page, and document changes require
 confirmation before discarding an affected draft, while saving one stream preserves drafts in the
 others. Reloading or closing a dirty tab also triggers the browser's unsaved-work warning. Every
