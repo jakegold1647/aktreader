@@ -106,6 +106,16 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"Keep editing" in root
         assert b"Discard changes" in root
         assert b"jsonDraftDirty" in root
+        assert b'id="previous-line"' in root
+        assert b'id="next-line"' in root
+        assert b'id="line-position" role="status" aria-live="polite"' in root
+        assert b'aria-keyshortcuts="Alt+ArrowUp"' in root
+        assert b'aria-keyshortcuts="Alt+ArrowDown"' in root
+        assert b'aria-keyshortcuts="Control+Enter Meta+Enter"' in root
+        assert b"async function navigateLine(offset, focusList)" in root
+        assert b'lineList.addEventListener("keydown"' in root
+        assert b'reviewPanel.addEventListener("keydown"' in root
+        assert b"save.click();" in root
         assert b"line.text = text.value" in root
         assert b"state.page.reading_order.region_ids = [...state.regionOrder]" in root
         assert b'].join("\\n");' in root
