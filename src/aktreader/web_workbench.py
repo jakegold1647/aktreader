@@ -23,6 +23,7 @@ from aktreader.project import (
     list_project_pages,
     load_project_page,
     load_project_page_layout,
+    revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
@@ -170,6 +171,20 @@ def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[
         manifest_sha256=manifest_sha256,
         page_index=page_index,
     )
+    geometry_by_span = {line["source_span_id"]: line for line in layout["lines"]}
+    if set(geometry_by_span) != {line["source_span_id"] for line in page["lines"]}:
+        raise WebWorkbenchError("project page line geometry does not match its lines")
+    lines = []
+    for line in page["lines"]:
+        geometry = geometry_by_span[line["source_span_id"]]
+        lines.append(
+            {
+                **line,
+                "polygon": geometry["polygon"],
+                "baseline": geometry["baseline"],
+                "geometry_revision": geometry["revision"],
+            }
+        )
     safe_fields = {
         "manifest_sha256": manifest_sha256,
         "page_index": page_index,
@@ -177,7 +192,7 @@ def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[
         "image_sha256": page["image_sha256"],
         "width_px": page["width_px"],
         "height_px": page["height_px"],
-        "lines": page["lines"],
+        "lines": lines,
         "regions": layout["regions"],
         "reading_order": layout["reading_order"],
         "image_url": f"/api/image?{_page_query(manifest_sha256, page_index)}",
@@ -266,6 +281,30 @@ def _revision_payload(project: Path, payload: object) -> dict[str, object]:
         expected_revision=_require_expected_revision(payload["expected_revision"]),
     )
 
+
+
+def _line_geometry_payload(project: Path, payload: object) -> dict[str, object]:
+    if not isinstance(payload, dict):
+        raise WebWorkbenchError("line geometry request must be a JSON object")
+    expected = {
+        "manifest_sha256",
+        "source_span_id",
+        "polygon",
+        "baseline",
+        "editor",
+        "expected_revision",
+    }
+    if set(payload) != expected:
+        raise WebWorkbenchError("line geometry request has invalid keys")
+    return revise_line_geometry(
+        project,
+        manifest_sha256=_require_manifest_sha256(payload["manifest_sha256"]),
+        source_span_id=payload["source_span_id"],
+        polygon=payload["polygon"],
+        baseline=payload["baseline"],
+        editor=payload["editor"],
+        expected_revision=_require_expected_revision(payload["expected_revision"]),
+    )
 
 
 def _region_geometry_payload(project: Path, payload: object) -> dict[str, object]:
@@ -417,6 +456,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                 payload = self._request_json()
                 if parsed.path == "/api/transcriptions":
                     response = _revision_payload(project, payload)
+                elif parsed.path == "/api/line-geometry":
+                    response = _line_geometry_payload(project, payload)
                 elif parsed.path == "/api/region-geometry":
                     response = _region_geometry_payload(project, payload)
                 elif parsed.path == "/api/reading-order":
@@ -479,6 +520,12 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
   touch-action: none; }
 .line-box { fill: rgba(245, 158, 11, .12); stroke: #d97706; stroke-width: 2; cursor: pointer; }
 .line-box.selected { fill: rgba(22, 163, 74, .16); stroke: #15803d; stroke-width: 3; }
+.line-baseline { fill: none; stroke: #7c3aed; stroke-width: 2; pointer-events: none; }
+.line-baseline.selected { stroke-width: 3; }
+.line-handle, .baseline-handle { fill: #fff; stroke-width: 2; cursor: move;
+  touch-action: none; }
+.line-handle { stroke: #15803d; }
+.baseline-handle { stroke: #7c3aed; }
 #line-list { display: grid; gap: 6px; max-height: 300px; overflow: auto; margin-bottom: 12px; }
 .line { text-align: left; border: 1px solid #d9e1ea; border-radius: 5px;
   padding: 8px; background: white; color: #18212f; }
@@ -504,7 +551,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   </div>
   <div id="page-thumbnails" aria-label="Page thumbnails"></div>
   <div class="scan"><img id="image" alt="Selected source page">
-    <svg id="overlay" aria-label="PAGE XML line bounds"></svg></div>
+    <svg id="overlay" aria-label="Effective PAGE XML layout geometry"></svg></div>
 </section>
 <aside class="panel">
   <label>Editor <input id="editor" value="local-user" autocomplete="off"></label>
@@ -515,6 +562,14 @@ button:disabled { cursor: not-allowed; opacity: .55; }
     <span id="status"></span></div>
   <details open>
     <summary>PAGE layout</summary>
+    <p><strong>Selected line geometry</strong></p>
+    <label>Line polygon (source pixels)
+      <textarea id="line-polygon" disabled></textarea>
+    </label>
+    <label>Line baseline (source pixels or null)
+      <textarea id="line-baseline" disabled></textarea>
+    </label>
+    <div class="actions"><button id="save-line-geometry" disabled>Save line geometry</button></div>
     <label>Region <select id="region"></select></label>
     <label>Polygon (source pixels)
       <textarea id="polygon" disabled></textarea>
@@ -542,15 +597,18 @@ const editor = document.getElementById("editor");
 const save = document.getElementById("save");
 const detail = document.getElementById("detail");
 const status = document.getElementById("status");
+const linePolygon = document.getElementById("line-polygon");
+const lineBaseline = document.getElementById("line-baseline");
+const saveLineGeometry = document.getElementById("save-line-geometry");
 const regionSelect = document.getElementById("region");
 const polygon = document.getElementById("polygon");
 const saveRegion = document.getElementById("save-region");
 const readingOrder = document.getElementById("reading-order");
 const saveOrder = document.getElementById("save-order");
 
-overlay.addEventListener("pointermove", movePolygonDrag);
-overlay.addEventListener("pointerup", finishPolygonDrag);
-overlay.addEventListener("pointercancel", finishPolygonDrag);
+overlay.addEventListener("pointermove", moveGeometryDrag);
+overlay.addEventListener("pointerup", finishGeometryDrag);
+overlay.addEventListener("pointercancel", finishGeometryDrag);
 
 async function api(path, options) {
   const response = await fetch(path, options);
@@ -571,17 +629,21 @@ function selectLine(sourceSpanId) {
   state.selected = sourceSpanId;
   const line = selectedLine();
   text.disabled = !line; save.disabled = !line;
+  linePolygon.disabled = !line; lineBaseline.disabled = !line; saveLineGeometry.disabled = !line;
   text.value = line && line.text !== null ? line.text : "";
+  linePolygon.value = line ? JSON.stringify(line.polygon) : "";
+  lineBaseline.value = line ? JSON.stringify(line.baseline) : "";
   renderLines(); drawOverlay();
   if (line) {
     const suggestion = line.suggestions && line.suggestions[0];
     const review = line.review_proposals
       && line.review_proposals.find(item => item.state === "PENDING");
     detail.textContent = [
-      "Line: " + line.line_id + " · revision " + line.revision,
+      "Line: " + line.line_id + " · text revision " + line.revision
+        + " · geometry revision " + line.geometry_revision,
       suggestion ? "Suggestion: " + (suggestion.text || "no text") : "No engine suggestion",
       review ? "Reviewer proposal: " + review.text : "No pending reviewer proposal"
-    ].join("\n");
+    ].join("\\n");
   }
 }
 function renderPageThumbnails() {
@@ -609,7 +671,8 @@ function renderLines() {
   state.lines.forEach(line => {
     const button = document.createElement("button");
     button.className = "line" + (line.source_span_id === state.selected ? " selected" : "");
-    button.textContent = line.line_id + " · r" + line.revision + " · " + (line.text || "∅");
+    button.textContent = line.line_id + " · text r" + line.revision
+      + " · geometry r" + line.geometry_revision + " · " + (line.text || "∅");
     button.addEventListener("click", () => selectLine(line.source_span_id));
     lineList.append(button);
   });
@@ -628,26 +691,58 @@ function drawOverlay() {
     overlay.append(shape);
   });
   state.lines.forEach(line => {
-    const box = line.bbox;
-    const rectangle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rectangle.setAttribute("x", box.x); rectangle.setAttribute("y", box.y);
-    rectangle.setAttribute("width", box.width); rectangle.setAttribute("height", box.height);
-    rectangle.setAttribute(
+    const shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    shape.setAttribute("points", line.polygon.map(point => point.join(",")).join(" "));
+    shape.setAttribute(
       "class", "line-box" + (line.source_span_id === state.selected ? " selected" : "")
     );
-    rectangle.addEventListener("click", () => selectLine(line.source_span_id));
-    overlay.append(rectangle);
+    shape.addEventListener("click", () => selectLine(line.source_span_id));
+    overlay.append(shape);
+    if (line.baseline) {
+      const baseline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      baseline.setAttribute("points", line.baseline.map(point => point.join(",")).join(" "));
+      baseline.setAttribute(
+        "class",
+        "line-baseline" + (line.source_span_id === state.selected ? " selected" : "")
+      );
+      overlay.append(baseline);
+    }
   });
   const activeRegion = selectedRegion();
-  if (!activeRegion) return;
-  activeRegion.polygon.forEach((point, pointIndex) => {
+  if (activeRegion) {
+    activeRegion.polygon.forEach((point, pointIndex) => {
+      const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
+      handle.setAttribute("r", "5"); handle.setAttribute("class", "region-handle");
+      handle.setAttribute("aria-label", "Drag region vertex " + (pointIndex + 1));
+      handle.addEventListener(
+        "pointerdown",
+        event => beginGeometryDrag("region", activeRegion.region_id, pointIndex, event)
+      );
+      overlay.append(handle);
+    });
+  }
+  const activeLine = selectedLine();
+  if (!activeLine) return;
+  activeLine.polygon.forEach((point, pointIndex) => {
     const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
-    handle.setAttribute("r", "5"); handle.setAttribute("class", "region-handle");
-    handle.setAttribute("aria-label", "Drag region vertex " + (pointIndex + 1));
+    handle.setAttribute("r", "5"); handle.setAttribute("class", "line-handle");
+    handle.setAttribute("aria-label", "Drag line polygon vertex " + (pointIndex + 1));
     handle.addEventListener(
       "pointerdown",
-      event => beginPolygonDrag(activeRegion.region_id, pointIndex, event)
+      event => beginGeometryDrag("line-polygon", activeLine.source_span_id, pointIndex, event)
+    );
+    overlay.append(handle);
+  });
+  (activeLine.baseline || []).forEach((point, pointIndex) => {
+    const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
+    handle.setAttribute("r", "5"); handle.setAttribute("class", "baseline-handle");
+    handle.setAttribute("aria-label", "Drag line baseline point " + (pointIndex + 1));
+    handle.addEventListener(
+      "pointerdown",
+      event => beginGeometryDrag("line-baseline", activeLine.source_span_id, pointIndex, event)
     );
     overlay.append(handle);
   });
@@ -674,24 +769,36 @@ function sourcePoint(event) {
   ];
 }
 
-function beginPolygonDrag(regionId, pointIndex, event) {
+function beginGeometryDrag(kind, identity, pointIndex, event) {
   event.preventDefault(); event.stopPropagation();
-  selectRegion(regionId);
-  state.drag = { regionId: regionId, pointIndex: pointIndex };
+  if (kind === "region") selectRegion(identity);
+  else selectLine(identity);
+  state.drag = { kind: kind, identity: identity, pointIndex: pointIndex };
   overlay.setPointerCapture(event.pointerId);
 }
 
-function movePolygonDrag(event) {
+function moveGeometryDrag(event) {
   if (!state.drag || !state.page) return;
   const point = sourcePoint(event);
-  const region = state.page.regions.find(item => item.region_id === state.drag.regionId);
-  if (!point || !region) return;
-  region.polygon[state.drag.pointIndex] = point;
-  polygon.value = JSON.stringify(region.polygon);
+  if (!point) return;
+  if (state.drag.kind === "region") {
+    const region = state.page.regions.find(item => item.region_id === state.drag.identity);
+    if (!region) return;
+    region.polygon[state.drag.pointIndex] = point;
+    polygon.value = JSON.stringify(region.polygon);
+  } else {
+    const line = state.lines.find(item => item.source_span_id === state.drag.identity);
+    if (!line) return;
+    const points = state.drag.kind === "line-polygon" ? line.polygon : line.baseline;
+    if (!points) return;
+    points[state.drag.pointIndex] = point;
+    if (state.drag.kind === "line-polygon") linePolygon.value = JSON.stringify(points);
+    else lineBaseline.value = JSON.stringify(points);
+  }
   drawOverlay();
 }
 
-function finishPolygonDrag(event) {
+function finishGeometryDrag(event) {
   if (!state.drag) return;
   state.drag = null;
   if (overlay.hasPointerCapture(event.pointerId)) {
@@ -791,10 +898,37 @@ save.addEventListener("click", async () => {
         expected_revision: line.revision
       })
     });
+    await loadPage();
+    selectLine(line.source_span_id);
     setStatus(result.status === "UNCHANGED"
       ? "No change to save."
       : "Saved human revision " + result.revision + ".");
+  } catch (error) { setStatus(error.message); }
+});
+saveLineGeometry.addEventListener("click", async () => {
+  const line = selectedLine();
+  if (!line) return;
+  try {
+    const revisedPolygon = JSON.parse(linePolygon.value);
+    const revisedBaseline = JSON.parse(lineBaseline.value);
+    setStatus("Saving line geometry…");
+    const result = await api("/api/line-geometry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        manifest_sha256: state.page.manifest_sha256,
+        source_span_id: line.source_span_id,
+        polygon: revisedPolygon,
+        baseline: revisedBaseline,
+        editor: editor.value,
+        expected_revision: line.geometry_revision
+      })
+    });
     await loadPage();
+    selectLine(line.source_span_id);
+    setStatus(result.status === "UNCHANGED"
+      ? "No line geometry change to save."
+      : "Saved line geometry revision " + result.revision + ".");
   } catch (error) { setStatus(error.message); }
 });
 saveRegion.addEventListener("click", async () => {

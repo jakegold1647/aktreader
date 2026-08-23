@@ -24,6 +24,7 @@ def _project_with_one_page(root: Path) -> tuple[Path, dict[str, object]]:
       <Coords points="0,0 40,0 40,30 0,30"/>
       <TextLine id="line-1">
         <Coords points="2,2 38,2 38,12 2,12"/>
+        <Baseline points="4,10 36,10"/>
         <TextEquiv><Unicode>Alexander record</Unicode></TextEquiv>
       </TextLine>
     </TextRegion>
@@ -72,6 +73,11 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"Page thumbnails" in root
         assert b"region-handle" in root
         assert b"Drag region vertex" in root
+        assert b"line-handle" in root
+        assert b"Drag line polygon vertex" in root
+        assert b"baseline-handle" in root
+        assert b"Drag line baseline point" in root
+        assert b'].join("\\n");' in root
 
         project_status, _project_headers, project_body = _request(port, "GET", "/api/project")
         project_report = json.loads(project_body)
@@ -107,6 +113,9 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert page_status == 200
         assert "image_path" not in page
         assert page["lines"][0]["text"] == "Alexander record"
+        assert page["lines"][0]["polygon"] == [[2, 2], [38, 2], [38, 12], [2, 12]]
+        assert page["lines"][0]["baseline"] == [[4, 10], [36, 10]]
+        assert page["lines"][0]["geometry_revision"] == 0
 
         image_status, image_headers, image = _request(port, "GET", page["image_url"])
         assert image_status == 200
@@ -193,6 +202,72 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
             "region-2",
         ]
 
+        source_span_id = page["lines"][0]["source_span_id"]
+        revised_line_polygon = [[3, 3], [37, 3], [37, 13], [3, 13]]
+        revised_line_baseline = [[4, 11], [36, 11]]
+        line_request = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "polygon": revised_line_polygon,
+                "baseline": revised_line_baseline,
+                "editor": "layout-reviewer",
+                "expected_revision": 0,
+            }
+        ).encode("utf-8")
+        line_status, _line_headers, line_body = _request(
+            port,
+            "POST",
+            "/api/line-geometry",
+            body=line_request,
+        )
+        line = json.loads(line_body)
+        assert line_status == 200
+        assert line["status"] == "SAVED"
+        assert line["revision"] == 1
+
+        unchanged_line_request = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "polygon": revised_line_polygon,
+                "baseline": revised_line_baseline,
+                "editor": "layout-reviewer",
+                "expected_revision": 1,
+            }
+        ).encode("utf-8")
+        unchanged_line_status, _unchanged_line_headers, unchanged_line_body = _request(
+            port,
+            "POST",
+            "/api/line-geometry",
+            body=unchanged_line_request,
+        )
+        unchanged_line = json.loads(unchanged_line_body)
+        assert unchanged_line_status == 200
+        assert unchanged_line["status"] == "UNCHANGED"
+        assert unchanged_line["revision"] == 1
+
+        invalid_line_request = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "polygon": revised_line_polygon,
+                "baseline": "not-points",
+                "editor": "layout-reviewer",
+                "expected_revision": 1,
+            }
+        ).encode("utf-8")
+        invalid_line_status, _invalid_line_headers, invalid_line_body = _request(
+            port,
+            "POST",
+            "/api/line-geometry",
+            body=invalid_line_request,
+        )
+        invalid_line = json.loads(invalid_line_body)
+        assert invalid_line_status == 400
+        assert invalid_line["status"] == "ERROR"
+        assert "line baseline" in invalid_line["message"]
+
         region_request = json.dumps(
             {
                 "manifest_sha256": manifest_sha256,
@@ -241,6 +316,29 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
         assert refreshed["reading_order"]["region_ids"] == ["region-2", "region-1"]
         assert refreshed["regions"][1]["revision"] == 1
         assert refreshed["regions"][1]["polygon"] == [[1, 1], [39, 1], [39, 14], [1, 14]]
+        assert refreshed["lines"][0]["geometry_revision"] == 1
+        assert refreshed["lines"][0]["polygon"] == revised_line_polygon
+        assert refreshed["lines"][0]["baseline"] == revised_line_baseline
+
+        stale_line_request = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "polygon": [[4, 3], [36, 3], [36, 13], [4, 13]],
+                "baseline": revised_line_baseline,
+                "editor": "layout-reviewer",
+                "expected_revision": 0,
+            }
+        ).encode("utf-8")
+        stale_line_status, _stale_line_headers, stale_line_body = _request(
+            port,
+            "POST",
+            "/api/line-geometry",
+            body=stale_line_request,
+        )
+        stale_line = json.loads(stale_line_body)
+        assert stale_line_status == 400
+        assert "line geometry revision conflict" in stale_line["message"]
 
         stale_region_request = json.dumps(
             {
@@ -281,6 +379,7 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
         assert stale_order_status == 400
         assert "reading-order revision conflict" in stale_order["message"]
         summary = inspect_project(project)
+        assert summary["line_geometry_revision_count"] == 1
         assert summary["region_geometry_revision_count"] == 1
         assert summary["page_reading_order_revision_count"] == 1
     finally:
@@ -312,6 +411,16 @@ def test_loopback_browser_workbench_requires_integer_revision_preconditions(
                     "manifest_sha256": manifest_sha256,
                     "source_span_id": source_span_id,
                     "text": "revised",
+                    "editor": "reviewer",
+                },
+            ),
+            (
+                "/api/line-geometry",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "polygon": [[2, 2], [38, 2], [38, 12], [2, 12]],
+                    "baseline": [[4, 10], [36, 10]],
                     "editor": "reviewer",
                 },
             ),
@@ -372,6 +481,7 @@ def test_loopback_browser_workbench_requires_integer_revision_preconditions(
 
         summary = inspect_project(project)
         assert summary["transcription_revision_count"] == 0
+        assert summary["line_geometry_revision_count"] == 0
         assert summary["region_geometry_revision_count"] == 0
         assert summary["page_reading_order_revision_count"] == 0
     finally:

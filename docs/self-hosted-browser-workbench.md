@@ -20,11 +20,16 @@ Stop it with Ctrl+C.
 ## What it provides
 
 - document-first and page-scoped navigation with bounded, server-generated page thumbnails;
-- source-page image display with PAGE XML line and region bounds;
+- source-page image display with effective PAGE XML line polygons, optional
+  baselines, and region polygons;
 - effective transcription, local HTR suggestions, and pending review-proposal
   context for each line;
 - an editor that appends the same human transcription revisions as the
   desktop workbench;
+- direct on-canvas line-polygon and baseline-point dragging, with source-pixel
+  text fields that also allow an absent baseline to be represented as `null`;
+- line-polygon and baseline edits that append the same audited line-geometry
+  revisions as the local project commands;
 - direct on-canvas region-vertex dragging, with a source-pixel text fallback;
 - region-polygon and region-reading-order edits that append the same audited
   PAGE layout revisions as the local project commands; and
@@ -55,9 +60,11 @@ local browser transport.
 
 ## Concurrent tabs
 
-Each transcription, region-polygon, and reading-order save includes the exact
-revision displayed when that page was loaded. If another tab or local command
-saves the same entity stream first, the stale request returns a conflict and
-does not append another audit row. Reload the page, review the newer state, and
-then decide whether to apply the edit again. A conflict never merges or retries
+Each transcription, line-geometry, region-polygon, and reading-order save
+includes the exact revision displayed when that page was loaded. Line text and
+line geometry have separate revision streams, so correcting one does not make
+an untouched editor for the other stale. If another tab or local command saves
+the same entity stream first, the stale request returns a conflict and does not
+append another audit row. Reload the page, review the newer state, and then
+decide whether to apply the edit again. A conflict never merges or retries
 content automatically.
