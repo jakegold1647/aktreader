@@ -100,6 +100,7 @@ from aktreader.project import (
     import_pdf_into_project,
     import_review_package,
     inspect_project,
+    list_project_activity,
     list_project_documents,
     recognize_project_with_kraken,
     resolve_review_proposal,
@@ -313,6 +314,23 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=50,
         help="maximum results from 1 to 100 (default: 50)",
+    )
+
+    project_activity = subparsers.add_parser(
+        "project-activity",
+        help="list content-free local revision activity for one document",
+    )
+    project_activity.add_argument("project", type=Path, help="local .aktproj directory")
+    project_activity.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_activity.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="maximum events from 1 to 500 (default: 100)",
     )
 
     project_document_update = subparsers.add_parser(
@@ -1708,6 +1726,18 @@ def _command_project_search(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_activity(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    _emit_json(
+        list_project_activity(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            limit=args.limit,
+        )
+    )
+    return 0
+
+
 def _command_project_update_document(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     metadata_path = local_input_path(args.metadata, role="document metadata")
@@ -2980,6 +3010,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-inspect": _command_project_inspect,
         "project-list-documents": _command_project_list_documents,
         "project-search": _command_project_search,
+        "project-activity": _command_project_activity,
         "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-images": _command_project_import_images,

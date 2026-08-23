@@ -152,7 +152,7 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-save-search`, `collection-list-saved-searches`, `collection-run-saved-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
-`project-list-documents`, `project-search`, `project-update-document`,
+`project-list-documents`, `project-search`, `project-activity`, `project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
 `project-kraken-recognize`, `project-export-pagexml`, `project-export-transcript`,
@@ -279,6 +279,15 @@ revision, can target transcription text, document titles, or tags, and never req
 
 ```powershell
 python -m aktreader project-search serock.aktproj "Aleksander" --field text --limit 20
+```
+
+Inspect the bounded revision trail for one imported document without exposing prior or revised
+transcription content. The report includes event kind, stable page/region/line identifiers, revision,
+editor, and timestamp; it is local-only and read-only:
+
+```powershell
+python -m aktreader project-activity serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> --limit 50
 ```
 
 ### Loopback browser workbench
