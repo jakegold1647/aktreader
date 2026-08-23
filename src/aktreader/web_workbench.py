@@ -38,6 +38,12 @@ class WebWorkbenchError(ValueError):
     """Raised when the self-hosted browser workbench cannot be started or used."""
 
 
+class _RequestBoundaryError(WebWorkbenchError):
+    def __init__(self, message: str, *, status: HTTPStatus) -> None:
+        super().__init__(message)
+        self.status = status
+
+
 class SelfHostedWorkbenchServer(ThreadingHTTPServer):
     """Threaded, loopback-only server bound to one local project."""
 
@@ -387,7 +393,53 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
         def _error(self, status: HTTPStatus, message: str) -> None:
             self._json(status, {"status": "ERROR", "message": message, "network_required": False})
 
+        def _validate_request_boundary(self) -> None:
+            host_values = self.headers.get_all("Host", [])
+            if len(host_values) != 1:
+                raise _RequestBoundaryError(
+                    "request Host must identify this loopback server",
+                    status=HTTPStatus.FORBIDDEN,
+                )
+            authority = host_values[0].strip().lower()
+            port = int(self.server.server_address[1])
+            allowed_authorities = {f"127.0.0.1:{port}", f"localhost:{port}"}
+            if port == 80:
+                allowed_authorities.update({"127.0.0.1", "localhost"})
+            if authority not in allowed_authorities:
+                raise _RequestBoundaryError(
+                    "request Host must identify this loopback server",
+                    status=HTTPStatus.FORBIDDEN,
+                )
+
+            origin_values = self.headers.get_all("Origin", [])
+            if len(origin_values) > 1 or (
+                origin_values and origin_values[0].strip().lower() != f"http://{authority}"
+            ):
+                raise _RequestBoundaryError(
+                    "request Origin must match this loopback server",
+                    status=HTTPStatus.FORBIDDEN,
+                )
+
+            fetch_site_values = self.headers.get_all("Sec-Fetch-Site", [])
+            if len(fetch_site_values) > 1 or (
+                fetch_site_values
+                and fetch_site_values[0].strip().lower() not in {"none", "same-origin"}
+            ):
+                raise _RequestBoundaryError(
+                    "cross-origin browser requests are not allowed",
+                    status=HTTPStatus.FORBIDDEN,
+                )
+
         def _request_json(self) -> object:
+            content_type_values = self.headers.get_all("Content-Type", [])
+            if len(content_type_values) != 1 or (
+                content_type_values[0].split(";", 1)[0].strip().lower()
+                != "application/json"
+            ):
+                raise _RequestBoundaryError(
+                    "write requests require Content-Type application/json",
+                    status=HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+                )
             raw_length = self.headers.get("Content-Length")
             if raw_length is None:
                 raise WebWorkbenchError("request body length is required")
@@ -407,6 +459,7 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
             parsed = urlparse(self.path)
             query = parse_qs(parsed.query, keep_blank_values=True)
             try:
+                self._validate_request_boundary()
                 if parsed.path == "/":
                     self._bytes(
                         HTTPStatus.OK,
@@ -447,12 +500,15 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                     self._bytes(HTTPStatus.OK, media_type, image)
                 else:
                     self._error(HTTPStatus.NOT_FOUND, "route was not found")
+            except _RequestBoundaryError as error:
+                self._error(error.status, str(error))
             except (ProjectStoreError, WebWorkbenchError) as error:
                 self._error(HTTPStatus.BAD_REQUEST, str(error))
 
         def do_POST(self) -> None:
             parsed = urlparse(self.path)
             try:
+                self._validate_request_boundary()
                 payload = self._request_json()
                 if parsed.path == "/api/transcriptions":
                     response = _revision_payload(project, payload)
@@ -466,6 +522,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                     self._error(HTTPStatus.NOT_FOUND, "route was not found")
                     return
                 self._json(HTTPStatus.OK, response)
+            except _RequestBoundaryError as error:
+                self._error(error.status, str(error))
             except (ProjectStoreError, WebWorkbenchError) as error:
                 self._error(HTTPStatus.BAD_REQUEST, str(error))
 

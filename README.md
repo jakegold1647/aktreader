@@ -337,8 +337,9 @@ It prints a `127.0.0.1` URL with document/page navigation and generated thumbnai
 line polygons and baselines, region overlays, saved human transcription revisions, and auditable
 line geometry, region geometry, or reading-order changes. Layout vertices can be dragged on the
 scan or entered as source-pixel coordinates. Every save is revision-checked; a stale tab must reload
-and review newer work before trying again. It has no
-accounts and cannot bind to a LAN or public address, so it is not yet a shared deployment. See
+and review newer work before trying again. The server rejects nonlocal request authorities,
+cross-origin browser requests, and non-JSON write bodies. It has no accounts and cannot bind to a
+LAN or public address, so it is not yet a shared deployment. See
 [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).
 
 ### Loopback service workspace and backups
