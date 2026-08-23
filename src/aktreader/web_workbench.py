@@ -32,6 +32,7 @@ from aktreader.project import (
     revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
+    search_project_transcriptions,
 )
 
 LOOPBACK_HOST = "127.0.0.1"
@@ -187,6 +188,20 @@ def _document_pages(project: Path, manifest_sha256: str) -> dict[str, object]:
         ],
         "network_required": False,
     }
+
+
+def _search_payload(
+    project: Path,
+    query: dict[str, list[str]],
+) -> dict[str, object]:
+    if set(query) != {"q", "field"}:
+        raise WebWorkbenchError("search requires only q and field query parameters")
+    return search_project_transcriptions(
+        project,
+        query=_query_value(query, "q"),
+        field=_query_value(query, "field"),
+        limit=50,
+    )
 
 
 def _page_payload(project: Path, manifest_sha256: str, page_index: int) -> dict[str, object]:
@@ -605,6 +620,8 @@ def _handler_for_project(project: Path) -> type[BaseHTTPRequestHandler]:
                         HTTPStatus.OK,
                         _document_pages(project, _query_value(query, "manifest_sha256")),
                     )
+                elif parsed.path == "/api/search":
+                    self._json(HTTPStatus.OK, _search_payload(project, query))
                 elif parsed.path == "/api/page":
                     self._json(
                         HTTPStatus.OK,
@@ -725,6 +742,14 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 .line { text-align: left; border: 1px solid #d9e1ea; border-radius: 5px;
   padding: 8px; background: white; color: #18212f; }
 .line.selected { outline: 2px solid #15803d; }
+.search-controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(110px, 1fr) auto;
+  gap: 8px; align-items: end; }
+.search-results { display: grid; gap: 6px; max-height: 260px; overflow: auto; }
+.search-result { background: white; border: 1px solid #d9e1ea; color: #18212f;
+  display: grid; gap: 3px; text-align: left; }
+.search-result:hover, .search-result:focus-visible { border-color: #0f766e; }
+.search-result small { font-weight: 400; }
+#search-status { color: #52616f; font-size: .85rem; min-height: 1.3rem; }
 small, #status, #dirty-indicator { color: #52616f; }
 #dirty-indicator:not(:empty) { color: #9a3412; font-weight: 600; }
 textarea { min-height: 120px; resize: vertical; width: 100%; box-sizing: border-box; }
@@ -738,7 +763,10 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
 #history-preview { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 5px;
   box-sizing: border-box; color: #334155; max-height: 220px; overflow: auto;
   padding: 8px; white-space: pre-wrap; }
-@media (max-width: 850px) { main { grid-template-columns: 1fr; } }
+@media (max-width: 850px) {
+  main { grid-template-columns: 1fr; }
+  .search-controls { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -756,6 +784,24 @@ dialog::backdrop { background: rgb(15 23 42 / .45); }
 </section>
 <aside class="panel" id="review-panel">
   <label>Editor <input id="editor" value="local-user" autocomplete="off"></label>
+  <details id="search-panel">
+    <summary>Find a line</summary>
+    <p><small>Search runs only against this local project. Results can contain transcription
+      text, so keep this browser private.</small></p>
+    <form id="search-form">
+      <div class="search-controls">
+        <label>Query <input id="search-query" maxlength="200" autocomplete="off"></label>
+        <label>Field <select id="search-field">
+          <option value="text">Transcription text</option>
+          <option value="title">Document title</option>
+          <option value="tag">Document tag</option>
+        </select></label>
+        <button id="search-button" type="submit">Search</button>
+      </div>
+    </form>
+    <p id="search-status" role="status" aria-live="polite">No search run.</p>
+    <div class="search-results" id="search-results" aria-label="Project search results"></div>
+  </details>
   <p id="detail">Choose a document and page.</p>
   <div id="line-list" aria-label="Lines"></div>
   <div class="actions" aria-label="Line navigation">
@@ -858,6 +904,12 @@ const historyPreview = document.getElementById("history-preview");
 const restoreRevision = document.getElementById("restore-revision");
 const discardDialog = document.getElementById("discard-dialog");
 const discardMessage = document.getElementById("discard-message");
+const searchForm = document.getElementById("search-form");
+const searchQuery = document.getElementById("search-query");
+const searchField = document.getElementById("search-field");
+const searchButton = document.getElementById("search-button");
+const searchStatus = document.getElementById("search-status");
+const searchResults = document.getElementById("search-results");
 
 overlay.addEventListener("pointermove", moveGeometryDrag);
 overlay.addEventListener("pointerup", finishGeometryDrag);
@@ -961,6 +1013,70 @@ function focusLineButton(sourceSpanId) {
     item => item.dataset.sourceSpanId === sourceSpanId
   );
   if (button) button.focus();
+}
+async function jumpToSearchResult(result) {
+  const alreadySelected = state.document === result.manifest_sha256
+    && state.page && state.page.page_index === result.page_index
+    && state.selected === result.source_span_id;
+  if (alreadySelected) {
+    focusLineButton(result.source_span_id);
+    return true;
+  }
+  if (!await confirmDiscard([
+    "transcription", "line geometry", "region geometry", "reading order"
+  ])) return false;
+  if (state.document !== result.manifest_sha256) {
+    documentSelect.value = result.manifest_sha256;
+    if (!await loadDocument(true)) return false;
+  }
+  const targetPage = state.pages.find(page => page.page_index === result.page_index);
+  if (!targetPage) throw new Error("Search result page is no longer available");
+  if (state.pageUrl !== targetPage.page_url) {
+    pageSelect.value = targetPage.page_url;
+    if (!await loadPage(true)) return false;
+  }
+  if (!await selectLine(result.source_span_id, true)) return false;
+  focusLineButton(result.source_span_id);
+  setStatus("Opened search result on page " + (result.page_index + 1) + ".");
+  return true;
+}
+function renderSearchResults(report) {
+  searchResults.replaceChildren();
+  report.results.forEach(result => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "search-result";
+    const resultText = document.createElement("strong");
+    resultText.textContent = result.text || "No transcription text";
+    const resultLocation = document.createElement("small");
+    resultLocation.textContent = result.title + " · page " + (result.page_index + 1)
+      + " · line " + result.line_id + " · text r" + result.revision;
+    button.append(resultText, resultLocation);
+    button.addEventListener("click", () => jumpToSearchResult(result)
+      .catch(error => setStatus(error.message)));
+    searchResults.append(button);
+  });
+  const suffix = report.truncated ? " Showing the first " + report.limit + "." : "";
+  searchStatus.textContent = report.result_count
+    ? report.result_count + (report.result_count === 1 ? " result." : " results.") + suffix
+    : "No matching lines.";
+}
+async function runSearch() {
+  const query = searchQuery.value.trim();
+  if (!query) {
+    searchResults.replaceChildren();
+    searchStatus.textContent = "Enter a nonblank search query.";
+    searchQuery.focus();
+    return;
+  }
+  searchButton.disabled = true;
+  searchStatus.textContent = "Searching this local project…";
+  try {
+    const parameters = new URLSearchParams({q: query, field: searchField.value});
+    renderSearchResults(await api("/api/search?" + parameters.toString()));
+  } finally {
+    searchButton.disabled = false;
+  }
 }
 async function navigateLine(offset, focusList) {
   const targetIndex = selectedLineIndex() + offset;
@@ -1353,6 +1469,13 @@ async function boot() {
 }
 documentSelect.addEventListener("change", () =>
   loadDocument().catch(error => setStatus(error.message)));
+searchForm.addEventListener("submit", event => {
+  event.preventDefault();
+  runSearch().catch(error => {
+    searchStatus.textContent = error.message;
+    searchButton.disabled = false;
+  });
+});
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
 regionSelect.addEventListener("change", () =>
   selectRegion(regionSelect.value).catch(error => setStatus(error.message)));
