@@ -8,7 +8,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from aktreader.project import create_project, import_pagexml_into_project
+from aktreader.project import create_project, import_pagexml_into_project, inspect_project
 from aktreader.web_workbench import create_self_hosted_workbench_server
 
 
@@ -119,6 +119,7 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
                 "source_span_id": page["lines"][0]["source_span_id"],
                 "text": "Aleksander corrected",
                 "editor": "reviewer-1",
+                "expected_revision": 0,
             }
         ).encode("utf-8")
         save_status, _save_headers, save_body = _request(
@@ -137,6 +138,36 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert refreshed_status == 200
         assert refreshed["lines"][0]["text"] == "Aleksander corrected"
         assert refreshed["lines"][0]["revision"] == 1
+
+        stale_request = json.dumps(
+            {
+                "manifest_sha256": imported["manifest_sha256"],
+                "source_span_id": page["lines"][0]["source_span_id"],
+                "text": "stale tab text",
+                "editor": "reviewer-2",
+                "expected_revision": 0,
+            }
+        ).encode("utf-8")
+        stale_status, _stale_headers, stale_body = _request(
+            port,
+            "POST",
+            "/api/transcriptions",
+            body=stale_request,
+        )
+        stale = json.loads(stale_body)
+        assert stale_status == 400
+        assert stale["status"] == "ERROR"
+        assert "transcription revision conflict" in stale["message"]
+        unchanged_status, _unchanged_headers, unchanged_body = _request(
+            port,
+            "GET",
+            page_url,
+        )
+        unchanged = json.loads(unchanged_body)
+        assert unchanged_status == 200
+        assert unchanged["lines"][0]["text"] == "Aleksander corrected"
+        assert unchanged["lines"][0]["revision"] == 1
+        assert inspect_project(project)["transcription_revision_count"] == 1
     finally:
         server.shutdown()
         thread.join(timeout=3)
@@ -169,6 +200,7 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
                 "region_id": "region-1",
                 "polygon": [[1, 1], [39, 1], [39, 14], [1, 14]],
                 "editor": "layout-reviewer",
+                "expected_revision": 0,
             }
         ).encode("utf-8")
         region_status, _region_headers, region_body = _request(
@@ -188,6 +220,7 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
                 "page_index": 0,
                 "region_ids": ["region-2", "region-1"],
                 "editor": "layout-reviewer",
+                "expected_revision": 0,
             }
         ).encode("utf-8")
         order_status, _order_headers, order_body = _request(
@@ -208,6 +241,139 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
         assert refreshed["reading_order"]["region_ids"] == ["region-2", "region-1"]
         assert refreshed["regions"][1]["revision"] == 1
         assert refreshed["regions"][1]["polygon"] == [[1, 1], [39, 1], [39, 14], [1, 14]]
+
+        stale_region_request = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "page_index": 0,
+                "region_id": "region-1",
+                "polygon": [[2, 1], [38, 1], [38, 14], [2, 14]],
+                "editor": "layout-reviewer",
+                "expected_revision": 0,
+            }
+        ).encode("utf-8")
+        stale_region_status, _stale_region_headers, stale_region_body = _request(
+            port,
+            "POST",
+            "/api/region-geometry",
+            body=stale_region_request,
+        )
+        stale_region = json.loads(stale_region_body)
+        assert stale_region_status == 400
+        assert "region geometry revision conflict" in stale_region["message"]
+
+        stale_order_request = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "page_index": 0,
+                "region_ids": ["region-1", "region-2"],
+                "editor": "layout-reviewer",
+                "expected_revision": 0,
+            }
+        ).encode("utf-8")
+        stale_order_status, _stale_order_headers, stale_order_body = _request(
+            port,
+            "POST",
+            "/api/reading-order",
+            body=stale_order_request,
+        )
+        stale_order = json.loads(stale_order_body)
+        assert stale_order_status == 400
+        assert "reading-order revision conflict" in stale_order["message"]
+        summary = inspect_project(project)
+        assert summary["region_geometry_revision_count"] == 1
+        assert summary["page_reading_order_revision_count"] == 1
+    finally:
+        server.shutdown()
+        thread.join(timeout=3)
+        server.server_close()
+
+
+def test_loopback_browser_workbench_requires_integer_revision_preconditions(
+    tmp_path: Path,
+) -> None:
+    project, imported = _project_with_one_page(tmp_path)
+    server = create_self_hosted_workbench_server(project, port=0)
+    thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01})
+    thread.start()
+    try:
+        _host, port = server.server_address[:2]
+        manifest_sha256 = imported["manifest_sha256"]
+        page_url = f"/api/page?manifest_sha256={manifest_sha256}&page_index=0"
+        page_status, _page_headers, page_body = _request(port, "GET", page_url)
+        page = json.loads(page_body)
+        assert page_status == 200
+        source_span_id = page["lines"][0]["source_span_id"]
+
+        missing_preconditions = [
+            (
+                "/api/transcriptions",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "text": "revised",
+                    "editor": "reviewer",
+                },
+            ),
+            (
+                "/api/region-geometry",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "page_index": 0,
+                    "region_id": "region-1",
+                    "polygon": [[1, 1], [39, 1], [39, 29], [1, 29]],
+                    "editor": "reviewer",
+                },
+            ),
+            (
+                "/api/reading-order",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "page_index": 0,
+                    "region_ids": ["region-2", "region-1"],
+                    "editor": "reviewer",
+                },
+            ),
+        ]
+        for route, payload in missing_preconditions:
+            response_status, _response_headers, response_body = _request(
+                port,
+                "POST",
+                route,
+                body=json.dumps(payload).encode("utf-8"),
+            )
+            response = json.loads(response_body)
+            assert response_status == 400
+            assert response["status"] == "ERROR"
+            assert "invalid keys" in response["message"] or "must contain only" in response[
+                "message"
+            ]
+
+        for invalid_revision in [True, "0", -1]:
+            response_status, _response_headers, response_body = _request(
+                port,
+                "POST",
+                "/api/transcriptions",
+                body=json.dumps(
+                    {
+                        "manifest_sha256": manifest_sha256,
+                        "source_span_id": source_span_id,
+                        "text": "revised",
+                        "editor": "reviewer",
+                        "expected_revision": invalid_revision,
+                    }
+                ).encode("utf-8"),
+            )
+            response = json.loads(response_body)
+            assert response_status == 400
+            assert response["message"] == (
+                "expected_revision must be a non-negative integer"
+            )
+
+        summary = inspect_project(project)
+        assert summary["transcription_revision_count"] == 0
+        assert summary["region_geometry_revision_count"] == 0
+        assert summary["page_reading_order_revision_count"] == 0
     finally:
         server.shutdown()
         thread.join(timeout=3)

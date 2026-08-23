@@ -28,6 +28,8 @@ Stop it with Ctrl+C.
 - direct on-canvas region-vertex dragging, with a source-pixel text fallback;
 - region-polygon and region-reading-order edits that append the same audited
   PAGE layout revisions as the local project commands; and
+- optimistic revision checks on every write so a stale tab cannot silently
+  overwrite work saved after that tab loaded; and
 - project state that remains content-addressed and local.
 
 The API never sends image filesystem paths to the browser. Source images are
@@ -50,3 +52,12 @@ roadmap work.
 The service does not make outbound network requests. `network_required: false`
 means it needs no external network; the explicit loopback listener is only a
 local browser transport.
+
+## Concurrent tabs
+
+Each transcription, region-polygon, and reading-order save includes the exact
+revision displayed when that page was loaded. If another tab or local command
+saves the same entity stream first, the stale request returns a conflict and
+does not append another audit row. Reload the page, review the newer state, and
+then decide whether to apply the edit again. A conflict never merges or retries
+content automatically.
