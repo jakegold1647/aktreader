@@ -47,6 +47,8 @@ jobs:
         run: |
           python -m aktreader compare labels/readerA labels/readerB --output "${{ runner.temp }}/reader-comparison.json" --csv "${{ runner.temp }}/reader-disagreements.csv"
           python -c "import os; from pathlib import Path; assert Path(os.environ['COMPARISON_JSON']).is_file(); assert Path(os.environ['DISAGREEMENTS_CSV']).is_file()"
+      - name: Parse browser workbench JavaScript
+        run: python -m tools.check_workbench_javascript
       - name: Lint
         run: python -m ruff check .
       - name: Test

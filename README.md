@@ -354,6 +354,16 @@ requests, and non-JSON write bodies. It has no accounts and cannot bind to a LAN
 so it is not yet a shared deployment. See
 [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).
 
+Contributors with Node.js installed can verify the rendered inline browser code before opening a
+pull request:
+
+```powershell
+python -m tools.check_workbench_javascript
+```
+
+The command parses the JavaScript after Python string escaping has been applied. CI runs it on every
+supported Python/OS job; the Python test suite itself does not require Node.js.
+
 ### Loopback service workspace and backups
 
 A separate local service workspace can own copies of projects, run durable checksum-verified
