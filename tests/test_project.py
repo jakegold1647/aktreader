@@ -44,6 +44,10 @@ from aktreader.project import (
     load_project_page_layout,
     recognize_project_with_kraken,
     resolve_review_proposal,
+    restore_line_geometry,
+    restore_line_transcription,
+    restore_page_reading_order,
+    restore_region_geometry,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
@@ -121,6 +125,96 @@ def _write_two_region_pagexml(path: Path) -> None:
 """,
         encoding="utf-8",
     )
+
+
+def _create_two_revision_streams(
+    tmp_path: Path,
+) -> tuple[Path, Path, str, str]:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    manifest_sha256 = imported["manifest_sha256"]
+    line = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"][0]
+    source_span_id = line["source_span_id"]
+
+    revise_line_transcription(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        text="first draft",
+        editor="reviewer",
+        expected_revision=0,
+    )
+    revise_line_transcription(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        text="first approved",
+        editor="reviewer",
+        expected_revision=1,
+    )
+    revise_line_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        polygon=[[1, 1], [39, 1], [39, 11], [1, 11]],
+        baseline=[[2, 9], [38, 9]],
+        editor="reviewer",
+        expected_revision=0,
+    )
+    revise_line_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        polygon=[[1, 2], [39, 2], [39, 12], [1, 12]],
+        baseline=[[2, 10], [38, 10]],
+        editor="reviewer",
+        expected_revision=1,
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="reviewer",
+        expected_revision=0,
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_id="region-2",
+        polygon=[[2, 15], [38, 15], [38, 29], [2, 29]],
+        editor="reviewer",
+        expected_revision=1,
+    )
+    revise_page_reading_order(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="reviewer",
+        expected_revision=0,
+    )
+    revise_page_reading_order(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_ids=["region-1", "region-2"],
+        editor="reviewer",
+        expected_revision=1,
+    )
+    return project, source, manifest_sha256, source_span_id
 
 
 def test_create_project_initializes_a_local_workbench_store(tmp_path: Path) -> None:
@@ -3079,3 +3173,399 @@ def test_project_layout_undo_cli_restores_all_three_revision_streams(
         for item in layout["lines"]
         if item["source_span_id"] == source_span_id
     ) == 2
+
+
+def test_project_restores_any_prior_revision_by_appending_new_revisions(
+    tmp_path: Path,
+) -> None:
+    project, source, manifest_sha256, source_span_id = _create_two_revision_streams(
+        tmp_path
+    )
+    source_bytes = source.read_bytes()
+
+    restored_revision = [
+        restore_line_transcription(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=1,
+            editor="reviewer",
+            expected_revision=2,
+        ),
+        restore_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=1,
+            editor="reviewer",
+            expected_revision=2,
+        ),
+        restore_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            target_revision=1,
+            editor="reviewer",
+            expected_revision=2,
+        ),
+        restore_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            target_revision=1,
+            editor="reviewer",
+            expected_revision=2,
+        ),
+    ]
+
+    assert [item["status"] for item in restored_revision] == [
+        "RESTORED",
+        "RESTORED",
+        "RESTORED",
+        "RESTORED",
+    ]
+    assert [item["revision"] for item in restored_revision] == [3, 3, 3, 3]
+    assert [item["target_revision"] for item in restored_revision] == [1, 1, 1, 1]
+    assert all(item["network_required"] is False for item in restored_revision)
+    restored_line = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"][0]
+    restored_layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )
+    restored_line_layout = next(
+        item
+        for item in restored_layout["lines"]
+        if item["source_span_id"] == source_span_id
+    )
+    restored_region = next(
+        item
+        for item in restored_layout["regions"]
+        if item["region_id"] == "region-2"
+    )
+    assert restored_line["text"] == "first draft"
+    assert restored_line["revision"] == 3
+    assert restored_line_layout["polygon"] == [
+        [1, 1],
+        [39, 1],
+        [39, 11],
+        [1, 11],
+    ]
+    assert restored_line_layout["baseline"] == [[2, 9], [38, 9]]
+    assert restored_line_layout["revision"] == 3
+    assert restored_region["polygon"] == [
+        [1, 15],
+        [39, 15],
+        [39, 29],
+        [1, 29],
+    ]
+    assert restored_region["revision"] == 3
+    assert restored_layout["reading_order"] == {
+        "revision": 3,
+        "region_ids": ["region-2", "region-1"],
+    }
+
+    restored_source = [
+        restore_line_transcription(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=0,
+            editor="reviewer",
+            expected_revision=3,
+        ),
+        restore_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=0,
+            editor="reviewer",
+            expected_revision=3,
+        ),
+        restore_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            target_revision=0,
+            editor="reviewer",
+            expected_revision=3,
+        ),
+        restore_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            target_revision=0,
+            editor="reviewer",
+            expected_revision=3,
+        ),
+    ]
+
+    assert [item["status"] for item in restored_source] == [
+        "RESTORED",
+        "RESTORED",
+        "RESTORED",
+        "RESTORED",
+    ]
+    assert [item["revision"] for item in restored_source] == [4, 4, 4, 4]
+    assert [item["target_revision"] for item in restored_source] == [0, 0, 0, 0]
+    source_line = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"][0]
+    source_layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )
+    source_line_layout = next(
+        item
+        for item in source_layout["lines"]
+        if item["source_span_id"] == source_span_id
+    )
+    source_region = next(
+        item for item in source_layout["regions"] if item["region_id"] == "region-2"
+    )
+    assert source_line["source_text"] == source_line["text"] == "first"
+    assert source_line["revision"] == 4
+    assert source_line_layout["polygon"] == [
+        [2, 2],
+        [38, 2],
+        [38, 10],
+        [2, 10],
+    ]
+    assert source_line_layout["baseline"] is None
+    assert source_line_layout["revision"] == 4
+    assert source_region["polygon"] == [
+        [0, 15],
+        [40, 15],
+        [40, 30],
+        [0, 30],
+    ]
+    assert source_region["revision"] == 4
+    assert source_layout["reading_order"] == {
+        "revision": 4,
+        "region_ids": ["region-1", "region-2"],
+    }
+    assert source.read_bytes() == source_bytes
+    summary = inspect_project(project)
+    assert summary["transcription_revision_count"] == 4
+    assert summary["line_geometry_revision_count"] == 4
+    assert summary["region_geometry_revision_count"] == 4
+    assert summary["page_reading_order_revision_count"] == 4
+
+    unchanged = [
+        restore_line_transcription(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=0,
+            expected_revision=4,
+        ),
+        restore_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=0,
+            expected_revision=4,
+        ),
+        restore_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            target_revision=0,
+            expected_revision=4,
+        ),
+        restore_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            target_revision=0,
+            expected_revision=4,
+        ),
+    ]
+    assert [item["status"] for item in unchanged] == [
+        "UNCHANGED",
+        "UNCHANGED",
+        "UNCHANGED",
+        "UNCHANGED",
+    ]
+    assert [item["revision"] for item in unchanged] == [4, 4, 4, 4]
+    assert [item["target_revision"] for item in unchanged] == [0, 0, 0, 0]
+    unchanged_summary = inspect_project(project)
+    assert unchanged_summary["transcription_revision_count"] == 4
+    assert unchanged_summary["line_geometry_revision_count"] == 4
+    assert unchanged_summary["region_geometry_revision_count"] == 4
+    assert unchanged_summary["page_reading_order_revision_count"] == 4
+
+    with pytest.raises(ProjectStoreError, match="transcription revision conflict"):
+        restore_line_transcription(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=1,
+            expected_revision=3,
+        )
+    with pytest.raises(ProjectStoreError, match="line geometry revision conflict"):
+        restore_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=1,
+            expected_revision=3,
+        )
+    with pytest.raises(ProjectStoreError, match="region geometry revision conflict"):
+        restore_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            target_revision=1,
+            expected_revision=3,
+        )
+    with pytest.raises(ProjectStoreError, match="reading-order revision conflict"):
+        restore_page_reading_order(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            target_revision=1,
+            expected_revision=3,
+        )
+    with pytest.raises(ProjectStoreError, match="must be earlier"):
+        restore_line_transcription(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=4,
+            expected_revision=4,
+        )
+    with pytest.raises(ProjectStoreError, match="non-negative integer"):
+        restore_line_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=source_span_id,
+            target_revision=True,
+            expected_revision=4,
+        )
+    with pytest.raises(ProjectStoreError, match="non-negative integer"):
+        restore_region_geometry(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=0,
+            region_id="region-2",
+            target_revision=-1,
+            expected_revision=4,
+        )
+
+
+def test_project_restore_cli_covers_all_four_revision_streams(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    project, _, manifest_sha256, source_span_id = _create_two_revision_streams(
+        tmp_path
+    )
+    commands = [
+        [
+            "project-restore-line-transcription",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--source-span-id",
+            source_span_id,
+            "--target-revision",
+            "1",
+            "--editor",
+            "reviewer",
+            "--expected-revision",
+            "2",
+        ],
+        [
+            "project-restore-line-geometry",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--source-span-id",
+            source_span_id,
+            "--target-revision",
+            "1",
+            "--editor",
+            "reviewer",
+            "--expected-revision",
+            "2",
+        ],
+        [
+            "project-restore-region-geometry",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--page-index",
+            "0",
+            "--region-id",
+            "region-2",
+            "--target-revision",
+            "1",
+            "--editor",
+            "reviewer",
+            "--expected-revision",
+            "2",
+        ],
+        [
+            "project-restore-page-reading-order",
+            str(project),
+            "--manifest-sha256",
+            manifest_sha256,
+            "--page-index",
+            "0",
+            "--target-revision",
+            "1",
+            "--editor",
+            "reviewer",
+            "--expected-revision",
+            "2",
+        ],
+    ]
+
+    reports = []
+    for command in commands:
+        assert main(command) == 0
+        reports.append(json.loads(capsys.readouterr().out))
+
+    assert [report["status"] for report in reports] == [
+        "RESTORED",
+        "RESTORED",
+        "RESTORED",
+        "RESTORED",
+    ]
+    assert [report["revision"] for report in reports] == [3, 3, 3, 3]
+    assert [report["target_revision"] for report in reports] == [1, 1, 1, 1]
+    assert all(report["network_required"] is False for report in reports)
+    page = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )
+    layout = load_project_page_layout(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )
+    assert page["lines"][0]["text"] == "first draft"
+    assert layout["reading_order"]["region_ids"] == ["region-2", "region-1"]
+    assert next(
+        item["revision"]
+        for item in layout["lines"]
+        if item["source_span_id"] == source_span_id
+    ) == 3
+    assert next(
+        item["revision"]
+        for item in layout["regions"]
+        if item["region_id"] == "region-2"
+    ) == 3
