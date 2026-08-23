@@ -293,8 +293,8 @@ Projects are intentionally local-only and contain no training consent. Importing
 does not make it training data or publishable data.
 
 Every import is also a stable document record. Its local title, tags, and notes can be updated from
-the loopback browser workbench or CLI without touching the PAGE XML or images; see
-[document metadata](docs/document-metadata.md).
+the single-project browser workbench, the authenticated collaborative workbench, or the CLI without
+touching the PAGE XML or images; see [document metadata](docs/document-metadata.md).
 
 Search one project without first building a collection. Results use the latest effective human
 revision, can target transcription text, document titles, or tags, and never require network access:

@@ -175,6 +175,27 @@ The service derives the revision editor from the authenticated account and write
 project revision. If someone has saved another revision first, it returns `409 Conflict`; reload
 the page and explicitly decide how to reconcile the text. It never silently overwrites a correction.
 
+An `EDITOR` or `OWNER` can also update the selected document's title, tags, and project notes:
+
+```text
+POST /api/projects/<project-id>/documents/<manifest-sha256>/metadata
+```
+
+```json
+{
+  "title": "Serock civil register, 1890",
+  "tags": ["Serock", "births"],
+  "notes": "Shared review note.",
+  "expected_updated_at": "<exact value returned by the document list>"
+}
+```
+
+All four keys are required so the browser saves one reviewed metadata snapshot. The service scopes
+the write to the authenticated managed project, never accepts a filesystem path, and returns the
+updated public document record. `VIEWER` accounts remain read-only. A stale `expected_updated_at`
+returns `409 Conflict`; malformed keys or invalid field values return `400 Bad Request`. Project
+notes are visible to every authorized member of the project and should not be used as personal notes.
+
 This is a local-service foundation for shared review. It does not accept external identity or
 expose a LAN listener.
 
@@ -185,8 +206,12 @@ Start the local service and open the loopback URL it prints (normally
 token only in memory for that tab.
 
 The workbench lets an authorized reviewer choose a project, PAGE XML document, and page; view the
-source image with line bounds; inspect current line revisions; and save a correction. An owner can
-create or revoke recipient-bound local invitations for existing accounts, then copy the shown code
+source image with line bounds; inspect current line revisions; and save a correction. Under
+**Document details**, every authorized member can read the selected title, tags, and project notes;
+editors and owners can save them against the loaded `updated_at` token. Unsaved metadata prompts
+before a project or document switch, sign-out, reload, or tab close. A successful title or tag save
+reruns any active project search so stale matches disappear and displayed titles stay current. An
+owner can create or revoke recipient-bound local invitations for existing accounts, then copy the shown code
 to the named recipient. Every signed-in account can see invitations addressed to it and accept one
 with that code; no invitation code is retained or shown again after creation. J or Down
 moves to the next line, K or Up moves to the previous line, and Ctrl/Command+Enter saves the
@@ -195,9 +220,10 @@ than that explicit save shortcut. Image bytes are fetched only with the authenti
 neither the API nor the page exposes a local filesystem path. `VIEWER` accounts can inspect, while
 `EDITOR` and `OWNER` accounts can save.
 
-Every save includes the line revision that was displayed. If another correction landed first, the
-workbench receives HTTP `409`, shows the service's conflict message, and reloads the current page
-instead of overwriting it. Validation errors remain HTTP `400`. **Undo latest correction** appends a
+Every save includes the line or metadata revision that was displayed. If another correction or
+metadata update landed first, the workbench receives HTTP `409`, shows the service's conflict
+message, and reloads only the affected current state instead of overwriting it. Validation errors
+remain HTTP `400` and preserve the metadata draft for correction. **Undo latest correction** appends a
 new revision containing the prior text; it never deletes the original correction and also rejects a
 stale revision. The activity panel lets any authorized viewer browse those transcription, line,
 region, and reading-order revisions and jump to their source page. It reports the editor, revision,
