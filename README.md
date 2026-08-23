@@ -306,7 +306,16 @@ editor, and timestamp; it is local-only and read-only:
 ```powershell
 python -m aktreader project-activity serock.aktproj `
   --manifest-sha256 <project-import-manifest-sha256> --limit 50
+
+python -m aktreader project-activity serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --kind LINE_GEOMETRY --page-index 0 --source-span-id <source-span-id>
 ```
+
+`--kind`, `--page-index`, `--source-span-id`, and `--region-id` are optional exact filters and
+can be combined. The JSON report echoes their normalized values under `filters`; omitted filters
+remain `null`. Filtering does not add prior text, revised text, polygons, or other revision content
+to the activity feed.
 
 ### Loopback browser workbench
 

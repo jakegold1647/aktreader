@@ -385,6 +385,25 @@ def build_parser() -> argparse.ArgumentParser:
         default=100,
         help="maximum events from 1 to 500 (default: 100)",
     )
+    project_activity.add_argument(
+        "--kind",
+        type=str.upper,
+        choices=("TRANSCRIPTION", "LINE_GEOMETRY", "REGION_GEOMETRY", "READING_ORDER"),
+        help="optional exact revision kind",
+    )
+    project_activity.add_argument(
+        "--page-index",
+        type=int,
+        help="optional exact zero-based page index",
+    )
+    project_activity.add_argument(
+        "--source-span-id",
+        help="optional exact line source-span ID",
+    )
+    project_activity.add_argument(
+        "--region-id",
+        help="optional exact PAGE XML region ID",
+    )
 
     project_revise_line = subparsers.add_parser(
         "project-revise-line-transcription",
@@ -2010,6 +2029,10 @@ def _command_project_activity(args: argparse.Namespace) -> int:
             project,
             manifest_sha256=args.manifest_sha256,
             limit=args.limit,
+            kind=args.kind,
+            page_index=args.page_index,
+            source_span_id=args.source_span_id,
+            region_id=args.region_id,
         )
     )
     return 0

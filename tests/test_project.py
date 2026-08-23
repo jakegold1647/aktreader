@@ -37,6 +37,7 @@ from aktreader.project import (
     import_review_package,
     inspect_project,
     list_htr_suggestion_evaluations,
+    list_project_activity,
     list_project_documents,
     list_project_pages,
     load_project_page,
@@ -597,6 +598,174 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(
         == 2
     )
     assert "transcription revision conflict" in capsys.readouterr().err
+
+
+def test_project_activity_filters_revision_streams_and_locators(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    manifest_sha256 = imported["manifest_sha256"]
+    lines = load_project_page(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+    )["lines"]
+    first_line = next(line for line in lines if line["region_id"] == "region-1")
+
+    revise_line_transcription(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=first_line["source_span_id"],
+        text="first revised",
+        editor="text-reviewer",
+        expected_revision=0,
+    )
+    revise_line_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=first_line["source_span_id"],
+        polygon=[[1, 1], [39, 1], [39, 11], [1, 11]],
+        baseline=[[2, 9], [38, 9]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+    revise_page_reading_order(
+        project,
+        manifest_sha256=manifest_sha256,
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="layout-reviewer",
+        expected_revision=0,
+    )
+
+    activity = list_project_activity(
+        project,
+        manifest_sha256=manifest_sha256,
+        limit=10,
+    )
+    assert activity["filters"] == {
+        "kind": None,
+        "page_index": None,
+        "source_span_id": None,
+        "region_id": None,
+    }
+    assert {event["kind"] for event in activity["events"]} == {
+        "TRANSCRIPTION",
+        "LINE_GEOMETRY",
+        "REGION_GEOMETRY",
+        "READING_ORDER",
+    }
+    assert all("prior_text" not in event for event in activity["events"])
+    assert all("revised_text" not in event for event in activity["events"])
+
+    by_kind = list_project_activity(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind="line_geometry",
+    )
+    assert by_kind["filters"]["kind"] == "LINE_GEOMETRY"
+    assert [event["kind"] for event in by_kind["events"]] == ["LINE_GEOMETRY"]
+
+    by_source_span = list_project_activity(
+        project,
+        manifest_sha256=manifest_sha256,
+        source_span_id=first_line["source_span_id"],
+    )
+    assert {event["kind"] for event in by_source_span["events"]} == {
+        "TRANSCRIPTION",
+        "LINE_GEOMETRY",
+    }
+    assert all(
+        event["source_span_id"] == first_line["source_span_id"]
+        for event in by_source_span["events"]
+    )
+
+    by_region = list_project_activity(
+        project,
+        manifest_sha256=manifest_sha256,
+        region_id="region-2",
+    )
+    assert [event["kind"] for event in by_region["events"]] == ["REGION_GEOMETRY"]
+    assert by_region["events"][0]["region_id"] == "region-2"
+
+    assert (
+        list_project_activity(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=1,
+        )["events"]
+        == []
+    )
+
+    assert (
+        main(
+            [
+                "project-activity",
+                str(project),
+                "--manifest-sha256",
+                manifest_sha256,
+                "--kind",
+                "line_geometry",
+                "--page-index",
+                "0",
+                "--source-span-id",
+                first_line["source_span_id"],
+                "--region-id",
+                "region-1",
+            ]
+        )
+        == 0
+    )
+    filtered = json.loads(capsys.readouterr().out)
+    assert filtered["filters"] == {
+        "kind": "LINE_GEOMETRY",
+        "page_index": 0,
+        "source_span_id": first_line["source_span_id"],
+        "region_id": "region-1",
+    }
+    assert [event["kind"] for event in filtered["events"]] == ["LINE_GEOMETRY"]
+
+    with pytest.raises(ProjectStoreError, match="supported revision kind"):
+        list_project_activity(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind="OTHER",
+        )
+    with pytest.raises(ProjectStoreError, match="non-negative integer"):
+        list_project_activity(
+            project,
+            manifest_sha256=manifest_sha256,
+            page_index=True,
+        )
+    with pytest.raises(ProjectStoreError, match="nonblank exact string"):
+        list_project_activity(
+            project,
+            manifest_sha256=manifest_sha256,
+            source_span_id=" ",
+        )
+    with pytest.raises(ProjectStoreError, match="nonblank exact string"):
+        list_project_activity(
+            project,
+            manifest_sha256=manifest_sha256,
+            region_id=" ",
+        )
 
 
 def test_project_cli_inspects_effective_pages_and_layout(
