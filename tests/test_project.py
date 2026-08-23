@@ -1405,7 +1405,10 @@ def test_project_export_can_add_text_equiv_for_previously_blank_line(tmp_path: P
     ] == "рукописный текст"
 
 
-def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path) -> None:
+def test_project_evaluates_one_htr_result_against_human_revisions(
+    tmp_path: Path,
+    capsys,
+) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()
     _write_image(source_root / "page.png")
@@ -1416,6 +1419,20 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     project = tmp_path / "register.aktproj"
     create_project(project, name="Serock births")
     imported = import_pagexml_into_project(project, source)
+
+    assert (
+        main(
+            [
+                "project-list-htr-evaluations",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+            ]
+        )
+        == 0
+    )
+    assert json.loads(capsys.readouterr().out) == []
+
     htr = import_htr_suggestions(
         project,
         recognized,
@@ -1469,6 +1486,19 @@ def test_project_evaluates_one_htr_result_against_human_revisions(tmp_path: Path
     assert evaluations[0]["character_error_rate"] == 1 / 3
     assert evaluations[0]["human_revision_set_sha256"] == report["human_revision_set_sha256"]
     assert isinstance(evaluations[0]["imported_at"], str)
+
+    assert (
+        main(
+            [
+                "project-list-htr-evaluations",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+            ]
+        )
+        == 0
+    )
+    assert json.loads(capsys.readouterr().out) == evaluations
 
 
 

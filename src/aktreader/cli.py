@@ -100,6 +100,7 @@ from aktreader.project import (
     import_pdf_into_project,
     import_review_package,
     inspect_project,
+    list_htr_suggestion_evaluations,
     list_project_activity,
     list_project_documents,
     recognize_project_with_kraken,
@@ -793,6 +794,21 @@ def build_parser() -> argparse.ArgumentParser:
         "--replace-existing",
         action="store_true",
         help="explicitly replace an existing local evaluation report",
+    )
+
+    project_list_htr_evaluations = subparsers.add_parser(
+        "project-list-htr-evaluations",
+        help="list current HTR evaluations for one imported document",
+    )
+    project_list_htr_evaluations.add_argument(
+        "project",
+        type=Path,
+        help="local .aktproj directory",
+    )
+    project_list_htr_evaluations.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="source PAGE XML project-import manifest SHA-256",
     )
 
 
@@ -2129,6 +2145,19 @@ def _command_project_evaluate_htr(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_list_htr_evaluations(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        list_htr_suggestion_evaluations(
+            project,
+            manifest_sha256=args.manifest_sha256,
+        )
+    )
+    return 0
+
+
 def _command_project_grant_training_consent(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     if not project.is_dir():
@@ -3030,6 +3059,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-import-review-package": _command_project_import_review_package,
         "project-resolve-review-proposal": _command_project_resolve_review_proposal,
         "project-evaluate-htr": _command_project_evaluate_htr,
+        "project-list-htr-evaluations": _command_project_list_htr_evaluations,
         "project-grant-training-consent": _command_project_grant_training_consent,
         "project-revoke-training-consent": _command_project_revoke_training_consent,
         "project-training-readiness": _command_project_training_readiness,

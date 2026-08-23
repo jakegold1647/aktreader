@@ -515,6 +515,22 @@ def test_project_htr_evaluation_runs_with_sockets_disabled(
     assert payload["network_required"] is False
     assert report_path.is_file()
 
+    assert (
+        main(
+            [
+                "project-list-htr-evaluations",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+            ]
+        )
+        == 0
+    )
+    history = json.loads(capsys.readouterr().out)
+    assert len(history) == 1
+    assert history[0]["result_pagexml_sha256"] == htr["result_pagexml_sha256"]
+    assert history[0]["network_required"] is False
+
 
 def test_project_training_readiness_runs_with_sockets_disabled(
     sockets_disabled: None,

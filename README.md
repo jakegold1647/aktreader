@@ -156,7 +156,9 @@ The CLI also provides `label-validate`, `collection-create`, `collection-add-pro
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
 `project-kraken-recognize`, `project-export-pagexml`, `project-export-transcript`,
-`project-export-transcriptions-csv`, `project-export-alto`, `project-export-pdf`, `project-evaluate-htr`, `project-grant-training-consent`, `project-revoke-training-consent`,
+`project-export-transcriptions-csv`, `project-export-alto`, `project-export-pdf`,
+`project-evaluate-htr`, `project-list-htr-evaluations`, `project-grant-training-consent`,
+`project-revoke-training-consent`,
 `project-training-readiness`, `project-export-consented-training-pagexml`,
 `project-export-review-package`, `project-import-review-package`,
 `project-resolve-review-proposal`, `project-revise-line-geometry`,
@@ -424,7 +426,14 @@ python -m aktreader project-evaluate-htr serock.aktproj `
   --manifest-sha256 <project-import-manifest-sha256> `
   --result-pagexml-sha256 <imported-result-pagexml-sha256> `
   --output serock-kraken-evaluation.json
+
+python -m aktreader project-list-htr-evaluations serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256>
 ```
+
+The listing recalculates every imported run against the latest saved human revisions and prints
+the newest run first. It is read-only, stays local, and includes metrics and provenance hashes but
+no transcription content or filesystem paths.
 
 Training permission is also explicit and line-level. A contributor can consent only to their
 current saved revision; a later revision becomes unconsented, and withdrawal prevents any future
