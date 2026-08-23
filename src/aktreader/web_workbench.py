@@ -722,12 +722,15 @@ select, input, textarea { border: 1px solid #aab8c7; border-radius: 5px;
 .line { text-align: left; border: 1px solid #d9e1ea; border-radius: 5px;
   padding: 8px; background: white; color: #18212f; }
 .line.selected { outline: 2px solid #15803d; }
-small, #status { color: #52616f; }
+small, #status, #dirty-indicator { color: #52616f; }
+#dirty-indicator:not(:empty) { color: #9a3412; font-weight: 600; }
 textarea { min-height: 120px; resize: vertical; width: 100%; box-sizing: border-box; }
 .actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
 button { background: #0f766e; border: 0; border-radius: 5px; color: white;
   cursor: pointer; padding: 8px 12px; }
 button:disabled { cursor: not-allowed; opacity: .55; }
+dialog { border: 1px solid #d9e1ea; border-radius: 8px; max-width: 430px; padding: 20px; }
+dialog::backdrop { background: rgb(15 23 42 / .45); }
 #detail { white-space: pre-wrap; color: #52616f; font-size: .9rem; }
 #history-preview { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 5px;
   box-sizing: border-box; color: #334155; max-height: 220px; overflow: auto;
@@ -755,6 +758,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   <label>Transcription <textarea id="text" disabled></textarea></label>
   <div class="actions"><button id="save" disabled>Save human revision</button>
     <span id="status"></span></div>
+  <p id="dirty-indicator" role="status" aria-live="polite"></p>
   <details open>
     <summary>PAGE layout</summary>
     <p><strong>Selected line geometry</strong></p>
@@ -793,10 +797,18 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   </details>
 </aside>
 </main>
+<dialog id="discard-dialog" aria-labelledby="discard-title">
+  <h2 id="discard-title">Discard unsaved changes?</h2>
+  <p id="discard-message"></p>
+  <form method="dialog" class="actions">
+    <button value="cancel" autofocus>Keep editing</button>
+    <button value="discard">Discard changes</button>
+  </form>
+</dialog>
 <script>
 const state = {
   document: null, page: null, pages: [], lines: [], selected: null, selectedRegion: null,
-  regionOrder: [], drag: null, history: null
+  regionOrder: [], drag: null, history: null, pageUrl: null
 };
 const documentSelect = document.getElementById("document");
 const pageSelect = document.getElementById("page");
@@ -809,6 +821,7 @@ const editor = document.getElementById("editor");
 const save = document.getElementById("save");
 const detail = document.getElementById("detail");
 const status = document.getElementById("status");
+const dirtyIndicator = document.getElementById("dirty-indicator");
 const linePolygon = document.getElementById("line-polygon");
 const lineBaseline = document.getElementById("line-baseline");
 const saveLineGeometry = document.getElementById("save-line-geometry");
@@ -822,6 +835,8 @@ const loadHistoryButton = document.getElementById("load-history");
 const historyRevision = document.getElementById("history-revision");
 const historyPreview = document.getElementById("history-preview");
 const restoreRevision = document.getElementById("restore-revision");
+const discardDialog = document.getElementById("discard-dialog");
+const discardMessage = document.getElementById("discard-message");
 
 overlay.addEventListener("pointermove", moveGeometryDrag);
 overlay.addEventListener("pointerup", finishGeometryDrag);
@@ -842,6 +857,66 @@ function selectedLine() { return state.lines.find(line => line.source_span_id ==
 function selectedRegion() {
   return state.page && state.page.regions.find(region => region.region_id === state.selectedRegion);
 }
+function jsonDraft(value, fallback) {
+  try { return JSON.parse(value); }
+  catch (_error) { return fallback; }
+}
+function jsonDraftDirty(value, current) {
+  try { return JSON.stringify(JSON.parse(value)) !== JSON.stringify(current); }
+  catch (_error) { return true; }
+}
+function dirtyStreams() {
+  const streams = [];
+  const line = selectedLine();
+  const region = selectedRegion();
+  if (line && text.value !== (line.text === null ? "" : line.text)) {
+    streams.push("transcription");
+  }
+  if (line && (
+    jsonDraftDirty(linePolygon.value, line.polygon)
+    || jsonDraftDirty(lineBaseline.value, line.baseline)
+  )) streams.push("line geometry");
+  if (region && jsonDraftDirty(polygon.value, region.polygon)) {
+    streams.push("region geometry");
+  }
+  if (state.page && JSON.stringify(state.regionOrder)
+      !== JSON.stringify(state.page.reading_order.region_ids)) {
+    streams.push("reading order");
+  }
+  return streams;
+}
+function updateDirtyIndicator() {
+  const streams = dirtyStreams();
+  dirtyIndicator.textContent = streams.length ? "Unsaved: " + streams.join(", ") : "";
+}
+async function confirmDiscard(streams) {
+  const dirty = dirtyStreams().filter(stream => streams.includes(stream));
+  if (!dirty.length) return true;
+  discardMessage.textContent = "Discard unsaved " + dirty.join(", ") + " changes?";
+  discardDialog.returnValue = "cancel";
+  discardDialog.showModal();
+  return new Promise(resolve => discardDialog.addEventListener(
+    "close", () => resolve(discardDialog.returnValue === "discard"), {once: true}
+  ));
+}
+function renderLineDetail() {
+  const line = selectedLine();
+  if (!line) {
+    detail.textContent = state.page
+      ? "This page has no text lines."
+      : "Choose a document and page.";
+    return;
+  }
+  const suggestion = line.suggestions && line.suggestions[0];
+  const review = line.review_proposals
+    && line.review_proposals.find(item => item.state === "PENDING");
+  detail.textContent = [
+    "Line: " + line.line_id + " · text revision " + line.revision
+      + " · geometry revision " + line.geometry_revision,
+    suggestion ? "Suggestion: " + (suggestion.text || "no text") : "No engine suggestion",
+    review ? "Reviewer proposal: " + review.text : "No pending reviewer proposal"
+  ].join("\\n");
+}
 function clearHistory(message) {
   state.history = null;
   historyRevision.replaceChildren();
@@ -849,7 +924,12 @@ function clearHistory(message) {
   restoreRevision.disabled = true;
   historyPreview.textContent = message || "No revision history loaded.";
 }
-function selectLine(sourceSpanId) {
+async function selectLine(sourceSpanId, discardConfirmed) {
+  if (sourceSpanId === state.selected) return true;
+  if (!discardConfirmed && !await confirmDiscard(["transcription", "line geometry"])) {
+    renderLines(); drawOverlay();
+    return false;
+  }
   clearHistory();
   state.selected = sourceSpanId;
   const line = selectedLine();
@@ -859,17 +939,8 @@ function selectLine(sourceSpanId) {
   linePolygon.value = line ? JSON.stringify(line.polygon) : "";
   lineBaseline.value = line ? JSON.stringify(line.baseline) : "";
   renderLines(); drawOverlay();
-  if (line) {
-    const suggestion = line.suggestions && line.suggestions[0];
-    const review = line.review_proposals
-      && line.review_proposals.find(item => item.state === "PENDING");
-    detail.textContent = [
-      "Line: " + line.line_id + " · text revision " + line.revision
-        + " · geometry revision " + line.geometry_revision,
-      suggestion ? "Suggestion: " + (suggestion.text || "no text") : "No engine suggestion",
-      review ? "Reviewer proposal: " + review.text : "No pending reviewer proposal"
-    ].join("\\n");
-  }
+  renderLineDetail(); updateDirtyIndicator();
+  return true;
 }
 function renderPageThumbnails() {
   pageThumbnails.replaceChildren();
@@ -898,9 +969,22 @@ function renderLines() {
     button.className = "line" + (line.source_span_id === state.selected ? " selected" : "");
     button.textContent = line.line_id + " · text r" + line.revision
       + " · geometry r" + line.geometry_revision + " · " + (line.text || "∅");
-    button.addEventListener("click", () => selectLine(line.source_span_id));
+    button.addEventListener("click", () =>
+      selectLine(line.source_span_id).catch(error => setStatus(error.message)));
     lineList.append(button);
   });
+}
+function displayedRegionPolygon(region) {
+  return region.region_id === state.selectedRegion
+    ? jsonDraft(polygon.value, region.polygon) : region.polygon;
+}
+function displayedLinePolygon(line) {
+  return line.source_span_id === state.selected
+    ? jsonDraft(linePolygon.value, line.polygon) : line.polygon;
+}
+function displayedLineBaseline(line) {
+  return line.source_span_id === state.selected
+    ? jsonDraft(lineBaseline.value, line.baseline) : line.baseline;
 }
 function drawOverlay() {
   overlay.replaceChildren();
@@ -908,24 +992,31 @@ function drawOverlay() {
   overlay.setAttribute("viewBox", "0 0 " + state.page.width_px + " " + state.page.height_px);
   state.page.regions.forEach(region => {
     const shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    shape.setAttribute("points", region.polygon.map(point => point.join(",")).join(" "));
+    shape.setAttribute(
+      "points", displayedRegionPolygon(region).map(point => point.join(",")).join(" ")
+    );
     shape.setAttribute(
       "class", "region-box" + (region.region_id === state.selectedRegion ? " selected" : "")
     );
-    shape.addEventListener("click", () => selectRegion(region.region_id));
+    shape.addEventListener("click", () =>
+      selectRegion(region.region_id).catch(error => setStatus(error.message)));
     overlay.append(shape);
   });
   state.lines.forEach(line => {
     const shape = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    shape.setAttribute("points", line.polygon.map(point => point.join(",")).join(" "));
+    shape.setAttribute(
+      "points", displayedLinePolygon(line).map(point => point.join(",")).join(" ")
+    );
     shape.setAttribute(
       "class", "line-box" + (line.source_span_id === state.selected ? " selected" : "")
     );
-    shape.addEventListener("click", () => selectLine(line.source_span_id));
+    shape.addEventListener("click", () =>
+      selectLine(line.source_span_id).catch(error => setStatus(error.message)));
     overlay.append(shape);
-    if (line.baseline) {
+    const displayedBaseline = displayedLineBaseline(line);
+    if (displayedBaseline) {
       const baseline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-      baseline.setAttribute("points", line.baseline.map(point => point.join(",")).join(" "));
+      baseline.setAttribute("points", displayedBaseline.map(point => point.join(",")).join(" "));
       baseline.setAttribute(
         "class",
         "line-baseline" + (line.source_span_id === state.selected ? " selected" : "")
@@ -935,7 +1026,7 @@ function drawOverlay() {
   });
   const activeRegion = selectedRegion();
   if (activeRegion) {
-    activeRegion.polygon.forEach((point, pointIndex) => {
+    displayedRegionPolygon(activeRegion).forEach((point, pointIndex) => {
       const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
       handle.setAttribute("r", "5"); handle.setAttribute("class", "region-handle");
@@ -949,7 +1040,7 @@ function drawOverlay() {
   }
   const activeLine = selectedLine();
   if (!activeLine) return;
-  activeLine.polygon.forEach((point, pointIndex) => {
+  displayedLinePolygon(activeLine).forEach((point, pointIndex) => {
     const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
     handle.setAttribute("r", "5"); handle.setAttribute("class", "line-handle");
@@ -960,7 +1051,7 @@ function drawOverlay() {
     );
     overlay.append(handle);
   });
-  (activeLine.baseline || []).forEach((point, pointIndex) => {
+  (displayedLineBaseline(activeLine) || []).forEach((point, pointIndex) => {
     const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     handle.setAttribute("cx", point[0]); handle.setAttribute("cy", point[1]);
     handle.setAttribute("r", "5"); handle.setAttribute("class", "baseline-handle");
@@ -972,7 +1063,13 @@ function drawOverlay() {
     overlay.append(handle);
   });
 }
-function selectRegion(regionId) {
+async function selectRegion(regionId, discardConfirmed) {
+  if (regionId === state.selectedRegion) return true;
+  if (!discardConfirmed && !await confirmDiscard(["region geometry"])) {
+    regionSelect.value = state.selectedRegion || "";
+    drawOverlay();
+    return false;
+  }
   clearHistory();
   state.selectedRegion = regionId;
   const region = selectedRegion();
@@ -980,7 +1077,8 @@ function selectRegion(regionId) {
   saveRegion.disabled = !region;
   polygon.value = region ? JSON.stringify(region.polygon) : "";
   regionSelect.value = regionId || "";
-  drawOverlay();
+  drawOverlay(); updateDirtyIndicator();
+  return true;
 }
 
 function sourcePoint(event) {
@@ -997,8 +1095,8 @@ function sourcePoint(event) {
 
 function beginGeometryDrag(kind, identity, pointIndex, event) {
   event.preventDefault(); event.stopPropagation();
-  if (kind === "region") selectRegion(identity);
-  else selectLine(identity);
+  if (kind === "region" && identity !== state.selectedRegion) return;
+  if (kind !== "region" && identity !== state.selected) return;
   state.drag = { kind: kind, identity: identity, pointIndex: pointIndex };
   overlay.setPointerCapture(event.pointerId);
 }
@@ -1010,18 +1108,21 @@ function moveGeometryDrag(event) {
   if (state.drag.kind === "region") {
     const region = state.page.regions.find(item => item.region_id === state.drag.identity);
     if (!region) return;
-    region.polygon[state.drag.pointIndex] = point;
-    polygon.value = JSON.stringify(region.polygon);
+    const points = jsonDraft(polygon.value, region.polygon.map(item => [...item]));
+    points[state.drag.pointIndex] = point;
+    polygon.value = JSON.stringify(points);
   } else {
     const line = state.lines.find(item => item.source_span_id === state.drag.identity);
     if (!line) return;
-    const points = state.drag.kind === "line-polygon" ? line.polygon : line.baseline;
+    const source = state.drag.kind === "line-polygon" ? linePolygon.value : lineBaseline.value;
+    const fallback = state.drag.kind === "line-polygon" ? line.polygon : line.baseline;
+    const points = jsonDraft(source, fallback ? fallback.map(item => [...item]) : null);
     if (!points) return;
     points[state.drag.pointIndex] = point;
     if (state.drag.kind === "line-polygon") linePolygon.value = JSON.stringify(points);
     else lineBaseline.value = JSON.stringify(points);
   }
-  drawOverlay();
+  drawOverlay(); updateDirtyIndicator();
 }
 
 function finishGeometryDrag(event) {
@@ -1038,7 +1139,7 @@ function renderRegions() {
   state.page.regions.forEach(region => {
     option(regionSelect, region.region_id, region.region_id + " · revision " + region.revision);
   });
-  selectRegion(state.selectedRegion || state.page.regions[0]?.region_id);
+  regionSelect.value = state.selectedRegion || "";
 }
 
 function renderReadingOrder() {
@@ -1129,25 +1230,54 @@ function moveRegion(index, offset) {
   [state.regionOrder[index], state.regionOrder[target]] = [
     state.regionOrder[target], state.regionOrder[index]
   ];
-  renderReadingOrder();
+  renderReadingOrder(); updateDirtyIndicator();
 }
 
-async function loadPage() {
+async function loadPage(discardConfirmed) {
+  const targetPageUrl = pageSelect.value;
+  if (targetPageUrl !== state.pageUrl && !discardConfirmed && !await confirmDiscard([
+    "transcription", "line geometry", "region geometry", "reading order"
+  ])) {
+    pageSelect.value = state.pageUrl || "";
+    renderPageThumbnails();
+    return false;
+  }
   clearHistory();
   setStatus("");
-  state.page = await api(pageSelect.value);
+  let nextPage;
+  try { nextPage = await api(targetPageUrl); }
+  catch (error) {
+    pageSelect.value = state.pageUrl || "";
+    renderPageThumbnails();
+    throw error;
+  }
+  state.page = nextPage;
+  state.pageUrl = targetPageUrl;
   state.lines = state.page.lines;
-  state.selected = state.lines.length ? state.lines[0].source_span_id : null;
-  state.selectedRegion = state.page.regions.length ? state.page.regions[0].region_id : null;
+  const firstLine = state.lines.length ? state.lines[0].source_span_id : null;
+  const firstRegion = state.page.regions.length ? state.page.regions[0].region_id : null;
+  state.selected = undefined;
+  state.selectedRegion = undefined;
   state.regionOrder = [...state.page.reading_order.region_ids];
   image.src = state.page.image_url;
   renderPageThumbnails(); renderLines(); renderRegions(); renderReadingOrder(); drawOverlay();
-  selectLine(state.selected);
+  await selectLine(firstLine, true);
+  await selectRegion(firstRegion, true);
+  updateDirtyIndicator();
+  return true;
 }
-async function loadDocument() {
+async function loadDocument(discardConfirmed) {
+  const targetDocument = documentSelect.value;
+  if (targetDocument !== state.document && !discardConfirmed && !await confirmDiscard([
+    "transcription", "line geometry", "region geometry", "reading order"
+  ])) {
+    documentSelect.value = state.document || "";
+    return false;
+  }
   const response = await api(
-    "/api/pages?manifest_sha256=" + encodeURIComponent(documentSelect.value)
+    "/api/pages?manifest_sha256=" + encodeURIComponent(targetDocument)
   );
+  state.document = targetDocument;
   pageSelect.replaceChildren();
   state.pages = response.pages;
   response.pages.forEach((page, index) => {
@@ -1155,7 +1285,8 @@ async function loadDocument() {
       (index + 1) + " of " + response.pages.length + ". " + page.page_id);
   });
   renderPageThumbnails();
-  if (response.pages.length) await loadPage();
+  if (response.pages.length) await loadPage(true);
+  return true;
 }
 async function boot() {
   try {
@@ -1172,13 +1303,26 @@ async function boot() {
 documentSelect.addEventListener("change", () =>
   loadDocument().catch(error => setStatus(error.message)));
 pageSelect.addEventListener("change", () => loadPage().catch(error => setStatus(error.message)));
-regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
+regionSelect.addEventListener("change", () =>
+  selectRegion(regionSelect.value).catch(error => setStatus(error.message)));
+text.addEventListener("input", updateDirtyIndicator);
+[linePolygon, lineBaseline, polygon].forEach(control => control.addEventListener("input", () => {
+  drawOverlay(); updateDirtyIndicator();
+}));
+window.addEventListener("beforeunload", event => {
+  if (!dirtyStreams().length) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
 historyKind.addEventListener("change", () => clearHistory());
 historyRevision.addEventListener("change", renderHistorySelection);
 loadHistoryButton.addEventListener("click", () =>
   loadHistory().catch(error => setStatus(error.message)));
 restoreRevision.addEventListener("click", async () => {
   if (!state.history || historyRevision.value === "") return;
+  if (!await confirmDiscard([
+    "transcription", "line geometry", "region geometry", "reading order"
+  ])) return;
   const kind = state.history.kind;
   const selectedSourceSpanId = state.selected;
   const selectedRegionId = state.selectedRegion;
@@ -1197,9 +1341,9 @@ restoreRevision.addEventListener("click", async () => {
         ...locator
       })
     });
-    await loadPage();
-    if (selectedSourceSpanId) selectLine(selectedSourceSpanId);
-    if (selectedRegionId) selectRegion(selectedRegionId);
+    await loadPage(true);
+    if (selectedSourceSpanId) await selectLine(selectedSourceSpanId);
+    if (selectedRegionId) await selectRegion(selectedRegionId);
     await loadHistory();
     setStatus(result.status === "UNCHANGED"
       ? "The selected historical value is already current."
@@ -1222,8 +1366,10 @@ save.addEventListener("click", async () => {
         expected_revision: line.revision
       })
     });
-    await loadPage();
-    selectLine(line.source_span_id);
+    line.text = text.value;
+    line.revision = result.revision;
+    clearHistory();
+    renderLines(); renderLineDetail(); updateDirtyIndicator();
     setStatus(result.status === "UNCHANGED"
       ? "No change to save."
       : "Saved human revision " + result.revision + ".");
@@ -1248,8 +1394,13 @@ saveLineGeometry.addEventListener("click", async () => {
         expected_revision: line.geometry_revision
       })
     });
-    await loadPage();
-    selectLine(line.source_span_id);
+    line.polygon = revisedPolygon;
+    line.baseline = revisedBaseline;
+    line.geometry_revision = result.revision;
+    linePolygon.value = JSON.stringify(revisedPolygon);
+    lineBaseline.value = JSON.stringify(revisedBaseline);
+    clearHistory();
+    renderLines(); renderLineDetail(); drawOverlay(); updateDirtyIndicator();
     setStatus(result.status === "UNCHANGED"
       ? "No line geometry change to save."
       : "Saved line geometry revision " + result.revision + ".");
@@ -1261,7 +1412,7 @@ saveRegion.addEventListener("click", async () => {
   try {
     const revisedPolygon = JSON.parse(polygon.value);
     setStatus("Saving region geometry…");
-    await api("/api/region-geometry", {
+    const result = await api("/api/region-geometry", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1273,15 +1424,20 @@ saveRegion.addEventListener("click", async () => {
         expected_revision: region.revision
       })
     });
-    await loadPage();
-    selectRegion(region.region_id);
-    setStatus("Saved region geometry.");
+    region.polygon = revisedPolygon;
+    region.revision = result.revision;
+    polygon.value = JSON.stringify(revisedPolygon);
+    clearHistory();
+    renderRegions(); drawOverlay(); updateDirtyIndicator();
+    setStatus(result.status === "UNCHANGED"
+      ? "No region geometry change to save."
+      : "Saved region geometry revision " + result.revision + ".");
   } catch (error) { setStatus(error.message); }
 });
 saveOrder.addEventListener("click", async () => {
   try {
     setStatus("Saving reading order…");
-    await api("/api/reading-order", {
+    const result = await api("/api/reading-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1292,8 +1448,12 @@ saveOrder.addEventListener("click", async () => {
         expected_revision: state.page.reading_order.revision
       })
     });
-    await loadPage();
-    setStatus("Saved reading order.");
+    state.page.reading_order.region_ids = [...state.regionOrder];
+    state.page.reading_order.revision = result.revision;
+    clearHistory(); updateDirtyIndicator();
+    setStatus(result.status === "UNCHANGED"
+      ? "No reading-order change to save."
+      : "Saved reading-order revision " + result.revision + ".");
   } catch (error) { setStatus(error.message); }
 });
 boot();

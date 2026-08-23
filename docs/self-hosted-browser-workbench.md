@@ -36,6 +36,9 @@ Stop it with Ctrl+C.
 - bounded, contentful history for the selected transcription, line geometry,
   region geometry, or page reading order, with append-only restoration of an
   explicitly selected older state;
+- per-stream unsaved-draft detection that guards affected navigation and
+  restoration, warns before a dirty tab reloads or closes, and preserves other
+  streams' drafts when one stream is saved;
 - optimistic revision checks on every write so a stale tab cannot silently
   overwrite work saved after that tab loaded; and
 - project state that remains content-addressed and local.

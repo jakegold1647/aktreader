@@ -338,8 +338,11 @@ line polygons and baselines, region overlays, saved human transcription revision
 line geometry, region geometry, or reading-order changes. Layout vertices can be dragged on the
 scan or entered as source-pixel coordinates. A bounded, contentful history view can inspect any of
 those four streams and restore an explicitly selected older value by appending a new audited
-revision. Every save and restoration is revision-checked; a stale tab must reload and review newer
-work before trying again. The server rejects nonlocal request authorities, cross-origin browser
+revision. Unsaved work is identified per stream: line, region, page, and document changes require
+confirmation before discarding an affected draft, while saving one stream preserves drafts in the
+others. Reloading or closing a dirty tab also triggers the browser's unsaved-work warning. Every
+save and restoration is revision-checked; a stale tab must reload and review newer work before
+trying again. The server rejects nonlocal request authorities, cross-origin browser
 requests, and non-JSON write bodies. It has no accounts and cannot bind to a LAN or public address,
 so it is not yet a shared deployment. See
 [the self-hosted browser workbench boundary](docs/self-hosted-browser-workbench.md).

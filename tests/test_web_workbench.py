@@ -85,6 +85,14 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"Drag line baseline point" in root
         assert b"Revision history and restore" in root
         assert b"Restore as new revision" in root
+        assert b'id="dirty-indicator"' in root
+        assert b'window.addEventListener("beforeunload"' in root
+        assert b"Discard unsaved " in root
+        assert b"Keep editing" in root
+        assert b"Discard changes" in root
+        assert b"jsonDraftDirty" in root
+        assert b"line.text = text.value" in root
+        assert b"state.page.reading_order.region_ids = [...state.regionOrder]" in root
         assert b'].join("\\n");' in root
 
         project_status, _project_headers, project_body = _request(port, "GET", "/api/project")
