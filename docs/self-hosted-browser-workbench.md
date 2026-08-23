@@ -28,6 +28,8 @@ Stop it with Ctrl+C.
   navigation for sustained line-by-line review;
 - bounded local search across effective transcription text, document titles,
   and document tags, with direct jumps to the matching line;
+- a bounded, content-free recent-activity panel for the selected document,
+  with guarded jumps to the affected page, line, or region;
 - an editor that appends the same human transcription revisions as the
   desktop workbench;
 - direct on-canvas line-polygon and baseline-point dragging, with source-pixel
@@ -76,6 +78,19 @@ one loads that exact line and moves keyboard focus to it. A jump to another line
 page, or document uses the normal unsaved-work confirmation across transcription,
 line geometry, region geometry, and reading order. Cancelling leaves the current
 selection and every draft in place.
+
+## Recent changes
+
+Open **Recent changes** to review the newest 50 human revisions for the selected
+document. The panel reuses the same content-free project activity feed as the
+`project-activity` command: each event includes its revision kind, page and line
+or region locator, editor, revision number, and timestamp, but never prior or
+revised transcription text or a local filesystem path.
+
+Selecting an event loads its page and, where available, its exact line or region.
+The jump uses the same unsaved-work confirmation as page and search navigation,
+so cancelling keeps the current selection and all drafts. The feed refreshes
+after successful saves and restorations, and can also be refreshed manually.
 
 ## Security boundary
 
