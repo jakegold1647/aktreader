@@ -435,7 +435,10 @@ def test_project_pdf_import_cli_creates_a_page_document(tmp_path: Path, capsys) 
 
 
 
-def test_project_keeps_human_transcription_revisions_separate_from_source(tmp_path: Path) -> None:
+def test_project_keeps_human_transcription_revisions_separate_from_source(
+    tmp_path: Path,
+    capsys,
+) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()
     _write_image(source_root / "page.png")
@@ -488,6 +491,44 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(tmp_pa
     assert unchanged["status"] == "UNCHANGED"
     assert unchanged["revision"] == 1
     assert inspect_project(project)["transcription_revision_count"] == 1
+
+    assert (
+        main(
+            [
+                "project-activity",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    activity = json.loads(capsys.readouterr().out)
+    assert activity["manifest_sha256"] == imported["manifest_sha256"]
+    assert activity["network_required"] is False
+    assert len(activity["events"]) == 1
+    assert activity["events"][0]["kind"] == "TRANSCRIPTION"
+    assert activity["events"][0]["source_span_id"] == line["source_span_id"]
+    assert activity["events"][0]["editor"] == "reviewer-1"
+    assert "prior_text" not in activity["events"][0]
+    assert "revised_text" not in activity["events"][0]
+
+    assert (
+        main(
+            [
+                "project-activity",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--limit",
+                "0",
+            ]
+        )
+        == 2
+    )
+    assert "activity limit must be an integer from 1 to 500" in capsys.readouterr().err
 
 
 
