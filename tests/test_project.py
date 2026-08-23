@@ -2297,6 +2297,8 @@ def test_project_cli_revises_page_reading_order(tmp_path: Path, capsys) -> None:
             str(order),
             "--editor",
             "layout-reviewer",
+            "--expected-revision",
+            "0",
         ]
     )
 
@@ -2399,6 +2401,8 @@ def test_project_cli_revises_region_geometry(tmp_path: Path, capsys) -> None:
             str(geometry),
             "--editor",
             "layout-reviewer",
+            "--expected-revision",
+            "0",
         ]
     )
 
@@ -2450,3 +2454,188 @@ def test_project_keeps_line_geometry_revisions_separate_and_exports_them(
     locator = rendered["pages"][0]["lines"][0]["locator"]
     assert locator["polygon"] == [[1, 1], [39, 1], [39, 16], [1, 16]]
     assert locator["baseline"] == [[2, 13], [38, 13]]
+
+
+def test_project_cli_revises_line_geometry_with_revision_precondition(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    geometry = tmp_path / "line-geometry.json"
+    geometry.write_text(
+        json.dumps(
+            {
+                "polygon": [[1, 1], [39, 1], [39, 16], [1, 16]],
+                "baseline": [[2, 13], [38, 13]],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "project-revise-line-geometry",
+            str(project),
+            "--manifest-sha256",
+            imported["manifest_sha256"],
+            "--source-span-id",
+            line["source_span_id"],
+            "--geometry",
+            str(geometry),
+            "--editor",
+            "layout-reviewer",
+            "--expected-revision",
+            "0",
+        ]
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["status"] == "SAVED"
+    assert report["source_span_id"] == line["source_span_id"]
+    assert report["revision"] == 1
+    assert report["network_required"] is False
+
+
+def test_project_layout_cli_rejects_stale_revision_preconditions(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "page.xml"
+    _write_two_region_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+
+    revise_line_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        source_span_id=line["source_span_id"],
+        polygon=[[1, 1], [39, 1], [39, 14], [1, 14]],
+        baseline=[[2, 12], [38, 12]],
+        editor="first-reviewer",
+        expected_revision=0,
+    )
+    revise_region_geometry(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_id="region-2",
+        polygon=[[1, 15], [39, 15], [39, 29], [1, 29]],
+        editor="first-reviewer",
+        expected_revision=0,
+    )
+    revise_page_reading_order(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+        region_ids=["region-2", "region-1"],
+        editor="first-reviewer",
+        expected_revision=0,
+    )
+
+    line_geometry = tmp_path / "stale-line-geometry.json"
+    line_geometry.write_text(
+        json.dumps(
+            {
+                "polygon": [[2, 2], [38, 2], [38, 15], [2, 15]],
+                "baseline": [[3, 13], [37, 13]],
+            }
+        ),
+        encoding="utf-8",
+    )
+    region_geometry = tmp_path / "stale-region-geometry.json"
+    region_geometry.write_text(
+        json.dumps({"polygon": [[2, 16], [38, 16], [38, 28], [2, 28]]}),
+        encoding="utf-8",
+    )
+    reading_order = tmp_path / "stale-reading-order.json"
+    reading_order.write_text(
+        json.dumps({"region_ids": ["region-1", "region-2"]}),
+        encoding="utf-8",
+    )
+
+    cases = [
+        (
+            [
+                "project-revise-line-geometry",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--source-span-id",
+                line["source_span_id"],
+                "--geometry",
+                str(line_geometry),
+                "--editor",
+                "stale-reviewer",
+                "--expected-revision",
+                "0",
+            ],
+            "line geometry revision conflict",
+        ),
+        (
+            [
+                "project-revise-region-geometry",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--page-index",
+                "0",
+                "--region-id",
+                "region-2",
+                "--geometry",
+                str(region_geometry),
+                "--editor",
+                "stale-reviewer",
+                "--expected-revision",
+                "0",
+            ],
+            "region geometry revision conflict",
+        ),
+        (
+            [
+                "project-revise-page-reading-order",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--page-index",
+                "0",
+                "--region-order",
+                str(reading_order),
+                "--editor",
+                "stale-reviewer",
+                "--expected-revision",
+                "0",
+            ],
+            "reading-order revision conflict",
+        ),
+    ]
+
+    for command, conflict in cases:
+        assert main(command) == 2
+        assert conflict in capsys.readouterr().err
+
+    summary = inspect_project(project)
+    assert summary["line_geometry_revision_count"] == 1
+    assert summary["region_geometry_revision_count"] == 1
+    assert summary["page_reading_order_revision_count"] == 1

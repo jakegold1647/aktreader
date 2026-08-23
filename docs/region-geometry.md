@@ -20,12 +20,15 @@ python -m aktreader project-revise-region-geometry serock.aktproj `
   --page-index 0 `
   --region-id region-2 `
   --geometry region-geometry.json `
-  --editor layout-reviewer
+  --editor layout-reviewer `
+  --expected-revision 0
 ~~~
 
 The region ID must match exactly one imported TextRegion, and every polygon point must lie inside
 the recorded source image dimensions. The local project records the preceding polygon, revised
-polygon, editor claim, and timestamp. Repeating the latest polygon reports UNCHANGED.
+polygon, editor claim, and timestamp. Repeating the latest polygon reports UNCHANGED. Read the
+region's current geometry `revision` with `project-show-page-layout` and pass it as
+`--expected-revision`; a stale value is rejected before anything is appended.
 
 When project-export-pagexml writes a derivative, it applies only the latest region polygon for each
 affected TextRegion. The source PAGE XML, import manifest, image, and all earlier revisions remain

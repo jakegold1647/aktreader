@@ -738,6 +738,12 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="local editor recording the geometry revision",
     )
+    project_geometry.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative line geometry revision from project-show-page-layout",
+    )
 
     project_reading_order = subparsers.add_parser(
         "project-revise-page-reading-order",
@@ -765,6 +771,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--editor",
         required=True,
         help="local editor recording the reading-order revision",
+    )
+    project_reading_order.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative reading-order revision from project-show-page-layout",
     )
 
     project_region_geometry = subparsers.add_parser(
@@ -802,6 +814,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--editor",
         required=True,
         help="local editor recording the region geometry revision",
+    )
+    project_region_geometry.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative region geometry revision from project-show-page-layout",
     )
 
     project_export_review = subparsers.add_parser(
@@ -2198,6 +2216,7 @@ def _command_project_revise_line_geometry(args: argparse.Namespace) -> int:
             polygon=geometry["polygon"],
             baseline=geometry["baseline"],
             editor=args.editor,
+            expected_revision=args.expected_revision,
         )
     )
     return 0
@@ -2222,6 +2241,7 @@ def _command_project_revise_page_reading_order(args: argparse.Namespace) -> int:
             page_index=args.page_index,
             region_ids=order["region_ids"],
             editor=args.editor,
+            expected_revision=args.expected_revision,
         )
     )
     return 0
@@ -2245,6 +2265,7 @@ def _command_project_revise_region_geometry(args: argparse.Namespace) -> int:
             region_id=args.region_id,
             polygon=geometry["polygon"],
             editor=args.editor,
+            expected_revision=args.expected_revision,
         )
     )
     return 0
