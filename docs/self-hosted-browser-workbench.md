@@ -33,6 +33,9 @@ Stop it with Ctrl+C.
 - direct on-canvas region-vertex dragging, with a source-pixel text fallback;
 - region-polygon and region-reading-order edits that append the same audited
   PAGE layout revisions as the local project commands; and
+- bounded, contentful history for the selected transcription, line geometry,
+  region geometry, or page reading order, with append-only restoration of an
+  explicitly selected older state;
 - optimistic revision checks on every write so a stale tab cannot silently
   overwrite work saved after that tab loaded; and
 - project state that remains content-addressed and local.
@@ -67,6 +70,22 @@ roadmap work.
 The service does not make outbound network requests. `network_required: false`
 means it needs no external network; the explicit loopback listener is only a
 local browser transport.
+
+## Revision history and restoration
+
+Open **Revision history and restore**, choose one of the four streams, and load
+the history for the selected line, region, or page. The response is bounded to
+the newest 100 saved revisions and also exposes imported revision `0`. The panel
+shows each resulting historical value before enabling restoration. Transcription
+history contains human-readable text, so keep the browser and screenshots private
+unless that content is independently cleared for sharing.
+
+Restoring does not rewind or delete the audit trail. It runs the same project-store
+operation as the local restoration commands and appends the selected historical
+value as a new revision. The request includes the stream revision returned with
+the history. If another tab or command writes first, restoration fails as stale
+without adding an audit row. Reload the history, review the newer state, and make
+a fresh decision.
 
 ## Concurrent tabs
 

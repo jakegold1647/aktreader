@@ -5,6 +5,7 @@ import json
 import threading
 from io import BytesIO
 from pathlib import Path
+from urllib.parse import urlencode
 
 from PIL import Image
 
@@ -82,6 +83,8 @@ def test_loopback_browser_workbench_serves_and_saves_project_revisions(tmp_path:
         assert b"Drag line polygon vertex" in root
         assert b"baseline-handle" in root
         assert b"Drag line baseline point" in root
+        assert b"Revision history and restore" in root
+        assert b"Restore as new revision" in root
         assert b'].join("\\n");' in root
 
         project_status, _project_headers, project_body = _request(port, "GET", "/api/project")
@@ -498,6 +501,213 @@ def test_loopback_browser_workbench_saves_page_layout_revisions(tmp_path: Path) 
         assert summary["line_geometry_revision_count"] == 1
         assert summary["region_geometry_revision_count"] == 1
         assert summary["page_reading_order_revision_count"] == 1
+    finally:
+        server.shutdown()
+        thread.join(timeout=3)
+        server.server_close()
+
+
+def test_loopback_browser_workbench_reads_and_restores_all_revision_streams(
+    tmp_path: Path,
+) -> None:
+    project, imported = _project_with_one_page(tmp_path)
+    server = create_self_hosted_workbench_server(project, port=0)
+    thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01})
+    thread.start()
+    try:
+        _host, port = server.server_address[:2]
+        manifest_sha256 = imported["manifest_sha256"]
+        page_url = f"/api/page?manifest_sha256={manifest_sha256}&page_index=0"
+        page_status, _page_headers, page_body = _request(port, "GET", page_url)
+        page = json.loads(page_body)
+        assert page_status == 200
+        source_span_id = page["lines"][0]["source_span_id"]
+
+        def post(route: str, payload: dict[str, object]) -> dict[str, object]:
+            response_status, _response_headers, response_body = _request(
+                port,
+                "POST",
+                route,
+                body=json.dumps(payload).encode("utf-8"),
+            )
+            response = json.loads(response_body)
+            assert response_status == 200, response
+            return response
+
+        line_polygons = [
+            [[3, 2], [37, 2], [37, 12], [3, 12]],
+            [[4, 2], [36, 2], [36, 12], [4, 12]],
+        ]
+        region_polygons = [
+            [[1, 1], [39, 1], [39, 14], [1, 14]],
+            [[2, 1], [38, 1], [38, 14], [2, 14]],
+        ]
+        orders = [["region-2", "region-1"], ["region-1", "region-2"]]
+        for revision in [0, 1]:
+            expected_revision = revision
+            post(
+                "/api/transcriptions",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "text": ["First correction", "Second correction"][revision],
+                    "editor": "history-reviewer",
+                    "expected_revision": expected_revision,
+                },
+            )
+            post(
+                "/api/line-geometry",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": source_span_id,
+                    "polygon": line_polygons[revision],
+                    "baseline": [[4, 10 + revision], [36, 10 + revision]],
+                    "editor": "history-reviewer",
+                    "expected_revision": expected_revision,
+                },
+            )
+            post(
+                "/api/region-geometry",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "page_index": 0,
+                    "region_id": "region-1",
+                    "polygon": region_polygons[revision],
+                    "editor": "history-reviewer",
+                    "expected_revision": expected_revision,
+                },
+            )
+            post(
+                "/api/reading-order",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "page_index": 0,
+                    "region_ids": orders[revision],
+                    "editor": "history-reviewer",
+                    "expected_revision": expected_revision,
+                },
+            )
+
+        history_queries = {
+            "TRANSCRIPTION": {"source_span_id": source_span_id},
+            "LINE_GEOMETRY": {"source_span_id": source_span_id},
+            "REGION_GEOMETRY": {"page_index": 0, "region_id": "region-1"},
+            "READING_ORDER": {"page_index": 0},
+        }
+        histories = {}
+        for kind, locator in history_queries.items():
+            query = urlencode(
+                {"manifest_sha256": manifest_sha256, "kind": kind, **locator}
+            )
+            history_status, _history_headers, history_body = _request(
+                port,
+                "GET",
+                f"/api/revision-history?{query}",
+            )
+            history = json.loads(history_body)
+            assert history_status == 200, history
+            assert history["kind"] == kind
+            assert history["current_revision"] == 2
+            assert [item["revision"] for item in history["revisions"]] == [2, 1]
+            assert history["pagination"] == {
+                "limit": 100,
+                "before_revision": None,
+                "has_more": False,
+                "next_before_revision": None,
+            }
+            assert history["content_included"] is True
+            assert history["network_required"] is False
+            histories[kind] = history
+
+        assert histories["TRANSCRIPTION"]["imported_state"] == {
+            "text": "Alexander record"
+        }
+        assert histories["TRANSCRIPTION"]["contains_human_text"] is True
+        assert histories["LINE_GEOMETRY"]["contains_human_text"] is False
+
+        restore_payloads = {
+            "TRANSCRIPTION": {
+                "source_span_id": source_span_id,
+            },
+            "LINE_GEOMETRY": {
+                "source_span_id": source_span_id,
+            },
+            "REGION_GEOMETRY": {
+                "page_index": 0,
+                "region_id": "region-1",
+            },
+            "READING_ORDER": {
+                "page_index": 0,
+            },
+        }
+        for kind, locator in restore_payloads.items():
+            restored = post(
+                "/api/restorations",
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": kind,
+                    "target_revision": 1,
+                    "editor": "history-reviewer",
+                    "expected_revision": 2,
+                    **locator,
+                },
+            )
+            assert restored["status"] == "RESTORED"
+            assert restored["revision"] == 3
+            assert restored["target_revision"] == 1
+
+        refreshed_status, _refreshed_headers, refreshed_body = _request(
+            port, "GET", page_url
+        )
+        refreshed = json.loads(refreshed_body)
+        assert refreshed_status == 200
+        assert refreshed["lines"][0]["text"] == "First correction"
+        assert refreshed["lines"][0]["polygon"] == line_polygons[0]
+        assert refreshed["regions"][1]["polygon"] == region_polygons[0]
+        assert refreshed["reading_order"]["region_ids"] == orders[0]
+
+        stale_status, _stale_headers, stale_body = _request(
+            port,
+            "POST",
+            "/api/restorations",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": "TRANSCRIPTION",
+                    "source_span_id": source_span_id,
+                    "target_revision": 0,
+                    "editor": "stale-tab",
+                    "expected_revision": 2,
+                }
+            ).encode("utf-8"),
+        )
+        assert stale_status == 400
+        assert "transcription revision conflict" in json.loads(stale_body)["message"]
+
+        invalid_status, _invalid_headers, invalid_body = _request(
+            port,
+            "POST",
+            "/api/restorations",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": "TRANSCRIPTION",
+                    "source_span_id": source_span_id,
+                    "target_revision": True,
+                    "editor": "history-reviewer",
+                    "expected_revision": 3,
+                }
+            ).encode("utf-8"),
+        )
+        assert invalid_status == 400
+        assert json.loads(invalid_body)["message"] == (
+            "target_revision must be a non-negative integer"
+        )
+        summary = inspect_project(project)
+        assert summary["transcription_revision_count"] == 3
+        assert summary["line_geometry_revision_count"] == 3
+        assert summary["region_geometry_revision_count"] == 3
+        assert summary["page_reading_order_revision_count"] == 3
     finally:
         server.shutdown()
         thread.join(timeout=3)
