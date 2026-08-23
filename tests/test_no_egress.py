@@ -532,6 +532,86 @@ def test_project_htr_evaluation_runs_with_sockets_disabled(
     assert history[0]["network_required"] is False
 
 
+def test_project_line_correction_cli_runs_with_sockets_disabled(
+    sockets_disabled: None,
+    tmp_path: Path,
+    capsys,
+) -> None:
+    image = tmp_path / "page.png"
+    Image.new("L", (20, 20), color=255).save(image)
+    source = tmp_path / "page.xml"
+    source.write_text(
+        """<PcGts>
+  <Page id="page-1" imageFilename="page.png" imageWidth="20" imageHeight="20">
+    <TextRegion id="region-1">
+      <Coords points="0,0 20,0 20,20 0,20"/>
+      <TextLine id="line-1">
+        <Coords points="1,1 19,1 19,10 1,10"/>
+        <TextEquiv><Unicode>source text</Unicode></TextEquiv>
+      </TextLine>
+    </TextRegion>
+  </Page>
+</PcGts>
+""",
+        encoding="utf-8",
+    )
+    project = tmp_path / "register.aktproj"
+    assert main(["project-create", str(project), "--name", "Serock births"]) == 0
+    capsys.readouterr()
+    assert main(["project-import-pagexml", str(project), str(source)]) == 0
+    imported = json.loads(capsys.readouterr().out)
+    line = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+
+    assert (
+        main(
+            [
+                "project-revise-line-transcription",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--source-span-id",
+                line["source_span_id"],
+                "--text",
+                "reviewed text",
+                "--editor",
+                "local-user",
+                "--expected-revision",
+                "0",
+            ]
+        )
+        == 0
+    )
+    saved = json.loads(capsys.readouterr().out)
+    assert saved["status"] == "SAVED"
+    assert saved["network_required"] is False
+
+    assert (
+        main(
+            [
+                "project-undo-line-transcription",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--source-span-id",
+                line["source_span_id"],
+                "--editor",
+                "local-user",
+                "--expected-revision",
+                "1",
+            ]
+        )
+        == 0
+    )
+    undone = json.loads(capsys.readouterr().out)
+    assert undone["status"] == "UNDONE"
+    assert undone["revision"] == 2
+    assert undone["network_required"] is False
+
+
 def test_project_training_readiness_runs_with_sockets_disabled(
     sockets_disabled: None,
     tmp_path: Path,

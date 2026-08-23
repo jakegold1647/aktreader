@@ -106,12 +106,14 @@ from aktreader.project import (
     recognize_project_with_kraken,
     resolve_review_proposal,
     revise_line_geometry,
+    revise_line_transcription,
     revise_page_reading_order,
     revise_region_geometry,
     revoke_training_consent,
     search_project_transcriptions,
     segment_project_with_kraken,
     training_readiness,
+    undo_line_transcription,
     update_project_document,
 )
 from aktreader.prompt import verify_reader_prompt
@@ -332,6 +334,65 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=100,
         help="maximum events from 1 to 500 (default: 100)",
+    )
+
+    project_revise_line = subparsers.add_parser(
+        "project-revise-line-transcription",
+        help="append one optimistic local human transcription revision",
+    )
+    project_revise_line.add_argument("project", type=Path, help="local .aktproj directory")
+    project_revise_line.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_revise_line.add_argument(
+        "--source-span-id",
+        required=True,
+        help="stable line source-span ID from a transcription CSV export",
+    )
+    project_revise_line.add_argument(
+        "--text",
+        required=True,
+        help="exact human transcription to save; an empty string is allowed",
+    )
+    project_revise_line.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the revision",
+    )
+    project_revise_line.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative line revision from the CSV export",
+    )
+
+    project_undo_line = subparsers.add_parser(
+        "project-undo-line-transcription",
+        help="append a reversal of the latest local human transcription revision",
+    )
+    project_undo_line.add_argument("project", type=Path, help="local .aktproj directory")
+    project_undo_line.add_argument(
+        "--manifest-sha256",
+        required=True,
+        help="document PAGE XML import manifest SHA-256",
+    )
+    project_undo_line.add_argument(
+        "--source-span-id",
+        required=True,
+        help="stable line source-span ID from a transcription CSV export",
+    )
+    project_undo_line.add_argument(
+        "--editor",
+        required=True,
+        help="local editor recording the reversal",
+    )
+    project_undo_line.add_argument(
+        "--expected-revision",
+        required=True,
+        type=int,
+        help="current non-negative line revision; zero reports undo unavailable",
     )
 
     project_document_update = subparsers.add_parser(
@@ -1754,6 +1815,39 @@ def _command_project_activity(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_project_revise_line_transcription(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        revise_line_transcription(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            source_span_id=args.source_span_id,
+            text=args.text,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
+def _command_project_undo_line_transcription(args: argparse.Namespace) -> int:
+    project = local_input_path(args.project, role="project")
+    if not project.is_dir():
+        raise CliConfigurationError(f"project is not a directory: {project}")
+    _emit_json(
+        undo_line_transcription(
+            project,
+            manifest_sha256=args.manifest_sha256,
+            source_span_id=args.source_span_id,
+            editor=args.editor,
+            expected_revision=args.expected_revision,
+        )
+    )
+    return 0
+
+
 def _command_project_update_document(args: argparse.Namespace) -> int:
     project = local_input_path(args.project, role="project")
     metadata_path = local_input_path(args.metadata, role="document metadata")
@@ -3040,6 +3134,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "project-list-documents": _command_project_list_documents,
         "project-search": _command_project_search,
         "project-activity": _command_project_activity,
+        "project-revise-line-transcription": _command_project_revise_line_transcription,
+        "project-undo-line-transcription": _command_project_undo_line_transcription,
         "project-update-document": _command_project_update_document,
         "project-import-pagexml": _command_project_import_pagexml,
         "project-import-images": _command_project_import_images,

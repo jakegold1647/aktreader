@@ -152,7 +152,9 @@ It requires no model weights, runtime binary, source scans, or network access. U
 stable machine-readable report; a failed or skipped check makes the command exit nonzero.
 
 The CLI also provides `label-validate`, `collection-create`, `collection-add-project`,\n`collection-inspect`, `collection-list-documents`, `collection-search`, `collection-save-search`, `collection-list-saved-searches`, `collection-run-saved-search`, `collection-export-public`, `project-create`,\n`project-inspect`,
-`project-list-documents`, `project-search`, `project-activity`, `project-update-document`,
+`project-list-documents`, `project-search`, `project-activity`,
+`project-revise-line-transcription`, `project-undo-line-transcription`,
+`project-update-document`,
 `project-import-pagexml`, `project-import-images`, `project-import-pdf`,
 `project-import-htr-suggestions`, `project-kraken-segment`,
 `project-kraken-recognize`, `project-export-pagexml`, `project-export-transcript`,
@@ -379,6 +381,22 @@ python -m aktreader project-export-alto serock.aktproj `
 python -m aktreader project-export-pdf serock.aktproj `
   --manifest-sha256 <project-import-manifest-sha256> `
   --output serock-human.pdf
+```
+
+The CSV exposes each line's stable `source_span_id` and current `revision`. Use both to append an
+optimistically locked human correction; a stale revision is refused instead of overwriting newer
+work. Undo appends the prior text as a new revision, preserving the full history and the imported
+PAGE XML source:
+
+```powershell
+python -m aktreader project-revise-line-transcription serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --source-span-id <source-span-id> --text "corrected text" `
+  --editor local-user --expected-revision 0
+
+python -m aktreader project-undo-line-transcription serock.aktproj `
+  --manifest-sha256 <project-import-manifest-sha256> `
+  --source-span-id <source-span-id> --editor local-user --expected-revision 1
 ```
 
 ### Offline review exchange

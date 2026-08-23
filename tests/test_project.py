@@ -461,13 +461,26 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(
     assert line["source_text"] == line["text"] == "Александр"
     assert line["revision"] == 0
 
-    saved = revise_line_transcription(
-        project,
-        manifest_sha256=imported["manifest_sha256"],
-        source_span_id=line["source_span_id"],
-        text="Александръ",
-        editor="reviewer-1",
+    assert (
+        main(
+            [
+                "project-revise-line-transcription",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--source-span-id",
+                line["source_span_id"],
+                "--text",
+                "Александръ",
+                "--editor",
+                "reviewer-1",
+                "--expected-revision",
+                "0",
+            ]
+        )
+        == 0
     )
+    saved = json.loads(capsys.readouterr().out)
 
     assert saved["status"] == "SAVED"
     assert saved["revision"] == 1
@@ -529,6 +542,56 @@ def test_project_keeps_human_transcription_revisions_separate_from_source(
         == 2
     )
     assert "activity limit must be an integer from 1 to 500" in capsys.readouterr().err
+
+    assert (
+        main(
+            [
+                "project-undo-line-transcription",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--source-span-id",
+                line["source_span_id"],
+                "--editor",
+                "reviewer-1",
+                "--expected-revision",
+                "1",
+            ]
+        )
+        == 0
+    )
+    undone = json.loads(capsys.readouterr().out)
+    assert undone["status"] == "UNDONE"
+    assert undone["revision"] == 2
+    assert undone["undone_revision"] == 1
+    restored = load_project_page(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        page_index=0,
+    )["lines"][0]
+    assert restored["source_text"] == restored["text"] == "Александр"
+    assert restored["revision"] == 2
+    assert inspect_project(project)["transcription_revision_count"] == 2
+    assert source.read_text(encoding="utf-8").count("Александр") == 1
+
+    assert (
+        main(
+            [
+                "project-undo-line-transcription",
+                str(project),
+                "--manifest-sha256",
+                imported["manifest_sha256"],
+                "--source-span-id",
+                line["source_span_id"],
+                "--editor",
+                "reviewer-1",
+                "--expected-revision",
+                "1",
+            ]
+        )
+        == 2
+    )
+    assert "transcription revision conflict" in capsys.readouterr().err
 
 
 
