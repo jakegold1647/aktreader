@@ -37,7 +37,7 @@ Primary sources:
 - <https://www.transkribus.org/models/russian-civil-records-late-xix-cent>
 - <https://www.transkribus.org/document-data-extraction>
 - <https://www.transkribus.org/pricing>
-- <https://www.transkribus.org/integration>
+- <https://www.transkribus.org/text-recognition-api>
 - <https://legal.transkribus.org/terms>
 
 ## Metryki
