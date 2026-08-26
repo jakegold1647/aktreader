@@ -196,6 +196,41 @@ updated public document record. `VIEWER` accounts remain read-only. A stale `exp
 returns `409 Conflict`; malformed keys or invalid field values return `400 Bad Request`. Project
 notes are visible to every authorized member of the project and should not be used as personal notes.
 
+Any signed-in project role can request one line's full transcription revision history:
+
+```text
+POST /api/projects/<project-id>/transcriptions/history
+```
+
+```json
+{
+  "manifest_sha256": "<document-manifest-sha256>",
+  "source_span_id": "<PAGE-line-source-span>"
+}
+```
+
+The response includes the imported source text, the current revision number, and up to the 100
+most recent revisions with their editor, timestamp, and stored text; it never exposes a local
+filesystem path. An `EDITOR` or `OWNER` can restore any earlier revision as a new append-only
+revision:
+
+```text
+POST /api/projects/<project-id>/transcriptions/restore
+```
+
+```json
+{
+  "manifest_sha256": "<document-manifest-sha256>",
+  "source_span_id": "<PAGE-line-source-span>",
+  "target_revision": 1,
+  "expected_revision": 3
+}
+```
+
+A `target_revision` of `0` restores the imported source text. Restoration appends a new revision
+and never deletes history; the target must be earlier than the current revision, and a stale
+`expected_revision` returns `409 Conflict`.
+
 This is a local-service foundation for shared review. It does not accept external identity or
 expose a LAN listener.
 
@@ -225,7 +260,9 @@ metadata update landed first, the workbench receives HTTP `409`, shows the servi
 message, and reloads only the affected current state instead of overwriting it. Validation errors
 remain HTTP `400` and preserve the metadata draft for correction. **Undo latest correction** appends a
 new revision containing the prior text; it never deletes the original correction and also rejects a
-stale revision. The activity panel lets any authorized viewer browse those transcription, line,
+stale revision. **Line history** lists every stored revision of the selected line — including the
+imported source text — with its editor, timestamp, and text; editors and owners can restore any
+earlier revision, which also appends a new revision instead of rewriting history. The activity panel lets any authorized viewer browse those transcription, line,
 region, and reading-order revisions and jump to their source page. It reports the editor, revision,
 and timestamp but never exposes historical text or a local filesystem path. The source PAGE XML
 and image object remain immutable; only append-only human revisions are created.

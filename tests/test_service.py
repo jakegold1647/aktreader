@@ -359,6 +359,13 @@ def test_authenticated_document_review_api_requires_current_revision(
         assert "/members" in workbench
         assert "Undo latest correction" in workbench
         assert "/transcriptions/undo" in workbench
+        assert "Line history" in workbench
+        assert 'id="line-history-toggle"' in workbench
+        assert "Line revision history" in workbench
+        assert "/transcriptions/history" in workbench
+        assert "/transcriptions/restore" in workbench
+        assert "renderLineHistory(payload.history);" in workbench
+        assert "restoreLineRevision(entry.revision)" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
         assert "Attached models and datasets" in workbench
@@ -854,6 +861,122 @@ def test_authenticated_document_review_api_requires_current_revision(
         stale_undo_response = connection.getresponse()
         assert stale_undo_response.status == 409
         assert "conflict" in json.loads(stale_undo_response.read())["message"]
+
+        history_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+            }
+        )
+        history_route = f"/api/projects/{project_id}/transcriptions/history"
+        connection.request(
+            "POST",
+            history_route,
+            body=history_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        history_response = connection.getresponse()
+        history_report = json.loads(history_response.read())
+        assert history_response.status == 200
+        assert history_report["status"] == "READY"
+        assert history_report["network_required"] is False
+        history = history_report["history"]
+        assert history["kind"] == "TRANSCRIPTION"
+        assert history["manifest_sha256"] == manifest_sha256
+        assert history["current_revision"] == 2
+        assert history["contains_human_text"] is True
+        assert history["imported_state"]["text"] == page["lines"][0]["text"]
+        assert [entry["revision"] for entry in history["revisions"]] == [2, 1]
+        assert history["revisions"][0]["revised_state"]["text"] == (
+            page["lines"][0]["text"]
+        )
+        assert history["revisions"][1]["revised_state"]["text"] == "reviewed text"
+        assert all(entry["editor"] == "editor" for entry in history["revisions"])
+        assert "project" not in history
+        assert all(not key.endswith("_path") for key in history)
+        assert all(not key.endswith("_path") for key in history["locator"])
+
+        invalid_history_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "managed_project_path": "must not be accepted",
+            }
+        )
+        connection.request(
+            "POST",
+            history_route,
+            body=invalid_history_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_history_response = connection.getresponse()
+        assert invalid_history_response.status == 400
+        assert "invalid keys" in json.loads(invalid_history_response.read())["message"]
+
+        restore_route = f"/api/projects/{project_id}/transcriptions/restore"
+        restore_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "target_revision": 1,
+                "expected_revision": 2,
+            }
+        )
+        connection.request(
+            "POST",
+            restore_route,
+            body=restore_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        restore_response = connection.getresponse()
+        restored = json.loads(restore_response.read())
+        assert restore_response.status == 200
+        assert restored["status"] == "RESTORED"
+        assert restored["revision"] == 3
+        assert restored["target_revision"] == 1
+        assert restored["editor"] == "editor"
+        assert "project" not in restored
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0",
+            headers=authorization,
+        )
+        restored_page_response = connection.getresponse()
+        restored_page = json.loads(restored_page_response.read())["page"]
+        assert restored_page_response.status == 200
+        assert restored_page["lines"][0]["text"] == "reviewed text"
+        assert restored_page["lines"][0]["revision"] == 3
+
+        connection.request(
+            "POST",
+            restore_route,
+            body=restore_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        stale_restore_response = connection.getresponse()
+        assert stale_restore_response.status == 409
+        assert "conflict" in json.loads(stale_restore_response.read())["message"]
+
+        future_restore_payload = json.dumps(
+            {
+                "manifest_sha256": manifest_sha256,
+                "source_span_id": source_span_id,
+                "target_revision": 3,
+                "expected_revision": 3,
+            }
+        )
+        connection.request(
+            "POST",
+            restore_route,
+            body=future_restore_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        future_restore_response = connection.getresponse()
+        assert future_restore_response.status == 400
+        assert "earlier than the current revision" in json.loads(
+            future_restore_response.read()
+        )["message"]
     finally:
         connection.close()
         server.shutdown()
@@ -998,6 +1121,49 @@ def test_owner_can_manage_existing_project_members(tmp_path: Path) -> None:
         unchanged_document = json.loads(unchanged_response.read())["documents"][0]
         assert unchanged_response.status == 200
         assert unchanged_document["notes"] != "Viewer must not save this note."
+
+        connection.request(
+            "GET",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/pages/0",
+            headers=reviewer_headers,
+        )
+        viewer_page_response = connection.getresponse()
+        viewer_page = json.loads(viewer_page_response.read())["page"]
+        assert viewer_page_response.status == 200
+        viewer_span_id = viewer_page["lines"][0]["source_span_id"]
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions/history",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": viewer_span_id,
+                }
+            ),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        viewer_history_response = connection.getresponse()
+        viewer_history = json.loads(viewer_history_response.read())
+        assert viewer_history_response.status == 200
+        assert viewer_history["history"]["kind"] == "TRANSCRIPTION"
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/transcriptions/restore",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "source_span_id": viewer_span_id,
+                    "target_revision": 0,
+                    "expected_revision": 0,
+                }
+            ),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        viewer_restore_response = connection.getresponse()
+        assert viewer_restore_response.status == 403
+        viewer_restore_response.read()
     finally:
         connection.close()
         server.shutdown()

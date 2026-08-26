@@ -42,7 +42,9 @@ from aktreader.project import (
     list_project_documents,
     load_project_page,
     load_project_page_layout,
+    load_project_revision_history,
     recognize_project_with_kraken,
+    restore_line_transcription,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
@@ -3227,6 +3229,65 @@ def undo_authorized_project_line(
     return {key: value for key, value in revision.items() if key != "project"}
 
 
+def load_authorized_project_line_history(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    source_span_id: str,
+) -> dict[str, object]:
+    """Load one line's transcription revision history for an authorized viewer."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return load_project_revision_history(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        kind="TRANSCRIPTION",
+        source_span_id=source_span_id,
+        limit=100,
+    )
+
+
+def restore_authorized_project_line(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    source_span_id: str,
+    target_revision: object,
+    expected_revision: object,
+) -> dict[str, object]:
+    """Append a role-checked restoration of an older transcription revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = restore_line_transcription(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        source_span_id=source_span_id,
+        target_revision=target_revision,
+        editor=str(account["username"]),
+        expected_revision=expected_revision,
+    )
+    return {key: value for key, value in revision.items() if key != "project"}
+
+
 def revise_authorized_project_line_geometry(
     service_workspace: Path | str,
     project_id: str,
@@ -3982,6 +4043,56 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.OK, revision)
                 return
             if (
+                len(parts) == 6
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4:] == ["transcriptions", "history"]
+            ):
+                required = {"manifest_sha256", "source_span_id"}
+                if set(payload) != required:
+                    raise ServiceError("transcription history has invalid keys")
+                account = self._account()
+                history = load_authorized_project_line_history(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    source_span_id=str(payload["source_span_id"]),
+                )
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "history": history,
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 6
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4:] == ["transcriptions", "restore"]
+            ):
+                required = {
+                    "manifest_sha256",
+                    "source_span_id",
+                    "target_revision",
+                    "expected_revision",
+                }
+                if set(payload) != required:
+                    raise ServiceError("transcription restore has invalid keys")
+                account = self._account()
+                revision = restore_authorized_project_line(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=str(payload["manifest_sha256"]),
+                    source_span_id=str(payload["source_span_id"]),
+                    target_revision=payload["target_revision"],
+                    expected_revision=payload["expected_revision"],
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
+            if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "transcriptions"
@@ -4319,10 +4430,15 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
         <div class="actions">
           <button id="save" type="button" disabled>Save correction</button>
           <button id="undo" type="button" disabled>Undo latest correction</button>
+          <button id="line-history-toggle" type="button" disabled>Line history</button>
           <span id="role"></span>
         </div>
         <p id="review-shortcuts">Keyboard: J/↓ next line · K/↑ previous line ·
           Ctrl/⌘+Enter saves a reviewed correction (editors and owners).</p>
+        <section id="line-history" aria-labelledby="line-history-title" class="hidden">
+          <h2 id="line-history-title">Line revision history</h2>
+          <ol id="history-list" aria-live="polite"></ol>
+        </section>
         <section id="project-activity" aria-labelledby="activity-title">
           <h2 id="activity-title">Recent project activity</h2>
           <ol id="activity-list" aria-live="polite"></ol>
@@ -4505,6 +4621,9 @@ const suggestions = document.getElementById("suggestions");
 const text = document.getElementById("text");
 const save = document.getElementById("save");
 const undo = document.getElementById("undo");
+const historyToggle = document.getElementById("line-history-toggle");
+const historySection = document.getElementById("line-history");
+const historyList = document.getElementById("history-list");
 const role = document.getElementById("role");
 const regionSelect = document.getElementById("region");
 const polygon = document.getElementById("region-polygon");
@@ -5105,6 +5224,12 @@ function selectLine(sourceSpanId) {
     : (canEdit()
       ? "Append a new revision with the text before the latest correction."
       : "Only editors and owners can undo a correction.");
+  historyToggle.disabled = !line;
+  historyToggle.title = line
+    ? "Show every stored revision of this line."
+    : "Choose a line to inspect its revision history.";
+  historySection.classList.add("hidden");
+  historyList.replaceChildren();
   text.value = line ? (line.text || "") : "";
   linePolygon.value = geometry ? JSON.stringify(geometry.polygon) : "";
   lineBaseline.value = geometry ? JSON.stringify(geometry.baseline) : "";
@@ -5601,6 +5726,92 @@ async function saveRevision() {
     save.disabled = !canEdit();
   }
 }
+function renderLineHistory(history) {
+  historyList.replaceChildren();
+  const entries = history.revisions.concat([{
+    revision: 0,
+    revised_state: { text: history.imported_state.text },
+    editor: "imported source",
+    created_at: ""
+  }]);
+  for (const entry of entries) {
+    const item = document.createElement("li");
+    const summary = document.createElement("span");
+    summary.textContent = "Revision " + entry.revision +
+      (entry.editor ? " · " + entry.editor : "") +
+      (entry.created_at ? " · " + entry.created_at : "") +
+      " · " + (entry.revised_state.text || "∅");
+    item.appendChild(summary);
+    if (canEdit() && entry.revision < history.current_revision) {
+      const restoreButton = document.createElement("button");
+      restoreButton.type = "button";
+      restoreButton.textContent = "Restore";
+      restoreButton.title =
+        "Append a new revision containing this older text.";
+      restoreButton.addEventListener(
+        "click",
+        () => restoreLineRevision(entry.revision)
+      );
+      item.appendChild(restoreButton);
+    }
+    historyList.appendChild(item);
+  }
+}
+async function loadLineHistory() {
+  const line = selectedLine();
+  const doc = currentDocument();
+  if (!line || !doc) return;
+  historyToggle.disabled = true;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/transcriptions/history",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          source_span_id: line.source_span_id
+        })
+      }
+    );
+    renderLineHistory(payload.history);
+    historySection.classList.remove("hidden");
+  } catch (error) {
+    setStatus(error.message);
+  } finally {
+    historyToggle.disabled = !selectedLine();
+  }
+}
+async function restoreLineRevision(targetRevision) {
+  const line = selectedLine();
+  const doc = currentDocument();
+  if (!line || !doc || !canEdit()) return;
+  try {
+    const payload = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/transcriptions/restore",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          source_span_id: line.source_span_id,
+          target_revision: targetRevision,
+          expected_revision: line.revision
+        })
+      }
+    );
+    await loadPage();
+    setStatus(payload.status === "RESTORED"
+      ? "Revision " + targetRevision + " restored as a new revision."
+      : "The current text already matches that revision.");
+    await loadLineHistory();
+  } catch (error) {
+    setStatus(error.message);
+    await loadPage();
+  }
+}
 async function undoRevision() {
   const line = selectedLine();
   const doc = currentDocument();
@@ -5713,6 +5924,14 @@ document.addEventListener("keydown", event => {
 });
 save.addEventListener("click", () => saveRevision());
 undo.addEventListener("click", () => undoRevision());
+historyToggle.addEventListener("click", () => {
+  if (historySection.classList.contains("hidden")) {
+    loadLineHistory();
+  } else {
+    historySection.classList.add("hidden");
+    historyList.replaceChildren();
+  }
+});
 saveLineGeometry.addEventListener("click", () => saveLineGeometryRevision());
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 saveRegion.addEventListener("click", () => saveRegionRevision());
