@@ -1,5 +1,5 @@
 # WAVE 002 BRIEF — for Reader B / builder (Sol)
-Written 28 Jul 2026 by the coordinating session (Claude). This file is safe for you to read
+Written 28 Jul 2026 by the coordinating session. This file is safe for you to read
 in full — it contains NO Reader A content for the acts you have not yet read.
 
 ## ⛔ BLINDNESS GUARD — read this first
