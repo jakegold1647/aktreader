@@ -8,6 +8,17 @@ from aktreader.gold import load_gold_records, resolve_recorded_path, sha256_file
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_gold_records_use_platform_independent_filename_order(tmp_path: Path) -> None:
+    acts = tmp_path / "gold" / "acts"
+    acts.mkdir(parents=True)
+    (acts / "a.json").write_text('{"record_id": "lower"}', encoding="utf-8")
+    (acts / "B.json").write_text('{"record_id": "upper"}', encoding="utf-8")
+
+    records = load_gold_records(tmp_path)
+
+    assert [record["record_id"] for record in records] == ["upper", "lower"]
+
+
 def test_gold_corpus_contract_and_coverage() -> None:
     records = load_gold_records(ROOT)
     coverage = validate_corpus(records)

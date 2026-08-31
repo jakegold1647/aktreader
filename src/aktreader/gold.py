@@ -77,7 +77,8 @@ def load_gold_records(root: Path) -> list[dict[str, Any]]:
     """Load every generated act record in stable filename order."""
     acts_dir = root / "gold" / "acts"
     return [
-        json.loads(path.read_text(encoding="utf-8")) for path in sorted(acts_dir.glob("*.json"))
+        json.loads(path.read_text(encoding="utf-8"))
+        for path in sorted(acts_dir.glob("*.json"), key=lambda candidate: candidate.name)
     ]
 
 
