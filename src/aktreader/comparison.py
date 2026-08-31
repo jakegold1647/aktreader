@@ -147,7 +147,9 @@ def _label_paths(path: Path) -> tuple[list[Path], list[str]]:
         raise ComparisonError(f"comparison input is not a file or directory: {path}")
     paths: list[Path] = []
     ignored: list[str] = []
-    for item in sorted(path.rglob("*.json")):
+    for item in sorted(
+        path.rglob("*.json"), key=lambda candidate: candidate.relative_to(path).as_posix()
+    ):
         if not item.is_file():
             continue
         relative_parts = item.relative_to(path).parts[:-1]

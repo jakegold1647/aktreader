@@ -6,6 +6,7 @@ from pathlib import Path
 from aktreader.cli import main
 from aktreader.comparison import (
     CSV_FIELDNAMES,
+    _label_paths,
     compare_reader_labels,
     render_disagreements_csv,
 )
@@ -14,6 +15,19 @@ ROOT = Path(__file__).resolve().parents[1]
 READER_B = ROOT / "labels" / "readerB" / "serock-1890-death-1.json"
 READER_A_DIR = ROOT / "labels" / "readerA"
 READER_B_DIR = ROOT / "labels" / "readerB"
+
+
+def test_label_discovery_uses_platform_independent_path_order(tmp_path: Path) -> None:
+    payload = READER_B.read_text(encoding="utf-8")
+    upper = tmp_path / "B.json"
+    lower = tmp_path / "a.json"
+    upper.write_text(payload, encoding="utf-8")
+    lower.write_text(payload, encoding="utf-8")
+
+    paths, ignored = _label_paths(tmp_path)
+
+    assert paths == [upper, lower]
+    assert ignored == []
 
 
 def test_compare_reports_field_disagreement_without_inference(tmp_path: Path) -> None:
