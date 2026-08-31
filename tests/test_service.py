@@ -366,6 +366,14 @@ def test_authenticated_document_review_api_requires_current_revision(
         assert "/transcriptions/restore" in workbench
         assert "renderLineHistory(payload.history);" in workbench
         assert "restoreLineRevision(entry.revision)" in workbench
+        assert 'id="layout-history-kind"' in workbench
+        assert 'id="layout-history-revision"' in workbench
+        assert 'id="layout-history-preview"' in workbench
+        assert 'id="restore-layout-revision"' in workbench
+        assert "/layout/history" in workbench
+        assert "/layout/restore" in workbench
+        assert "clearLayoutHistory" in workbench
+        assert "expected_revision: state.layoutHistory.current_revision" in workbench
         assert "Save reading order" in workbench
         assert "Download PAGE XML" in workbench
         assert "Attached models and datasets" in workbench
@@ -977,6 +985,166 @@ def test_authenticated_document_review_api_requires_current_revision(
         assert "earlier than the current revision" in json.loads(
             future_restore_response.read()
         )["message"]
+
+        layout_history_route = f"/api/projects/{project_id}/layout/history"
+        layout_restore_route = f"/api/projects/{project_id}/layout/restore"
+        layout_history_requests = [
+            (
+                "LINE_GEOMETRY",
+                {"source_span_id": source_span_id},
+                layout["lines"][0],
+            ),
+            (
+                "REGION_GEOMETRY",
+                {"page_index": 0, "region_id": "region-1"},
+                layout["regions"][0],
+            ),
+            (
+                "READING_ORDER",
+                {"page_index": 0},
+                layout["reading_order"],
+            ),
+        ]
+        for kind, locator, imported in layout_history_requests:
+            connection.request(
+                "POST",
+                layout_history_route,
+                body=json.dumps(
+                    {
+                        "manifest_sha256": manifest_sha256,
+                        "kind": kind,
+                        **locator,
+                    }
+                ),
+                headers={"Content-Type": "application/json", **authorization},
+            )
+            layout_history_response = connection.getresponse()
+            layout_history_report = json.loads(layout_history_response.read())
+            assert layout_history_response.status == 200
+            assert layout_history_report["status"] == "READY"
+            assert layout_history_report["network_required"] is False
+            layout_history = layout_history_report["history"]
+            assert layout_history["kind"] == kind
+            assert layout_history["current_revision"] == 1
+            assert layout_history["contains_human_text"] is False
+            assert [entry["revision"] for entry in layout_history["revisions"]] == [1]
+            assert layout_history["revisions"][0]["editor"] == "editor"
+            assert layout_history["imported_state"] == {
+                key: value
+                for key, value in imported.items()
+                if key not in {"source_span_id", "line_id", "region_id", "revision"}
+            }
+            assert "project" not in layout_history
+            assert all(not key.endswith("_path") for key in layout_history)
+            assert all(not key.endswith("_path") for key in layout_history["locator"])
+
+            connection.request(
+                "POST",
+                layout_restore_route,
+                body=json.dumps(
+                    {
+                        "manifest_sha256": manifest_sha256,
+                        "kind": kind,
+                        "target_revision": 0,
+                        "expected_revision": 1,
+                        **locator,
+                    }
+                ),
+                headers={"Content-Type": "application/json", **authorization},
+            )
+            layout_restore_response = connection.getresponse()
+            layout_restored = json.loads(layout_restore_response.read())
+            assert layout_restore_response.status == 200
+            assert layout_restored["status"] == "RESTORED"
+            assert layout_restored["revision"] == 2
+            assert layout_restored["target_revision"] == 0
+            assert layout_restored["editor"] == "editor"
+            assert "project" not in layout_restored
+
+        connection.request("GET", layout_route, headers=authorization)
+        restored_layout_response = connection.getresponse()
+        restored_layout = json.loads(restored_layout_response.read())["layout"]
+        assert restored_layout_response.status == 200
+        assert restored_layout["lines"][0]["polygon"] == layout["lines"][0]["polygon"]
+        assert restored_layout["lines"][0]["baseline"] == layout["lines"][0]["baseline"]
+        assert restored_layout["lines"][0]["revision"] == 2
+        assert restored_layout["regions"][0]["polygon"] == layout["regions"][0]["polygon"]
+        assert restored_layout["regions"][0]["revision"] == 2
+        assert restored_layout["reading_order"] == {
+            "revision": 2,
+            "region_ids": layout["reading_order"]["region_ids"],
+        }
+
+        stale_layout_restore = {
+            "manifest_sha256": manifest_sha256,
+            "kind": "LINE_GEOMETRY",
+            "source_span_id": source_span_id,
+            "target_revision": 1,
+            "expected_revision": 1,
+        }
+        connection.request(
+            "POST",
+            layout_restore_route,
+            body=json.dumps(stale_layout_restore),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        stale_layout_restore_response = connection.getresponse()
+        assert stale_layout_restore_response.status == 409
+        assert "conflict" in json.loads(stale_layout_restore_response.read())["message"]
+
+        future_layout_restore = {
+            "manifest_sha256": manifest_sha256,
+            "kind": "READING_ORDER",
+            "page_index": 0,
+            "target_revision": 2,
+            "expected_revision": 2,
+        }
+        connection.request(
+            "POST",
+            layout_restore_route,
+            body=json.dumps(future_layout_restore),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        future_layout_restore_response = connection.getresponse()
+        assert future_layout_restore_response.status == 400
+        assert "earlier than the current revision" in json.loads(
+            future_layout_restore_response.read()
+        )["message"]
+
+        connection.request(
+            "POST",
+            layout_history_route,
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": "TRANSCRIPTION",
+                    "source_span_id": source_span_id,
+                }
+            ),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_layout_kind_response = connection.getresponse()
+        assert invalid_layout_kind_response.status == 400
+        assert "supported layout kind" in json.loads(
+            invalid_layout_kind_response.read()
+        )["message"]
+
+        connection.request(
+            "POST",
+            layout_history_route,
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": "READING_ORDER",
+                    "page_index": 0,
+                    "managed_project_path": "must not be accepted",
+                }
+            ),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_layout_keys_response = connection.getresponse()
+        assert invalid_layout_keys_response.status == 400
+        assert "invalid keys" in json.loads(invalid_layout_keys_response.read())["message"]
     finally:
         connection.close()
         server.shutdown()
@@ -1164,6 +1332,42 @@ def test_owner_can_manage_existing_project_members(tmp_path: Path) -> None:
         viewer_restore_response = connection.getresponse()
         assert viewer_restore_response.status == 403
         viewer_restore_response.read()
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/layout/history",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": "READING_ORDER",
+                    "page_index": 0,
+                }
+            ),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        viewer_layout_history_response = connection.getresponse()
+        viewer_layout_history = json.loads(viewer_layout_history_response.read())
+        assert viewer_layout_history_response.status == 200
+        assert viewer_layout_history["history"]["kind"] == "READING_ORDER"
+        assert viewer_layout_history["history"]["current_revision"] == 0
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/layout/restore",
+            body=json.dumps(
+                {
+                    "manifest_sha256": manifest_sha256,
+                    "kind": "READING_ORDER",
+                    "page_index": 0,
+                    "target_revision": 0,
+                    "expected_revision": 0,
+                }
+            ),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        viewer_layout_restore_response = connection.getresponse()
+        assert viewer_layout_restore_response.status == 403
+        viewer_layout_restore_response.read()
     finally:
         connection.close()
         server.shutdown()

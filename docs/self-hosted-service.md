@@ -231,6 +231,37 @@ A `target_revision` of `0` restores the imported source text. Restoration append
 and never deletes history; the target must be earlier than the current revision, and a stale
 `expected_revision` returns `409 Conflict`.
 
+The same role and append-only rules apply to layout history. Any authorized project role can load
+line geometry, region geometry, or page reading-order history:
+
+```text
+POST /api/projects/<project-id>/layout/history
+```
+
+```json
+{
+  "manifest_sha256": "<document-manifest-sha256>",
+  "kind": "LINE_GEOMETRY",
+  "source_span_id": "<PAGE-line-source-span>"
+}
+```
+
+Use `page_index` instead of `source_span_id` for `READING_ORDER`. A `REGION_GEOMETRY` request uses
+both `page_index` and the exact `region_id`. The response contains the imported state, current
+revision, and up to 100 newest stored revisions with editor and timestamp metadata. Layout history
+contains polygons, baselines, or region IDs but no human transcription text or filesystem path.
+
+An `EDITOR` or `OWNER` restores an earlier layout value through:
+
+```text
+POST /api/projects/<project-id>/layout/restore
+```
+
+The restore payload repeats the exact history locator and adds `target_revision` plus
+`expected_revision`. Revision `0` means the imported PAGE XML value. The service appends a new
+audited revision, rejects viewer writes with `403 Forbidden`, rejects stale state with
+`409 Conflict`, and never rewrites the source PAGE XML.
+
 This is a local-service foundation for shared review. It does not accept external identity or
 expose a LAN listener.
 
@@ -262,10 +293,16 @@ remain HTTP `400` and preserve the metadata draft for correction. **Undo latest 
 new revision containing the prior text; it never deletes the original correction and also rejects a
 stale revision. **Line history** lists every stored revision of the selected line — including the
 imported source text — with its editor, timestamp, and text; editors and owners can restore any
-earlier revision, which also appends a new revision instead of rewriting history. The activity panel lets any authorized viewer browse those transcription, line,
-region, and reading-order revisions and jump to their source page. It reports the editor, revision,
-and timestamp but never exposes historical text or a local filesystem path. The source PAGE XML
-and image object remain immutable; only append-only human revisions are created.
+earlier revision, which also appends a new revision instead of rewriting history. Under
+**Layout**, every authorized viewer can inspect earlier line outlines, region outlines, and page
+reading orders as JSON. Editors and owners can restore a selected older value against the exact
+revision loaded with that history; the workbench reloads the page and selected entity afterward.
+The panel clears whenever its project, document, page, line, region, or stream changes, so it never
+offers a restore from stale selection context. The activity panel lets any authorized viewer browse
+those transcription, line, region, and reading-order revisions and jump to their source page. It
+reports the editor, revision, and timestamp but never exposes historical text or a local filesystem
+path. The source PAGE XML and image object remain immutable; only append-only human revisions are
+created.
 
 **Search project** is available to every signed-in project viewer. It sends a bounded query to:
 

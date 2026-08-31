@@ -44,7 +44,10 @@ from aktreader.project import (
     load_project_page_layout,
     load_project_revision_history,
     recognize_project_with_kraken,
+    restore_line_geometry,
     restore_line_transcription,
+    restore_page_reading_order,
+    restore_region_geometry,
     revise_line_geometry,
     revise_line_transcription,
     revise_page_reading_order,
@@ -85,6 +88,13 @@ SESSION_TTL_SECONDS = 8 * 60 * 60
 INVITATION_TTL_SECONDS = 7 * 24 * 60 * 60
 PROJECT_ROLES = ("VIEWER", "EDITOR", "OWNER")
 _ROLE_RANK = {role: index for index, role in enumerate(PROJECT_ROLES)}
+_LAYOUT_REVISION_KINDS = {
+    "LINE_GEOMETRY",
+    "REGION_GEOMETRY",
+    "READING_ORDER",
+}
+
+
 class ServiceError(ValueError):
     """Raised when a local self-hosted service contract is invalid."""
 
@@ -3288,6 +3298,118 @@ def restore_authorized_project_line(
     return {key: value for key, value in revision.items() if key != "project"}
 
 
+def _require_layout_revision_kind(value: object) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ServiceError("layout revision kind must be a supported layout kind")
+    kind = value.strip().upper()
+    if kind not in _LAYOUT_REVISION_KINDS:
+        raise ServiceError("layout revision kind must be a supported layout kind")
+    return kind
+
+
+def load_authorized_project_layout_history(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: object,
+    kind: object,
+    source_span_id: object = None,
+    page_index: object = None,
+    region_id: object = None,
+) -> dict[str, object]:
+    """Load one authorized layout entity's contentful revision history."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    canonical_kind = _require_layout_revision_kind(kind)
+    project = _managed_project_path(root, canonical_id)
+    if canonical_kind == "LINE_GEOMETRY":
+        return load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind=canonical_kind,
+            source_span_id=source_span_id,
+            limit=100,
+        )
+    if canonical_kind == "REGION_GEOMETRY":
+        return load_project_revision_history(
+            project,
+            manifest_sha256=manifest_sha256,
+            kind=canonical_kind,
+            page_index=page_index,
+            region_id=region_id,
+            limit=100,
+        )
+    return load_project_revision_history(
+        project,
+        manifest_sha256=manifest_sha256,
+        kind=canonical_kind,
+        page_index=page_index,
+        limit=100,
+    )
+
+
+def restore_authorized_project_layout_revision(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: object,
+    kind: object,
+    target_revision: object,
+    expected_revision: object,
+    source_span_id: object = None,
+    page_index: object = None,
+    region_id: object = None,
+) -> dict[str, object]:
+    """Append one authorized older layout value as a new audited revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    canonical_kind = _require_layout_revision_kind(kind)
+    account = _account_by_id(root, account_id)
+    common = {
+        "manifest_sha256": manifest_sha256,
+        "target_revision": target_revision,
+        "editor": str(account["username"]),
+        "expected_revision": expected_revision,
+    }
+    project = _managed_project_path(root, canonical_id)
+    if canonical_kind == "LINE_GEOMETRY":
+        revision = restore_line_geometry(
+            project,
+            source_span_id=source_span_id,
+            **common,
+        )
+    elif canonical_kind == "REGION_GEOMETRY":
+        revision = restore_region_geometry(
+            project,
+            page_index=page_index,
+            region_id=region_id,
+            **common,
+        )
+    else:
+        revision = restore_page_reading_order(
+            project,
+            page_index=page_index,
+            **common,
+        )
+    return {key: value for key, value in revision.items() if key != "project"}
+
+
 def revise_authorized_project_line_geometry(
     service_workspace: Path | str,
     project_id: str,
@@ -4093,6 +4215,76 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 self._json(HTTPStatus.OK, revision)
                 return
             if (
+                len(parts) == 6
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4:] == ["layout", "history"]
+            ):
+                kind = _require_layout_revision_kind(payload.get("kind"))
+                required = {"manifest_sha256", "kind"}
+                if kind == "LINE_GEOMETRY":
+                    required.add("source_span_id")
+                elif kind == "REGION_GEOMETRY":
+                    required.update({"page_index", "region_id"})
+                else:
+                    required.add("page_index")
+                if set(payload) != required:
+                    raise ServiceError("layout history has invalid keys")
+                account = self._account()
+                history = load_authorized_project_layout_history(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=payload["manifest_sha256"],
+                    kind=kind,
+                    source_span_id=payload.get("source_span_id"),
+                    page_index=payload.get("page_index"),
+                    region_id=payload.get("region_id"),
+                )
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "history": history,
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
+                len(parts) == 6
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4:] == ["layout", "restore"]
+            ):
+                kind = _require_layout_revision_kind(payload.get("kind"))
+                required = {
+                    "manifest_sha256",
+                    "kind",
+                    "target_revision",
+                    "expected_revision",
+                }
+                if kind == "LINE_GEOMETRY":
+                    required.add("source_span_id")
+                elif kind == "REGION_GEOMETRY":
+                    required.update({"page_index", "region_id"})
+                else:
+                    required.add("page_index")
+                if set(payload) != required:
+                    raise ServiceError("layout restore has invalid keys")
+                account = self._account()
+                revision = restore_authorized_project_layout_revision(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=payload["manifest_sha256"],
+                    kind=kind,
+                    target_revision=payload["target_revision"],
+                    expected_revision=payload["expected_revision"],
+                    source_span_id=payload.get("source_span_id"),
+                    page_index=payload.get("page_index"),
+                    region_id=payload.get("region_id"),
+                )
+                self._json(HTTPStatus.OK, revision)
+                return
+            if (
                 len(parts) == 5
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "transcriptions"
@@ -4340,6 +4532,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #layout-editor { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #layout-editor h2, #layout-editor h3 { margin: 8px 0; }
 #region-polygon, #line-polygon, #line-baseline { min-height: 92px; }
+#layout-history-preview { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 5px;
+  box-sizing: border-box; max-height: 240px; overflow: auto; padding: 10px; white-space: pre-wrap; }
 #reading-order { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
 .order-row { align-items: center; display: flex; gap: 6px; }
 .order-row span { flex: 1; overflow-wrap: anywhere; }
@@ -4552,6 +4746,26 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
           <div class="actions">
             <button id="save-reading-order" type="button" disabled>Save reading order</button>
           </div>
+          <h3>Revision history and restore</h3>
+          <p>Inspect earlier layout values. Restoring appends a new audited revision and never
+            deletes history.</p>
+          <label>Stream
+            <select id="layout-history-kind">
+              <option value="LINE_GEOMETRY">Selected line geometry</option>
+              <option value="REGION_GEOMETRY">Selected region geometry</option>
+              <option value="READING_ORDER">Page reading order</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button id="load-layout-history" type="button" disabled>Load layout history</button>
+          </div>
+          <label>Older state <select id="layout-history-revision" disabled></select></label>
+          <pre id="layout-history-preview">No layout history loaded.</pre>
+          <div class="actions">
+            <button id="restore-layout-revision" type="button" disabled>
+              Restore as new revision
+            </button>
+          </div>
         </section>
       </aside>
     </div>
@@ -4565,7 +4779,8 @@ const state = {
   layout: null, selected: null, selectedRegion: null, drag: null, imageUrl: null,
   activity: [], evaluations: [], members: [], accounts: [], projectInvitations: [],
   invitations: [], artifacts: [], attachableArtifacts: [], searchResults: [],
-  searchTruncated: false, krakenRecognitionEnabled: false, metadataManifest: null
+  searchTruncated: false, krakenRecognitionEnabled: false, metadataManifest: null,
+  layoutHistory: null
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -4636,6 +4851,11 @@ const downloadTranscriptionsCsv = document.getElementById("download-transcriptio
 const linePolygon = document.getElementById("line-polygon");
 const lineBaseline = document.getElementById("line-baseline");
 const saveLineGeometry = document.getElementById("save-line-geometry");
+const layoutHistoryKind = document.getElementById("layout-history-kind");
+const loadLayoutHistoryButton = document.getElementById("load-layout-history");
+const layoutHistoryRevision = document.getElementById("layout-history-revision");
+const layoutHistoryPreview = document.getElementById("layout-history-preview");
+const restoreLayoutRevisionButton = document.getElementById("restore-layout-revision");
 const runKraken = document.getElementById("run-kraken");
 
 function setExportDisabled(disabled) {
@@ -5214,6 +5434,7 @@ function drawOverlay() {
 }
 function selectLine(sourceSpanId) {
   state.selected = sourceSpanId;
+  clearLayoutHistory();
   const line = selectedLine();
   const geometry = selectedLineGeometry();
   text.disabled = !line || !canEdit();
@@ -5287,6 +5508,7 @@ function renderLayout() {
 }
 function selectRegion(regionId) {
   state.selectedRegion = regionId;
+  clearLayoutHistory();
   if (regionId) regionSelect.value = regionId;
   const region = selectedRegion();
   polygon.value = region ? JSON.stringify(region.polygon) : "";
@@ -5294,6 +5516,146 @@ function selectRegion(regionId) {
   saveRegion.disabled = !region || !canEdit();
   renderReadingOrder();
   drawOverlay();
+}
+function layoutHistoryTargetAvailable() {
+  if (!state.page || !state.layout || !currentDocument()) return false;
+  if (layoutHistoryKind.value === "LINE_GEOMETRY") return Boolean(selectedLineGeometry());
+  if (layoutHistoryKind.value === "REGION_GEOMETRY") return Boolean(selectedRegion());
+  return true;
+}
+function clearLayoutHistory(message) {
+  state.layoutHistory = null;
+  layoutHistoryRevision.replaceChildren();
+  layoutHistoryRevision.disabled = true;
+  restoreLayoutRevisionButton.disabled = true;
+  layoutHistoryPreview.textContent = message || "No layout history loaded.";
+  loadLayoutHistoryButton.disabled = !layoutHistoryTargetAvailable();
+}
+function layoutHistoryLocator(kind) {
+  if (!state.page) throw new Error("Choose a page before loading layout history.");
+  if (kind === "LINE_GEOMETRY") {
+    const line = selectedLineGeometry();
+    if (!line) throw new Error("Choose a line before loading its geometry history.");
+    return {source_span_id: line.source_span_id};
+  }
+  if (kind === "REGION_GEOMETRY") {
+    const region = selectedRegion();
+    if (!region) throw new Error("Choose a region before loading its geometry history.");
+    return {page_index: state.page.page_index, region_id: region.region_id};
+  }
+  return {page_index: state.page.page_index};
+}
+function selectedLayoutHistoryState() {
+  if (!state.layoutHistory || layoutHistoryRevision.value === "") return null;
+  const targetRevision = Number(layoutHistoryRevision.value);
+  if (targetRevision === 0) return state.layoutHistory.imported_state;
+  const entry = state.layoutHistory.revisions.find(
+    item => item.revision === targetRevision
+  );
+  return entry ? entry.revised_state : null;
+}
+function renderLayoutHistorySelection() {
+  const historicalState = selectedLayoutHistoryState();
+  layoutHistoryPreview.textContent = historicalState
+    ? JSON.stringify(historicalState, null, 2)
+    : "No older revision is available for this layout stream.";
+  restoreLayoutRevisionButton.disabled = !historicalState || !canEdit();
+  restoreLayoutRevisionButton.title = canEdit()
+    ? "Append the selected older layout value as a new audited revision."
+    : "Only editors and owners can restore layout history.";
+}
+async function loadLayoutHistoryRevision() {
+  const doc = currentDocument();
+  if (!doc || !state.project || !layoutHistoryTargetAvailable()) return;
+  const kind = layoutHistoryKind.value;
+  loadLayoutHistoryButton.disabled = true;
+  setStatus("Loading layout history…");
+  try {
+    const report = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/layout/history",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          kind,
+          ...layoutHistoryLocator(kind)
+        })
+      }
+    );
+    state.layoutHistory = report.history;
+    layoutHistoryRevision.replaceChildren();
+    report.history.revisions
+      .filter(item => item.revision < report.history.current_revision)
+      .forEach(item => option(
+        layoutHistoryRevision,
+        String(item.revision),
+        "Revision " + item.revision + " · " + item.editor + " · " + item.created_at
+      ));
+    if (report.history.current_revision > 0) {
+      option(layoutHistoryRevision, "0", "Imported source · revision 0");
+    }
+    layoutHistoryRevision.disabled = layoutHistoryRevision.options.length === 0;
+    if (layoutHistoryRevision.options.length) layoutHistoryRevision.selectedIndex = 0;
+    renderLayoutHistorySelection();
+    const suffix = report.history.pagination.has_more ? " (newest 100 shown)" : "";
+    setStatus(
+      "Loaded " + kind.toLowerCase().replaceAll("_", " ") + " history" + suffix + "."
+    );
+  } catch (error) {
+    clearLayoutHistory(error.message);
+    setStatus(error.message);
+  } finally {
+    loadLayoutHistoryButton.disabled = !layoutHistoryTargetAvailable();
+  }
+}
+async function restoreSelectedLayoutRevision() {
+  const doc = currentDocument();
+  if (
+    !doc || !state.project || !state.layoutHistory ||
+    layoutHistoryRevision.value === "" || !canEdit()
+  ) return;
+  if (!window.confirm(
+    "Restore this older layout value as a new revision? Unsaved layout edits will be discarded."
+  )) return;
+  const kind = state.layoutHistory.kind;
+  const targetRevision = Number(layoutHistoryRevision.value);
+  const sourceSpanId = state.selected;
+  const regionId = state.selectedRegion;
+  restoreLayoutRevisionButton.disabled = true;
+  setStatus("Restoring layout revision " + targetRevision + "…");
+  try {
+    const result = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) + "/layout/restore",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          manifest_sha256: doc.manifest_sha256,
+          kind,
+          target_revision: targetRevision,
+          expected_revision: state.layoutHistory.current_revision,
+          ...layoutHistoryLocator(kind)
+        })
+      }
+    );
+    await loadPage();
+    if (sourceSpanId && state.page.lines.some(line => line.source_span_id === sourceSpanId)) {
+      selectLine(sourceSpanId);
+    }
+    if (regionId && state.layout.regions.some(region => region.region_id === regionId)) {
+      selectRegion(regionId);
+    }
+    await loadLayoutHistoryRevision();
+    setStatus(result.status === "RESTORED"
+      ? "Restored layout revision " + targetRevision + " as revision " + result.revision + "."
+      : "The selected historical layout value is already current.");
+  } catch (error) {
+    if (error.status === 409) await loadPage();
+    setStatus(error.message);
+  } finally {
+    renderLayoutHistorySelection();
+  }
 }
 function moveRegion(regionId, direction) {
   if (!state.layout || !canEdit()) return;
@@ -5525,6 +5887,7 @@ async function loadProject() {
     setExportDisabled(true);
     updateRecognitionControl();
     lineList.replaceChildren();
+    clearLayoutHistory();
     renderDocumentMetadata();
     await Promise.all([loadMembership(), loadArtifacts()]);
     setStatus("This project has no imported PAGE XML documents.");
@@ -5936,6 +6299,12 @@ saveLineGeometry.addEventListener("click", () => saveLineGeometryRevision());
 regionSelect.addEventListener("change", () => selectRegion(regionSelect.value));
 saveRegion.addEventListener("click", () => saveRegionRevision());
 saveReadingOrder.addEventListener("click", () => saveReadingOrderRevision());
+layoutHistoryKind.addEventListener("change", () => clearLayoutHistory());
+layoutHistoryRevision.addEventListener("change", () => renderLayoutHistorySelection());
+loadLayoutHistoryButton.addEventListener("click", () => loadLayoutHistoryRevision());
+restoreLayoutRevisionButton.addEventListener(
+  "click", () => restoreSelectedLayoutRevision()
+);
 runKraken.addEventListener("click", () => queueKrakenRecognition());
 async function downloadDocumentExport(exportName, filename, successMessage, control) {
   const doc = currentDocument();
@@ -6021,6 +6390,7 @@ document.getElementById("logout").addEventListener("click", () => {
   state.metadataManifest = null;
   state.page = null;
   state.layout = null;
+  state.layoutHistory = null;
   state.activity = [];
   state.evaluations = [];
   state.members = [];
@@ -6033,6 +6403,7 @@ document.getElementById("logout").addEventListener("click", () => {
   renderArtifacts();
   renderEvaluations();
   renderDocumentMetadata();
+  clearLayoutHistory();
   state.selectedRegion = null;
   state.drag = null;
   state.krakenRecognitionEnabled = false;
