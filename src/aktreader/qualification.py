@@ -119,6 +119,7 @@ def build_qualification_packet(
         for candidate_code in raw_candidate_codes
     ]
     _require_casefold_unique(candidate_codes, role="candidate codes")
+    candidate_codes.sort(key=lambda value: (value.casefold(), value))
 
     public_records: list[dict[str, Any]] = []
     image_payloads: dict[str, bytes] = {}
@@ -166,11 +167,17 @@ def build_qualification_packet(
             }
         )
     _require_casefold_unique(record_ids, role="record IDs")
+    public_records.sort(
+        key=lambda record: (
+            str(record["record_id"]).casefold(),
+            str(record["record_id"]),
+        )
+    )
 
     output_dir.mkdir(parents=True, exist_ok=True)
     images_dir = output_dir / "images"
     images_dir.mkdir()
-    for name, payload in image_payloads.items():
+    for name, payload in sorted(image_payloads.items()):
         (output_dir / name).write_bytes(payload)
 
     readme = (
