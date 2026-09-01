@@ -219,6 +219,7 @@ def select_questions(
         key=lambda question: (
             _PRIORITY[str(question["selection_reason"])],
             str(question["question_id"]).casefold(),
+            str(question["question_id"]),
         ),
     )
     mandatory = [
@@ -248,7 +249,10 @@ def mine_lineup(
                 and exemplar.get("glyph") == candidate["glyph"]
                 and exemplar.get("confidence") == "UNCONTESTED"
             ),
-            key=lambda exemplar: str(exemplar["exemplar_id"]).casefold(),
+            key=lambda exemplar: (
+                str(exemplar["exemplar_id"]).casefold(),
+                str(exemplar["exemplar_id"]),
+            ),
         )
         if len(matches) < 3:
             raise AdjudicationError(
