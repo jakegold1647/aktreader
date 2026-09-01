@@ -251,8 +251,9 @@ and line geometry revisions. These outputs can contain transcription content and
 review them before copying them into logs or sharing them.
 
 For scans that have not been segmented yet, import one directory of top-level image files. AKT Reader
-creates and retains a deterministic PAGE XML source with one editable full-page TextRegion per scan,
-then copies the images into the same content-addressed project store.
+orders them case-insensitively by filename with the exact filename as a deterministic tie-break,
+creates and retains a PAGE XML source with one editable full-page TextRegion per scan, then copies
+the images into the same content-addressed project store.
 
 ```powershell
 python -m aktreader project-import-images serock.aktproj serock-scans `

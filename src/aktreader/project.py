@@ -743,9 +743,14 @@ _IMAGE_IMPORT_SUFFIXES = frozenset(
 )
 
 
+def _image_import_order_key(candidate: Path) -> tuple[str, str]:
+    name = candidate.name
+    return name.casefold(), name
+
+
 def _image_import_inputs(directory: Path) -> list[tuple[Path, int, int]]:
     images: list[tuple[Path, int, int]] = []
-    for candidate in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
+    for candidate in sorted(directory.iterdir(), key=_image_import_order_key):
         if not candidate.is_file() or candidate.suffix.lower() not in _IMAGE_IMPORT_SUFFIXES:
             continue
         try:

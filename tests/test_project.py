@@ -14,6 +14,7 @@ import pytest
 from PIL import Image
 
 import aktreader.kraken as kraken_module
+import aktreader.project as project_module
 from aktreader.cli import main
 from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import PinnedArtifact, sha256_file
@@ -444,6 +445,18 @@ def test_project_imports_an_image_directory_as_editable_pagexml(tmp_path: Path) 
 
     assert repeated["already_imported"] is True
     assert list_project_documents(project)[0]["title"] == "Serock birth register"
+
+
+def test_image_import_order_breaks_casefold_ties_by_exact_name() -> None:
+    candidates = [Path("scan-b.png"), Path("scan-a.png"), Path("SCAN-A.png")]
+
+    ordered = sorted(candidates, key=project_module._image_import_order_key)
+
+    assert [candidate.name for candidate in ordered] == [
+        "SCAN-A.png",
+        "scan-a.png",
+        "scan-b.png",
+    ]
 
 
 def test_project_image_import_cli_creates_a_document(tmp_path: Path, capsys) -> None:
