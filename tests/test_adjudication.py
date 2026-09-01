@@ -165,6 +165,19 @@ def test_selection_keeps_mandatory_questions_and_excludes_transcription_queue() 
     assert [item["question_id"] for item in selected] == ["identity", "deadlock"]
 
 
+def test_selection_breaks_casefold_ties_by_exact_question_id() -> None:
+    questions = [
+        {"question_id": "ß-question", "selection_reason": "GOLD_SINGLE_COVERAGE"},
+        {"question_id": "ss-question", "selection_reason": "GOLD_SINGLE_COVERAGE"},
+    ]
+
+    forward = select_questions(questions, max_questions=1)
+    reverse = select_questions(list(reversed(questions)), max_questions=1)
+
+    assert [item["question_id"] for item in forward] == ["ss-question"]
+    assert reverse == forward
+
+
 def test_lineup_miner_requires_same_clerk_uncontested_examples(tmp_path: Path) -> None:
     spec = json.loads(_wave_spec(tmp_path).read_text(encoding="utf-8"))
 
@@ -175,6 +188,29 @@ def test_lineup_miner_requires_same_clerk_uncontested_examples(tmp_path: Path) -
     assert all(
         item["clerk_year_id"] == "serock-1890-clerk" for items in lineup.values() for item in items
     )
+
+
+def test_lineup_miner_breaks_casefold_ties_by_exact_exemplar_id() -> None:
+    question = {
+        "question_id": "question",
+        "clerk_year_id": "clerk-year",
+        "candidates": [{"candidate_id": "candidate", "glyph": "x"}],
+    }
+    exemplars = [
+        {
+            "exemplar_id": exemplar_id,
+            "clerk_year_id": "clerk-year",
+            "glyph": "x",
+            "confidence": "UNCONTESTED",
+        }
+        for exemplar_id in ("ß", "ss", "z")
+    ]
+
+    forward = mine_lineup(question, exemplars)
+    reverse = mine_lineup(question, list(reversed(exemplars)))
+
+    assert [item["exemplar_id"] for item in forward["candidate"]] == ["ss", "ß", "z"]
+    assert reverse == forward
 
 
 def test_generate_and_ingest_packet_are_offline_self_contained_and_immutable(
