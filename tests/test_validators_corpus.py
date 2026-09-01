@@ -113,6 +113,67 @@ def test_exact_anchor_recurring_name_variants_are_flagged() -> None:
     )
 
 
+def test_corpus_findings_ignore_record_and_observation_order() -> None:
+    records = [
+        _record(
+            "z-2",
+            1891,
+            name="Zed",
+            age=31,
+            clerk_year="z-clerk",
+            original_script="Зет",
+        ),
+        _record(
+            "z-1",
+            1890,
+            name="Zed",
+            age=20,
+            clerk_year="z-clerk",
+            original_script="Зед",
+        ),
+        _record(
+            "a-2",
+            1891,
+            name="Able",
+            age=30,
+            clerk_year="a-clerk",
+            original_script="Эйбл",
+        ),
+        _record(
+            "a-1",
+            1890,
+            name="Able",
+            age=20,
+            clerk_year="a-clerk",
+            original_script="Ейбл",
+        ),
+    ]
+    for record, original_script in zip(records, ("Ж", "Ч", "В", "Г"), strict=True):
+        record["observations"]["witnesses.0.name"] = _evidence(
+            record["observations"]["declarants.0.name"]["value"],
+            original_script,
+        )
+
+    reordered = [
+        {
+            **record,
+            "observations": dict(reversed(tuple(record["observations"].items()))),
+        }
+        for record in reversed(records)
+    ]
+
+    forward = validate_corpus(records)
+    reverse = validate_corpus(reordered)
+
+    assert [finding.code for finding in forward] == [
+        "ATTESTOR_AGE_DISCONTINUITY",
+        "ATTESTOR_AGE_DISCONTINUITY",
+        "RECURRING_NAME_SCRIPT_VARIANT",
+        "RECURRING_NAME_SCRIPT_VARIANT",
+    ]
+    assert reverse == forward
+
+
 def test_different_names_do_not_create_recurring_name_claim() -> None:
     records = [
         _record("act-1", 1890, name="Abram Rozenberg", original_script="Абрамъ"),
