@@ -446,7 +446,9 @@ Each backup is a deterministic ZIP archive under
 `service-data/backups/<project-id>/<snapshot-sha256>.aktbackup.zip`. It contains every
 regular project file and `backup.aktreader.json`, whose sorted file manifest records
 size and SHA-256 for each member. Archive names are content-derived; a repeated backup
-of unchanged storage verifies and reuses the same archive.
+of unchanged storage verifies and reuses the same archive. Every member is unencrypted and
+stored without compression (`ZIP_STORED`), and member names are portable across supported
+filesystems.
 
 ## Verify and restore
 
@@ -459,10 +461,11 @@ python -m aktreader service-backup-restore `
   recovered.aktproj
 ```
 
-Restore verifies archive member names, duplicate entries, manifest schema, snapshot hash,
-file sizes, and every file SHA-256 before writing to a new destination. It rejects
-symbolic links, archive traversal paths, and an existing restore destination. The
-restored directory is re-opened as an AKT Reader project before it is published.
+Restore verifies archive member names, case-insensitive uniqueness, storage method, encryption
+flags, manifest schema, snapshot hash, file sizes, and every file SHA-256 before writing to a new
+destination. It rejects symbolic links, archive traversal paths, Windows-special names, and an
+existing restore destination. The restored directory is re-opened as an AKT Reader project before
+it is published.
 
 ## Optional local Compose process
 
