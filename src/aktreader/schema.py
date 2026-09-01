@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlsplit
 
 from jsonschema import Draft202012Validator, FormatChecker
+from referencing import Registry, Resource
+from referencing.exceptions import NoSuchResource, Unresolvable
+from referencing.jsonschema import DRAFT202012
 
 
 class ContractValidationError(ValueError):
@@ -25,11 +30,82 @@ def load_json(path: Path) -> dict[str, Any]:
     return payload
 
 
-def validate_instance(instance: dict[str, Any], schema_path: Path) -> None:
+def _file_uri_path(uri: str) -> Path:
+    parsed = urlsplit(uri)
+    if parsed.scheme != "file" or parsed.netloc or parsed.query or parsed.fragment:
+        raise NoSuchResource(ref=uri)
+    converted = unquote(parsed.path)
+    if (
+        os.name == "nt"
+        and len(converted) >= 3
+        and converted[0] in {"/", "\\"}
+        and converted[2] == ":"
+    ):
+        converted = converted[1:]
+    return Path(converted)
+
+
+def _local_schema_registry(
+    schema: dict[str, Any],
+    *,
+    schema_path: Path,
+    schema_root: Path,
+) -> tuple[dict[str, Any], Registry]:
+    schema_uri = schema_path.as_uri()
+    rooted_schema = schema if "$id" in schema else {**schema, "$id": schema_uri}
+
+    def retrieve(uri: str) -> Resource:
+        try:
+            candidate = _file_uri_path(uri).resolve(strict=True)
+            candidate.relative_to(schema_root)
+            if not candidate.is_file():
+                raise OSError("schema reference is not a file")
+            payload = load_json(candidate)
+        except (ContractValidationError, OSError, RuntimeError, ValueError) as error:
+            raise NoSuchResource(ref=uri) from error
+        return Resource.from_contents(payload, default_specification=DRAFT202012)
+
+    resource = Resource.from_contents(rooted_schema, default_specification=DRAFT202012)
+    return rooted_schema, Registry(retrieve=retrieve).with_resource(schema_uri, resource)
+
+
+def validate_instance(
+    instance: dict[str, Any],
+    schema_path: Path,
+    *,
+    schema_root: Path | None = None,
+) -> None:
     """Validate one object against a local draft-2020-12 schema."""
-    schema = load_json(schema_path)
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
-    errors = sorted(validator.iter_errors(instance), key=lambda item: list(item.absolute_path))
+    try:
+        resolved_schema = schema_path.resolve(strict=True)
+        resolved_root = (
+            resolved_schema.parent if schema_root is None else schema_root.resolve(strict=True)
+        )
+        resolved_schema.relative_to(resolved_root)
+    except (OSError, RuntimeError, ValueError) as error:
+        raise ContractValidationError(
+            f"{schema_path}: schema must resolve inside its local root"
+        ) from error
+    schema = load_json(resolved_schema)
+    rooted_schema, registry = _local_schema_registry(
+        schema,
+        schema_path=resolved_schema,
+        schema_root=resolved_root,
+    )
+    validator = Draft202012Validator(
+        rooted_schema,
+        format_checker=FormatChecker(),
+        registry=registry,
+    )
+    try:
+        errors = sorted(
+            validator.iter_errors(instance), key=lambda item: list(item.absolute_path)
+        )
+    except Unresolvable as error:
+        raise ContractValidationError(
+            f"schema validation against {resolved_schema} could not resolve a reference "
+            "inside the local schema root"
+        ) from error
     if errors:
         rendered: list[str] = []
         for error in errors[:20]:
@@ -77,5 +153,5 @@ def validate_declared_document(path: Path, *, workspace_root: Path) -> dict[str,
     root = workspace_root.resolve()
     if schema_path != root and root not in schema_path.parents:
         raise ContractValidationError(f"{path}: declared schema escapes the workspace")
-    validate_instance(document, schema_path)
+    validate_instance(document, schema_path, schema_root=root)
     return document

@@ -90,9 +90,15 @@ LOOPBACK_ONLY_IMPORTS: dict[str, frozenset[str]] = {
     )
 }
 
+# URI decomposition cannot open a connection. Schema validation uses only this
+# parsing submodule before its local-only reference registry rejects non-file URIs.
+LOCAL_ONLY_UTILITY_IMPORTS: dict[str, frozenset[str]] = {
+    "src/aktreader/schema.py": frozenset({"urllib.parse"}),
+}
+
 # The reviewed local-only runtime dependency set (see dependency-licenses.json
 # for the full transitive license inventory). None of these packages opens sockets.
-REVIEWED_RUNTIME_DEPENDENCIES = ["jsonschema", "pillow", "pypdfium2"]
+REVIEWED_RUNTIME_DEPENDENCIES = ["jsonschema", "pillow", "pypdfium2", "referencing"]
 
 
 def _imported_names(tree: ast.Module) -> list[tuple[int, str]]:
@@ -110,7 +116,9 @@ def test_package_imports_no_networking_modules() -> None:
     for source in sorted(PACKAGE_ROOT.rglob("*.py")):
         tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
         relative = source.relative_to(ROOT)
-        allowed_for_source = LOOPBACK_ONLY_IMPORTS.get(relative.as_posix(), frozenset())
+        allowed_for_source = LOOPBACK_ONLY_IMPORTS.get(
+            relative.as_posix(), frozenset()
+        ) | LOCAL_ONLY_UTILITY_IMPORTS.get(relative.as_posix(), frozenset())
         for lineno, name in _imported_names(tree):
             if name in allowed_for_source:
                 continue

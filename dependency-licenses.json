@@ -16,7 +16,8 @@
     "runtime": [
       "jsonschema",
       "pillow",
-      "pypdfium2"
+      "pypdfium2",
+      "referencing"
     ],
     "development": [
       "hypothesis",
@@ -90,7 +91,7 @@
     },
     {
       "name": "referencing",
-      "relationship": "jsonschema transitive",
+      "relationship": "direct runtime",
       "spdx": "MIT"
     },
     {
