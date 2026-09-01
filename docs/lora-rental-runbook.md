@@ -25,9 +25,10 @@ training is authorized, but no GPU is provisioned until `training/readiness-0001
      --manifest-output .\training\silver.manifest.json
    ```
 
-   Export fails closed for overlap, missing materialization, hash drift, malformed provenance,
-   or any source label whose PRESENT observations are not grounded in its own continuous
-   transcription.
+   Export fails closed for missing or duplicate record IDs, overlap, missing materialization,
+   hash drift, malformed provenance, or any source label whose PRESENT observations are not
+   grounded in its own continuous transcription. Preflight applies the same record-identity
+   checks before it counts grounded examples.
 
 4. Fetch the exact trainable safetensor revision from the recipe. Do not train from the GGUF
    inference artifact. Create a file-level SHA-256 manifest after download and verify it before
