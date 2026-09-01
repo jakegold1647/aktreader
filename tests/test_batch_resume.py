@@ -296,6 +296,30 @@ def test_discovery_and_manifest_fail_closed_on_unknown_or_multi_act_targets(
     assert manifest_progress.review_required == 1
 
 
+def test_folder_discovery_breaks_casefold_ties_by_exact_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scan_dir = tmp_path / "scans"
+    scan_dir.mkdir()
+    exact_first = scan_dir / "ss.jpg"
+    exact_second = scan_dir / "ß.jpg"
+    exact_first.write_bytes(b"first")
+    exact_second.write_bytes(b"second")
+    assert exact_first.name.casefold() == exact_second.name.casefold()
+
+    filesystem_order = [exact_second, exact_first]
+    monkeypatch.setattr(
+        Path, "rglob", lambda _path, _pattern: iter(filesystem_order)
+    )
+
+    jobs = discover_folder_jobs(scan_dir, tmp_path / "output")
+
+    assert [job.metadata["discovered_relative_path"] for job in jobs] == [
+        "ss.jpg",
+        "ß.jpg",
+    ]
+
+
 def test_unknown_year_is_privacy_refused_without_calling_reader(tmp_path: Path) -> None:
     scan = tmp_path / "scan.jpg"
     scan.write_bytes(b"scan")
