@@ -95,8 +95,16 @@ def validate_attestor_age_continuity(
 
     findings: list[ValidationFinding] = []
     seen_pairs: set[tuple[str, str, str]] = set()
-    for (_, _, name), occurrences in grouped.items():
-        ordered = sorted(occurrences, key=lambda item: (item.year, item.record_id, item.role_path))
+    for group_key in sorted(
+        grouped,
+        key=lambda key: tuple((value is not None, value or "") for value in key),
+    ):
+        _, _, name = group_key
+        occurrences = grouped[group_key]
+        ordered = sorted(
+            occurrences,
+            key=lambda item: (item.year, item.record_id, item.role_path, item.age),
+        )
         for index, left in enumerate(ordered):
             for right in ordered[index + 1 :]:
                 year_gap = right.year - left.year
@@ -142,6 +150,10 @@ class _NameReading:
     original: str
 
 
+def _name_reading_order_key(reading: _NameReading) -> tuple[str, str, str, str]:
+    return reading.record_id, reading.path, reading.normalized, reading.original
+
+
 def validate_within_clerk_year_names(
     records: list[Any] | tuple[Any, ...],
 ) -> tuple[ValidationFinding, ...]:
@@ -175,13 +187,15 @@ def validate_within_clerk_year_names(
                 )
 
     findings: list[ValidationFinding] = []
-    for clerk_year, readings in by_clerk.items():
+    for clerk_year in sorted(by_clerk):
+        readings = by_clerk[clerk_year]
         by_normalized: dict[str, list[_NameReading]] = defaultdict(list)
         by_original: dict[str, list[_NameReading]] = defaultdict(list)
         for reading in readings:
             by_normalized[reading.normalized].append(reading)
             by_original[reading.original].append(reading)
-        for normalized, matches in by_normalized.items():
+        for normalized in sorted(by_normalized):
+            matches = sorted(by_normalized[normalized], key=_name_reading_order_key)
             originals = {match.original for match in matches}
             if len(originals) > 1:
                 findings.append(
@@ -197,7 +211,8 @@ def validate_within_clerk_year_names(
                         evidence={"normalized": normalized, "original_scripts": sorted(originals)},
                     )
                 )
-        for original, matches in by_original.items():
+        for original in sorted(by_original):
+            matches = sorted(by_original[original], key=_name_reading_order_key)
             normalized_values = {match.normalized for match in matches}
             if len(normalized_values) > 1:
                 findings.append(
@@ -217,7 +232,8 @@ def validate_within_clerk_year_names(
                     )
                 )
 
-    for clerk_year, values in officiants.items():
+    for clerk_year in sorted(officiants):
+        values = officiants[clerk_year]
         distinct = sorted({value for _, value in values})
         if len(distinct) <= 1:
             continue
