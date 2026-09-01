@@ -65,7 +65,12 @@ python tools/build_human_qualification_packet.py
 
 Generated ZIPs and their receipt are placed in `training/qualification-0001/`. The builder
 verifies source hashes, refuses any path under BulkData, includes no observations or machine
-labels, and fails rather than overwrite a non-empty packet directory.
+labels, and fails rather than overwrite a non-empty packet directory. Qualification manifests
+must use portable identifiers: `packet_id` follows `[a-z0-9][a-z0-9._-]+`, each `record_id`
+follows `[a-z0-9][a-z0-9-]+`, and candidate codes use ASCII letters, digits, `.`, `_`, or `-`
+after an initial letter or digit. Candidate codes and record IDs must also be unique when case
+is ignored; Windows device names such as `con` and `nul` are rejected before any output is
+created.
 
 ## Marketplace job post
 

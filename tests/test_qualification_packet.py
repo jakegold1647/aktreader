@@ -1,6 +1,7 @@
 import hashlib
 import json
 import zipfile
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,14 @@ def _source_manifest(tmp_path: Path, source: Path) -> Path:
     path = tmp_path / "source-manifest.json"
     path.write_text(json.dumps(manifest), encoding="utf-8")
     return path
+
+
+def _manifest_payload(path: Path) -> dict[str, object]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_manifest(path: Path, payload: dict[str, object]) -> None:
+    path.write_text(json.dumps(payload), encoding="utf-8")
 
 
 def test_builds_deterministic_blind_candidate_archives(tmp_path: Path) -> None:
@@ -92,3 +101,74 @@ def test_refuses_bulkdata_source_even_when_hash_matches(tmp_path: Path) -> None:
             source_manifest_path=manifest,
             output_dir=tmp_path / "packet",
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "unsafe_value", "message"),
+    [
+        ("packet_id", "../escaped", "packet_id is not a portable identifier"),
+        ("candidate_code", "../escaped", "candidate code is not a portable identifier"),
+        ("record_id", "../../escaped", "record_id is not a portable identifier"),
+        ("record_id", "con", "record_id is not a portable filename segment"),
+    ],
+)
+def test_rejects_archive_unsafe_identifiers_before_writing_output(
+    tmp_path: Path,
+    field: str,
+    unsafe_value: str,
+    message: str,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (20, 20)).save(source)
+    manifest = _source_manifest(tmp_path, source)
+    payload = _manifest_payload(manifest)
+    if field == "candidate_code":
+        payload["candidate_codes"][1] = unsafe_value
+    elif field == "record_id":
+        payload["records"][0]["record_id"] = unsafe_value
+    else:
+        payload[field] = unsafe_value
+    _write_manifest(manifest, payload)
+    output = tmp_path / "packet"
+
+    with pytest.raises(QualificationPacketError, match=message):
+        build_qualification_packet(source_manifest_path=manifest, output_dir=output)
+
+    assert not output.exists()
+    assert not (tmp_path.parent / "escaped.png").exists()
+    assert not (tmp_path.parent / "escaped.zip").exists()
+
+
+def test_rejects_case_colliding_candidate_codes_before_writing_output(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (20, 20)).save(source)
+    manifest = _source_manifest(tmp_path, source)
+    payload = _manifest_payload(manifest)
+    payload["candidate_codes"] = ["H1", "h1", "H3"]
+    _write_manifest(manifest, payload)
+    output = tmp_path / "packet"
+
+    with pytest.raises(QualificationPacketError, match="case-insensitively unique"):
+        build_qualification_packet(source_manifest_path=manifest, output_dir=output)
+
+    assert not output.exists()
+
+
+def test_rejects_duplicate_record_ids_before_writing_output(tmp_path: Path) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (20, 20)).save(source)
+    manifest = _source_manifest(tmp_path, source)
+    payload = _manifest_payload(manifest)
+    payload["records"].append(deepcopy(payload["records"][0]))
+    _write_manifest(manifest, payload)
+    output = tmp_path / "packet"
+
+    with pytest.raises(
+        QualificationPacketError,
+        match="record IDs must be case-insensitively unique",
+    ):
+        build_qualification_packet(source_manifest_path=manifest, output_dir=output)
+
+    assert not output.exists()
