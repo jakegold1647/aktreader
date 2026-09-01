@@ -36,7 +36,14 @@ def _blind_group(spec: dict[str, Any]) -> str:
                 "act_end": artifact["act_end"],
                 "sha256": artifact["sha256"],
             }
-            for artifact in spec["artifacts"]
+            for artifact in sorted(
+                spec["artifacts"],
+                key=lambda item: (
+                    item["act_start"],
+                    item["act_end"],
+                    item["sha256"],
+                ),
+            )
         ],
     }
     digest = hashlib.sha256(
