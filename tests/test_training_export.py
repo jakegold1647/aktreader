@@ -24,8 +24,18 @@ def _write_json(path: Path, payload: object) -> None:
     )
 
 
-def _grounded_label(path: Path, *, reader_id: str, reader_family: str) -> None:
-    payload = json.loads(READER_B.read_text(encoding="utf-8"))
+def _grounded_label(
+    path: Path,
+    *,
+    reader_id: str,
+    reader_family: str,
+    record_id: str = "serock-1890-death-1",
+) -> None:
+    payload = json.loads(
+        READER_B.read_text(encoding="utf-8").replace(
+            "serock-1890-death-1", record_id
+        )
+    )
     payload["label_id"] = f"synthetic.{reader_id}"
     payload["reader"]["reader_id"] = reader_id
     payload["reader"]["reader_family"] = reader_family
@@ -45,46 +55,66 @@ def _grounded_label(path: Path, *, reader_id: str, reader_family: str) -> None:
     _write_json(path, payload)
 
 
-def _grounded_export_fixture(tmp_path: Path) -> tuple[Path, Path]:
-    left = tmp_path / "labels" / "left.json"
-    right = tmp_path / "labels" / "right.json"
-    _grounded_label(left, reader_id="human-left", reader_family="human")
-    _grounded_label(right, reader_id="human-right", reader_family="human-independent")
+def _grounded_export_fixture(
+    tmp_path: Path,
+    *,
+    record_ids: tuple[str, ...] = ("serock-1890-death-1",),
+) -> tuple[Path, Path]:
+    records = []
+    for act_no, record_id in enumerate(record_ids, start=1):
+        left = tmp_path / "labels" / f"{record_id}-left.json"
+        right = tmp_path / "labels" / f"{record_id}-right.json"
+        _grounded_label(
+            left,
+            reader_id="human-left",
+            reader_family="human",
+            record_id=record_id,
+        )
+        _grounded_label(
+            right,
+            reader_id="human-right",
+            reader_family="human-independent",
+            record_id=record_id,
+        )
 
-    record_path = tmp_path / "records" / "serock-1890-death-1.json"
-    record = {
-        "record_id": "serock-1890-death-1",
-        "clerk_year": {"id": "73-826-0|serock|1890|clerk-unknown"},
-        "artifact": {"path": "image.jpg", "sha256": "0" * 64},
-        "target": {"kind": "act", "act_no": 1},
-        "observations": {"principal.name": {"value": "Fruma"}},
-        "authority_warning": "extraction is not authority — verify against the scan",
-    }
-    _write_json(record_path, record)
-
-    manifest_path = tmp_path / "manifest.json"
-    manifest = {
-        "records": [
+        record_path = tmp_path / "records" / f"{record_id}.json"
+        record = {
+            "record_id": record_id,
+            "clerk_year": {"id": "73-826-0|serock|1890|clerk-unknown"},
+            "artifact": {"path": f"image-{act_no}.jpg", "sha256": "0" * 64},
+            "target": {"kind": "act", "act_no": act_no},
+            "observations": {"principal.name": {"value": "Fruma"}},
+            "authority_warning": "extraction is not authority — verify against the scan",
+        }
+        _write_json(record_path, record)
+        records.append(
             {
-                "record_id": "serock-1890-death-1",
+                "record_id": record_id,
                 "clerk_year_id": "73-826-0|serock|1890|clerk-unknown",
                 "training_eligible": True,
                 "training_materialized": True,
                 "resolved_fields": {
                     "storage": "MATERIALIZED_JSON",
-                    "path": "records/serock-1890-death-1.json",
+                    "path": f"records/{record_id}.json",
                     "sha256": sha256_path(record_path),
                 },
                 "provenance": {
                     "source_labels": [
-                        {"path": "labels/left.json", "sha256": sha256_path(left)},
-                        {"path": "labels/right.json", "sha256": sha256_path(right)},
+                        {
+                            "path": f"labels/{record_id}-left.json",
+                            "sha256": sha256_path(left),
+                        },
+                        {
+                            "path": f"labels/{record_id}-right.json",
+                            "sha256": sha256_path(right),
+                        },
                     ]
                 },
             }
-        ]
-    }
-    _write_json(manifest_path, manifest)
+        )
+
+    manifest_path = tmp_path / "manifest.json"
+    _write_json(manifest_path, {"records": records})
 
     holdout_path = tmp_path / "holdout.json"
     _write_json(
@@ -147,6 +177,36 @@ def test_grounded_non_overlapping_export_is_content_addressed(tmp_path: Path) ->
     assert manifest["split_validation"] == "PASS_NO_CLERK_YEAR_OVERLAP"
     assert manifest["grounding_validation"] == "PASS_ALL_SOURCE_LABELS_GROUNDED"
     assert len(manifest["materialized_records"]) == 1
+
+
+def test_training_export_ignores_manifest_record_order(tmp_path: Path) -> None:
+    manifest_path, holdout_path = _grounded_export_fixture(
+        tmp_path,
+        record_ids=("serock-1890-death-2", "serock-1890-death-1"),
+    )
+
+    first_examples, first_manifest = build_training_export(
+        workspace_root=tmp_path,
+        silver_manifest_path=manifest_path,
+        evaluation_holdout_path=holdout_path,
+    )
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload["records"].reverse()
+    _write_json(manifest_path, payload)
+    second_examples, second_manifest = build_training_export(
+        workspace_root=tmp_path,
+        silver_manifest_path=manifest_path,
+        evaluation_holdout_path=holdout_path,
+    )
+
+    assert [example["record_id"] for example in first_examples] == [
+        "serock-1890-death-1",
+        "serock-1890-death-2",
+    ]
+    assert second_examples == first_examples
+    assert second_manifest["materialized_records"] == first_manifest[
+        "materialized_records"
+    ]
 
 
 def test_holdout_must_explicitly_forbid_overlap(tmp_path: Path) -> None:
