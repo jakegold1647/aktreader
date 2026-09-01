@@ -89,6 +89,50 @@ def test_builds_deterministic_blind_candidate_archives(tmp_path: Path) -> None:
         validate_human_transcription(submission, schema, qualification=True)
 
 
+def test_candidate_archives_ignore_manifest_candidate_and_record_order(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (24, 20), color=(240, 240, 240)).save(source)
+    first_manifest = _source_manifest(tmp_path, source)
+    first_payload = _manifest_payload(first_manifest)
+    second_record = deepcopy(first_payload["records"][0])
+    second_record["record_id"] = "synthetic-1890-death-2"
+    second_record["crop"]["x"] = 4
+    first_payload["candidate_codes"] = ["H3", "H1", "H2"]
+    first_payload["records"].append(second_record)
+    _write_manifest(first_manifest, first_payload)
+
+    second_manifest = tmp_path / "source-manifest-reordered.json"
+    second_payload = deepcopy(first_payload)
+    second_payload["candidate_codes"].reverse()
+    second_payload["records"].reverse()
+    _write_manifest(second_manifest, second_payload)
+
+    first = build_qualification_packet(
+        source_manifest_path=first_manifest,
+        output_dir=tmp_path / "packet-one",
+    )
+    second = build_qualification_packet(
+        source_manifest_path=second_manifest,
+        output_dir=tmp_path / "packet-two",
+    )
+
+    assert first["candidate_codes"] == second["candidate_codes"] == ["H1", "H2", "H3"]
+    assert [record["record_id"] for record in first["records"]] == [
+        "synthetic-1890-death-1",
+        "synthetic-1890-death-2",
+    ]
+    assert first["records"] == second["records"]
+    assert {
+        archive["path"]: archive["sha256"]
+        for archive in first["candidate_archives"]
+    } == {
+        archive["path"]: archive["sha256"]
+        for archive in second["candidate_archives"]
+    }
+
+
 def test_refuses_bulkdata_source_even_when_hash_matches(tmp_path: Path) -> None:
     restricted = tmp_path / "BulkData"
     restricted.mkdir()
