@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import zipfile
 from collections.abc import Iterable, Mapping
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +23,19 @@ class QualificationPacketError(ValueError):
 
 class QualificationIntakeError(ValueError):
     """Raised when returned qualification work cannot enter adjudication."""
+
+
+_PACKET_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]+")
+_CANDIDATE_CODE_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+_RECORD_ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]+")
+_WINDOWS_DEVICE_NAMES = {
+    "aux",
+    "con",
+    "nul",
+    "prn",
+    *(f"com{index}" for index in range(1, 10)),
+    *(f"lpt{index}" for index in range(1, 10)),
+}
 
 
 def _sha256(path: Path) -> str:
@@ -50,6 +65,23 @@ def _source_path(raw: Any, *, base: Path) -> Path:
     return resolved
 
 
+def _portable_identifier(raw: Any, *, role: str, pattern: re.Pattern[str]) -> str:
+    if not isinstance(raw, str) or pattern.fullmatch(raw) is None:
+        raise QualificationPacketError(f"{role} is not a portable identifier")
+    if raw.split(".", 1)[0].casefold() in _WINDOWS_DEVICE_NAMES:
+        raise QualificationPacketError(f"{role} is not a portable filename segment")
+    return raw
+
+
+def _require_casefold_unique(values: Iterable[str], *, role: str) -> None:
+    seen: set[str] = set()
+    for value in values:
+        folded = value.casefold()
+        if folded in seen:
+            raise QualificationPacketError(f"{role} must be case-insensitively unique")
+        seen.add(folded)
+
+
 def build_qualification_packet(
     *,
     source_manifest_path: Path,
@@ -60,9 +92,6 @@ def build_qualification_packet(
     output_dir = output_dir.resolve()
     if output_dir.exists() and any(output_dir.iterdir()):
         raise QualificationPacketError(f"output directory is not empty: {output_dir}")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    images_dir = output_dir / "images"
-    images_dir.mkdir()
 
     try:
         source_manifest = json.loads(source_manifest_path.read_text(encoding="utf-8"))
@@ -70,23 +99,41 @@ def build_qualification_packet(
         raise QualificationPacketError("source manifest is not readable strict JSON") from error
     if not isinstance(source_manifest, Mapping):
         raise QualificationPacketError("source manifest must be an object")
+    packet_id = _portable_identifier(
+        source_manifest.get("packet_id"),
+        role="packet_id",
+        pattern=_PACKET_ID_PATTERN,
+    )
     records = source_manifest.get("records")
-    candidate_codes = source_manifest.get("candidate_codes")
+    raw_candidate_codes = source_manifest.get("candidate_codes")
     if not isinstance(records, list) or not records:
         raise QualificationPacketError("source manifest requires records")
-    if not isinstance(candidate_codes, list) or len(candidate_codes) < 3:
+    if not isinstance(raw_candidate_codes, list) or len(raw_candidate_codes) < 3:
         raise QualificationPacketError("qualification requires at least three candidates")
+    candidate_codes = [
+        _portable_identifier(
+            candidate_code,
+            role="candidate code",
+            pattern=_CANDIDATE_CODE_PATTERN,
+        )
+        for candidate_code in raw_candidate_codes
+    ]
+    _require_casefold_unique(candidate_codes, role="candidate codes")
 
     public_records: list[dict[str, Any]] = []
     image_payloads: dict[str, bytes] = {}
+    record_ids: list[str] = []
     for entry in records:
         if not isinstance(entry, Mapping):
             raise QualificationPacketError("record entry must be an object")
-        record_id = entry.get("record_id")
+        record_id = _portable_identifier(
+            entry.get("record_id"),
+            role="record_id",
+            pattern=_RECORD_ID_PATTERN,
+        )
+        record_ids.append(record_id)
         source = entry.get("source")
         crop = entry.get("crop")
-        if not isinstance(record_id, str) or not record_id:
-            raise QualificationPacketError("record_id must be non-empty")
         if not isinstance(source, Mapping) or not isinstance(crop, Mapping):
             raise QualificationPacketError(f"{record_id}: source and crop must be objects")
         source_path = _source_path(source.get("path"), base=source_manifest_path.parent)
@@ -102,14 +149,15 @@ def build_qualification_packet(
         if min(x, y) < 0 or min(width, height) <= 0:
             raise QualificationPacketError(f"{record_id}: invalid crop bounds")
 
-        destination = images_dir / f"{record_id}.png"
         with Image.open(source_path) as image:
             if x + width > image.width or y + height > image.height:
                 raise QualificationPacketError(f"{record_id}: crop exceeds source image")
-            image.crop((x, y, x + width, y + height)).save(destination, format="PNG")
-        crop_sha = _sha256(destination)
-        relative_image = f"images/{destination.name}"
-        image_payloads[relative_image] = destination.read_bytes()
+            image_buffer = BytesIO()
+            image.crop((x, y, x + width, y + height)).save(image_buffer, format="PNG")
+        image_payload = image_buffer.getvalue()
+        crop_sha = hashlib.sha256(image_payload).hexdigest()
+        relative_image = f"images/{record_id}.png"
+        image_payloads[relative_image] = image_payload
         public_records.append(
             {
                 "record_id": record_id,
@@ -117,6 +165,13 @@ def build_qualification_packet(
                 "artifact": {"path": relative_image, "sha256": crop_sha},
             }
         )
+    _require_casefold_unique(record_ids, role="record IDs")
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    images_dir = output_dir / "images"
+    images_dir.mkdir()
+    for name, payload in image_payloads.items():
+        (output_dir / name).write_bytes(payload)
 
     readme = (
         b"Blind qualification packet. Do not use OCR or AI. Do not consult indexes or "
@@ -125,17 +180,15 @@ def build_qualification_packet(
     )
     zip_receipts: list[dict[str, str]] = []
     for candidate_code in candidate_codes:
-        if not isinstance(candidate_code, str) or not candidate_code:
-            raise QualificationPacketError("candidate codes must be non-empty strings")
-        assignment_id = f"{source_manifest.get('packet_id')}-{candidate_code.casefold()}"
+        assignment_id = f"{packet_id}-{candidate_code.casefold()}"
         assignment = {
             "schema_version": "1.0.0",
-            "packet_id": source_manifest.get("packet_id"),
+            "packet_id": packet_id,
             "candidate_code": candidate_code,
             "purpose": "QUALIFICATION_ONLY_EXCLUDED_FROM_GOLD_AND_TRAINING",
             "records": public_records,
         }
-        zip_path = output_dir / f"{source_manifest.get('packet_id')}-{candidate_code}.zip"
+        zip_path = output_dir / f"{packet_id}-{candidate_code}.zip"
         with zipfile.ZipFile(zip_path, "w") as archive:
             _zip_write(archive, "README.txt", readme)
             _zip_write(archive, "assignment.json", _json_bytes(assignment))
@@ -180,7 +233,7 @@ def build_qualification_packet(
 
     receipt = {
         "schema_version": "1.0.0",
-        "packet_id": source_manifest.get("packet_id"),
+        "packet_id": packet_id,
         "purpose": "QUALIFICATION_ONLY_EXCLUDED_FROM_GOLD_AND_TRAINING",
         "source_manifest": {
             "path": str(source_manifest_path),
