@@ -1975,6 +1975,13 @@ def list_service_projects(service_workspace: Path | str) -> list[dict[str, objec
         if candidate.name != f"{project_id}.aktproj":
             raise ServiceError("managed project directory does not match its project_id")
         projects.append(_project_summary(report))
+    projects.sort(
+        key=lambda project: (
+            str(project["name"]).casefold(),
+            str(project["name"]),
+            str(project["project_id"]),
+        )
+    )
     return projects
 
 

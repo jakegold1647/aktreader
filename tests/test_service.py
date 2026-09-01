@@ -15,6 +15,7 @@ from PIL import Image
 
 import aktreader.service as service_module
 from aktreader import kraken as kraken_module
+from aktreader import project as project_module
 from aktreader.kraken import KrakenConfig, LocalKraken
 from aktreader.local_reader import PinnedArtifact, sha256_file
 from aktreader.project import (
@@ -151,6 +152,57 @@ def test_service_workspace_owns_a_copy_of_each_project(tmp_path: Path) -> None:
     managed = workspace / "projects" / f"{project_id}.aktproj"
     assert managed.is_dir()
     assert managed.resolve() != project.resolve()
+
+
+def test_service_project_lists_use_display_name_order_with_stable_ties(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "service"
+    create_service_workspace(workspace)
+    owner = create_local_account(
+        workspace,
+        username="owner",
+        password="a sufficiently long local owner password",
+    )
+    project_ids = iter(
+        [
+            project_module.uuid.UUID("00000000-0000-4000-8000-000000000001"),
+            project_module.uuid.UUID("00000000-0000-4000-8000-000000000004"),
+            project_module.uuid.UUID("00000000-0000-4000-8000-000000000002"),
+            project_module.uuid.UUID("00000000-0000-4000-8000-000000000003"),
+        ]
+    )
+    monkeypatch.setattr(project_module.uuid, "uuid4", lambda: next(project_ids))
+
+    inputs = [
+        ("Zulu register", "zulu.aktproj"),
+        ("alpha register", "alpha-later.aktproj"),
+        ("Alpha register", "alpha-title-case.aktproj"),
+        ("alpha register", "alpha-earlier.aktproj"),
+    ]
+    added_projects: list[dict[str, object]] = []
+    for name, directory in inputs:
+        project = tmp_path / directory
+        create_project(project, name=name)
+        added = add_project_to_service(workspace, project, owner_username="owner")
+        added_projects.append(added["project"])
+
+    expected_ids = [
+        str(added_projects[2]["project_id"]),
+        str(added_projects[3]["project_id"]),
+        str(added_projects[1]["project_id"]),
+        str(added_projects[0]["project_id"]),
+    ]
+    administrative = list_service_projects(workspace)
+    authorized = list_authorized_service_projects(
+        workspace,
+        account_id=str(owner["account_id"]),
+    )
+
+    assert [str(project["project_id"]) for project in administrative] == expected_ids
+    assert [str(project["project_id"]) for project in authorized] == expected_ids
+    assert [project["role"] for project in authorized] == ["OWNER"] * 4
 
 
 def test_local_accounts_limit_project_visibility_and_create_sessions(
