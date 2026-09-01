@@ -91,7 +91,8 @@ def test_training_uses_pinned_local_ketos_and_writes_receipt(
         )
         checkpoints = Path(json.loads(checkpoint_line.split(": ", 1)[1]))
         checkpoints.mkdir()
-        (checkpoints / "model.safetensors").write_bytes(b"weights")
+        (checkpoints / "a.safetensors").write_bytes(b"lower")
+        (checkpoints / "B.safetensors").write_bytes(b"upper")
         return subprocess.CompletedProcess(command, 0, "trained", "")
 
     monkeypatch.setattr(training.subprocess, "run", fake_run)
@@ -112,8 +113,13 @@ def test_training_uses_pinned_local_ketos_and_writes_receipt(
     assert receipt["corpus_manifest_sha256"] == "a" * 64
     assert receipt["outputs"] == [
         {
-            "path": "checkpoints/model.safetensors",
-            "sha256": hashlib.sha256(b"weights").hexdigest(),
-            "size_bytes": 7,
-        }
+            "path": "checkpoints/B.safetensors",
+            "sha256": hashlib.sha256(b"upper").hexdigest(),
+            "size_bytes": 5,
+        },
+        {
+            "path": "checkpoints/a.safetensors",
+            "sha256": hashlib.sha256(b"lower").hexdigest(),
+            "size_bytes": 5,
+        },
     ]
