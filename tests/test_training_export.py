@@ -209,6 +209,64 @@ def test_training_export_ignores_manifest_record_order(tmp_path: Path) -> None:
     ]
 
 
+def test_training_export_rejects_duplicate_record_ids(tmp_path: Path) -> None:
+    manifest_path, holdout_path = _grounded_export_fixture(tmp_path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload["records"].append(payload["records"][0])
+    _write_json(manifest_path, payload)
+
+    with pytest.raises(TrainingExportError, match="duplicate record IDs"):
+        build_training_export(
+            workspace_root=tmp_path,
+            silver_manifest_path=manifest_path,
+            evaluation_holdout_path=holdout_path,
+        )
+
+
+@pytest.mark.parametrize("record_id", [None, "", "   "])
+def test_training_export_requires_non_empty_string_record_ids(
+    tmp_path: Path,
+    record_id: object,
+) -> None:
+    manifest_path, holdout_path = _grounded_export_fixture(tmp_path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload["records"][0]["record_id"] = record_id
+    _write_json(manifest_path, payload)
+
+    with pytest.raises(TrainingExportError, match="non-empty string"):
+        build_training_export(
+            workspace_root=tmp_path,
+            silver_manifest_path=manifest_path,
+            evaluation_holdout_path=holdout_path,
+        )
+
+
+def test_training_readiness_rejects_duplicate_record_ids(tmp_path: Path) -> None:
+    _write_json(
+        tmp_path / "silver.json",
+        {"records": [{"record_id": "duplicate"}, {"record_id": "duplicate"}]},
+    )
+    _write_json(tmp_path / "holdout.json", {})
+    _write_json(tmp_path / "attestation.json", {})
+    _write_json(tmp_path / "recipe.json", {})
+    plan_path = tmp_path / "plan.json"
+    _write_json(
+        plan_path,
+        {
+            "inputs": {
+                "silver_manifest": "silver.json",
+                "evaluation_holdout": "holdout.json",
+                "gold_attestation_audit": "attestation.json",
+                "lora_recipe": "recipe.json",
+            },
+            "minimums": {},
+        },
+    )
+
+    with pytest.raises(TrainingExportError, match="duplicate record IDs"):
+        build_training_readiness(workspace_root=tmp_path, plan_path=plan_path)
+
+
 def test_holdout_must_explicitly_forbid_overlap(tmp_path: Path) -> None:
     holdout = tmp_path / "holdout.json"
     _write_json(holdout, {"holdout_clerk_year_ids": []})
