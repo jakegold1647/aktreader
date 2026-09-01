@@ -40,6 +40,7 @@ from aktreader.project import (
     list_htr_suggestion_evaluations,
     list_project_activity,
     list_project_documents,
+    load_project_document_metadata_history,
     load_project_page,
     load_project_page_layout,
     load_project_revision_history,
@@ -47,6 +48,7 @@ from aktreader.project import (
     restore_line_geometry,
     restore_line_transcription,
     restore_page_reading_order,
+    restore_project_document_metadata,
     restore_region_geometry,
     revise_line_geometry,
     revise_line_transcription,
@@ -2843,14 +2845,70 @@ def update_authorized_project_document(
         account_id=account_id,
         minimum_role="EDITOR",
     )
+    account = _account_by_id(root, account_id)
     return update_project_document(
         _managed_project_path(root, canonical_id),
         manifest_sha256=manifest_sha256,
         title=title,
         tags=tags,
         notes=notes,
+        editor=str(account["username"]),
         expected_updated_at=expected_updated_at,
     )
+
+
+def load_authorized_project_document_metadata_history(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+) -> dict[str, object]:
+    """Load bounded document metadata history for an authorized viewer."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="VIEWER",
+    )
+    return load_project_document_metadata_history(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        limit=100,
+    )
+
+
+def restore_authorized_project_document_metadata(
+    service_workspace: Path | str,
+    project_id: str,
+    *,
+    account_id: str,
+    manifest_sha256: str,
+    target_revision: object,
+    expected_updated_at: object,
+) -> dict[str, object]:
+    """Append an authorized older metadata value as a new audited revision."""
+
+    root = _service_root(service_workspace)
+    canonical_id = _require_uuid(project_id, role="project_id")
+    _require_project_role(
+        root,
+        project_id=canonical_id,
+        account_id=account_id,
+        minimum_role="EDITOR",
+    )
+    account = _account_by_id(root, account_id)
+    revision = restore_project_document_metadata(
+        _managed_project_path(root, canonical_id),
+        manifest_sha256=manifest_sha256,
+        target_revision=target_revision,
+        editor=str(account["username"]),
+        expected_updated_at=expected_updated_at,
+    )
+    return {key: value for key, value in revision.items() if key != "project"}
 
 
 def load_authorized_project_page(
@@ -3744,6 +3802,28 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                 )
                 return
             if (
+                len(parts) == 8
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6:] == ["metadata", "history"]
+            ):
+                account = self._account()
+                history = load_authorized_project_document_metadata_history(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                )
+                self._json(
+                    HTTPStatus.OK,
+                    {
+                        "status": "READY",
+                        "history": history,
+                        "network_required": False,
+                    },
+                )
+                return
+            if (
                 len(parts) == 7
                 and parts[:3] == ["", "api", "projects"]
                 and parts[4] == "documents"
@@ -4054,6 +4134,26 @@ class _ServiceRequestHandler(BaseHTTPRequestHandler):
                     title=payload["title"],
                     tags=payload["tags"],
                     notes=payload["notes"],
+                    expected_updated_at=payload["expected_updated_at"],
+                )
+                self._json(HTTPStatus.OK, document)
+                return
+            if (
+                len(parts) == 8
+                and parts[:3] == ["", "api", "projects"]
+                and parts[4] == "documents"
+                and parts[6:] == ["metadata", "restore"]
+            ):
+                required = {"target_revision", "expected_updated_at"}
+                if set(payload) != required:
+                    raise ServiceError("document metadata restore has invalid keys")
+                account = self._account()
+                document = restore_authorized_project_document_metadata(
+                    self.server.service_workspace,
+                    parts[3],
+                    account_id=str(account["account_id"]),
+                    manifest_sha256=parts[5],
+                    target_revision=payload["target_revision"],
                     expected_updated_at=payload["expected_updated_at"],
                 )
                 self._json(HTTPStatus.OK, document)
@@ -4532,7 +4632,8 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
 #layout-editor { border-top: 1px solid #d9e1ea; margin-top: 18px; padding-top: 14px; }
 #layout-editor h2, #layout-editor h3 { margin: 8px 0; }
 #region-polygon, #line-polygon, #line-baseline { min-height: 92px; }
-#layout-history-preview { background: #f8fafc; border: 1px solid #d9e1ea; border-radius: 5px;
+#layout-history-preview, #metadata-history-preview { background: #f8fafc;
+  border: 1px solid #d9e1ea; border-radius: 5px;
   box-sizing: border-box; max-height: 240px; overflow: auto; padding: 10px; white-space: pre-wrap; }
 #reading-order { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
 .order-row { align-items: center; display: flex; gap: 6px; }
@@ -4610,6 +4711,18 @@ textarea { box-sizing: border-box; min-height: 130px; resize: vertical; width: 1
               <span id="metadata-status" role="status" aria-live="polite"></span>
             </div>
           </form>
+          <div class="controls">
+            <button id="load-metadata-history" class="secondary" type="button" disabled>
+              Load history
+            </button>
+            <label>Older state
+              <select id="metadata-history-revision" disabled></select>
+            </label>
+            <button id="restore-metadata-revision" type="button" disabled>
+              Restore selected state
+            </button>
+          </div>
+          <pre id="metadata-history-preview">No document metadata history loaded.</pre>
         </details>
         <p id="page-detail">Choose a project.</p>
         <div id="scan">
@@ -4780,7 +4893,7 @@ const state = {
   activity: [], evaluations: [], members: [], accounts: [], projectInvitations: [],
   invitations: [], artifacts: [], attachableArtifacts: [], searchResults: [],
   searchTruncated: false, krakenRecognitionEnabled: false, metadataManifest: null,
-  layoutHistory: null
+  layoutHistory: null, metadataHistory: null
 };
 const login = document.getElementById("login");
 const workspace = document.getElementById("workspace");
@@ -4799,6 +4912,10 @@ const documentTags = document.getElementById("document-tags");
 const documentNotes = document.getElementById("document-notes");
 const saveDocumentMetadata = document.getElementById("save-document-metadata");
 const metadataStatus = document.getElementById("metadata-status");
+const loadMetadataHistoryButton = document.getElementById("load-metadata-history");
+const metadataHistoryRevision = document.getElementById("metadata-history-revision");
+const metadataHistoryPreview = document.getElementById("metadata-history-preview");
+const restoreMetadataRevisionButton = document.getElementById("restore-metadata-revision");
 const pageDetail = document.getElementById("page-detail");
 const image = document.getElementById("image");
 const overlay = document.getElementById("overlay");
@@ -4920,8 +5037,115 @@ function confirmMetadataNavigation() {
     "Discard unsaved document title, tags, or notes?"
   );
 }
+function clearDocumentMetadataHistory(message) {
+  state.metadataHistory = null;
+  metadataHistoryRevision.replaceChildren();
+  metadataHistoryRevision.disabled = true;
+  restoreMetadataRevisionButton.disabled = true;
+  metadataHistoryPreview.textContent = message || "No document metadata history loaded.";
+  loadMetadataHistoryButton.disabled = !currentDocument();
+}
+function selectedDocumentMetadataHistoryState() {
+  if (!state.metadataHistory || metadataHistoryRevision.value === "") return null;
+  const targetRevision = Number(metadataHistoryRevision.value);
+  if (targetRevision === 0) return state.metadataHistory.baseline_state;
+  const entry = state.metadataHistory.revisions.find(
+    revision => revision.revision === targetRevision
+  );
+  return entry ? entry.revised_state : null;
+}
+function renderDocumentMetadataHistorySelection() {
+  const historicalState = selectedDocumentMetadataHistoryState();
+  metadataHistoryPreview.textContent = historicalState
+    ? JSON.stringify(historicalState, null, 2)
+    : "Choose an older document metadata state.";
+  restoreMetadataRevisionButton.disabled = !historicalState || !canEdit();
+}
+async function loadDocumentMetadataHistory() {
+  const record = currentDocument();
+  if (!record || !state.project) return;
+  loadMetadataHistoryButton.disabled = true;
+  metadataHistoryPreview.textContent = "Loading document metadata history…";
+  try {
+    const report = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(record.manifest_sha256) + "/metadata/history"
+    );
+    if (currentDocument()?.manifest_sha256 !== record.manifest_sha256) return;
+    state.metadataHistory = report.history;
+    metadataHistoryRevision.replaceChildren();
+    report.history.revisions
+      .filter(revision => revision.revision < report.history.current_revision)
+      .forEach(revision => option(
+        metadataHistoryRevision,
+        String(revision.revision),
+        "Revision " + revision.revision + " · " + revision.editor + " · " + revision.created_at
+      ));
+    option(metadataHistoryRevision, "0", "Imported metadata · revision 0");
+    metadataHistoryRevision.disabled = metadataHistoryRevision.options.length === 0;
+    if (metadataHistoryRevision.options.length) metadataHistoryRevision.selectedIndex = 0;
+    renderDocumentMetadataHistorySelection();
+  } catch (error) {
+    clearDocumentMetadataHistory(error.message);
+  } finally {
+    loadMetadataHistoryButton.disabled = !currentDocument();
+  }
+}
+async function restoreSelectedDocumentMetadataRevision() {
+  const record = metadataDocument();
+  const historicalState = selectedDocumentMetadataHistoryState();
+  if (!record || !state.project || !state.metadataHistory || !historicalState || !canEdit()) {
+    return;
+  }
+  const targetRevision = Number(metadataHistoryRevision.value);
+  const prompt = documentMetadataDirty()
+    ? "Restore this older document metadata state? Unsaved title, tags, or notes will be discarded."
+    : "Restore this older document metadata state as a new revision?";
+  if (!window.confirm(prompt)) return;
+  restoreMetadataRevisionButton.disabled = true;
+  metadataStatus.textContent = "Restoring document details…";
+  try {
+    const updated = await api(
+      "/api/projects/" + encodeURIComponent(state.project.project_id) +
+      "/documents/" + encodeURIComponent(record.manifest_sha256) + "/metadata/restore",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_revision: targetRevision,
+          expected_updated_at: state.metadataHistory.updated_at
+        })
+      }
+    );
+    const index = state.documents.findIndex(
+      item => item.manifest_sha256 === updated.manifest_sha256
+    );
+    if (index < 0) throw new Error("Restored document is not in the current project.");
+    state.documents[index] = updated;
+    renderDocumentOptions(updated.manifest_sha256);
+    renderDocumentMetadata();
+    if (searchQuery.value.trim()) await runProjectSearch();
+    metadataStatus.textContent = "Restored revision " + targetRevision + " as a new revision.";
+  } catch (error) {
+    if (error.status === 409) {
+      try {
+        const payload = await api(
+          "/api/projects/" + encodeURIComponent(state.project.project_id) + "/documents"
+        );
+        state.documents = payload.documents;
+        renderDocumentOptions(state.metadataManifest);
+        renderDocumentMetadata();
+        if (searchQuery.value.trim()) await runProjectSearch();
+      } catch (reloadError) {
+        setStatus("Could not reload document details: " + reloadError.message);
+      }
+    }
+    metadataStatus.textContent = error.message;
+  }
+}
 function renderDocumentMetadata() {
   const record = currentDocument();
+  clearDocumentMetadataHistory();
   state.metadataManifest = record ? record.manifest_sha256 : null;
   documentTitle.value = record ? record.title : "";
   documentTags.value = record ? record.tags.join("\\n") : "";
@@ -6305,6 +6529,13 @@ loadLayoutHistoryButton.addEventListener("click", () => loadLayoutHistoryRevisio
 restoreLayoutRevisionButton.addEventListener(
   "click", () => restoreSelectedLayoutRevision()
 );
+loadMetadataHistoryButton.addEventListener("click", () => loadDocumentMetadataHistory());
+metadataHistoryRevision.addEventListener(
+  "change", () => renderDocumentMetadataHistorySelection()
+);
+restoreMetadataRevisionButton.addEventListener(
+  "click", () => restoreSelectedDocumentMetadataRevision()
+);
 runKraken.addEventListener("click", () => queueKrakenRecognition());
 async function downloadDocumentExport(exportName, filename, successMessage, control) {
   const doc = currentDocument();
@@ -6391,6 +6622,7 @@ document.getElementById("logout").addEventListener("click", () => {
   state.page = null;
   state.layout = null;
   state.layoutHistory = null;
+  state.metadataHistory = null;
   state.activity = [];
   state.evaluations = [];
   state.members = [];

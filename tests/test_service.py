@@ -346,6 +346,14 @@ def test_authenticated_document_review_api_requires_current_revision(
         assert 'id="document-tags"' in workbench
         assert 'id="document-notes"' in workbench
         assert "/metadata" in workbench
+        assert 'id="load-metadata-history"' in workbench
+        assert 'id="metadata-history-revision"' in workbench
+        assert 'id="metadata-history-preview"' in workbench
+        assert 'id="restore-metadata-revision"' in workbench
+        assert "/metadata/history" in workbench
+        assert "/metadata/restore" in workbench
+        assert "clearDocumentMetadataHistory" in workbench
+        assert "expected_updated_at: state.metadataHistory.updated_at" in workbench
         assert "documentMetadataDirty" in workbench
         assert "Discard unsaved document title, tags, or notes?" in workbench
         assert "error.status = response.status" in workbench
@@ -534,6 +542,90 @@ def test_authenticated_document_review_api_requires_current_revision(
         assert metadata_search["result_count"] == 1
         assert metadata_search["results"][0]["title"] == "Serock civil register, 1890"
         assert metadata_search["results"][0]["tags"] == ["Serock", "births"]
+
+        metadata_history_route = metadata_route + "/history"
+        connection.request("GET", metadata_history_route, headers=authorization)
+        metadata_history_response = connection.getresponse()
+        metadata_history = json.loads(metadata_history_response.read())["history"]
+        assert metadata_history_response.status == 200
+        assert metadata_history["current_revision"] == 1
+        assert metadata_history["updated_at"] == metadata["updated_at"]
+        assert metadata_history["baseline_state"] == {
+            "title": original_document["title"],
+            "tags": original_document["tags"],
+            "notes": original_document["notes"],
+        }
+        assert metadata_history["revisions"][0]["editor"] == "editor"
+        assert metadata_history["contains_human_text"] is True
+        assert all(
+            not key.endswith("_path")
+            for entry in metadata_history["revisions"]
+            for key in entry
+        )
+
+        metadata_restore_route = metadata_route + "/restore"
+        metadata_restore_payload = json.dumps(
+            {
+                "target_revision": 0,
+                "expected_updated_at": metadata["updated_at"],
+            }
+        )
+        connection.request(
+            "POST",
+            metadata_restore_route,
+            body=metadata_restore_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        metadata_restore_response = connection.getresponse()
+        restored_metadata = json.loads(metadata_restore_response.read())
+        assert metadata_restore_response.status == 200
+        assert restored_metadata["status"] == "RESTORED"
+        assert restored_metadata["revision"] == 2
+        assert restored_metadata["target_revision"] == 0
+        assert restored_metadata["title"] == original_document["title"]
+        assert restored_metadata["tags"] == original_document["tags"]
+        assert restored_metadata["notes"] == original_document["notes"]
+
+        connection.request(
+            "POST",
+            metadata_restore_route,
+            body=metadata_restore_payload,
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        stale_restore_response = connection.getresponse()
+        assert stale_restore_response.status == 409
+        stale_restore_response.read()
+
+        connection.request(
+            "POST",
+            metadata_restore_route,
+            body=json.dumps(
+                {
+                    "target_revision": 2,
+                    "expected_updated_at": restored_metadata["updated_at"],
+                }
+            ),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        current_restore_response = connection.getresponse()
+        assert current_restore_response.status == 400
+        assert "must be earlier" in json.loads(current_restore_response.read())["message"]
+
+        connection.request(
+            "POST",
+            metadata_restore_route,
+            body=json.dumps(
+                {
+                    "target_revision": 0,
+                    "expected_updated_at": restored_metadata["updated_at"],
+                    "managed_project_path": "must not be accepted",
+                }
+            ),
+            headers={"Content-Type": "application/json", **authorization},
+        )
+        invalid_restore_response = connection.getresponse()
+        assert invalid_restore_response.status == 400
+        assert "invalid keys" in json.loads(invalid_restore_response.read())["message"]
 
         connection.request(
             "GET",
@@ -1279,6 +1371,30 @@ def test_owner_can_manage_existing_project_members(tmp_path: Path) -> None:
         viewer_metadata_response = connection.getresponse()
         assert viewer_metadata_response.status == 403
         viewer_metadata_response.read()
+
+        viewer_metadata_history_route = (
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/metadata/history"
+        )
+        connection.request("GET", viewer_metadata_history_route, headers=reviewer_headers)
+        viewer_history_response = connection.getresponse()
+        viewer_history = json.loads(viewer_history_response.read())["history"]
+        assert viewer_history_response.status == 200
+        assert viewer_history["current_revision"] == 0
+
+        connection.request(
+            "POST",
+            f"/api/projects/{project_id}/documents/{manifest_sha256}/metadata/restore",
+            body=json.dumps(
+                {
+                    "target_revision": 0,
+                    "expected_updated_at": viewer_document["updated_at"],
+                }
+            ),
+            headers={"Content-Type": "application/json", **reviewer_headers},
+        )
+        viewer_restore_response = connection.getresponse()
+        assert viewer_restore_response.status == 403
+        viewer_restore_response.read()
 
         connection.request(
             "GET",
