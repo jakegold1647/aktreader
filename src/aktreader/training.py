@@ -75,7 +75,33 @@ def _source_labels(entry: Mapping[str, Any]) -> list[Mapping[str, Any]]:
         raise TrainingExportError(
             f"{entry.get('record_id')}: provenance source labels must be objects"
         )
-    return sources
+    return sorted(sources, key=_canonical_mapping_key)
+
+
+def _canonical_mapping_key(value: Mapping[str, Any]) -> str:
+    """Return a complete, platform-independent ordering key for JSON objects."""
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
+def _ordered_manifest_records(records: list[Any]) -> list[Mapping[str, Any]]:
+    """Validate and canonically order records whose JSON list order is not semantic."""
+    entries: list[Mapping[str, Any]] = []
+    for record in records:
+        if not isinstance(record, Mapping):
+            raise TrainingExportError("silver manifest record must be an object")
+        entries.append(record)
+    return sorted(
+        entries,
+        key=lambda entry: (
+            str(entry.get("record_id", "")),
+            _canonical_mapping_key(entry),
+        ),
+    )
 
 
 def _grounding_failures(
@@ -143,11 +169,10 @@ def build_training_export(
     records = silver.get("records")
     if not isinstance(records, list) or not records:
         raise TrainingExportError("silver manifest contains no records")
+    ordered_records = _ordered_manifest_records(records)
 
     clerk_year_ids: set[str] = set()
-    for entry in records:
-        if not isinstance(entry, dict):
-            raise TrainingExportError("silver manifest record must be an object")
+    for entry in ordered_records:
         if entry.get("training_eligible") is not True:
             raise TrainingExportError(f"{entry.get('record_id')}: record is not training eligible")
         if entry.get("training_materialized") is not True:
@@ -158,12 +183,12 @@ def build_training_export(
         clerk_year_ids.add(clerk_year_id)
 
     validate_training_split(clerk_year_ids, holdout)
-    for entry in records:
+    for entry in ordered_records:
         _require_grounded_sources(root, entry)
 
     examples: list[dict[str, Any]] = []
     record_pins: list[dict[str, str]] = []
-    for entry in records:
+    for entry in ordered_records:
         resolved = entry.get("resolved_fields")
         if not isinstance(resolved, dict) or resolved.get("storage") != "MATERIALIZED_JSON":
             raise TrainingExportError(f"{entry.get('record_id')}: invalid materialized payload")
@@ -244,11 +269,10 @@ def build_training_readiness(
     records = silver.get("records")
     if not isinstance(records, list):
         raise TrainingExportError("silver manifest records must be a list")
+    ordered_records = _ordered_manifest_records(records)
     record_reports: list[dict[str, Any]] = []
     training_clerk_year_ids: set[str] = set()
-    for raw_entry in records:
-        if not isinstance(raw_entry, Mapping):
-            raise TrainingExportError("silver manifest record must be an object")
+    for raw_entry in ordered_records:
         clerk_year_id = raw_entry.get("clerk_year_id")
         if isinstance(clerk_year_id, str):
             training_clerk_year_ids.add(clerk_year_id)
