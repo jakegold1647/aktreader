@@ -434,6 +434,9 @@ python -m aktreader service-list-projects service-data
 python -m aktreader service-queue-backup service-data --project-id <project-id>
 ```
 
+The project list and the signed-in workbench picker use the same human-readable order: display
+name without case distinctions, then exact display name and project UUID as stable tie-breakers.
+
 The worker persists jobs in `service.sqlite3`. A job that was running when the process
 stopped returns to the pending queue on restart. Health, project, invitation, document, review,
 artifact, and job endpoints all declare `network_required: false`; none accepts a remote URL or
