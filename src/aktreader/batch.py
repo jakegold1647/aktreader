@@ -270,13 +270,20 @@ def discover_folder_jobs(
         raise NotADirectoryError(source_root)
     destination_root = Path(output_dir).resolve()
     candidates = source_root.rglob("*") if recursive else source_root.iterdir()
+
+    def portable_relative_key(path: Path) -> tuple[str, str]:
+        relative = path.relative_to(source_root).as_posix()
+        # Preserve case-insensitive discovery while breaking case-fold ties by
+        # exact spelling instead of the filesystem's enumeration order.
+        return relative.casefold(), relative
+
     scan_paths = sorted(
         (
             path
             for path in candidates
             if path.is_file() and path.suffix.lower() in SUPPORTED_SCAN_SUFFIXES
         ),
-        key=lambda path: path.relative_to(source_root).as_posix().casefold(),
+        key=portable_relative_key,
     )
 
     jobs: list[BatchJob] = []
