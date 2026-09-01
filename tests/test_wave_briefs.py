@@ -85,6 +85,16 @@ def test_wave_generator_emits_matching_blind_paired_briefs(tmp_path: Path) -> No
         assert right["reader"]["other_reader_output_seen"] is False
 
 
+def test_wave_generator_ignores_artifact_manifest_order(tmp_path: Path) -> None:
+    spec = _spec(tmp_path)
+
+    forward = build_reader_briefs(spec)
+    spec["artifacts"].reverse()
+    reverse = build_reader_briefs(spec)
+
+    assert reverse == forward
+
+
 def test_wave_generator_rejects_artifact_hash_drift(tmp_path: Path) -> None:
     spec = _spec(tmp_path)
     spec["artifacts"][0]["sha256"] = "0" * 64
