@@ -196,6 +196,33 @@ updated public document record. `VIEWER` accounts remain read-only. A stale `exp
 returns `409 Conflict`; malformed keys or invalid field values return `400 Bad Request`. Project
 notes are visible to every authorized member of the project and should not be used as personal notes.
 
+Every changed metadata save also appends a complete prior/revised snapshot attributed to the signed-in
+account. An unchanged save returns the current state without adding revision noise. Any authorized
+project role can browse the latest 100 snapshots, including the imported revision-0 baseline:
+
+```text
+GET /api/projects/<project-id>/documents/<manifest-sha256>/metadata/history
+```
+
+The response contains human-readable title, tag, and note content but no managed filesystem paths.
+An `EDITOR` or `OWNER` can restore any earlier tracked state as a new revision:
+
+```text
+POST /api/projects/<project-id>/documents/<manifest-sha256>/metadata/restore
+```
+
+```json
+{
+  "target_revision": 0,
+  "expected_updated_at": "<exact value returned by metadata history>"
+}
+```
+
+Restore never rewrites or deletes history. A stale token returns `409 Conflict`; a current, future,
+missing, or malformed target returns `400 Bad Request`; and `VIEWER` restore attempts return
+`403 Forbidden`. The workbench previews older states before restore, warns before discarding an
+unsaved metadata draft, and refreshes document and search results after a successful append.
+
 Any signed-in project role can request one line's full transcription revision history:
 
 ```text

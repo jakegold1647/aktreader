@@ -41,6 +41,7 @@ from aktreader.project import (
     list_project_activity,
     list_project_documents,
     list_project_pages,
+    load_project_document_metadata_history,
     load_project_page,
     load_project_page_layout,
     load_project_revision_history,
@@ -49,6 +50,7 @@ from aktreader.project import (
     restore_line_geometry,
     restore_line_transcription,
     restore_page_reading_order,
+    restore_project_document_metadata,
     restore_region_geometry,
     revise_line_geometry,
     revise_line_transcription,
@@ -1319,6 +1321,125 @@ def test_project_document_update_refuses_a_stale_metadata_timestamp(
         )
 
 
+def test_project_document_metadata_history_is_append_only_and_restorable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "register.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    original = list_project_documents(project)[0]
+    timestamps = iter(
+        (
+            "2026-08-31T03:00:01Z",
+            "2026-08-31T03:00:02Z",
+            "2026-08-31T03:00:03Z",
+        )
+    )
+    monkeypatch.setattr("aktreader.project._timestamp", lambda: next(timestamps))
+
+    empty_history = load_project_document_metadata_history(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+    assert empty_history["current_revision"] == 0
+    assert empty_history["baseline_state"] == {
+        "title": "register",
+        "tags": [],
+        "notes": "",
+    }
+    assert empty_history["revisions"] == []
+
+    first = update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        title="Serock civil register",
+        tags=["Serock", "1890"],
+        notes="First catalog pass.",
+        editor="alice",
+        expected_updated_at=original["updated_at"],
+    )
+    assert first["status"] == "SAVED"
+    assert first["revision"] == 1
+    assert first["editor"] == "alice"
+
+    unchanged = update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        title=first["title"],
+        tags=first["tags"],
+        notes=first["notes"],
+        editor="alice",
+        expected_updated_at=first["updated_at"],
+    )
+    assert unchanged["status"] == "UNCHANGED"
+    assert unchanged["revision"] == 1
+    assert unchanged["updated_at"] == first["updated_at"]
+
+    second = update_project_document(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        notes="Second catalog pass.",
+        editor="bob",
+        expected_updated_at=first["updated_at"],
+    )
+    history = load_project_document_metadata_history(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        limit=1,
+    )
+    assert second["revision"] == 2
+    assert history["current_revision"] == 2
+    assert history["updated_at"] == second["updated_at"]
+    assert history["baseline_state"] == empty_history["baseline_state"]
+    assert history["current_state"]["notes"] == "Second catalog pass."
+    assert [entry["revision"] for entry in history["revisions"]] == [2]
+    assert history["revisions"][0]["prior_state"]["notes"] == "First catalog pass."
+    assert history["revisions"][0]["editor"] == "bob"
+    assert history["pagination"] == {
+        "limit": 1,
+        "before_revision": None,
+        "has_more": True,
+        "next_before_revision": 2,
+    }
+
+    restored = restore_project_document_metadata(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+        target_revision=0,
+        editor="owner",
+        expected_updated_at=second["updated_at"],
+    )
+    assert restored["status"] == "RESTORED"
+    assert restored["revision"] == 3
+    assert restored["target_revision"] == 0
+    assert restored["title"] == "register"
+    assert restored["tags"] == []
+    assert restored["notes"] == ""
+
+    with pytest.raises(ProjectRevisionConflictError, match="metadata conflict"):
+        restore_project_document_metadata(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            target_revision=1,
+            editor="owner",
+            expected_updated_at=second["updated_at"],
+        )
+    with pytest.raises(ProjectStoreError, match="must be earlier"):
+        restore_project_document_metadata(
+            project,
+            manifest_sha256=imported["manifest_sha256"],
+            target_revision=3,
+            editor="owner",
+            expected_updated_at=restored["updated_at"],
+        )
+
+
 def test_project_document_cli_updates_strict_metadata(tmp_path: Path, capsys) -> None:
     source_root = tmp_path / "source"
     source_root.mkdir()
@@ -1360,6 +1481,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
             connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
@@ -1380,7 +1502,7 @@ def test_project_migrates_v2_store_for_htr_suggestions(tmp_path: Path) -> None:
     assert report["htr_suggestion_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
     finally:
         connection.close()
 
@@ -2128,6 +2250,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
             connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
@@ -2146,7 +2269,7 @@ def test_project_migrates_v3_store_for_training_consent(tmp_path: Path) -> None:
     assert report["training_consent_revocation_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
     finally:
         connection.close()
 
@@ -2228,6 +2351,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
             connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
@@ -2243,7 +2367,7 @@ def test_project_migrates_v4_store_for_training_split_assignments(tmp_path: Path
     assert report["training_split_assignment_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
     finally:
         connection.close()
 
@@ -2258,6 +2382,7 @@ def test_project_migrates_v7_store_for_page_reading_order_revisions(
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
             connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("DROP TABLE page_reading_order_revisions")
@@ -2270,7 +2395,7 @@ def test_project_migrates_v7_store_for_page_reading_order_revisions(
     assert report["page_reading_order_revision_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
     finally:
         connection.close()
 
@@ -2285,6 +2410,7 @@ def test_project_migrates_v8_store_for_region_geometry_revisions(
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
             connection.execute("DROP TABLE documents")
             connection.execute("DROP TABLE region_geometry_revisions")
             connection.execute("PRAGMA user_version = 8")
@@ -2296,7 +2422,7 @@ def test_project_migrates_v8_store_for_region_geometry_revisions(
     assert report["region_geometry_revision_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
     finally:
         connection.close()
 
@@ -2309,6 +2435,7 @@ def test_project_migrates_v9_store_for_documents(tmp_path: Path) -> None:
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
         with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
             connection.execute("DROP TABLE documents")
             connection.execute("PRAGMA user_version = 9")
     finally:
@@ -2319,7 +2446,43 @@ def test_project_migrates_v9_store_for_documents(tmp_path: Path) -> None:
     assert report["document_count"] == 0
     connection = sqlite3.connect(project / "project.sqlite3")
     try:
-        assert connection.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
+    finally:
+        connection.close()
+
+
+def test_project_migrates_v10_store_for_document_metadata_history(
+    tmp_path: Path,
+) -> None:
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    _write_image(source_root / "page.png")
+    source = source_root / "register.xml"
+    _write_pagexml(source)
+    project = tmp_path / "register.aktproj"
+    create_project(project, name="Serock births")
+    imported = import_pagexml_into_project(project, source)
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        with connection:
+            connection.execute("DROP TABLE document_metadata_revisions")
+            connection.execute("PRAGMA user_version = 10")
+    finally:
+        connection.close()
+
+    history = load_project_document_metadata_history(
+        project,
+        manifest_sha256=imported["manifest_sha256"],
+    )
+
+    assert history["current_revision"] == 0
+    assert history["baseline_state"]["title"] == "register"
+    connection = sqlite3.connect(project / "project.sqlite3")
+    try:
+        assert connection.execute("PRAGMA user_version").fetchone()[0] == 11
+        assert connection.execute(
+            "SELECT COUNT(*) FROM document_metadata_revisions"
+        ).fetchone()[0] == 0
     finally:
         connection.close()
 

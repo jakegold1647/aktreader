@@ -35,7 +35,7 @@ PROJECT_CONTRACT_NAME = "aktreader-project"
 PROJECT_CONTRACT_VERSION = "1.0.0"
 PROJECT_MANIFEST_NAME = "project.akt.json"
 PROJECT_DATABASE_NAME = "project.sqlite3"
-PROJECT_DATABASE_VERSION = 10
+PROJECT_DATABASE_VERSION = 11
 ALTO_XML_NAMESPACE = "http://www.loc.gov/standards/alto/ns-v4#"
 PDF_EXPORT_DPI = 300
 
@@ -117,7 +117,7 @@ def _initialize_database(path: Path) -> None:
             connection.executescript(
                 """
                 PRAGMA application_id = 1095459668;
-                PRAGMA user_version = 10;
+                PRAGMA user_version = 11;
                 CREATE TABLE source_objects (
                     sha256 TEXT PRIMARY KEY,
                     object_kind TEXT NOT NULL,
@@ -292,6 +292,20 @@ def _initialize_database(path: Path) -> None:
                     notes TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
+                );
+                CREATE TABLE document_metadata_revisions (
+                    manifest_sha256 TEXT NOT NULL
+                        REFERENCES documents(manifest_sha256),
+                    revision INTEGER NOT NULL CHECK (revision >= 1),
+                    prior_title TEXT NOT NULL,
+                    prior_tags_json TEXT NOT NULL,
+                    prior_notes TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    tags_json TEXT NOT NULL,
+                    notes TEXT NOT NULL,
+                    editor TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (manifest_sha256, revision)
                 );
                 """
             )
@@ -548,6 +562,29 @@ def _migrate_database(path: Path) -> None:
                     )
                 connection.execute("PRAGMA user_version = 10")
             version = 10
+
+        if version == 10:
+            with connection:
+                connection.executescript(
+                    """
+                    CREATE TABLE document_metadata_revisions (
+                        manifest_sha256 TEXT NOT NULL
+                            REFERENCES documents(manifest_sha256),
+                        revision INTEGER NOT NULL CHECK (revision >= 1),
+                        prior_title TEXT NOT NULL,
+                        prior_tags_json TEXT NOT NULL,
+                        prior_notes TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        tags_json TEXT NOT NULL,
+                        notes TEXT NOT NULL,
+                        editor TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        PRIMARY KEY (manifest_sha256, revision)
+                    );
+                    PRAGMA user_version = 11;
+                    """
+                )
+            version = 11
 
         if version != PROJECT_DATABASE_VERSION:
             raise ProjectStoreError(f"unsupported project database version: {version}")
@@ -3353,6 +3390,30 @@ def _validated_document_tags(tags: Sequence[str]) -> list[str]:
     return normalized
 
 
+def _document_metadata_state(
+    title: object,
+    tags_json: object,
+    notes: object,
+    *,
+    role: str,
+) -> dict[str, object]:
+    if not isinstance(title, str) or not title.strip():
+        raise ProjectStoreError(f"{role} title is invalid")
+    if not isinstance(tags_json, str):
+        raise ProjectStoreError(f"{role} tags are unreadable")
+    if not isinstance(notes, str):
+        raise ProjectStoreError(f"{role} notes are invalid")
+    try:
+        tags = json.loads(tags_json)
+    except json.JSONDecodeError as error:
+        raise ProjectStoreError(f"{role} tags are unreadable") from error
+    return {
+        "title": title,
+        "tags": _validated_document_tags(tags),
+        "notes": notes,
+    }
+
+
 def update_project_document(
     path: Path | str,
     *,
@@ -3360,9 +3421,10 @@ def update_project_document(
     title: str | None = None,
     tags: Sequence[str] | None = None,
     notes: str | None = None,
+    editor: str = "local-user",
     expected_updated_at: str | None = None,
 ) -> dict[str, object]:
-    """Update mutable local metadata for one immutable PAGE XML import."""
+    """Append an audited metadata revision and update its current projection."""
 
     manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
     if title is None and tags is None and notes is None:
@@ -3371,6 +3433,8 @@ def update_project_document(
         raise ProjectStoreError("document title must be a nonblank string")
     if notes is not None and not isinstance(notes, str):
         raise ProjectStoreError("document notes must be a string")
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("document metadata editor must be a nonblank string")
     if expected_updated_at is not None and (
         not isinstance(expected_updated_at, str)
         or not expected_updated_at.strip()
@@ -3382,60 +3446,311 @@ def update_project_document(
     connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
     try:
         with connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 """
                 SELECT
                     documents.manifest_sha256, documents.document_id, documents.title,
                     documents.tags_json, documents.notes, pagexml_imports.page_count,
                     pagexml_imports.region_count, pagexml_imports.line_count,
-                    pagexml_imports.pagexml_sha256, documents.created_at, documents.updated_at
+                    pagexml_imports.pagexml_sha256, documents.created_at, documents.updated_at,
+                    COALESCE(MAX(document_metadata_revisions.revision), 0)
                 FROM documents
                 JOIN pagexml_imports
                     ON pagexml_imports.manifest_sha256 = documents.manifest_sha256
+                LEFT JOIN document_metadata_revisions
+                    ON document_metadata_revisions.manifest_sha256 = documents.manifest_sha256
                 WHERE documents.manifest_sha256 = ?
+                GROUP BY documents.manifest_sha256
                 """,
                 (manifest_sha256,),
             ).fetchone()
             if row is None:
                 raise ProjectStoreError("project document was not found")
-            current = _document_record(row)
+            current = _document_record(row[:11])
+            current_revision = int(row[11])
+            if (
+                expected_updated_at is not None
+                and current["updated_at"] != expected_updated_at
+            ):
+                raise ProjectRevisionConflictError(
+                    "document metadata conflict; reload the current document"
+                )
             next_title = title.strip() if title is not None else current["title"]
             next_tags = normalized_tags if normalized_tags is not None else current["tags"]
             next_notes = notes if notes is not None else current["notes"]
+            if (
+                next_title == current["title"]
+                and next_tags == current["tags"]
+                and next_notes == current["notes"]
+            ):
+                return {
+                    **current,
+                    "status": "UNCHANGED",
+                    "revision": current_revision,
+                    "network_required": False,
+                }
+            revision = current_revision + 1
             updated_at = _timestamp()
-            update = connection.execute(
+            next_tags_json = _canonical_json(next_tags)
+            connection.execute(
                 """
                 UPDATE documents
                 SET title = ?, tags_json = ?, notes = ?, updated_at = ?
                 WHERE manifest_sha256 = ?
-                  AND (? IS NULL OR updated_at = ?)
                 """,
                 (
                     next_title,
-                    _canonical_json(next_tags),
+                    next_tags_json,
                     next_notes,
                     updated_at,
                     manifest_sha256,
-                    expected_updated_at,
-                    expected_updated_at,
                 ),
             )
-            if update.rowcount != 1:
-                raise ProjectRevisionConflictError(
-                    "document metadata conflict; reload the current document"
+            connection.execute(
+                """
+                INSERT INTO document_metadata_revisions (
+                    manifest_sha256, revision, prior_title, prior_tags_json,
+                    prior_notes, title, tags_json, notes, editor, created_at
                 )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest_sha256,
+                    revision,
+                    current["title"],
+                    _canonical_json(current["tags"]),
+                    current["notes"],
+                    next_title,
+                    next_tags_json,
+                    next_notes,
+                    editor.strip(),
+                    updated_at,
+                ),
+            )
     except sqlite3.Error as error:
         raise ProjectStoreError(f"cannot update project document: {error}") from error
     finally:
         connection.close()
     return {
         **current,
+        "status": "SAVED",
         "title": next_title,
         "tags": next_tags,
         "notes": next_notes,
         "updated_at": updated_at,
+        "revision": revision,
+        "editor": editor.strip(),
         "network_required": False,
     }
+
+
+def load_project_document_metadata_history(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    limit: int = 100,
+    before_revision: int | None = None,
+) -> dict[str, object]:
+    """Load bounded contentful metadata history for one exact document."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 500:
+        raise ProjectStoreError("metadata history limit must be an integer from 1 to 500")
+    if before_revision is not None and (
+        isinstance(before_revision, bool)
+        or not isinstance(before_revision, int)
+        or before_revision < 1
+    ):
+        raise ProjectStoreError("before_revision must be a positive integer")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        document = connection.execute(
+            """
+            SELECT
+                documents.document_id, documents.title, documents.tags_json,
+                documents.notes, documents.updated_at,
+                COALESCE(MAX(document_metadata_revisions.revision), 0)
+            FROM documents
+            LEFT JOIN document_metadata_revisions
+                ON document_metadata_revisions.manifest_sha256 = documents.manifest_sha256
+            WHERE documents.manifest_sha256 = ?
+            GROUP BY documents.manifest_sha256
+            """,
+            (manifest_sha256,),
+        ).fetchone()
+        if document is None:
+            raise ProjectStoreError("project document was not found")
+        if not isinstance(document[0], str) or not isinstance(document[4], str):
+            raise ProjectStoreError("stored document metadata is invalid")
+        current_state = _document_metadata_state(
+            document[1], document[2], document[3], role="stored document metadata"
+        )
+        current_revision = int(document[5])
+        baseline = connection.execute(
+            """
+            SELECT prior_title, prior_tags_json, prior_notes
+            FROM document_metadata_revisions
+            WHERE manifest_sha256 = ? AND revision = 1
+            """,
+            (manifest_sha256,),
+        ).fetchone()
+        baseline_state = (
+            current_state
+            if baseline is None
+            else _document_metadata_state(
+                baseline[0], baseline[1], baseline[2], role="stored metadata baseline"
+            )
+        )
+        cursor_clause = " AND revision < ?" if before_revision is not None else ""
+        rows = connection.execute(
+            f"""
+            SELECT
+                revision, prior_title, prior_tags_json, prior_notes,
+                title, tags_json, notes, editor, created_at
+            FROM document_metadata_revisions
+            WHERE manifest_sha256 = ?{cursor_clause}
+            ORDER BY revision DESC
+            LIMIT ?
+            """,
+            (
+                manifest_sha256,
+                *(() if before_revision is None else (before_revision,)),
+                limit + 1,
+            ),
+        ).fetchall()
+    except sqlite3.Error as error:
+        raise ProjectStoreError(f"cannot load document metadata history: {error}") from error
+    finally:
+        connection.close()
+    revisions = []
+    for row in rows[:limit]:
+        if not isinstance(row[7], str) or not isinstance(row[8], str):
+            raise ProjectStoreError("stored document metadata revision is invalid")
+        revisions.append(
+            {
+                "revision": int(row[0]),
+                "prior_state": _document_metadata_state(
+                    row[1], row[2], row[3], role="stored prior metadata"
+                ),
+                "revised_state": _document_metadata_state(
+                    row[4], row[5], row[6], role="stored revised metadata"
+                ),
+                "editor": row[7],
+                "created_at": row[8],
+            }
+        )
+    has_more = len(rows) > limit
+    return {
+        "manifest_sha256": manifest_sha256,
+        "document_id": document[0],
+        "kind": "DOCUMENT_METADATA",
+        "baseline_state": baseline_state,
+        "current_state": current_state,
+        "current_revision": current_revision,
+        "updated_at": document[4],
+        "revisions": revisions,
+        "pagination": {
+            "limit": limit,
+            "before_revision": before_revision,
+            "has_more": has_more,
+            "next_before_revision": (
+                revisions[-1]["revision"] if has_more and revisions else None
+            ),
+        },
+        "contains_human_text": True,
+        "network_required": False,
+    }
+
+
+def restore_project_document_metadata(
+    path: Path | str,
+    *,
+    manifest_sha256: str,
+    target_revision: int,
+    editor: str = "local-user",
+    expected_updated_at: str,
+) -> dict[str, object]:
+    """Append an earlier tracked metadata state as a new revision."""
+
+    manifest_sha256 = _require_sha256(manifest_sha256, role="manifest_sha256")
+    target_revision = _validated_target_revision(target_revision)
+    if not isinstance(editor, str) or not editor.strip():
+        raise ProjectStoreError("document metadata editor must be a nonblank string")
+    if (
+        not isinstance(expected_updated_at, str)
+        or not expected_updated_at.strip()
+        or expected_updated_at != expected_updated_at.strip()
+    ):
+        raise ProjectStoreError("expected_updated_at must be a nonblank exact string")
+    root = _required_project_root(path)
+    connection = sqlite3.connect(root / PROJECT_DATABASE_NAME)
+    try:
+        current = connection.execute(
+            """
+            SELECT
+                documents.updated_at,
+                COALESCE(MAX(document_metadata_revisions.revision), 0)
+            FROM documents
+            LEFT JOIN document_metadata_revisions
+                ON document_metadata_revisions.manifest_sha256 = documents.manifest_sha256
+            WHERE documents.manifest_sha256 = ?
+            GROUP BY documents.manifest_sha256
+            """,
+            (manifest_sha256,),
+        ).fetchone()
+        if current is None:
+            raise ProjectStoreError("project document was not found")
+        current_revision = int(current[1])
+        if current[0] != expected_updated_at:
+            raise ProjectRevisionConflictError(
+                "document metadata conflict; reload the current document"
+            )
+        if target_revision >= current_revision:
+            raise ProjectStoreError(
+                "target document metadata revision must be earlier than the current revision"
+            )
+        stored_revision = 1 if target_revision == 0 else target_revision
+        target = connection.execute(
+            """
+            SELECT
+                prior_title, prior_tags_json, prior_notes,
+                title, tags_json, notes
+            FROM document_metadata_revisions
+            WHERE manifest_sha256 = ? AND revision = ?
+            """,
+            (manifest_sha256, stored_revision),
+        ).fetchone()
+        if target is None:
+            raise ProjectStoreError("target document metadata revision is unavailable")
+        offset = 0 if target_revision == 0 else 3
+        target_state = _document_metadata_state(
+            target[offset],
+            target[offset + 1],
+            target[offset + 2],
+            role="target document metadata revision",
+        )
+    except sqlite3.Error as error:
+        raise ProjectStoreError(
+            f"cannot load target document metadata revision: {error}"
+        ) from error
+    finally:
+        connection.close()
+    result = update_project_document(
+        root,
+        manifest_sha256=manifest_sha256,
+        title=str(target_state["title"]),
+        tags=target_state["tags"],
+        notes=str(target_state["notes"]),
+        editor=editor,
+        expected_updated_at=expected_updated_at,
+    )
+    result["target_revision"] = target_revision
+    if result["status"] == "SAVED":
+        result["status"] = "RESTORED"
+    return result
+
 
 def list_project_pages(path: Path | str) -> list[dict[str, object]]:
     """List every imported page in stable import and page order."""
