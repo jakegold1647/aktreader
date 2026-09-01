@@ -422,7 +422,10 @@ def run_kraken_training(
         artifacts = (
             [
                 path
-                for path in sorted(checkpoints.rglob("*.safetensors"))
+                for path in sorted(
+                    checkpoints.rglob("*.safetensors"),
+                    key=lambda candidate: candidate.relative_to(checkpoints).as_posix(),
+                )
                 if path.is_file()
             ]
             if checkpoints.is_dir()
