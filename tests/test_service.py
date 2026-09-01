@@ -7,6 +7,7 @@ import subprocess
 import threading
 import time
 import xml.etree.ElementTree as ET
+import zipfile
 from http.client import HTTPConnection
 from pathlib import Path
 
@@ -277,6 +278,75 @@ def test_project_backup_is_deterministic_verified_and_restorable(tmp_path: Path)
     assert verified["backup_id"] == first["backup_id"]
     assert restored["project_id"] == project_id
     assert inspect_project(restored_path)["project_id"] == project_id
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "C:project/file.json",
+        "project/stream:data",
+        "project/con",
+        "project/NUL.txt",
+        "project/trailing.",
+        "project/trailing ",
+        "project/file?.json",
+        "project//file.json",
+        "./project/file.json",
+    ],
+)
+def test_backup_member_names_must_be_portable(name: str) -> None:
+    with pytest.raises(ServiceError, match="member name"):
+        service_module._safe_archive_member(name)
+
+
+def test_backup_verification_rejects_compressed_members(tmp_path: Path) -> None:
+    backup = tmp_path / "compressed.aktbackup.zip"
+    with zipfile.ZipFile(backup, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(service_module.BACKUP_MANIFEST_NAME, b"{}")
+
+    with pytest.raises(ServiceError, match="ZIP_STORED"):
+        verify_project_backup(backup)
+
+
+def test_backup_restore_revalidates_members_before_extraction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    backup = tmp_path / "changed.aktbackup.zip"
+    with zipfile.ZipFile(backup, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(service_module.BACKUP_MANIFEST_NAME, b"{}")
+    verified = {
+        "project_id": "8ad02d14-e168-4e21-87f4-e6f6e7f021a1",
+        "backup_id": "0" * 64,
+        "snapshot_sha256": "0" * 64,
+    }
+    monkeypatch.setattr(service_module, "verify_project_backup", lambda _: verified)
+    destination = tmp_path / "restored.aktproj"
+
+    with pytest.raises(ServiceError, match="ZIP_STORED"):
+        restore_project_backup(backup, destination)
+
+    assert not destination.exists()
+
+
+def test_backup_verification_rejects_encrypted_member_flags() -> None:
+    member = zipfile.ZipInfo(service_module.BACKUP_MANIFEST_NAME)
+    member.compress_type = zipfile.ZIP_STORED
+    member.flag_bits = 0x1
+
+    with pytest.raises(ServiceError, match="unencrypted"):
+        service_module._validated_backup_member(member)
+
+
+def test_backup_verification_rejects_casefold_member_collisions(tmp_path: Path) -> None:
+    backup = tmp_path / "colliding.aktbackup.zip"
+    with zipfile.ZipFile(backup, "w", compression=zipfile.ZIP_STORED) as archive:
+        archive.writestr(service_module.BACKUP_MANIFEST_NAME, b"{}")
+        archive.writestr("project/file.json", b"first")
+        archive.writestr("project/FILE.json", b"second")
+
+    with pytest.raises(ServiceError, match="case-insensitively unique"):
+        verify_project_backup(backup)
 
 
 def test_loopback_service_queues_and_completes_a_backup_job(tmp_path: Path) -> None:

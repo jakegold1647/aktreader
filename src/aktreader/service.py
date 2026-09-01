@@ -82,6 +82,15 @@ MAX_ARTIFACT_DESCRIPTION_LENGTH = 4_000
 MAX_IMAGE_RESPONSE_BYTES = 100 * 1024 * 1024
 MAX_EXPORT_RESPONSE_BYTES = 100 * 1024 * 1024
 _COPY_BUFFER_BYTES = 1024 * 1024
+_WINDOWS_DEVICE_NAMES = {
+    "aux",
+    "con",
+    "nul",
+    "prn",
+    *(f"com{index}" for index in range(1, 10)),
+    *(f"lpt{index}" for index in range(1, 10)),
+}
+_WINDOWS_FORBIDDEN_FILENAME_CHARACTERS = frozenset('<>:"|?*')
 ARTIFACT_KINDS = ("MODEL", "DATASET")
 PASSWORD_SCRYPT_N = 16_384
 PASSWORD_SCRYPT_R = 8
@@ -2100,9 +2109,50 @@ def _safe_archive_member(name: str) -> str:
         or path.is_absolute()
         or "\\" in name
         or any(part in {"", ".", ".."} for part in path.parts)
+        or path.as_posix() != name
     ):
         raise ServiceError("backup archive contains an unsafe member name")
+    for part in path.parts:
+        if (
+            part.endswith((".", " "))
+            or any(
+                character in _WINDOWS_FORBIDDEN_FILENAME_CHARACTERS
+                or ord(character) < 32
+                for character in part
+            )
+            or part.split(".", 1)[0].casefold() in _WINDOWS_DEVICE_NAMES
+        ):
+            raise ServiceError("backup archive contains a non-portable member name")
     return path.as_posix()
+
+
+def _validated_backup_member(member: zipfile.ZipInfo) -> str:
+    name = _safe_archive_member(member.filename)
+    if member.is_dir():
+        raise ServiceError("backup archive may not contain directory members")
+    if member.flag_bits & 0x1:
+        raise ServiceError("backup archive members must be unencrypted")
+    if member.compress_type != zipfile.ZIP_STORED:
+        raise ServiceError("backup archive members must use ZIP_STORED")
+    return name
+
+
+def _validated_archive_members(archive: zipfile.ZipFile) -> dict[str, zipfile.ZipInfo]:
+    members = archive.infolist()
+    if not members or len(members) > MAX_BACKUP_FILES + 1:
+        raise ServiceError("backup archive has an invalid number of members")
+    validated: dict[str, zipfile.ZipInfo] = {}
+    folded_names: set[str] = set()
+    for member in members:
+        name = _validated_backup_member(member)
+        folded = name.casefold()
+        if name in validated or folded in folded_names:
+            raise ServiceError(
+                "backup archive member names must be case-insensitively unique"
+            )
+        validated[name] = member
+        folded_names.add(folded)
+    return validated
 
 
 def _read_backup_manifest(archive: zipfile.ZipFile) -> dict[str, object]:
@@ -2175,21 +2225,14 @@ def verify_project_backup(path: Path | str) -> dict[str, object]:
         raise ServiceError("backup archive is not a regular file")
     try:
         with zipfile.ZipFile(backup) as archive:
-            members = archive.infolist()
-            if not members or len(members) > MAX_BACKUP_FILES + 1:
-                raise ServiceError("backup archive has an invalid number of members")
-            names = [_safe_archive_member(member.filename) for member in members]
-            if len(set(names)) != len(names):
-                raise ServiceError("backup archive contains duplicate member names")
-            if any(member.is_dir() for member in members):
-                raise ServiceError("backup archive may not contain directory members")
+            members = _validated_archive_members(archive)
             manifest = _read_backup_manifest(archive)
             entries = _validated_backup_entries(manifest)
             expected_names = {BACKUP_MANIFEST_NAME, *(str(entry["path"]) for entry in entries)}
-            if set(names) != expected_names:
+            if set(members) != expected_names:
                 raise ServiceError("backup archive members do not match its manifest")
             for entry in entries:
-                member = archive.getinfo(str(entry["path"]))
+                member = members[str(entry["path"])]
                 if member.file_size != entry["size_bytes"]:
                     raise ServiceError("backup archive member size does not match its manifest")
                 digest = hashlib.sha256()
@@ -2233,6 +2276,7 @@ def restore_project_backup(
     )
     try:
         with zipfile.ZipFile(backup_path) as archive:
+            members = _validated_archive_members(archive)
             manifest = _read_backup_manifest(archive)
             entries = _validated_backup_entries(manifest)
             if (
@@ -2240,8 +2284,11 @@ def restore_project_backup(
                 or manifest["snapshot_sha256"] != verified["snapshot_sha256"]
             ):
                 raise ServiceError("backup archive changed after verification")
+            expected_names = {BACKUP_MANIFEST_NAME, *(str(entry["path"]) for entry in entries)}
+            if set(members) != expected_names:
+                raise ServiceError("backup archive changed after verification")
             for entry in entries:
-                member = archive.getinfo(str(entry["path"]))
+                member = members[str(entry["path"])]
                 if member.file_size != entry["size_bytes"]:
                     raise ServiceError("backup archive changed after verification")
                 target = temporary.joinpath(*PurePosixPath(str(entry["path"])).parts)
