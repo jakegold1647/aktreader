@@ -255,3 +255,15 @@ def test_prediction_loader_rejects_ambiguous_records(
 
     with pytest.raises(EvaluationIntegrityError, match=message):
         load_prediction_records(prediction)
+
+
+def test_prediction_directory_order_is_platform_independent(tmp_path: Path) -> None:
+    for filename, record_id in (("a.json", "lower"), ("B.json", "upper")):
+        (tmp_path / filename).write_text(
+            json.dumps({"record_id": record_id, "observations": {}}),
+            encoding="utf-8",
+        )
+
+    records = load_prediction_records(tmp_path)
+
+    assert [record["record_id"] for record in records] == ["upper", "lower"]

@@ -618,7 +618,11 @@ def evaluate_predictions(
 
 def load_prediction_records(path: Path) -> list[dict[str, Any]]:
     """Strictly load one prediction JSON or every JSON in a directory."""
-    paths = sorted(path.glob("*.json")) if path.is_dir() else [path]
+    paths = (
+        sorted(path.glob("*.json"), key=lambda candidate: candidate.name)
+        if path.is_dir()
+        else [path]
+    )
     records = [_load_prediction_record(item) for item in paths]
     ids = [record["record_id"] for record in records]
     if len(ids) != len(set(ids)):
