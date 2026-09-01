@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -91,14 +92,28 @@ def _canonical_mapping_key(value: Mapping[str, Any]) -> str:
 def _ordered_manifest_records(records: list[Any]) -> list[Mapping[str, Any]]:
     """Validate and canonically order records whose JSON list order is not semantic."""
     entries: list[Mapping[str, Any]] = []
+    record_ids: list[str] = []
     for record in records:
         if not isinstance(record, Mapping):
             raise TrainingExportError("silver manifest record must be an object")
+        record_id = record.get("record_id")
+        if not isinstance(record_id, str) or not record_id.strip():
+            raise TrainingExportError(
+                "silver manifest record_id must be a non-empty string"
+            )
         entries.append(record)
+        record_ids.append(record_id)
+    duplicate_ids = sorted(
+        record_id for record_id, count in Counter(record_ids).items() if count > 1
+    )
+    if duplicate_ids:
+        raise TrainingExportError(
+            f"silver manifest contains duplicate record IDs: {duplicate_ids}"
+        )
     return sorted(
         entries,
         key=lambda entry: (
-            str(entry.get("record_id", "")),
+            entry["record_id"],
             _canonical_mapping_key(entry),
         ),
     )
