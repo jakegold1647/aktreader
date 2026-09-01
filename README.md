@@ -94,9 +94,13 @@ is: none.
 - The same file re-runs representative CLI paths (`doctor`, `prompt-verify`, `compare`, `eval`) with
   socket creation disabled; any attempt to open a socket fails the run. This includes
   `pagexml-import`.
-- Runtime dependencies are `jsonschema`, `pillow`, and `pypdfium2`; the reviewed Python-package
-  license inventory (16 packages, including transitive) is `dependency-licenses.json`. PDFium wheel
-  redistributions must retain their bundled third-party notices.
+- Runtime dependencies are `jsonschema`, `pillow`, `pypdfium2`, and `referencing`; the reviewed
+  Python-package license inventory (16 packages, including transitive) is
+  `dependency-licenses.json`. PDFium wheel redistributions must retain their bundled third-party
+  notices.
+- JSON Schema validation uses a local-only reference registry. A schema `$ref` may load a sibling
+  file beneath the selected schema root; URL, UNC, and root-escaping references fail before any
+  network access.
 - The only external processes the package starts are content-pinned local reader and Kraken
   subprocesses. They receive only local paths and a credential-free, offline environment. Owner-side
   acquisition scripts under `tools/` do use the network and are documented in "Owner-only open
