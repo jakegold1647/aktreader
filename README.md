@@ -699,7 +699,7 @@ Evidence Lab rather than treating their shared import namespace as identity.
 ## Public-release boundary
 
 The application code is released under the MIT License. Bundled derived records and labels carry
-the CC BY 4.0 data note in [`LICENSE`](LICENSE). Source scan images are not redistributed;
+the CC BY 4.0 data note in [`DATA-LICENSE.md`](DATA-LICENSE.md). Source scan images are not redistributed;
 provenance hashes and crop coordinates are retained where they are needed for reproducibility.
 Local human-review packets may contain scan derivatives and are intentionally excluded from the
 public release.
